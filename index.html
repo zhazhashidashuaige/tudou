@@ -25,8 +25,14 @@
             position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0,0,0,0.5); border-radius: 40px;
         }
         @media (min-width: 450px) {
-             #phone-screen { aspect-ratio: 9 / 19.5; height: 90vh; width: auto; }
-        }
+     #phone-screen { 
+        aspect-ratio: 9 / 19.5; 
+        height: 90vh; 
+        width: auto; 
+        /* ↓↓↓ 只需在这里加上这一行 ↓↓↓ */
+        background-image: url('https://files.catbox.moe/nymwdh.jpg');
+     }
+}
 
         /* --- 状态栏 & 灵动岛容器 (新功能) --- */
         #status-bar {
@@ -633,4 +639,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
