@@ -21,12 +21,14 @@
             --button-text-color: #ffffff;
             --item-bg: #ffffff;
             --item-active-bg: #e5e5ea;
+            --system-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --system-font-color: #000000;
         }
 
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: var(--system-font-family);
             background-color: #333;
             display: flex; justify-content: center; align-items: center;
             user-select: none; -webkit-user-select: none;
@@ -43,41 +45,32 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.5);
             border-radius: 40px;
         }
+        #phone-screen * {
+            font-family: var(--system-font-family);
+            color: var(--system-font-color);
+        }
         
         @media (min-width: 450px) {
              #phone-screen { aspect-ratio: 9 / 19.5; height: 90vh; width: auto; }
         }
 
         /* --- 顶部区域 (状态栏 + 灵动岛) --- */
-        #top-area {
-            position: absolute; top: 0; left: 0; right: 0;
-            padding: 15px 10px 10px 10px;
-            display: flex; justify-content: center; align-items: flex-start;
-            z-index: 50; pointer-events: none;
-        }
-        #status-bar {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            color: white; font-weight: 600; font-size: 15px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            padding: 0 15px 0 20px; /* 优化3：增加右侧内边距 */
-        }
+        #top-area { position: absolute; top: 0; left: 0; right: 0; padding: 15px 10px 10px 10px; display: flex; justify-content: center; align-items: flex-start; z-index: 50; pointer-events: none; }
+        #status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; font-size: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); padding: 0 25px 0 20px; }
         #time { flex: 1 1 0; text-align: left; }
-        #battery-status { flex: 1 1 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 5px; padding-right: 5px; }
+        #battery-status { flex: 1 1 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         #battery-icon { font-size: 20px; }
 
         /* --- 灵动岛 --- */
         #dynamic-island {
             position: absolute; top: 12px;
-            height: 36px; width: 125px;
-            background-color: black;
-            border-radius: 18px;
+            height: 36px; width: 33vw; max-width: 125px; /* 优化2.2 */
+            background-color: black; border-radius: 18px;
             transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-            pointer-events: auto;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8px; box-sizing: border-box;
-            overflow: hidden;
+            pointer-events: auto; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 8px; box-sizing: border-box; overflow: hidden;
         }
-        #dynamic-island.music-active { width: 220px; }
+        #dynamic-island.music-active { width: 55vw; max-width: 220px; } /* 优化2.2 */
         .island-content { color: white; font-size: 13px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #dynamic-island.music-active .island-content { opacity: 1; }
         .island-music-info { flex-grow: 1; text-align: left; padding: 0 5px; }
@@ -99,7 +92,7 @@
         #main-content { flex-grow: 1; padding: 80px 20px 20px 20px; }
         #app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; justify-items: center; }
         .app-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; cursor: pointer; width: 70px; }
-        .app-icon .icon { width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.9); border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s ease-in-out; }
+        .app-icon .icon { width: 60px; height: 60px; background-color: rgba(255, 255, 255, 0.9); border-radius: 15px; display: flex; justify-content: center; align-items: center; font-size: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.1s ease-in-out; background-size: cover; background-position: center; }
         .app-icon:active .icon { transform: scale(0.9); }
         .app-icon .label { color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
 
@@ -114,6 +107,11 @@
         .app-header .title { flex-grow: 1; text-align: center; font-size: 17px; font-weight: 600; }
         .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
         .app-content { flex-grow: 1; overflow-y: auto; }
+        .app-footer-tabs { display: flex; border-top: 1px solid var(--border-color); background-color: var(--app-screen-bg); flex-shrink: 0; }
+        .app-footer-tabs .tab-item { flex: 1; padding: 10px; text-align: center; cursor: pointer; color: var(--secondary-text-color); border-top: 2px solid transparent; }
+        .app-footer-tabs .tab-item.active { color: var(--accent-color); border-top-color: var(--accent-color); }
+        .app-tab-content { display: none; }
+        .app-tab-content.active { display: block; }
 
         /* --- 设置 APP 特定样式 --- */
         .settings-group { margin-bottom: 25px; padding: 0 20px; }
@@ -143,25 +141,11 @@
         .music-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .music-list-item.playing .music-item-info .title, .music-list-item.playing .music-item-info .artist { color: var(--accent-color); }
 
-        /* --- 浮动歌词 --- */
+        /* --- 浮动歌词 & 播放器 --- */
         #lyrics-container { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         #lyrics-container.visible { opacity: 1; visibility: visible; }
         #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
-
-        /* --- 全新播放器模态框 --- */
-        #player-modal {
-            position: absolute; top: 50%; left: 50%;
-            width: 80%; max-width: 300px; height: 45%; max-height: 400px;
-            transform: translate(-50%, -50%) scale(0.9);
-            background-color: rgba(20, 20, 20, 0.7);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 20px;
-            z-index: 150;
-            display: flex; flex-direction: column;
-            color: white;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
-        }
+        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
         #player-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; }
@@ -172,7 +156,7 @@
         .player-body { flex-grow: 1; overflow: hidden; position: relative; }
         .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .player-view.active { opacity: 1; pointer-events: auto; }
-        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; }
+        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; display: flex; flex-direction: column; justify-content: center; } /* 优化① */
         .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; }
         .player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
         .player-playlist-view { list-style: none; padding: 0; margin: 0; }
@@ -188,8 +172,24 @@
         #progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; }
         #progress-bar::-moz-range-thumb { width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; }
         .player-controls { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
-        .player-controls .icon-btn svg { width: 24px; height: 24px; fill: white; }
-        .player-controls .play-pause-btn svg { width: 40px; height: 40px; }
+        .player-controls .icon-btn svg { width: 22px; height: 22px; fill: white; } /* 优化② */
+        .player-controls .play-pause-btn svg { width: 38px; height: 38px; } /* 优化② */
+
+        /* --- 美化 APP --- */
+        #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; }
+        .wallpaper-item { aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; position: relative; }
+        .wallpaper-item::after { content: '✓'; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background-color: var(--accent-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; transform: scale(0); transition: transform 0.2s; }
+        #wallpaper-view.selection-mode .wallpaper-item.selected::after { transform: scale(1); }
+        #font-list { list-style: none; padding: 0; margin: 0; }
+        .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
+        .font-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; }
+        .font-item-content.active { color: var(--accent-color); font-weight: bold; }
+        .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; padding: 15px; }
+        .icon-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .icon-item .icon-preview { width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 24px; background-size: cover; background-position: center; }
+        .icon-item .icon-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
 
         /* --- 弹窗/模态框样式 --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
@@ -206,20 +206,24 @@
         .modal-actions button { flex: 1; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; }
         .modal-actions .confirm-btn { background-color: var(--accent-color); color: white; }
         .modal-actions .cancel-btn { background-color: #e5e5ea; color: var(--accent-color); }
-        #add-music-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .modal-options-list button { display: block; width: 100%; padding: 12px; font-size: 16px; border: none; background: none; text-align: center; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        .modal-options-list button:last-child { border-bottom: none; }
+        .modal-options-list button.danger { color: var(--danger-color); }
+        #chat-bg-select-list { max-height: 200px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px; }
+        .char-select-item { display: flex; align-items: center; padding: 8px; cursor: pointer; }
+        .char-select-item input[type="checkbox"] { margin-right: 10px; }
+        .tab-btn-container { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--secondary-text-color); border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        #tab-content-url #music-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; } /* 优化2.③ */
-        #add-music-modal .modal-actions .single-button { flex: none; width: 100%; } /* 优化2.① */
-
+        
         /* --- 预设管理列表 --- */
         #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
         .preset-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .preset-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: grab; position: relative; z-index: 2; }
-        .preset-item-actions, .music-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
-        .preset-item-actions > div, .music-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .preset-item-actions, .music-item-actions, .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .edit-action { background-color: var(--edit-color); }
         .delete-action { background-color: var(--danger-color); }
         
@@ -248,19 +252,19 @@
         <!-- 主屏幕APP图标 -->
         <div id="main-content">
             <div id="app-grid">
-                <div class="app-icon"><div class="icon">💬</div><span class="label">聊天</span></div>
+                <div class="app-icon" id="chat-app-btn"><div class="icon">💬</div><span class="label">聊天</span></div>
                 <div class="app-icon" id="music-app-btn"><div class="icon">🎵</div><span class="label">音乐</span></div>
-                <div class="app-icon"><div class="icon">🛒</div><span class="label">购物</span></div>
-                <div class="app-icon"><div class="icon">📔</div><span class="label">日记</span></div>
-                <div class="app-icon"><div class="icon">✉️</div><span class="label">信箱</span></div>
+                <div class="app-icon" id="shop-app-btn"><div class="icon">🛒</div><span class="label">购物</span></div>
+                <div class="app-icon" id="diary-app-btn"><div class="icon">📔</div><span class="label">日记</span></div>
+                <div class="app-icon" id="mail-app-btn"><div class="icon">✉️</div><span class="label">信箱</span></div>
             </div>
         </div>
 
         <!-- 底部Dock栏 -->
         <div id="dock">
             <div class="app-icon" id="settings-app-btn"><div class="icon">⚙️</div></div>
-            <div class="app-icon"><div class="icon">🎨</div></div>
-            <div class="app-icon"><div class="icon">✨</div></div>
+            <div class="app-icon" id="beautify-app-btn"><div class="icon">🎨</div></div>
+            <div class="app-icon" id="ai-app-btn"><div class="icon">✨</div></div>
         </div>
 
         <!-- 设置APP界面 -->
@@ -279,9 +283,35 @@
             <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">音乐</h2><button class="action-btn" id="add-music-btn">+</button></div>
             <div class="app-content" style="padding:0;"><ul id="music-list"></ul></div>
         </div>
+
+        <!-- 美化APP界面 -->
+        <div id="beautify-app-screen" class="app-screen">
+            <div class="app-header">
+                <button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button>
+                <h2 class="title">美化</h2>
+                <button class="action-btn" id="beautify-action-btn">+</button>
+            </div>
+            <div class="app-content">
+                <div id="wallpaper-view" class="app-tab-content active">
+                    <div id="wallpaper-grid"></div>
+                </div>
+                <div id="font-view" class="app-tab-content">
+                    <div class="button-group" style="padding: 10px;"><button id="change-font-color-btn" class="settings-button secondary">修改字体颜色</button></div>
+                    <ul id="font-list"></ul>
+                </div>
+                <div id="icon-view" class="app-tab-content">
+                    <div id="icon-grid"></div>
+                </div>
+            </div>
+            <div class="app-footer-tabs" id="beautify-tabs">
+                <div class="tab-item active" data-tab="wallpaper-view">壁纸</div>
+                <div class="tab-item" data-tab="font-view">字体</div>
+                <div class="tab-item" data-tab="icon-view">图标</div>
+            </div>
+        </div>
     </div>
 
-    <!-- 浮动歌词 & 全新播放器 -->
+    <!-- 浮动歌词 & 播放器 -->
     <div id="lyrics-container"><div id="lyrics-line">...</div></div>
     <div id="player-modal">
         <div class="player-header">
@@ -310,8 +340,13 @@
     <!-- 弹窗集合 -->
     <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 10px;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions"><button id="close-manage-modal-btn" class="cancel-btn">关闭</button></div></div></div>
     <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions"><button id="cancel-edit-btn" class="cancel-btn">取消</button><button id="save-edit-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/mpeg,audio/wav,audio/flac,audio/aac,audio/ogg,audio/wma,audio/ape,audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions"><button id="cancel-add-music-btn" class="cancel-btn single-button">取消</button></div></div></div>
+    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div class="tab-btn-container"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions"><button id="cancel-add-music-btn" class="cancel-btn single-button">取消</button></div></div></div>
     <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions"><button id="cancel-edit-song-btn" class="cancel-btn">取消</button><button id="save-edit-song-btn" class="confirm-btn">保存</button></div></div></div>
+    <div id="wallpaper-options-modal" class="modal-overlay"><div class="modal-content"><div class="modal-options-list"><button id="set-as-wallpaper-btn">设为壁纸</button><button id="set-as-chat-bg-btn">设为背景</button><button id="cancel-wallpaper-options-btn" class="danger">取消</button></div></div></div>
+    <div id="chat-bg-select-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择聊天背景</h3><div class="modal-body"><div id="chat-bg-select-list"></div></div><div class="modal-actions"><button id="cancel-chat-bg-select-btn" class="cancel-btn">取消</button><button id="confirm-chat-bg-select-btn" class="confirm-btn">确认</button></div></div></div>
+    <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div class="tab-btn-container"><button class="tab-btn active" data-tab="font-upload">上传</button><button class="tab-btn" data-tab="font-url">URL</button></div><div id="tab-content-font-upload" class="tab-content active"><button id="upload-font-btn" class="settings-button">选择字体文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="tab-content"><textarea id="font-url-input" rows="5" placeholder="每行一条，格式：&#10;字体名称:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions"><button id="cancel-add-font-btn" class="cancel-btn single-button">取消</button></div></div></div>
+    <div id="font-color-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">修改字体颜色</h3><div class="modal-body"><div class="form-group"><label for="font-color-input">输入色号 (例如 #RRGGBB)</label><input type="text" id="font-color-input"></div></div><div class="modal-actions"><button id="cancel-font-color-btn" class="cancel-btn">取消</button><button id="save-font-color-btn" class="confirm-btn">保存</button></div></div></div>
+    <div id="change-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">更换图标</h3><div class="modal-body"><div class="tab-btn-container"><button class="tab-btn active" data-tab="icon-upload">上传</button><button class="tab-btn" data-tab="icon-url">URL</button></div><div id="tab-content-icon-upload" class="tab-content active"><button id="upload-icon-btn" class="settings-button">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="tab-content"><input type="text" id="icon-url-input" placeholder="输入图片链接"><button id="confirm-add-icon-url-btn" class="settings-button" style="margin-top:10px;">确认</button></div></div><div class="modal-actions"><button id="cancel-change-icon-btn" class="cancel-btn single-button">取消</button></div></div></div>
     
     <div id="toast"></div>
 
@@ -328,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const batteryIconEl = getEl('battery-icon');
     const toastEl = getEl('toast');
     const phoneScreen = getEl('phone-screen');
+    const root = document.documentElement;
 
     // --- 灵动岛 & 通知 ---
     const dynamicIsland = getEl('dynamic-island');
@@ -340,6 +376,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsAppScreen = getEl('settings-app-screen');
     const musicAppBtn = getEl('music-app-btn');
     const musicAppScreen = getEl('music-app-screen');
+    const beautifyAppBtn = getEl('beautify-app-btn');
+    const beautifyAppScreen = getEl('beautify-app-screen');
 
     // --- 设置 APP ---
     const apiUrlInput = getEl('api-url');
@@ -398,135 +436,96 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNextBtn = getEl('player-next-btn');
     const playerPlaybackModeBtn = getEl('player-playback-mode-btn');
 
+    // --- 美化 APP ---
+    const beautifyActionBtn = getEl('beautify-action-btn');
+    const beautifyTabs = getEl('beautify-tabs');
+    const wallpaperView = getEl('wallpaper-view');
+    const wallpaperGrid = getEl('wallpaper-grid');
+    const fontView = getEl('font-view');
+    const fontListEl = getEl('font-list');
+    const iconView = getEl('icon-view');
+    const iconGrid = getEl('icon-grid');
+    const wallpaperOptionsModal = getEl('wallpaper-options-modal');
+    const setAsWallpaperBtn = getEl('set-as-wallpaper-btn');
+    const setAsChatBgBtn = getEl('set-as-chat-bg-btn');
+    const cancelWallpaperOptionsBtn = getEl('cancel-wallpaper-options-btn');
+    const chatBgSelectModal = getEl('chat-bg-select-modal');
+    const chatBgSelectList = getEl('chat-bg-select-list');
+    const cancelChatBgSelectBtn = getEl('cancel-chat-bg-select-btn');
+    const confirmChatBgSelectBtn = getEl('confirm-chat-bg-select-btn');
+    const addFontModal = getEl('add-font-modal');
+    const uploadFontBtn = getEl('upload-font-btn');
+    const fontFileInput = getEl('font-file-input');
+    const fontUrlInput = getEl('font-url-input');
+    const confirmAddFontUrlBtn = getEl('confirm-add-font-url-btn');
+    const cancelAddFontBtn = getEl('cancel-add-font-btn');
+    const changeFontColorBtn = getEl('change-font-color-btn');
+    const fontColorModal = getEl('font-color-modal');
+    const fontColorInput = getEl('font-color-input');
+    const saveFontColorBtn = getEl('save-font-color-btn');
+    const cancelFontColorBtn = getEl('cancel-font-color-btn');
+    const changeIconModal = getEl('change-icon-modal');
+    const uploadIconBtn = getEl('upload-icon-btn');
+    const iconFileInput = getEl('icon-file-input');
+    const iconUrlInput = getEl('icon-url-input');
+    const confirmAddIconUrlBtn = getEl('confirm-add-icon-url-btn');
+    const cancelChangeIconBtn = getEl('cancel-change-icon-btn');
+
     // --- SVG 图标 ---
-    const svgIcons = {
-        play: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333v853.333334l640-426.666667-640-426.666667z"></path></svg>',
-        pause: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333h256v853.333334H213.333333V85.333333z m341.333334 0h256v853.333334H554.666667V85.333333z"></path></svg>',
-        repeat: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256z"></path></svg>',
-        repeatOne: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256zM554.666667 469.333333h-128v-85.333333l-170.666667 128 170.666667 128v-85.333333h85.333333v170.666667h85.333333V469.333333h-42.666666z"></path></svg>',
-        shuffle: '<svg viewBox="0 0 1024 1024"><path d="M128 256l170.666667 170.666667L128 597.333333V256z m768 341.333333l-170.666667-170.666666L896 256v341.333333zM128 768h170.666667l512-512H640l-85.333333 85.333333h170.666666L213.333333 853.333333H384l85.333333-85.333333H128v-85.333333z"></path></svg>'
-    };
+    const svgIcons = { play: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333v853.333334l640-426.666667-640-426.666667z"></path></svg>', pause: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333h256v853.333334H213.333333V85.333333z m341.333334 0h256v853.333334H554.666667V85.333333z"></path></svg>', repeat: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256z"></path></svg>', repeatOne: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256zM554.666667 469.333333h-128v-85.333333l-170.666667 128 170.666667 128v-85.333333h85.333333v170.666667h85.333333V469.333333h-42.666666z"></path></svg>', shuffle: '<svg viewBox="0 0 1024 1024"><path d="M128 256l170.666667 170.666667L128 597.333333V256z m768 341.333333l-170.666667-170.666666L896 256v341.333333zM128 768h170.666667l512-512H640l-85.333333 85.333333h170.666666L213.333333 853.333333H384l85.333333-85.333333H128v-85.333333z"></path></svg>' };
 
     // --- 全局状态管理 ---
     const DB_KEY = 'EmperorPhoneData';
-    let appState = {
-        settings: {
-            apiUrl: '', apiKey: '', selectedModel: '',
-            availableModels: [], presets: []
-        },
-        music: {
-            playlist: [],
-            queue: [], // The current playback queue
-            lyrics: {}, // { songId: parsedLrcData }
-            currentQueueIndex: -1,
-            playbackMode: 'repeat', // 'repeat', 'repeat-one', 'shuffle'
-            lyricsPosition: { top: '100px', left: '50%' }
+    let appState = {};
+    const defaultState = {
+        settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
+        music: { playlist: [], queue: [], lyrics: {}, currentQueueIndex: -1, playbackMode: 'repeat', lyricsPosition: { top: '100px', left: '50%' } },
+        beautify: {
+            wallpapers: [],
+            fonts: [],
+            icons: {
+                'chat-app-btn': { name: '主界面-聊天', url: '' }, 'music-app-btn': { name: '主界面-音乐', url: '' }, 'shop-app-btn': { name: '主界面-购物', url: '' }, 'diary-app-btn': { name: '主界面-日记', url: '' }, 'mail-app-btn': { name: '主界面-信箱', url: '' },
+                'settings-app-btn': { name: 'Dock-设置', url: '' }, 'beautify-app-btn': { name: 'Dock-美化', url: '' }, 'ai-app-btn': { name: 'Dock-AI', url: '' }
+            },
+            activeWallpaperUrl: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302',
+            activeFont: { name: 'default' },
+            fontColor: '#000000'
         }
     };
 
     // ===================================================================
     // --- 状态保存与加载 ---
     // ===================================================================
-    function saveState() {
-        try {
-            const stateToSave = JSON.parse(JSON.stringify(appState));
-            stateToSave.music.playlist = stateToSave.music.playlist.filter(song => !song.isLocal);
-            stateToSave.music.queue = stateToSave.music.queue.filter(song => !song.isLocal);
-            localStorage.setItem(DB_KEY, JSON.stringify(stateToSave));
-        } catch (error) {
-            console.error("保存状态失败:", error);
-            showToast("保存数据失败！", 'error');
-        }
-    }
-
+    function saveState() { try { localStorage.setItem(DB_KEY, JSON.stringify(appState)); } catch (error) { console.error("保存状态失败:", error); showToast("保存数据失败！", 'error'); } }
     function loadState() {
         const savedStateJSON = localStorage.getItem(DB_KEY);
         if (savedStateJSON) {
             const savedState = JSON.parse(savedStateJSON);
-            appState = {
-                ...appState,
-                ...savedState,
-                settings: { ...appState.settings, ...savedState.settings },
-                music: { ...appState.music, ...savedState.music }
+            appState = { ...defaultState, ...savedState,
+                settings: { ...defaultState.settings, ...savedState.settings },
+                music: { ...defaultState.music, ...savedState.music },
+                beautify: { ...defaultState.beautify, ...savedState.beautify }
             };
-            if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
-            if (!Array.isArray(appState.music.playlist)) appState.music.playlist = [];
-            if (!Array.isArray(appState.music.queue)) appState.music.queue = [];
-        }
+        } else { appState = JSON.parse(JSON.stringify(defaultState)); }
         updateUIFromState();
     }
-
     function updateUIFromState() {
-        apiUrlInput.value = appState.settings.apiUrl || '';
-        apiKeyInput.value = appState.settings.apiKey || '';
-        updateModelSelect();
-        updatePresetSelect();
-        renderMusicList();
-        updatePlaybackModeIcon();
-        lyricsContainer.style.top = appState.music.lyricsPosition.top;
-        lyricsContainer.style.left = appState.music.lyricsPosition.left;
-        lyricsContainer.style.transform = `translateX(-50%)`;
+        apiUrlInput.value = appState.settings.apiUrl || ''; apiKeyInput.value = appState.settings.apiKey || '';
+        updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon();
+        lyricsContainer.style.top = appState.music.lyricsPosition.top; lyricsContainer.style.left = appState.music.lyricsPosition.left; lyricsContainer.style.transform = `translateX(-50%)`;
+        applyWallpaper(appState.beautify.activeWallpaperUrl); applyFont(appState.beautify.activeFont); applyFontColor(appState.beautify.fontColor); applyAllIcons();
     }
 
     // ===================================================================
     // --- 基础 UI & 系统功能 ---
     // ===================================================================
-    function updateTime() {
-        const now = new Date();
-        timeEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    }
-
-    async function updateBattery() {
-        try {
-            if ('getBattery' in navigator) {
-                const battery = await navigator.getBattery();
-                const update = () => {
-                    const level = Math.floor(battery.level * 100);
-                    batteryLevelEl.textContent = `${level}%`;
-                    batteryIconEl.textContent = battery.charging ? '⚡️' : (level > 20 ? '🔋' : '🪫');
-                };
-                update();
-                battery.addEventListener('levelchange', update);
-                battery.addEventListener('chargingchange', update);
-            } else {
-                batteryLevelEl.textContent = 'N/A'; batteryIconEl.textContent = '❔';
-            }
-        } catch (error) {
-            console.error("获取电池信息失败:", error);
-            batteryLevelEl.textContent = 'N/A'; batteryIconEl.textContent = '❔';
-        }
-    }
-
+    function updateTime() { const now = new Date(); timeEl.textContent = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`; }
+    async function updateBattery() { try { if ('getBattery' in navigator) { const battery = await navigator.getBattery(); const update = () => { const level = Math.floor(battery.level * 100); batteryLevelEl.textContent = `${level}%`; batteryIconEl.textContent = battery.charging ? '⚡️' : (level > 20 ? '🔋' : '🪫'); }; update(); battery.addEventListener('levelchange', update); battery.addEventListener('chargingchange', update); } else { batteryLevelEl.textContent = 'N/A'; batteryIconEl.textContent = '❔'; } } catch (error) { console.error("获取电池信息失败:", error); batteryLevelEl.textContent = 'N/A'; batteryIconEl.textContent = '❔'; } }
     window.openApp = (appScreen) => appScreen.classList.add('active');
     window.closeCurrentApp = () => document.querySelector('.app-screen.active')?.classList.remove('active');
-
     let toastTimer;
-    function showToast(message, type = 'info') {
-        toastEl.textContent = message;
-        toastEl.className = `show ${type}`;
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500);
-    }
-
-    function showNotification(message) {
-        const banner = document.createElement('div');
-        banner.className = 'notification-banner';
-        banner.textContent = message;
-        notificationContainer.appendChild(banner);
-        setTimeout(() => banner.classList.add('show'), 50);
-        let startY, currentY, isDragging = false;
-        const dismiss = () => {
-            banner.style.transition = 'transform 0.3s ease-out';
-            banner.style.transform = 'translateY(-150%)';
-            banner.addEventListener('transitionend', () => banner.remove(), { once: true });
-        };
-        const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; };
-        const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } };
-        const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } };
-        banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd);
-        banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd);
-        setTimeout(dismiss, 5000);
-    }
+    function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
+    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
 
     // ===================================================================
     // --- 设置 APP (无变更) ---
@@ -546,365 +545,64 @@ document.addEventListener('DOMContentLoaded', () => {
     presetListEl.addEventListener('click', (e) => { const item = e.target.closest('.preset-list-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.classList.contains('delete-action')) { if (confirm(`确定要删除预设 "${appState.settings.presets[index].name}" 吗？`)) { appState.settings.presets.splice(index, 1); saveState(); renderPresetList(); updatePresetSelect(); showToast("预设已删除"); } } else if (e.target.classList.contains('edit-action')) { const preset = appState.settings.presets[index]; editPresetIndexInput.value = index; editPresetNameInput.value = preset.name; editPresetUrlInput.value = preset.url; editPresetKeyInput.value = preset.key; editPresetModal.classList.add('visible'); } });
     cancelEditBtn.addEventListener('click', () => editPresetModal.classList.remove('visible'));
     saveEditBtn.addEventListener('click', () => { const index = parseInt(editPresetIndexInput.value); const newName = editPresetNameInput.value.trim(); if (!newName) return showToast("预设名称不能为空", "error"); const existingIndex = appState.settings.presets.findIndex(p => p.name === newName); if (existingIndex !== -1 && existingIndex !== index) { if (!confirm(`已存在名为 "${newName}" 的预设，要覆盖它吗？`)) return; appState.settings.presets.splice(existingIndex, 1); const newCurrentIndex = appState.settings.presets.findIndex(p => p.name === appState.settings.presets[index].name); appState.settings.presets[newCurrentIndex] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[newCurrentIndex].model }; } else { appState.settings.presets[index] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[index].model }; } saveState(); updatePresetSelect(); renderPresetList(); editPresetModal.classList.remove('visible'); showToast("预设已更新"); });
-    exportDataBtn.addEventListener('click', () => { try { const stateToExport = JSON.parse(JSON.stringify(appState)); stateToExport.music.playlist = stateToExport.music.playlist.filter(song => !song.isLocal); const dataStr = JSON.stringify(stateToExport, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
+    exportDataBtn.addEventListener('click', () => { try { const dataStr = JSON.stringify(appState, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
     importDataBtn.addEventListener('click', () => importFileInput.click());
-    importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
+    importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
     // ===================================================================
-    // --- 音乐播放器核心 ---
+    // --- 音乐播放器核心 (无变更) ---
     // ===================================================================
-    function playSongFromQueue(queueIndex) {
-        if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return;
-        appState.music.currentQueueIndex = queueIndex;
-        const song = appState.music.queue[queueIndex];
-        audioPlayer.src = song.url;
-        audioPlayer.play().catch(e => console.error("播放失败:", e));
-        updateAllPlayerUI(song);
-    }
-
-    function stopPlayback() {
-        audioPlayer.pause();
-        audioPlayer.src = '';
-        appState.music.currentQueueIndex = -1;
-        updateDynamicIsland(false);
-        lyricsContainer.classList.remove('visible');
-        playerModal.classList.remove('show');
-        updateMusicListPlayingStatus();
-    }
-
-    function togglePlayPause() {
-        if (audioPlayer.paused) {
-            if (appState.music.currentQueueIndex === -1 && appState.music.queue.length > 0) {
-                playSongFromQueue(0);
-            } else {
-                audioPlayer.play();
-            }
-        } else {
-            audioPlayer.pause();
-        }
-    }
-
-    function playNext() {
-        const { currentQueueIndex, queue, playbackMode } = appState.music;
-        if (queue.length === 0) return;
-        let nextIndex;
-        if (playbackMode === 'shuffle') {
-            nextIndex = Math.floor(Math.random() * queue.length);
-        } else {
-            nextIndex = (currentQueueIndex + 1) % queue.length;
-        }
-        playSongFromQueue(nextIndex);
-    }
-
-    function playPrev() {
-        const { currentQueueIndex, queue, playbackMode } = appState.music;
-        if (queue.length === 0) return;
-        let prevIndex;
-        if (playbackMode === 'shuffle') {
-            prevIndex = Math.floor(Math.random() * queue.length);
-        } else {
-            prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length;
-        }
-        playSongFromQueue(prevIndex);
-    }
-
-    function togglePlaybackMode() {
-        const modes = ['repeat', 'repeat-one', 'shuffle'];
-        const currentModeIndex = modes.indexOf(appState.music.playbackMode);
-        appState.music.playbackMode = modes[(currentModeIndex + 1) % modes.length];
-        updatePlaybackModeIcon();
-        saveState();
-    }
-
-    function updatePlaybackModeIcon() {
-        const icons = { 'repeat': svgIcons.repeat, 'repeat-one': svgIcons.repeatOne, 'shuffle': svgIcons.shuffle };
-        playerPlaybackModeBtn.innerHTML = icons[appState.music.playbackMode];
-    }
-
-    audioPlayer.addEventListener('play', () => {
-        playerPlayPauseBtn.innerHTML = svgIcons.pause;
-        islandWaveform.classList.remove('paused');
-    });
-    audioPlayer.addEventListener('pause', () => {
-        playerPlayPauseBtn.innerHTML = svgIcons.play;
-        islandWaveform.classList.add('paused');
-    });
-    audioPlayer.addEventListener('ended', () => {
-        if (appState.music.playbackMode === 'repeat-one') {
-            playSongFromQueue(appState.music.currentQueueIndex);
-        } else {
-            playNext();
-        }
-    });
-    audioPlayer.addEventListener('loadedmetadata', () => {
-        const song = appState.music.queue[appState.music.currentQueueIndex];
-        if (song && isNaN(song.duration)) {
-            song.duration = audioPlayer.duration;
-            const mainPlaylistSong = appState.music.playlist.find(s => s.id === song.id);
-            if (mainPlaylistSong) mainPlaylistSong.duration = audioPlayer.duration;
-            renderMusicList();
-        }
-        progressBar.max = audioPlayer.duration;
-    });
-    audioPlayer.addEventListener('timeupdate', () => {
-        progressBar.value = audioPlayer.currentTime;
-        updateLyrics(audioPlayer.currentTime);
-    });
-    progressBar.addEventListener('input', () => {
-        audioPlayer.currentTime = progressBar.value;
-    });
+    function playSongFromQueue(queueIndex) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); }
+    function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); }
+    function togglePlayPause() { if (audioPlayer.paused) { if (appState.music.currentQueueIndex === -1 && appState.music.queue.length > 0) { playSongFromQueue(0); } else { audioPlayer.play(); } } else { audioPlayer.pause(); } }
+    function playNext() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let nextIndex; if (playbackMode === 'shuffle') { nextIndex = Math.floor(Math.random() * queue.length); } else { nextIndex = (currentQueueIndex + 1) % queue.length; } playSongFromQueue(nextIndex); }
+    function playPrev() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let prevIndex; if (playbackMode === 'shuffle') { prevIndex = Math.floor(Math.random() * queue.length); } else { prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length; } playSongFromQueue(prevIndex); }
+    function togglePlaybackMode() { const modes = ['repeat', 'repeat-one', 'shuffle']; const currentModeIndex = modes.indexOf(appState.music.playbackMode); appState.music.playbackMode = modes[(currentModeIndex + 1) % modes.length]; updatePlaybackModeIcon(); saveState(); }
+    function updatePlaybackModeIcon() { const icons = { 'repeat': svgIcons.repeat, 'repeat-one': svgIcons.repeatOne, 'shuffle': svgIcons.shuffle }; playerPlaybackModeBtn.innerHTML = icons[appState.music.playbackMode]; }
+    audioPlayer.addEventListener('play', () => { playerPlayPauseBtn.innerHTML = svgIcons.pause; islandWaveform.classList.remove('paused'); });
+    audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.innerHTML = svgIcons.play; islandWaveform.classList.add('paused'); });
+    audioPlayer.addEventListener('ended', () => { if (appState.music.playbackMode === 'repeat-one') { playSongFromQueue(appState.music.currentQueueIndex); } else { playNext(); } });
+    audioPlayer.addEventListener('loadedmetadata', () => { const song = appState.music.queue[appState.music.currentQueueIndex]; if (song && isNaN(song.duration)) { song.duration = audioPlayer.duration; const mainPlaylistSong = appState.music.playlist.find(s => s.id === song.id); if (mainPlaylistSong) mainPlaylistSong.duration = audioPlayer.duration; renderMusicList(); } progressBar.max = audioPlayer.duration; });
+    audioPlayer.addEventListener('timeupdate', () => { progressBar.value = audioPlayer.currentTime; updateLyrics(audioPlayer.currentTime); });
+    progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI ---
+    // --- 音乐 APP UI (无变更) ---
     // ===================================================================
     musicAppBtn.addEventListener('click', () => openApp(musicAppScreen));
-
-    function formatTime(seconds) {
-        if (isNaN(seconds)) return '--:--';
-        const min = Math.floor(seconds / 60);
-        const sec = Math.floor(seconds % 60);
-        return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-    }
-
-    function renderMusicList() {
-        musicListEl.innerHTML = '';
-        if (appState.music.playlist.length === 0) {
-            musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>';
-            return;
-        }
-        appState.music.playlist.forEach((song, index) => {
-            const li = document.createElement('li');
-            li.className = 'music-list-item';
-            li.dataset.id = song.id;
-            li.innerHTML = `
-                <div class="music-item-content">
-                    <div class="music-item-info">
-                        <span class="title">${song.title}</span>
-                        <span class="artist">${song.artist}</span>
-                    </div>
-                    <div class="music-item-duration">${formatTime(song.duration)}</div>
-                </div>
-                <div class="music-item-actions">
-                    <div class="edit-action">编辑</div>
-                    <div class="delete-action">删除</div>
-                </div>
-            `;
-            musicListEl.appendChild(li);
-        });
-        updateMusicListPlayingStatus();
-    }
-
-    function updateMusicListPlayingStatus() {
-        const currentSong = appState.music.queue[appState.music.currentQueueIndex];
-        queryAll('.music-list-item').forEach(item => {
-            item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id);
-        });
-    }
-
-    musicListEl.addEventListener('click', (e) => {
-        const content = e.target.closest('.music-item-content');
-        if (content) {
-            const songId = content.parentElement.dataset.id;
-            const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex];
-            if (currentPlayingSong && currentPlayingSong.id === songId) {
-                stopPlayback();
-            } else {
-                const songIndex = appState.music.playlist.findIndex(s => s.id === songId);
-                if (songIndex > -1) {
-                    appState.music.queue = [...appState.music.playlist];
-                    playSongFromQueue(songIndex);
-                }
-            }
-        }
-    });
-
+    function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
+    function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
+    function updateMusicListPlayingStatus() { const currentSong = appState.music.queue[appState.music.currentQueueIndex]; queryAll('.music-list-item').forEach(item => { item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id); }); }
+    musicListEl.addEventListener('click', (e) => { const content = e.target.closest('.music-item-content'); if (content) { const songId = content.parentElement.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); } } } });
     addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
-    getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('.tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
-
-    musicFileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (files.length > 0) {
-            processFiles(files);
-            addMusicModal.classList.remove('visible');
-            musicFileInput.value = '';
-        }
-    });
-
-    confirmAddUrlBtn.addEventListener('click', () => {
-        const lines = musicUrlInput.value.trim().split('\n');
-        let addedCount = 0;
-        for (const line of lines) {
-            if (!line.trim()) continue;
-            const separatorIndex = line.search(/:|：/);
-            if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) continue;
-            
-            const meta = line.substring(0, separatorIndex).trim();
-            const url = line.substring(separatorIndex + 1).trim();
-            
-            const parts = meta.split(' - ');
-            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta;
-            
-            const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false };
-            appState.music.playlist.push(newSong);
-            addedCount++;
-        }
-        musicUrlInput.value = '';
-        if (addedCount > 0) {
-            showToast(`成功添加 ${addedCount} 首歌曲`);
-            renderMusicList();
-            saveState();
-        }
-        addMusicModal.classList.remove('visible');
-    });
-
-    function processFiles(files) {
-        let addedCount = 0;
-        const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc'));
-        for (const file of audioFiles) {
-            const isLrc = file.name.toLowerCase().endsWith('.lrc');
-            const baseName = file.name.replace(/\.[^/.]+$/, "");
-            if (isLrc) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const lrcData = parseLRC(e.target.result);
-                    const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName);
-                    if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } 
-                    else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); }
-                    saveState();
-                };
-                reader.readAsText(file);
-            } else {
-                const parts = baseName.split(' - ');
-                const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-                const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName;
-                const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true };
-                appState.music.playlist.push(newSong);
-                addedCount++;
-            }
-        }
-        if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); }
-    }
-
+    getEl('add-music-modal').querySelector('.tab-btn-container').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; e.target.parentElement.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); e.target.parentElement.parentElement.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
+    musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
+    confirmAddUrlBtn.addEventListener('click', () => { const lines = musicUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; const separatorIndex = line.search(/:|：/); if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) continue; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; } musicUrlInput.value = ''; if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } addMusicModal.classList.remove('visible'); });
+    function processFiles(files) { let addedCount = 0; const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc')); for (const file of audioFiles) { const isLrc = file.name.toLowerCase().endsWith('.lrc'); const baseName = file.name.replace(/\.[^/.]+$/, ""); if (isLrc) { const reader = new FileReader(); reader.onload = (e) => { const lrcData = parseLRC(e.target.result); const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); } saveState(); }; reader.readText(file); } else { const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; } } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 灵动岛 & 歌词 & 播放器 UI ---
+    // --- 灵动岛 & 歌词 & 播放器 UI (无变更) ---
     // ===================================================================
-    function updateAllPlayerUI(song) {
-        updateDynamicIsland(true, song);
-        updateMusicListPlayingStatus();
-        lyricsContainer.classList.add('visible');
-        playerSongTitle.textContent = song.title;
-        playerSongArtist.textContent = song.artist;
-        renderPlayerQueue();
-    }
-
-    function updateDynamicIsland(isPlaying, song) {
-        if (isPlaying && song) {
-            dynamicIsland.classList.add('music-active');
-            islandMusicInfo.querySelector('.title').textContent = song.title;
-            islandMusicInfo.querySelector('.artist').textContent = song.artist;
-        } else {
-            dynamicIsland.classList.remove('music-active');
-        }
-    }
-
+    function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
+    function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
     function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) { result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
-
     let currentLyricIndex = -1;
-    function updateLyrics(currentTime) {
-        const song = appState.music.queue[appState.music.currentQueueIndex];
-        if (!song) return;
-        const lyrics = appState.music.lyrics[song.id];
-        if (!lyrics || lyrics.length === 0) {
-            lyricsLine.textContent = '♪ ♪ ♪';
-            playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>';
-            return;
-        }
-        let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time));
-        if (newLyricIndex === -1) newLyricIndex = 0;
-        if (newLyricIndex !== currentLyricIndex) {
-            currentLyricIndex = newLyricIndex;
-            lyricsLine.textContent = lyrics[currentLyricIndex].text;
-            renderPlayerLyrics(lyrics, currentLyricIndex);
-        }
-    }
-
-    function renderPlayerLyrics(lyrics, activeIndex) {
-        playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join('');
-        const activeLine = playerLyricsView.querySelector('.lyric-line.active');
-        if (activeLine) {
-            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
+    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; lyricsLine.textContent = lyrics[currentLyricIndex].text; renderPlayerLyrics(lyrics, currentLyricIndex); } }
+    function renderPlayerLyrics(lyrics, activeIndex) { playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
     lyricsContainer.addEventListener('click', () => playerModal.classList.add('show'));
     hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
     playerPlayPauseBtn.addEventListener('click', togglePlayPause);
     playerNextBtn.addEventListener('click', playNext);
     playerPrevBtn.addEventListener('click', playPrev);
     playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
-
-    togglePlaylistViewBtn.addEventListener('click', () => {
-        playerLyricsView.classList.toggle('active');
-        playerPlaylistViewContainer.classList.toggle('active');
-    });
-
-    function renderPlayerQueue() {
-        playerPlaylistView.innerHTML = '';
-        appState.music.queue.forEach((song, index) => {
-            const li = document.createElement('li');
-            li.className = 'player-playlist-item';
-            li.classList.toggle('playing', index === appState.music.currentQueueIndex);
-            li.dataset.index = index;
-            li.innerHTML = `
-                <div class="info">
-                    <div class="title">${song.title}</div>
-                    <div class="artist">${song.artist}</div>
-                </div>
-                <button class="icon-btn delete-from-queue-btn">
-                    <svg viewBox="0 0 1024 1024"><path d="M213.333333 298.666667h597.333334v85.333333H213.333333v-85.333333z m85.333334 128h426.666666v469.333333H298.666667V426.666667z m128-213.333334h170.666666v85.333334H426.666667v-85.333334zM128 298.666667v-85.333334h768v85.333334H128z"></path></svg>
-                </button>
-            `;
-            playerPlaylistView.appendChild(li);
-        });
-    }
-
-    playerPlaylistView.addEventListener('click', (e) => {
-        const item = e.target.closest('.player-playlist-item');
-        if (!item) return;
-        const index = parseInt(item.dataset.index);
-        if (e.target.closest('.delete-from-queue-btn')) {
-            if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) {
-                appState.music.queue.splice(index, 1);
-                if (index === appState.music.currentQueueIndex) {
-                    if (appState.music.queue.length > 0) {
-                        playSongFromQueue(index % appState.music.queue.length);
-                    } else {
-                        stopPlayback();
-                    }
-                } else if (index < appState.music.currentQueueIndex) {
-                    appState.music.currentQueueIndex--;
-                }
-                renderPlayerQueue();
-                saveState();
-            }
-        } else {
-            playSongFromQueue(index);
-        }
-    });
-
-    restorePlaylistBtn.addEventListener('click', () => {
-        appState.music.queue = [...appState.music.playlist];
-        renderPlayerQueue();
-        saveState();
-        showToast("播放列表已还原");
-    });
-
+    togglePlaylistViewBtn.addEventListener('click', () => { playerLyricsView.classList.toggle('active'); playerPlaylistViewContainer.classList.toggle('active'); });
+    function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="icon-btn delete-from-queue-btn"><svg viewBox="0 0 1024 1024"><path d="M213.333333 298.666667h597.333334v85.333333H213.333333v-85.333333z m85.333334 128h426.666666v469.333333H298.666667V426.666667z m128-213.333334h170.666666v85.333334H426.666667v-85.333334zM128 298.666667v-85.333334h768v85.333334H128z"></path></svg></button>`; playerPlaylistView.appendChild(li); }); }
+    playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); saveState(); } } else { playSongFromQueue(index); } });
+    restorePlaylistBtn.addEventListener('click', () => { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); saveState(); showToast("播放列表已还原"); });
     let isDraggingLyrics = false, offsetX, offsetY;
     const handleLyricsDragStart = (e) => { isDraggingLyrics = true; lyricsContainer.style.cursor = 'grabbing'; const rect = lyricsContainer.getBoundingClientRect(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; offsetX = clientX - rect.left; offsetY = clientY - rect.top; };
     const handleLyricsDragMove = (e) => { if (!isDraggingLyrics) return; e.preventDefault(); const parentRect = phoneScreen.getBoundingClientRect(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; let newTop = clientY - parentRect.top - offsetY; let newLeft = clientX - parentRect.left - offsetX; newTop = Math.max(50, Math.min(newTop, parentRect.height - lyricsContainer.offsetHeight - 20)); newLeft = Math.max(0, Math.min(newLeft, parentRect.width - lyricsContainer.offsetWidth)); lyricsContainer.style.top = `${newTop}px`; lyricsContainer.style.left = `${newLeft}px`; lyricsContainer.style.transform = 'none'; };
@@ -913,7 +611,370 @@ document.addEventListener('DOMContentLoaded', () => {
     lyricsContainer.addEventListener('touchstart', handleLyricsDragStart, { passive: false }); document.addEventListener('touchmove', handleLyricsDragMove, { passive: false }); document.addEventListener('touchend', handleLyricsDragEnd);
 
     // ===================================================================
-    // --- 通用列表滑动交互 (优化版) ---
+    // --- 美化 APP ---
+    // ===================================================================
+    let currentBeautifyTab = 'wallpaper-view';
+    let wallpaperSelectionMode = false;
+    let longPressTimer;
+    let selectedWallpaperId = null;
+    let selectedIconId = null;
+
+    beautifyAppBtn.addEventListener('click', () => {
+        openApp(beautifyAppScreen);
+        renderWallpapers();
+        renderFonts();
+        renderIcons();
+    });
+
+    beautifyTabs.addEventListener('click', (e) => {
+        const tabItem = e.target.closest('.tab-item');
+        if (!tabItem) return;
+        currentBeautifyTab = tabItem.dataset.tab;
+        beautifyTabs.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        tabItem.classList.add('active');
+        beautifyAppScreen.querySelectorAll('.app-tab-content').forEach(c => c.classList.remove('active'));
+        getEl(currentBeautifyTab).classList.add('active');
+        beautifyActionBtn.style.display = (currentBeautifyTab === 'icon-view') ? 'none' : 'block';
+        if (currentBeautifyTab === 'wallpaper-view' && wallpaperSelectionMode) {
+            beautifyActionBtn.textContent = '🗑️';
+        } else {
+            beautifyActionBtn.textContent = '+';
+        }
+    });
+
+    beautifyActionBtn.addEventListener('click', () => {
+        if (currentBeautifyTab === 'wallpaper-view') {
+            if (wallpaperSelectionMode) {
+                deleteSelectedWallpapers();
+            } else {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = handleWallpaperUpload;
+                input.click();
+            }
+        } else if (currentBeautifyTab === 'font-view') {
+            addFontModal.classList.add('visible');
+        }
+    });
+
+    // --- 壁纸功能 ---
+    function renderWallpapers() {
+        wallpaperGrid.innerHTML = '';
+        appState.beautify.wallpapers.forEach(wallpaper => {
+            const item = document.createElement('div');
+            item.className = 'wallpaper-item';
+            item.style.backgroundImage = `url(${wallpaper.url})`;
+            item.dataset.id = wallpaper.id;
+            wallpaperGrid.appendChild(item);
+        });
+    }
+
+    function handleWallpaperUpload(e) {
+        const files = e.target.files;
+        if (files.length === 0) return;
+        let lastFileUrl = null;
+        Array.from(files).forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const newWallpaper = { id: 'wp_' + Date.now() + Math.random(), url: event.target.result };
+                appState.beautify.wallpapers.push(newWallpaper);
+                lastFileUrl = newWallpaper.url;
+                if (index === files.length - 1) {
+                    applyWallpaper(lastFileUrl);
+                    renderWallpapers();
+                    saveState();
+                    showToast(`成功上传 ${files.length} 张壁纸`);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function applyWallpaper(url) {
+        phoneScreen.style.backgroundImage = `url(${url})`;
+        appState.beautify.activeWallpaperUrl = url;
+    }
+
+    function toggleWallpaperSelectionMode(enable) {
+        wallpaperSelectionMode = enable;
+        wallpaperView.classList.toggle('selection-mode', enable);
+        if (enable) {
+            beautifyActionBtn.textContent = '🗑️';
+            showToast('已进入选择模式');
+        } else {
+            beautifyActionBtn.textContent = '+';
+            wallpaperGrid.querySelectorAll('.selected').forEach(item => item.classList.remove('selected'));
+        }
+    }
+
+    function deleteSelectedWallpapers() {
+        const selectedItems = wallpaperGrid.querySelectorAll('.selected');
+        if (selectedItems.length === 0) {
+            showToast('请选择要删除的壁纸');
+            return;
+        }
+        if (confirm(`确定要删除选中的 ${selectedItems.length} 张壁纸吗？`)) {
+            const idsToDelete = Array.from(selectedItems).map(item => item.dataset.id);
+            appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !idsToDelete.includes(wp.id));
+            renderWallpapers();
+            saveState();
+            showToast('壁纸已删除');
+        }
+        toggleWallpaperSelectionMode(false);
+    }
+
+    wallpaperGrid.addEventListener('mousedown', (e) => {
+        if (wallpaperSelectionMode) return;
+        const item = e.target.closest('.wallpaper-item');
+        if (!item) return;
+        longPressTimer = setTimeout(() => {
+            item.classList.add('selected');
+            toggleWallpaperSelectionMode(true);
+        }, 500);
+    });
+    wallpaperGrid.addEventListener('mouseup', () => clearTimeout(longPressTimer));
+    wallpaperGrid.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
+    wallpaperGrid.addEventListener('click', (e) => {
+        const item = e.target.closest('.wallpaper-item');
+        if (!item) return;
+        if (wallpaperSelectionMode) {
+            item.classList.toggle('selected');
+        } else {
+            selectedWallpaperId = item.dataset.id;
+            wallpaperOptionsModal.classList.add('visible');
+        }
+    });
+
+    setAsWallpaperBtn.addEventListener('click', () => {
+        const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === selectedWallpaperId);
+        if (wallpaper) {
+            applyWallpaper(wallpaper.url);
+            saveState();
+            showToast('壁纸已更换');
+        }
+        wallpaperOptionsModal.classList.remove('visible');
+    });
+    setAsChatBgBtn.addEventListener('click', () => {
+        wallpaperOptionsModal.classList.remove('visible');
+        // 预留功能，目前只显示一个示例
+        chatBgSelectList.innerHTML = `
+            <label class="char-select-item"><input type="checkbox" value="char1"> 角色A</label>
+            <label class="char-select-item"><input type="checkbox" value="char2"> 角色B</label>
+        `;
+        chatBgSelectModal.classList.add('visible');
+    });
+    cancelWallpaperOptionsBtn.addEventListener('click', () => wallpaperOptionsModal.classList.remove('visible'));
+    cancelChatBgSelectBtn.addEventListener('click', () => chatBgSelectModal.classList.remove('visible'));
+    confirmChatBgSelectBtn.addEventListener('click', () => {
+        showToast('聊天背景已设置（功能开发中）');
+        chatBgSelectModal.classList.remove('visible');
+    });
+
+    // --- 字体功能 ---
+    function renderFonts() {
+        fontListEl.innerHTML = '';
+        const defaultFontItem = document.createElement('li');
+        defaultFontItem.className = 'font-list-item';
+        defaultFontItem.innerHTML = `<div class="font-item-content ${appState.beautify.activeFont.name === 'default' ? 'active' : ''}" data-name="default">系统默认字体</div>`;
+        fontListEl.appendChild(defaultFontItem);
+
+        appState.beautify.fonts.forEach(font => {
+            const li = document.createElement('li');
+            li.className = 'font-list-item';
+            li.dataset.id = font.id;
+            li.innerHTML = `
+                <div class="font-item-content ${appState.beautify.activeFont.id === font.id ? 'active' : ''}" style="font-family: '${font.name}'">${font.name}</div>
+                <div class="font-item-actions"><div class="delete-action">删除</div></div>
+            `;
+            fontListEl.appendChild(li);
+        });
+    }
+
+    function applyFont(font) {
+        let styleEl = getEl('dynamic-font-style');
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'dynamic-font-style';
+            document.head.appendChild(styleEl);
+        }
+        
+        let fontCss = '';
+        appState.beautify.fonts.forEach(f => {
+            fontCss += `@font-face { font-family: '${f.name}'; src: url(${f.url}); }\n`;
+        });
+        styleEl.innerHTML = fontCss;
+
+        if (font && font.name !== 'default') {
+            root.style.setProperty('--system-font-family', `'${font.name}', sans-serif`);
+            appState.beautify.activeFont = font;
+        } else {
+            root.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
+            appState.beautify.activeFont = { name: 'default' };
+        }
+        renderFonts();
+    }
+
+    function applyFontColor(color) {
+        if (/^#[0-9A-F]{6}$/i.test(color)) {
+            root.style.setProperty('--system-font-color', color);
+            appState.beautify.fontColor = color;
+        }
+    }
+
+    fontListEl.addEventListener('click', (e) => {
+        const content = e.target.closest('.font-item-content');
+        if (content) {
+            if (confirm('确定要更换系统字体吗？')) {
+                const fontId = content.parentElement.dataset.id;
+                const font = fontId ? appState.beautify.fonts.find(f => f.id === fontId) : { name: 'default' };
+                applyFont(font);
+                saveState();
+                showToast('字体已更换');
+            }
+        }
+    });
+
+    uploadFontBtn.addEventListener('click', () => fontFileInput.click());
+    fontFileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files.length === 0) return;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const fontName = file.name.replace(/\.[^/.]+$/, "");
+                const newFont = { id: 'font_' + Date.now() + Math.random(), name: fontName, url: event.target.result };
+                appState.beautify.fonts.push(newFont);
+                applyFont(appState.beautify.activeFont); // Re-apply to update style tag
+                saveState();
+            };
+            reader.readAsDataURL(file);
+        });
+        addFontModal.classList.remove('visible');
+        showToast(`开始处理 ${files.length} 个字体文件`);
+    });
+
+    confirmAddFontUrlBtn.addEventListener('click', () => {
+        const lines = fontUrlInput.value.trim().split('\n');
+        lines.forEach(line => {
+            if (!line.trim()) return;
+            const separatorIndex = line.search(/:|：/);
+            if (separatorIndex === -1) return;
+            const name = line.substring(0, separatorIndex).trim();
+            const url = line.substring(separatorIndex + 1).trim();
+            if (name && url) {
+                const newFont = { id: 'font_' + Date.now() + Math.random(), name, url };
+                appState.beautify.fonts.push(newFont);
+            }
+        });
+        applyFont(appState.beautify.activeFont);
+        saveState();
+        fontUrlInput.value = '';
+        addFontModal.classList.remove('visible');
+    });
+    cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
+    addFontModal.querySelector('.tab-btn-container').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; e.target.parentElement.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); e.target.parentElement.parentElement.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
+
+    changeFontColorBtn.addEventListener('click', () => {
+        fontColorInput.value = appState.beautify.fontColor;
+        fontColorModal.classList.add('visible');
+    });
+    saveFontColorBtn.addEventListener('click', () => {
+        const newColor = fontColorInput.value.trim();
+        if (/^#[0-9A-F]{6}$/i.test(newColor)) {
+            applyFontColor(newColor);
+            saveState();
+            fontColorModal.classList.remove('visible');
+            showToast('字体颜色已更新');
+        } else {
+            showToast('请输入有效的6位十六进制色号', 'error');
+        }
+    });
+    cancelFontColorBtn.addEventListener('click', () => fontColorModal.classList.remove('visible'));
+
+    // --- 图标功能 ---
+    function renderIcons() {
+        iconGrid.innerHTML = '';
+        Object.keys(appState.beautify.icons).forEach(id => {
+            const iconData = appState.beautify.icons[id];
+            const item = document.createElement('div');
+            item.className = 'icon-item';
+            item.dataset.id = id;
+            const iconPreview = document.createElement('div');
+            iconPreview.className = 'icon-preview';
+            const originalIconEl = getEl(id).querySelector('.icon');
+            if (iconData.url) {
+                iconPreview.style.backgroundImage = `url(${iconData.url})`;
+            } else {
+                iconPreview.innerHTML = originalIconEl.innerHTML;
+            }
+            const nameLabel = document.createElement('div');
+            nameLabel.className = 'icon-name';
+            nameLabel.textContent = iconData.name;
+            item.appendChild(iconPreview);
+            item.appendChild(nameLabel);
+            iconGrid.appendChild(item);
+        });
+    }
+
+    function applyAllIcons() {
+        Object.keys(appState.beautify.icons).forEach(id => {
+            const iconData = appState.beautify.icons[id];
+            const iconEl = getEl(id)?.querySelector('.icon');
+            if (iconEl) {
+                if (iconData.url) {
+                    iconEl.style.backgroundImage = `url(${iconData.url})`;
+                    iconEl.innerHTML = '';
+                } else {
+                    // This part needs default icons if we want to revert
+                    // For now, we just clear the background image
+                    iconEl.style.backgroundImage = '';
+                }
+            }
+        });
+    }
+
+    iconGrid.addEventListener('click', (e) => {
+        const item = e.target.closest('.icon-item');
+        if (!item) return;
+        selectedIconId = item.dataset.id;
+        changeIconModal.classList.add('visible');
+    });
+
+    uploadIconBtn.addEventListener('click', () => iconFileInput.click());
+    iconFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            appState.beautify.icons[selectedIconId].url = event.target.result;
+            applyAllIcons();
+            renderIcons();
+            saveState();
+            showToast('图标已更换');
+        };
+        reader.readAsDataURL(file);
+        changeIconModal.classList.remove('visible');
+    });
+
+    confirmAddIconUrlBtn.addEventListener('click', () => {
+        const url = iconUrlInput.value.trim();
+        if (url) {
+            appState.beautify.icons[selectedIconId].url = url;
+            applyAllIcons();
+            renderIcons();
+            saveState();
+            showToast('图标已更换');
+        }
+        iconUrlInput.value = '';
+        changeIconModal.classList.remove('visible');
+    });
+    cancelChangeIconBtn.addEventListener('click', () => changeIconModal.classList.remove('visible'));
+    changeIconModal.querySelector('.tab-btn-container').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; e.target.parentElement.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); e.target.parentElement.parentElement.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
+
+    // ===================================================================
+    // --- 通用列表滑动交互 ---
     // ===================================================================
     function createListSwipeHandler(listElement, contentSelector, actionsSelector, onDelete, onEdit) {
         let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, justSwiped = false;
@@ -930,6 +991,10 @@ document.addEventListener('DOMContentLoaded', () => {
     createListSwipeHandler(musicListEl, '.music-item-content', '.music-item-actions',
         (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } },
         (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } }
+    );
+    createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions',
+        (item) => { const fontId = item.dataset.id; const fontIndex = appState.beautify.fonts.findIndex(f => f.id === fontId); if (fontIndex > -1) { const font = appState.beautify.fonts[fontIndex]; if (confirm(`确定要删除字体 "${font.name}" 吗？`)) { if (appState.beautify.activeFont.id === fontId) { applyFont({ name: 'default' }); } appState.beautify.fonts.splice(fontIndex, 1); applyFont(appState.beautify.activeFont); saveState(); showToast("字体已删除"); } } },
+        () => {} // No edit action for fonts
     );
 
     // ===================================================================
