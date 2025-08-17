@@ -62,14 +62,15 @@
             display: flex; justify-content: center; align-items: flex-start;
             z-index: 50; pointer-events: none;
         }
+        /* 优化3：修复状态栏对齐问题 */
         #status-bar {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
             color: white; font-weight: 600; font-size: 15px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            padding: 0 5px 0 25px; /* 优化3：调整内边距，将右侧内容推向边缘 */
+            padding: 0 25px 0 25px; /* 调整左右内边距 */
         }
-        #time { flex: 1 1 0; text-align: left; }
-        #battery-status { flex-shrink: 0; display: flex; align-items: center; gap: 5px; }
+        #time { flex-shrink: 0; }
+        #battery-status { flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
         #battery-icon { font-size: 20px; }
 
         /* --- 灵动岛 --- */
@@ -117,10 +118,11 @@
         /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
-        .app-header { display: flex; align-items: center; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; }
-        .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; }
-        .app-header .title { flex-grow: 1; text-align: center; font-size: 17px; font-weight: 600; margin: 0 10px; }
-        .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
+        /* 优化1：修复APP标题对齐 */
+        .app-header { display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; padding: 15px 10px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; }
+        .app-header .back-btn { grid-column: 1; justify-self: start; font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; }
+        .app-header .title { grid-column: 2; text-align: center; font-size: 17px; font-weight: 600; }
+        .app-header .action-btn { grid-column: 3; justify-self: end; font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
         .app-content { flex-grow: 1; overflow-y: auto; }
 
         /* --- 设置 APP 特定样式 --- */
@@ -147,22 +149,13 @@
         .music-item-info .title { font-size: 16px; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .music-item-info .artist { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .music-item-duration { font-size: 14px; color: var(--secondary-text-color); flex-shrink: 0; padding-left: 10px; }
+        .music-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .music-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .music-list-item.playing .music-item-info .title, .music-list-item.playing .music-item-info .artist { color: var(--accent-color); }
 
         /* --- 浮动歌词 --- */
-        #lyrics-container {
-            position: absolute;
-            top: 60px; /* 优化5：调整初始位置 */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%; max-width: 380px;
-            background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px);
-            color: white; border-radius: 12px; padding: 10px;
-            box-sizing: border-box; font-size: 14px; text-align: center;
-            z-index: 40; cursor: grab;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
-        }
+        /* 优化5：调整歌词初始位置 */
+        #lyrics-container { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         #lyrics-container.visible { opacity: 1; visibility: visible; }
         #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
 
@@ -206,20 +199,22 @@
         .tab-link.active { color: var(--accent-color); border-top-color: var(--accent-color); }
         .beautify-tab-content { display: none; }
         .beautify-tab-content.active { display: block; }
+        #font-tab-content, #wallpaper-tab-content, #icon-tab-content { padding: 15px; }
         /* 壁纸 */
-        #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 15px; }
+        #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .wallpaper-item { aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; }
         .wallpaper-item::after { content: '✓'; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background-color: var(--accent-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; transform: scale(0); transition: transform 0.2s; }
         #beautify-app-screen.selection-mode .wallpaper-item.selected::after { transform: scale(1); }
-        /* 字体 */
+        /* 字体 (优化2) */
         #font-list { list-style: none; padding: 0; margin: 0; }
         .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .font-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
-        .font-item-content.active { color: var(--accent-color); font-weight: bold; }
-        .font-item-name { flex-grow: 1; }
-        .font-color-action { padding: 5px 10px; font-size: 12px; border: 1px solid var(--border-color); border-radius: 5px; cursor: pointer; }
+        .font-item-content.active .font-name { color: var(--accent-color); font-weight: bold; }
+        .change-font-color-btn-inline { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
+        .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         /* 图标 */
-        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; padding: 15px; }
+        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
         .icon-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
         .icon-item .icon-preview { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 28px; }
         .icon-item .icon-preview img { max-width: 100%; max-height: 100%; }
@@ -246,13 +241,13 @@
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        /* 优化4：统一URL输入框样式 */
-        #music-url-input, #font-url-input, #icon-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        #tab-content-url #music-url-input, #add-font-modal #font-url-input, #replace-icon-modal #icon-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; } /* 优化4：统一URL输入框样式 */
         #add-music-modal .modal-actions .single-button { flex: none; width: 100%; }
 
-        /* --- 通用列表滑动操作样式 --- */
-        .preset-list-item, .music-list-item, .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
-        .preset-item-content, .music-item-content, .font-item-content { background-color: var(--item-bg); transition: transform 0.3s ease; position: relative; z-index: 2; }
+        /* --- 预设管理列表 --- */
+        #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
+        .preset-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
+        .preset-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: grab; position: relative; z-index: 2; }
         .preset-item-actions, .music-item-actions, .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
         .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .edit-action { background-color: var(--edit-color); }
@@ -300,7 +295,7 @@
 
         <!-- 设置APP界面 -->
         <div id="settings-app-screen" class="app-screen">
-            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2></div>
+            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2><div class="action-btn" style="visibility: hidden;"></div></div>
             <div class="app-content">
                 <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button">确认并加载模型</button></div>
                 <div class="settings-group"><div class="group-title">模型选择</div><div class="group-content"><div class="settings-item"><select id="model-select"><option value="">请先加载模型</option></select></div></div></div>
@@ -502,13 +497,13 @@ document.addEventListener('DOMContentLoaded', () => {
             playlist: [], queue: [], lyrics: {},
             currentQueueIndex: -1,
             playbackMode: 'repeat',
-            lyricsPosition: { top: '60px', left: '50%' } // 优化5：更新默认位置
+            lyricsPosition: { top: '60px', left: '50%' } // 优化5：更新初始位置
         },
         beautify: {
             wallpapers: [],
             currentWallpaper: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302',
-            fonts: [], // 结构: { id: string, name: string, url: string, isLocal: boolean }
-            currentFont: 'default', // 存储字体的id
+            fonts: [],
+            currentFont: '系统默认', // 优化2：默认字体名称
             fontColor: '#000000',
             icons: {}
         }
@@ -583,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeCurrentApp = () => { const activeApp = document.querySelector('.app-screen.active'); if (activeApp) { if (activeApp.id === 'beautify-app-screen' && activeApp.classList.contains('selection-mode')) { exitWallpaperSelectionMode(); } activeApp.classList.remove('active'); } };
     let toastTimer;
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
-    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
+    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 3000); } // 优化6：缩短停留时间
 
     // ===================================================================
     // --- 设置 APP (无变更) ---
@@ -608,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
     // ===================================================================
-    // --- 音乐播放器核心 (无变更) ---
+    // --- 音乐播放器核心 ---
     // ===================================================================
     function playSongFromQueue(queueIndex) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); }
     function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); }
@@ -625,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI (无变更) ---
+    // --- 音乐 APP UI ---
     // ===================================================================
     musicAppBtn.addEventListener('click', () => openApp(musicAppScreen));
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
@@ -637,13 +632,82 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
     getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-music-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-music-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    confirmAddUrlBtn.addEventListener('click', () => { const lines = musicUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; const separatorIndex = line.search(/:|：/); if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) continue; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; } musicUrlInput.value = ''; if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } addMusicModal.classList.remove('visible'); });
-    function processFiles(files) { let addedCount = 0; const allFiles = Array.from(files); const lrcFiles = allFiles.filter(f => f.name.toLowerCase().endsWith('.lrc')); const audioFiles = allFiles.filter(f => !f.name.toLowerCase().endsWith('.lrc')); for (const file of audioFiles) { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; } for (const file of lrcFiles) { const reader = new FileReader(); reader.onload = (e) => { const lrcData = parseLRC(e.target.result); const baseName = file.name.replace(/\.lrc$/i, ""); const matchingSong = appState.music.playlist.find(s => `${s.artist} - ${s.title}` === baseName || s.title === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); } saveState(); }; reader.readAsText(file); } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }
+    
+    // 优化7：修复URL歌词匹配Bug
+    confirmAddUrlBtn.addEventListener('click', async () => {
+        const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim());
+        if (lines.length === 0) return;
+
+        let musicEntries = [];
+        let lrcEntries = [];
+
+        for (const line of lines) {
+            const separatorIndex = line.search(/:|：/);
+            if (separatorIndex === -1) continue;
+            const meta = line.substring(0, separatorIndex).trim();
+            const url = line.substring(separatorIndex + 1).trim();
+            if (!url.startsWith('http')) continue;
+
+            const entry = { meta, url };
+            if (url.toLowerCase().endsWith('.lrc')) {
+                lrcEntries.push(entry);
+            } else {
+                musicEntries.push(entry);
+            }
+        }
+
+        let addedSongsCount = 0;
+        for (const entry of musicEntries) {
+            const parts = entry.meta.split(' - ');
+            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
+            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
+            const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url: entry.url, duration: NaN, isLocal: false };
+            appState.music.playlist.push(newSong);
+            addedSongsCount++;
+        }
+
+        let matchedLrcCount = 0;
+        for (const entry of lrcEntries) {
+            const parts = entry.meta.split(' - ');
+            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
+            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
+            
+            const matchingSong = appState.music.playlist.find(s => s.title === title && s.artist === artist);
+            if (matchingSong) {
+                try {
+                    const response = await fetch(entry.url);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const lrcText = await response.text();
+                    const lrcData = parseLRC(lrcText);
+                    appState.music.lyrics[matchingSong.id] = lrcData;
+                    matchedLrcCount++;
+                } catch (error) {
+                    console.error(`获取歌词失败: ${entry.url}`, error);
+                    showToast(`获取歌词失败: ${title}`, 'error');
+                }
+            }
+        }
+
+        musicUrlInput.value = '';
+        addMusicModal.classList.remove('visible');
+        if (addedSongsCount > 0) {
+            showToast(`成功添加 ${addedSongsCount} 首歌曲`);
+            renderMusicList();
+        }
+        if (matchedLrcCount > 0) {
+            showToast(`成功匹配 ${matchedLrcCount} 份歌词`);
+        }
+        if (addedSongsCount > 0 || matchedLrcCount > 0) {
+            saveState();
+        }
+    });
+
+    function processFiles(files) { let addedCount = 0; const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc')); for (const file of audioFiles) { const isLrc = file.name.toLowerCase().endsWith('.lrc'); const baseName = file.name.replace(/\.[^/.]+$/, ""); if (isLrc) { const reader = new FileReader(); reader.onload = (e) => { const lrcData = parseLRC(e.target.result); const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); } saveState(); }; reader.readAsText(file); } else { const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; } } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 灵动岛 & 歌词 & 播放器 UI (无变更) ---
+    // --- 灵动岛 & 歌词 & 播放器 UI ---
     // ===================================================================
     function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
     function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
@@ -672,131 +736,52 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 美化 APP ---
     // ===================================================================
     beautifyAppBtn.addEventListener('click', () => { openApp(beautifyAppScreen); renderWallpapers(); });
-    beautifyTabs.addEventListener('click', (e) => {
-        if (e.target.classList.contains('tab-link')) {
-            const tabId = e.target.dataset.tab;
-            queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active'));
-            queryAll('.beautify-tab-content').forEach(c => c.classList.remove('active'));
-            e.target.classList.add('active');
-            getEl(`${tabId}-tab-content`).classList.add('active');
-            
-            // 优化1：确保标题居中，通过控制按钮的显隐实现
-            const actionBtnContainer = beautifyActionBtn.parentElement;
-            if (tabId === 'icon') {
-                beautifyActionBtn.style.visibility = 'hidden'; // 隐藏但占位
-            } else {
-                beautifyActionBtn.style.visibility = 'visible'; // 显示
-            }
-
-            if (tabId === 'wallpaper') { renderWallpapers(); }
-            else if (tabId === 'font') { renderFonts(); }
-            else if (tabId === 'icon') { renderIcons(); }
-        }
-    });
-    beautifyActionBtn.addEventListener('click', () => {
-        const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab;
-        if (beautifyAppScreen.classList.contains('selection-mode')) {
-            if (wallpaperSelection.length > 0 && confirm(`确定要删除选中的 ${wallpaperSelection.length} 张壁纸吗？`)) {
-                appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !wallpaperSelection.includes(wp.id));
-                saveState();
-                renderWallpapers();
-            }
-            exitWallpaperSelectionMode();
-        } else if (activeTab === 'wallpaper') {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.multiple = true;
-            input.onchange = (e) => {
-                const files = e.target.files;
-                if (files.length > 0) {
-                    let lastUrl = '';
-                    Array.from(files).forEach(file => {
-                        const url = URL.createObjectURL(file);
-                        appState.beautify.wallpapers.push({ id: 'local_' + Date.now() + Math.random(), url: url, isLocal: true });
-                        lastUrl = url;
-                    });
-                    if (lastUrl) {
-                        appState.beautify.currentWallpaper = lastUrl;
-                        phoneScreen.style.backgroundImage = `url(${lastUrl})`;
-                    }
-                    saveState();
-                    renderWallpapers();
-                    showToast(`成功添加 ${files.length} 张壁纸`);
-                }
-            };
-            input.click();
-        } else if (activeTab === 'font') {
-            addFontModal.classList.add('visible');
-        }
-    });
+    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('.beautify-tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); beautifyActionBtn.style.display = (tabId === 'icon') ? 'none' : 'block'; if (tabId === 'wallpaper') { renderWallpapers(); } else if (tabId === 'font') { renderFonts(); } else if (tabId === 'icon') { renderIcons(); } } });
+    beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (beautifyAppScreen.classList.contains('selection-mode')) { if (wallpaperSelection.length > 0 && confirm(`确定要删除选中的 ${wallpaperSelection.length} 张壁纸吗？`)) { appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !wallpaperSelection.includes(wp.id)); saveState(); renderWallpapers(); } exitWallpaperSelectionMode(); } else if (activeTab === 'wallpaper') { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.multiple = true; input.onchange = (e) => { const files = e.target.files; if (files.length > 0) { let lastUrl = ''; Array.from(files).forEach(file => { const url = URL.createObjectURL(file); appState.beautify.wallpapers.push({ id: 'local_' + Date.now() + Math.random(), url: url, isLocal: true }); lastUrl = url; }); if (lastUrl) { appState.beautify.currentWallpaper = lastUrl; phoneScreen.style.backgroundImage = `url(${lastUrl})`; } saveState(); renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } }; input.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
 
     // 壁纸功能
-    function renderWallpapers() {
-        wallpaperGrid.innerHTML = '';
-        appState.beautify.wallpapers.forEach(wp => {
-            const item = document.createElement('div');
-            item.className = 'wallpaper-item';
-            item.style.backgroundImage = `url(${wp.url})`;
-            item.dataset.id = wp.id;
-            wallpaperGrid.appendChild(item);
-        });
-    }
+    function renderWallpapers() { wallpaperGrid.innerHTML = ''; appState.beautify.wallpapers.forEach(wp => { const item = document.createElement('div'); item.className = 'wallpaper-item'; item.style.backgroundImage = `url(${wp.url})`; item.dataset.id = wp.id; wallpaperGrid.appendChild(item); }); }
     let longPressTimer;
     wallpaperGrid.addEventListener('mousedown', (e) => { if (e.target.classList.contains('wallpaper-item')) { longPressTimer = setTimeout(() => enterWallpaperSelectionMode(e.target), 500); } });
     wallpaperGrid.addEventListener('mouseup', () => clearTimeout(longPressTimer));
     wallpaperGrid.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
     wallpaperGrid.addEventListener('touchstart', (e) => { if (e.target.classList.contains('wallpaper-item')) { longPressTimer = setTimeout(() => enterWallpaperSelectionMode(e.target), 500); } });
     wallpaperGrid.addEventListener('touchend', () => clearTimeout(longPressTimer));
-    wallpaperGrid.addEventListener('click', (e) => {
-        const item = e.target.closest('.wallpaper-item');
-        if (!item) return;
-        if (beautifyAppScreen.classList.contains('selection-mode')) {
-            item.classList.toggle('selected');
-            const id = item.dataset.id;
-            if (item.classList.contains('selected')) {
-                if (!wallpaperSelection.includes(id)) wallpaperSelection.push(id);
-            } else {
-                wallpaperSelection = wallpaperSelection.filter(selId => selId !== id);
-            }
-        } else {
-            currentWallpaperActionId = item.dataset.id;
-            wallpaperActionModal.classList.add('visible');
-        }
-    });
+    wallpaperGrid.addEventListener('click', (e) => { const item = e.target.closest('.wallpaper-item'); if (!item) return; if (beautifyAppScreen.classList.contains('selection-mode')) { item.classList.toggle('selected'); const id = item.dataset.id; if (item.classList.contains('selected')) { if (!wallpaperSelection.includes(id)) wallpaperSelection.push(id); } else { wallpaperSelection = wallpaperSelection.filter(selId => selId !== id); } } else { currentWallpaperActionId = item.dataset.id; wallpaperActionModal.classList.add('visible'); } });
     function enterWallpaperSelectionMode(item) { beautifyAppScreen.classList.add('selection-mode'); beautifyActionBtn.textContent = '删除'; item.classList.add('selected'); wallpaperSelection.push(item.dataset.id); }
     function exitWallpaperSelectionMode() { beautifyAppScreen.classList.remove('selection-mode'); beautifyActionBtn.textContent = '+'; queryAll('.wallpaper-item.selected').forEach(i => i.classList.remove('selected')); wallpaperSelection = []; }
     cancelWallpaperActionBtn.addEventListener('click', () => wallpaperActionModal.classList.remove('visible'));
     setAsWallpaperBtn.addEventListener('click', () => { const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === currentWallpaperActionId); if (wallpaper) { appState.beautify.currentWallpaper = wallpaper.url; phoneScreen.style.backgroundImage = `url(${wallpaper.url})`; saveState(); showToast('壁纸已更换'); } wallpaperActionModal.classList.remove('visible'); });
     setAsChatBgBtn.addEventListener('click', () => { showToast('聊天功能待开发'); wallpaperActionModal.classList.remove('visible'); });
 
-    // 优化2：字体功能重构
+    // 字体功能 (优化2：重构)
     function renderFonts() {
         fontListEl.innerHTML = '';
-        const allFonts = [{ id: 'default', name: 'Default Font' }, ...appState.beautify.fonts];
+        const allFonts = [{ name: '系统默认', isDefault: true }, ...appState.beautify.fonts];
         allFonts.forEach(font => {
-            const isActive = font.id === appState.beautify.currentFont;
+            const isActive = font.name === appState.beautify.currentFont;
             const li = document.createElement('li');
             li.className = 'font-list-item';
-            li.dataset.id = font.id;
+            li.dataset.name = font.name;
+            li.dataset.isDefault = font.isDefault || false;
+            const colorBtnHTML = isActive ? `<button class="change-font-color-btn-inline" data-icon-id="font-color">🎨</button>` : '';
             li.innerHTML = `
                 <div class="font-item-content ${isActive ? 'active' : ''}">
-                    <span class="font-item-name">${font.name}</span>
-                    ${isActive ? '<button class="font-color-action">修改颜色</button>' : ''}
+                    <span class="font-name">${font.name}</span>
+                    ${colorBtnHTML}
                 </div>
                 <div class="font-item-actions">
                     <div class="edit-action">编辑</div>
                     <div class="delete-action">删除</div>
-                </div>
-            `;
+                </div>`;
             fontListEl.appendChild(li);
         });
     }
     fontListEl.addEventListener('click', (e) => {
         const content = e.target.closest('.font-item-content');
-        if (e.target.classList.contains('font-color-action')) {
+        if (e.target.classList.contains('change-font-color-btn-inline')) {
             const newColor = prompt("请输入新的字体颜色 (Hex格式, 如 #RRGGBB):", appState.beautify.fontColor);
-            if (newColor && /^#([0-9A-F]{3}){1,2}$/i.test(newColor)) {
+            if (newColor && /^#[0-9A-F]{6}$/i.test(newColor)) {
                 appState.beautify.fontColor = newColor;
                 document.documentElement.style.setProperty('--system-font-color', newColor);
                 saveState();
@@ -805,22 +790,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('无效的颜色格式', 'error');
             }
         } else if (content) {
-            const fontId = content.parentElement.dataset.id;
-            const font = [{ id: 'default', name: 'Default Font' }, ...appState.beautify.fonts].find(f => f.id === fontId);
-            if (font && font.id !== appState.beautify.currentFont) {
-                if (confirm(`确定要将系统字体更换为 "${font.name}" 吗？`)) {
-                    applyFont(font.id);
+            const fontName = content.parentElement.dataset.name;
+            if (fontName !== appState.beautify.currentFont) {
+                if (confirm(`确定要将系统字体更换为 "${fontName}" 吗？`)) {
+                    applyFont(fontName);
                 }
             }
         }
     });
-    function applyFont(fontId, isInitialLoad = false) {
+    function applyFont(fontName, isInitialLoad = false) {
         const oldStyle = document.getElementById('custom-font-style');
         if (oldStyle) oldStyle.remove();
-        if (fontId === 'default') {
+        if (fontName === '系统默认') {
             document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
         } else {
-            const font = appState.beautify.fonts.find(f => f.id === fontId);
+            const font = appState.beautify.fonts.find(f => f.name === fontName);
             if (font) {
                 const style = document.createElement('style');
                 style.id = 'custom-font-style';
@@ -829,75 +813,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`);
             } else {
                 // Fallback if font not found
-                appState.beautify.currentFont = 'default';
-                applyFont('default', isInitialLoad);
-                return;
+                fontName = '系统默认';
+                document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
             }
         }
-        appState.beautify.currentFont = fontId;
+        appState.beautify.currentFont = fontName;
         if (!isInitialLoad) {
             saveState();
             renderFonts();
-            const fontName = (fontId === 'default') ? 'Default Font' : appState.beautify.fonts.find(f => f.id === fontId).name;
             showToast(`字体已应用: ${fontName}`);
         }
     }
     cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
     getEl('add-font-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-font-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-font-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-font-${tabId}`).classList.add('active'); } });
     uploadFontBtn.addEventListener('click', () => fontFileInput.click());
-    fontFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { Array.from(files).forEach(file => { const fontName = file.name.replace(/\.[^/.]+$/, ""); appState.beautify.fonts.push({ id: 'font_' + Date.now() + Math.random(), name: fontName, url: URL.createObjectURL(file), isLocal: true }); }); saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
-    confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ id: 'font_' + Date.now() + Math.random(), name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
+    fontFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { Array.from(files).forEach(file => { const fontName = file.name.replace(/\.[^/.]+$/, ""); appState.beautify.fonts.push({ name: fontName, url: URL.createObjectURL(file), isLocal: true }); }); saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
+    confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
 
     // 图标功能
-    function renderIcons() {
-        iconGrid.innerHTML = '';
-        const iconElements = queryAll('[data-icon-id]');
-        iconElements.forEach(el => {
-            const id = el.dataset.iconId;
-            const name = id.replace('-', ' - ');
-            const customSrc = appState.beautify.icons[id];
-            const item = document.createElement('div');
-            item.className = 'icon-item';
-            item.dataset.id = id;
-            let previewHTML;
-            if (customSrc) {
-                previewHTML = `<img src="${customSrc}">`;
-            } else {
-                const imgChild = el.querySelector('img');
-                if (imgChild) {
-                    previewHTML = `<img src="${imgChild.src}">`;
-                } else {
-                    previewHTML = el.textContent;
-                }
-            }
-            item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${name}</span>`;
-            iconGrid.appendChild(item);
-        });
-    }
+    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); iconElements.forEach(el => { const id = el.dataset.iconId; const name = id.replace('-', ' - '); const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML; if (customSrc) { previewHTML = `<img src="${customSrc}">`; } else { const imgChild = el.querySelector('img'); if (imgChild) { previewHTML = `<img src="${imgChild.src}">`; } else { previewHTML = el.textContent; } } item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${name}</span>`; iconGrid.appendChild(item); }); }
     iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
     cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
     getEl('replace-icon-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#replace-icon-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#replace-icon-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-icon-${tabId}`).classList.add('active'); } });
     uploadIconBtn.addEventListener('click', () => iconFileInput.click());
     iconFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { applyIconChange(replaceIconIdInput.value, event.target.result); }; reader.readAsDataURL(file); iconFileInput.value = ''; } });
     confirmReplaceIconUrlBtn.addEventListener('click', () => { const url = iconUrlInput.value.trim(); if (url) { applyIconChange(replaceIconIdInput.value, url); iconUrlInput.value = ''; } });
-    function applyIconChange(iconId, newSrc, isInitialLoad = false) {
-        const targetEl = query(`[data-icon-id="${iconId}"]`);
-        if (targetEl) {
-            const imgChild = targetEl.querySelector('img');
-            if (imgChild) {
-                imgChild.src = newSrc;
-            } else {
-                targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%;">`;
-            }
-        }
-        appState.beautify.icons[iconId] = newSrc;
-        if (!isInitialLoad) {
-            saveState();
-            renderIcons();
-            replaceIconModal.classList.remove('visible');
-            showToast('图标已替换');
-        }
-    }
+    function applyIconChange(iconId, newSrc, isInitialLoad = false) { const targetEl = query(`[data-icon-id="${iconId}"]`); if (targetEl) { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%;">`; } } appState.beautify.icons[iconId] = newSrc; if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } }
 
     // ===================================================================
     // --- 通用列表滑动交互 ---
@@ -907,39 +848,26 @@ document.addEventListener('DOMContentLoaded', () => {
     createListSwipeHandler(musicListEl, '.music-item-content', '.music-item-actions', (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } }, (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } });
     createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions', 
         (item) => { // onDelete
-            const fontId = item.dataset.id;
-            if (fontId === 'default') {
-                showToast('默认字体无法删除', 'error');
-                return;
-            }
-            const font = appState.beautify.fonts.find(f => f.id === fontId);
-            if (font && confirm(`确定要删除字体 "${font.name}" 吗？`)) {
-                appState.beautify.fonts = appState.beautify.fonts.filter(f => f.id !== fontId);
-                if (appState.beautify.currentFont === fontId) {
-                    applyFont('default');
-                }
-                saveState();
-                renderFonts();
-                showToast('字体已删除');
+            if (item.dataset.isDefault === 'true') { showToast('默认字体无法删除', 'error'); return; }
+            const fontName = item.dataset.name;
+            if (confirm(`确定要删除字体 "${fontName}" 吗？`)) {
+                appState.beautify.fonts = appState.beautify.fonts.filter(f => f.name !== fontName);
+                if (appState.beautify.currentFont === fontName) { applyFont('系统默认'); }
+                saveState(); renderFonts(); showToast('字体已删除');
             }
         }, 
         (item) => { // onEdit
-            const fontId = item.dataset.id;
-            if (fontId === 'default') {
-                showToast('默认字体无法编辑', 'error');
-                return;
-            }
-            const font = appState.beautify.fonts.find(f => f.id === fontId);
-            if (font) {
-                const newName = prompt('请输入新的字体名称:', font.name);
-                if (newName && newName.trim() !== '') {
+            if (item.dataset.isDefault === 'true') { showToast('默认字体无法编辑', 'error'); return; }
+            const oldName = item.dataset.name;
+            const newName = prompt(`请输入新的字体名称:`, oldName);
+            if (newName && newName.trim() !== '' && newName !== oldName) {
+                const font = appState.beautify.fonts.find(f => f.name === oldName);
+                if (font) {
                     font.name = newName.trim();
-                    saveState();
-                    renderFonts();
-                    if (appState.beautify.currentFont === fontId) {
-                        applyFont(fontId); // Re-apply to update font-family name if needed
+                    if (appState.beautify.currentFont === oldName) {
+                        appState.beautify.currentFont = newName.trim();
                     }
-                    showToast('字体名称已更新');
+                    saveState(); renderFonts(); showToast('字体名称已更新');
                 }
             }
         }
