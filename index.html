@@ -59,10 +59,10 @@
             width: 100%; display: flex; justify-content: space-between; align-items: center;
             color: white; font-weight: 600; font-size: 15px;
             text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            padding: 0 15px;
+            padding: 0 15px 0 20px; /* 优化3：增加右侧内边距 */
         }
         #time { flex: 1 1 0; text-align: left; }
-        #battery-status { flex: 1 1 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 5px; padding-right: 5px; /* 优化点3 */ }
+        #battery-status { flex: 1 1 0; text-align: right; display: flex; justify-content: flex-end; align-items: center; gap: 5px; padding-right: 5px; }
         #battery-icon { font-size: 20px; }
 
         /* --- 灵动岛 --- */
@@ -76,7 +76,6 @@
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 8px; box-sizing: border-box;
             overflow: hidden;
-            cursor: pointer;
         }
         #dynamic-island.music-active { width: 220px; }
         .island-content { color: white; font-size: 13px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -136,59 +135,61 @@
         #music-list { list-style: none; padding: 0; margin: 0; }
         .music-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .music-item-content { padding: 10px 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
-        .music-item-info { display: flex; flex-direction: column; }
-        .music-item-info .title { font-size: 16px; font-weight: 500; }
-        .music-item-info .artist { font-size: 13px; color: var(--secondary-text-color); }
-        .music-item-duration { font-size: 14px; color: var(--secondary-text-color); }
+        .music-item-info { display: flex; flex-direction: column; overflow: hidden; }
+        .music-item-info .title { font-size: 16px; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .music-item-info .artist { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .music-item-duration { font-size: 14px; color: var(--secondary-text-color); flex-shrink: 0; padding-left: 10px; }
         .music-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
         .music-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .music-list-item.playing .music-item-info .title { color: var(--accent-color); }
+        .music-list-item.playing .music-item-info .title, .music-list-item.playing .music-item-info .artist { color: var(--accent-color); }
 
-        /* --- 全新音乐播放器模态框 --- */
-        #music-player-modal {
-            position: absolute;
-            top: 50%; left: 50%;
+        /* --- 浮动歌词 --- */
+        #lyrics-container { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        #lyrics-container.visible { opacity: 1; visibility: visible; }
+        #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        /* --- 全新播放器模态框 --- */
+        #player-modal {
+            position: absolute; top: 50%; left: 50%;
+            width: 80%; max-width: 300px; height: 45%; max-height: 400px;
             transform: translate(-50%, -50%) scale(0.9);
-            width: 90%; max-width: 380px;
-            height: auto; max-height: 60%;
-            background-color: rgba(25, 25, 25, 0.7);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            background-color: rgba(20, 20, 20, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 20px;
             z-index: 150;
             display: flex; flex-direction: column;
-            padding: 15px; box-sizing: border-box;
+            color: white;
             opacity: 0; visibility: hidden;
             transition: opacity 0.3s, transform 0.3s, visibility 0.3s;
         }
-        #music-player-modal.visible { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
-        .player-header { display: flex; justify-content: space-between; align-items: center; color: white; flex-shrink: 0; }
-        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; width: 32px; height: 32px; }
-        .player-header .icon-btn svg { fill: #fff; width: 100%; height: 100%; }
+        #player-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+        .player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; }
+        .player-header .icon-btn svg { width: 22px; height: 22px; fill: white; }
         .player-song-info { text-align: center; }
         .player-song-info .title { font-size: 16px; font-weight: bold; }
         .player-song-info .artist { font-size: 13px; color: #ccc; }
-        .player-main-view { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
-        .player-lyrics-container { flex-grow: 1; overflow-y: auto; color: #ddd; text-align: center; font-size: 16px; margin: 15px 0; scroll-behavior: smooth; }
-        .player-lyrics-container p { margin: 8px 0; transition: color 0.3s, font-weight 0.3s; }
-        .player-lyrics-container p.active { color: white; font-weight: bold; }
-        .player-progress-container { margin: 10px 0; }
-        .player-progress-container input[type="range"] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.3); height: 4px; border-radius: 2px; outline: none; }
-        .player-progress-container input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; }
-        .player-controls { display: flex; justify-content: space-around; align-items: center; }
-        .player-controls .icon-btn svg { fill: #fff; }
+        .player-body { flex-grow: 1; overflow: hidden; position: relative; }
+        .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .player-view.active { opacity: 1; pointer-events: auto; }
+        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; }
+        .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; }
+        .player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
+        .player-playlist-view { list-style: none; padding: 0; margin: 0; }
+        .player-playlist-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .player-playlist-item.playing .info .title { color: var(--accent-color); }
+        .player-playlist-item .info { flex-grow: 1; }
+        .player-playlist-item .info .title { font-size: 15px; }
+        .player-playlist-item .info .artist { font-size: 12px; color: #aaa; }
+        .player-playlist-item .delete-from-queue-btn svg { width: 18px; height: 18px; fill: #aaa; }
+        .player-playlist-header { padding: 10px 20px; display: flex; justify-content: flex-end; }
+        .player-footer { padding: 15px 20px; flex-shrink: 0; }
+        #progress-bar { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
+        #progress-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; }
+        #progress-bar::-moz-range-thumb { width: 14px; height: 14px; background: white; border-radius: 50%; cursor: pointer; }
+        .player-controls { display: flex; justify-content: space-around; align-items: center; margin-top: 15px; }
+        .player-controls .icon-btn svg { width: 24px; height: 24px; fill: white; }
         .player-controls .play-pause-btn svg { width: 40px; height: 40px; }
-        .player-playlist-view { display: none; flex-grow: 1; min-height: 0; }
-        .player-playlist-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; color: white; }
-        .player-playlist-header button { background: #555; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        #player-playlist-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; }
-        #player-playlist-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; color: #ccc; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        #player-playlist-list li.playing { color: var(--accent-color); font-weight: bold; }
-        #player-playlist-list .song-details { display: flex; flex-direction: column; }
-        #player-playlist-list .song-details .artist { font-size: 12px; opacity: 0.7; }
-        #player-playlist-list .delete-from-queue-btn svg { width: 18px; height: 18px; fill: #ff6b6b; }
-        #music-player-modal.playlist-mode .player-main-view { display: none; }
-        #music-player-modal.playlist-mode .player-playlist-view { display: flex; flex-direction: column; }
 
         /* --- 弹窗/模态框样式 --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
@@ -210,9 +211,9 @@
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .tab-content .hint-text { font-size:12px; color:#888; margin-bottom: 15px; text-align: center; }
-        #music-url-input { width: 100%; box-sizing: border-box; /* 优化点2.③ */ }
-        
+        #tab-content-url #music-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; } /* 优化2.③ */
+        #add-music-modal .modal-actions .single-button { flex: none; width: 100%; } /* 优化2.① */
+
         /* --- 预设管理列表 --- */
         #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
         .preset-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
@@ -280,38 +281,36 @@
         </div>
     </div>
 
-    <!-- 全新音乐播放器模态框 -->
-    <div id="music-player-modal">
+    <!-- 浮动歌词 & 全新播放器 -->
+    <div id="lyrics-container"><div id="lyrics-line">...</div></div>
+    <div id="player-modal">
         <div class="player-header">
-            <button class="icon-btn" id="close-player-btn"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
-            <div class="player-song-info"><div class="title">...</div><div class="artist">...</div></div>
-            <button class="icon-btn" id="toggle-playlist-view-btn"><svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg></button>
+            <button class="icon-btn" id="hide-player-btn"><svg viewBox="0 0 1024 1024"><path d="M512 597.333333l-298.666667 298.666667-85.333333-85.333333L426.666667 512 128 213.333333l85.333333-85.333333L512 426.666667l298.666667-298.666667 85.333333 85.333333L597.333333 512l298.666667 298.666667-85.333333 85.333333z"></path></svg></button>
+            <div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div></div>
+            <button class="icon-btn" id="toggle-playlist-view-btn"><svg viewBox="0 0 1024 1024"><path d="M128 256h512v85.333333H128V256z m0 213.333333h512v85.333334H128v-85.333334z m0 213.333334h512v85.333333H128V682.666667zM810.666667 256h85.333333v512h-85.333333V256z"></path></svg></button>
         </div>
-        <div class="player-main-view">
-            <div class="player-lyrics-container"></div>
-            <div class="player-progress-container">
-                <input type="range" id="player-progress-bar" value="0" min="0" max="100" step="0.1">
+        <div class="player-body">
+            <div id="player-lyrics-view" class="player-view active"></div>
+            <div id="player-playlist-view-container" class="player-view">
+                <div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;">还原</button></div>
+                <ul class="player-playlist-view"></ul>
             </div>
+        </div>
+        <div class="player-footer">
+            <input type="range" id="progress-bar" value="0" step="1">
             <div class="player-controls">
-                <button class="icon-btn" id="player-prev-btn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-                <button class="icon-btn play-pause-btn" id="player-play-pause-btn"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-                <button class="icon-btn" id="player-next-btn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
-                <button class="icon-btn" id="player-mode-btn"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+                <button class="icon-btn" id="player-prev-btn"><svg viewBox="0 0 1024 1024"><path d="M213.333333 512L554.666667 213.333333v597.333334L213.333333 512z m341.333334-298.666667v597.333334h128V213.333333h-128z"></path></svg></button>
+                <button class="icon-btn play-pause-btn" id="player-play-pause-btn"><svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333v853.333334l640-426.666667-640-426.666667z"></path></svg></button>
+                <button class="icon-btn" id="player-next-btn"><svg viewBox="0 0 1024 1024"><path d="M810.666667 512L469.333333 213.333333v597.333334L810.666667 512z m-341.333334-298.666667v597.333334H341.333333V213.333333h128z"></path></svg></button>
+                <button class="icon-btn" id="player-playback-mode-btn"><svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256z"></path></svg></button>
             </div>
-        </div>
-        <div class="player-playlist-view">
-            <div class="player-playlist-header">
-                <h3>播放列表</h3>
-                <button id="restore-playlist-btn">恢复默认</button>
-            </div>
-            <ul id="player-playlist-list"></ul>
         </div>
     </div>
 
     <!-- 弹窗集合 -->
     <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 10px;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions"><button id="close-manage-modal-btn" class="cancel-btn">关闭</button></div></div></div>
     <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions"><button id="cancel-edit-btn" class="cancel-btn">取消</button><button id="save-edit-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p class="hint-text">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><div class="button-group"><button id="upload-music-btn" class="settings-button">选择文件</button><button id="cancel-add-music-btn-upload" class="settings-button secondary">取消</button></div><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p class="hint-text">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名:http://示例链接.示例主流媒体格式”。</p><div class="form-group"><textarea id="music-url-input" rows="5"></textarea></div><div class="modal-actions"><button id="cancel-add-music-btn-url" class="cancel-btn">取消</button><button id="confirm-add-url-btn" class="confirm-btn">添加URL</button></div></div></div></div></div>
+    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/mpeg,audio/wav,audio/flac,audio/aac,audio/ogg,audio/wma,audio/ape,audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions"><button id="cancel-add-music-btn" class="cancel-btn single-button">取消</button></div></div></div>
     <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions"><button id="cancel-edit-song-btn" class="cancel-btn">取消</button><button id="save-edit-song-btn" class="confirm-btn">保存</button></div></div></div>
     
     <div id="toast"></div>
@@ -321,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 全局 DOM 元素获取 ---
     const getEl = (id) => document.getElementById(id);
     const query = (selector) => document.querySelector(selector);
+    const queryAll = (selector) => document.querySelectorAll(selector);
     
     // --- 基础 UI ---
     const timeEl = getEl('time');
@@ -368,10 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicListEl = getEl('music-list');
     const addMusicBtn = getEl('add-music-btn');
     const addMusicModal = getEl('add-music-modal');
+    const cancelAddMusicBtn = getEl('cancel-add-music-btn');
+    const confirmAddUrlBtn = getEl('confirm-add-url-btn');
     const musicFileInput = getEl('music-file-input');
     const uploadMusicBtn = getEl('upload-music-btn');
     const musicUrlInput = getEl('music-url-input');
-    const confirmAddUrlBtn = getEl('confirm-add-url-btn');
     const editSongModal = getEl('edit-song-modal');
     const editSongIdInput = getEl('edit-song-id');
     const editSongTitleInput = getEl('edit-song-title');
@@ -379,28 +380,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditSongBtn = getEl('save-edit-song-btn');
     const cancelEditSongBtn = getEl('cancel-edit-song-btn');
 
-    // --- 全新音乐播放器 ---
-    const musicPlayerModal = getEl('music-player-modal');
-    const closePlayerBtn = getEl('close-player-btn');
-    const playerSongTitle = query('#music-player-modal .player-song-info .title');
-    const playerSongArtist = query('#music-player-modal .player-song-info .artist');
-    const playerLyricsContainer = query('.player-lyrics-container');
-    const playerProgressBar = getEl('player-progress-bar');
+    // --- 浮动歌词 & 播放器 ---
+    const lyricsContainer = getEl('lyrics-container');
+    const lyricsLine = getEl('lyrics-line');
+    const playerModal = getEl('player-modal');
+    const hidePlayerBtn = getEl('hide-player-btn');
+    const playerSongTitle = query('#player-modal .player-song-info .title');
+    const playerSongArtist = query('#player-modal .player-song-info .artist');
+    const togglePlaylistViewBtn = getEl('toggle-playlist-view-btn');
+    const playerLyricsView = getEl('player-lyrics-view');
+    const playerPlaylistViewContainer = getEl('player-playlist-view-container');
+    const playerPlaylistView = query('.player-playlist-view');
+    const restorePlaylistBtn = getEl('restore-playlist-btn');
+    const progressBar = getEl('progress-bar');
     const playerPlayPauseBtn = getEl('player-play-pause-btn');
     const playerPrevBtn = getEl('player-prev-btn');
     const playerNextBtn = getEl('player-next-btn');
-    const playerModeBtn = getEl('player-mode-btn');
-    const togglePlaylistViewBtn = getEl('toggle-playlist-view-btn');
-    const playerPlaylistList = getEl('player-playlist-list');
-    const restorePlaylistBtn = getEl('restore-playlist-btn');
+    const playerPlaybackModeBtn = getEl('player-playback-mode-btn');
 
     // --- SVG 图标 ---
-    const ICONS = {
-        play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
-        pause: '<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>',
-        repeat: '<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>',
-        repeatOne: '<svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zM13 15V9h-1l-2 1v1h1.5v4H13z"/></svg>',
-        shuffle: '<svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>',
+    const svgIcons = {
+        play: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333v853.333334l640-426.666667-640-426.666667z"></path></svg>',
+        pause: '<svg viewBox="0 0 1024 1024"><path d="M213.333333 85.333333h256v853.333334H213.333333V85.333333z m341.333334 0h256v853.333334H554.666667V85.333333z"></path></svg>',
+        repeat: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256z"></path></svg>',
+        repeatOne: '<svg viewBox="0 0 1024 1024"><path d="M853.333333 298.666667v-128H341.333333l128 128h384zM170.666667 725.333333v128h512l-128-128H170.666667z m682.666666 170.666667H170.666667V725.333333l-85.333334-85.333333 85.333334-85.333333v-256L85.333333 213.333333 170.666667 128h682.666666v256l85.333334 85.333333-85.333334 85.333334v256zM554.666667 469.333333h-128v-85.333333l-170.666667 128 170.666667 128v-85.333333h85.333333v170.666667h85.333333V469.333333h-42.666666z"></path></svg>',
+        shuffle: '<svg viewBox="0 0 1024 1024"><path d="M128 256l170.666667 170.666667L128 597.333333V256z m768 341.333333l-170.666667-170.666666L896 256v341.333333zM128 768h170.666667l512-512H640l-85.333333 85.333333h170.666666L213.333333 853.333333H384l85.333333-85.333333H128v-85.333333z"></path></svg>'
     };
 
     // --- 全局状态管理 ---
@@ -411,11 +415,12 @@ document.addEventListener('DOMContentLoaded', () => {
             availableModels: [], presets: []
         },
         music: {
-            playlist: [], // 音乐库
-            playQueue: [], // 播放队列
+            playlist: [],
+            queue: [], // The current playback queue
             lyrics: {}, // { songId: parsedLrcData }
             currentQueueIndex: -1,
             playbackMode: 'repeat', // 'repeat', 'repeat-one', 'shuffle'
+            lyricsPosition: { top: '100px', left: '50%' }
         }
     };
 
@@ -426,7 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const stateToSave = JSON.parse(JSON.stringify(appState));
             stateToSave.music.playlist = stateToSave.music.playlist.filter(song => !song.isLocal);
-            stateToSave.music.playQueue = stateToSave.music.playQueue.filter(song => !song.isLocal);
+            stateToSave.music.queue = stateToSave.music.queue.filter(song => !song.isLocal);
             localStorage.setItem(DB_KEY, JSON.stringify(stateToSave));
         } catch (error) {
             console.error("保存状态失败:", error);
@@ -446,9 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
             if (!Array.isArray(appState.music.playlist)) appState.music.playlist = [];
-            if (!Array.isArray(appState.music.playQueue) || appState.music.playQueue.length === 0) {
-                appState.music.playQueue = [...appState.music.playlist];
-            }
+            if (!Array.isArray(appState.music.queue)) appState.music.queue = [];
         }
         updateUIFromState();
     }
@@ -460,6 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePresetSelect();
         renderMusicList();
         updatePlaybackModeIcon();
+        lyricsContainer.style.top = appState.music.lyricsPosition.top;
+        lyricsContainer.style.left = appState.music.lyricsPosition.left;
+        lyricsContainer.style.transform = `translateX(-50%)`;
     }
 
     // ===================================================================
@@ -516,7 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; };
         const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } };
-        const handleDragEnd = () => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } };
+        const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } };
         banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd);
         banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd);
         setTimeout(dismiss, 5000);
@@ -540,37 +546,36 @@ document.addEventListener('DOMContentLoaded', () => {
     presetListEl.addEventListener('click', (e) => { const item = e.target.closest('.preset-list-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.classList.contains('delete-action')) { if (confirm(`确定要删除预设 "${appState.settings.presets[index].name}" 吗？`)) { appState.settings.presets.splice(index, 1); saveState(); renderPresetList(); updatePresetSelect(); showToast("预设已删除"); } } else if (e.target.classList.contains('edit-action')) { const preset = appState.settings.presets[index]; editPresetIndexInput.value = index; editPresetNameInput.value = preset.name; editPresetUrlInput.value = preset.url; editPresetKeyInput.value = preset.key; editPresetModal.classList.add('visible'); } });
     cancelEditBtn.addEventListener('click', () => editPresetModal.classList.remove('visible'));
     saveEditBtn.addEventListener('click', () => { const index = parseInt(editPresetIndexInput.value); const newName = editPresetNameInput.value.trim(); if (!newName) return showToast("预设名称不能为空", "error"); const existingIndex = appState.settings.presets.findIndex(p => p.name === newName); if (existingIndex !== -1 && existingIndex !== index) { if (!confirm(`已存在名为 "${newName}" 的预设，要覆盖它吗？`)) return; appState.settings.presets.splice(existingIndex, 1); const newCurrentIndex = appState.settings.presets.findIndex(p => p.name === appState.settings.presets[index].name); appState.settings.presets[newCurrentIndex] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[newCurrentIndex].model }; } else { appState.settings.presets[index] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[index].model }; } saveState(); updatePresetSelect(); renderPresetList(); editPresetModal.classList.remove('visible'); showToast("预设已更新"); });
-    exportDataBtn.addEventListener('click', () => { try { const stateToExport = JSON.parse(JSON.stringify(appState)); stateToExport.music.playlist = stateToExport.music.playlist.filter(song => !song.isLocal); stateToExport.music.playQueue = stateToExport.music.playQueue.filter(song => !song.isLocal); const dataStr = JSON.stringify(stateToExport, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
+    exportDataBtn.addEventListener('click', () => { try { const stateToExport = JSON.parse(JSON.stringify(appState)); stateToExport.music.playlist = stateToExport.music.playlist.filter(song => !song.isLocal); const dataStr = JSON.stringify(stateToExport, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
     importDataBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
     // ===================================================================
     // --- 音乐播放器核心 ---
     // ===================================================================
-    function playSong(queueIndex) {
-        if (queueIndex < 0 || queueIndex >= appState.music.playQueue.length) {
-            stopPlayback();
-            return;
-        }
+    function playSongFromQueue(queueIndex) {
+        if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return;
         appState.music.currentQueueIndex = queueIndex;
-        const song = appState.music.playQueue[queueIndex];
+        const song = appState.music.queue[queueIndex];
         audioPlayer.src = song.url;
         audioPlayer.play().catch(e => console.error("播放失败:", e));
-        updatePlayerUI(song, true);
+        updateAllPlayerUI(song);
     }
 
     function stopPlayback() {
         audioPlayer.pause();
         audioPlayer.src = '';
         appState.music.currentQueueIndex = -1;
-        updatePlayerUI(null, false);
-        hidePlayerModal();
+        updateDynamicIsland(false);
+        lyricsContainer.classList.remove('visible');
+        playerModal.classList.remove('show');
+        updateMusicListPlayingStatus();
     }
 
     function togglePlayPause() {
         if (audioPlayer.paused) {
-            if (appState.music.currentQueueIndex === -1 && appState.music.playQueue.length > 0) {
-                playSong(0);
+            if (appState.music.currentQueueIndex === -1 && appState.music.queue.length > 0) {
+                playSongFromQueue(0);
             } else {
                 audioPlayer.play();
             }
@@ -580,27 +585,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playNext() {
-        const { currentQueueIndex, playQueue, playbackMode } = appState.music;
-        if (playQueue.length === 0) return;
+        const { currentQueueIndex, queue, playbackMode } = appState.music;
+        if (queue.length === 0) return;
         let nextIndex;
         if (playbackMode === 'shuffle') {
-            nextIndex = Math.floor(Math.random() * playQueue.length);
+            nextIndex = Math.floor(Math.random() * queue.length);
         } else {
-            nextIndex = (currentQueueIndex + 1) % playQueue.length;
+            nextIndex = (currentQueueIndex + 1) % queue.length;
         }
-        playSong(nextIndex);
+        playSongFromQueue(nextIndex);
     }
 
     function playPrev() {
-        const { currentQueueIndex, playQueue, playbackMode } = appState.music;
-        if (playQueue.length === 0) return;
+        const { currentQueueIndex, queue, playbackMode } = appState.music;
+        if (queue.length === 0) return;
         let prevIndex;
         if (playbackMode === 'shuffle') {
-            prevIndex = Math.floor(Math.random() * playQueue.length);
+            prevIndex = Math.floor(Math.random() * queue.length);
         } else {
-            prevIndex = (currentQueueIndex - 1 + playQueue.length) % playQueue.length;
+            prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length;
         }
-        playSong(prevIndex);
+        playSongFromQueue(prevIndex);
     }
 
     function togglePlaybackMode() {
@@ -612,33 +617,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updatePlaybackModeIcon() {
-        const icons = { 'repeat': ICONS.repeat, 'repeat-one': ICONS.repeatOne, 'shuffle': ICONS.shuffle };
-        playerModeBtn.innerHTML = icons[appState.music.playbackMode];
+        const icons = { 'repeat': svgIcons.repeat, 'repeat-one': svgIcons.repeatOne, 'shuffle': svgIcons.shuffle };
+        playerPlaybackModeBtn.innerHTML = icons[appState.music.playbackMode];
     }
 
     audioPlayer.addEventListener('play', () => {
-        playerPlayPauseBtn.innerHTML = ICONS.pause;
+        playerPlayPauseBtn.innerHTML = svgIcons.pause;
         islandWaveform.classList.remove('paused');
     });
     audioPlayer.addEventListener('pause', () => {
-        playerPlayPauseBtn.innerHTML = ICONS.play;
+        playerPlayPauseBtn.innerHTML = svgIcons.play;
         islandWaveform.classList.add('paused');
     });
     audioPlayer.addEventListener('ended', () => {
         if (appState.music.playbackMode === 'repeat-one') {
-            playSong(appState.music.currentQueueIndex);
+            playSongFromQueue(appState.music.currentQueueIndex);
         } else {
             playNext();
         }
     });
     audioPlayer.addEventListener('loadedmetadata', () => {
-        const song = appState.music.playQueue[appState.music.currentQueueIndex];
+        const song = appState.music.queue[appState.music.currentQueueIndex];
         if (song && isNaN(song.duration)) {
             song.duration = audioPlayer.duration;
-            const masterSong = appState.music.playlist.find(s => s.id === song.id);
-            if (masterSong) masterSong.duration = audioPlayer.duration;
+            const mainPlaylistSong = appState.music.playlist.find(s => s.id === song.id);
+            if (mainPlaylistSong) mainPlaylistSong.duration = audioPlayer.duration;
             renderMusicList();
         }
+        progressBar.max = audioPlayer.duration;
+    });
+    audioPlayer.addEventListener('timeupdate', () => {
+        progressBar.value = audioPlayer.currentTime;
+        updateLyrics(audioPlayer.currentTime);
+    });
+    progressBar.addEventListener('input', () => {
+        audioPlayer.currentTime = progressBar.value;
     });
 
     // ===================================================================
@@ -659,13 +672,9 @@ document.addEventListener('DOMContentLoaded', () => {
             musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>';
             return;
         }
-        const currentSong = appState.music.playQueue[appState.music.currentQueueIndex];
-        appState.music.playlist.forEach((song) => {
+        appState.music.playlist.forEach((song, index) => {
             const li = document.createElement('li');
             li.className = 'music-list-item';
-            if (currentSong && song.id === currentSong.id && !audioPlayer.paused) {
-                li.classList.add('playing');
-            }
             li.dataset.id = song.id;
             li.innerHTML = `
                 <div class="music-item-content">
@@ -682,134 +691,119 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             musicListEl.appendChild(li);
         });
+        updateMusicListPlayingStatus();
+    }
+
+    function updateMusicListPlayingStatus() {
+        const currentSong = appState.music.queue[appState.music.currentQueueIndex];
+        queryAll('.music-list-item').forEach(item => {
+            item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id);
+        });
     }
 
     musicListEl.addEventListener('click', (e) => {
         const content = e.target.closest('.music-item-content');
         if (content) {
-            const item = content.parentElement;
-            if (item.dataset.swiped === 'true') {
-                content.style.transform = 'translateX(0px)';
-                item.dataset.swiped = 'false';
-                return;
-            }
-
-            const songId = item.dataset.id;
-            const currentPlayingSong = appState.music.playQueue[appState.music.currentQueueIndex];
-
-            if (currentPlayingSong && currentPlayingSong.id === songId && !audioPlayer.paused) {
+            const songId = content.parentElement.dataset.id;
+            const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex];
+            if (currentPlayingSong && currentPlayingSong.id === songId) {
                 stopPlayback();
             } else {
-                appState.music.playQueue = [...appState.music.playlist];
-                const newQueueIndex = appState.music.playQueue.findIndex(s => s.id === songId);
-                if (newQueueIndex > -1) {
-                    playSong(newQueueIndex);
-                    showPlayerModal();
+                const songIndex = appState.music.playlist.findIndex(s => s.id === songId);
+                if (songIndex > -1) {
+                    appState.music.queue = [...appState.music.playlist];
+                    playSongFromQueue(songIndex);
                 }
             }
         }
     });
 
     addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
-    getEl('cancel-add-music-btn-upload').addEventListener('click', () => addMusicModal.classList.remove('visible'));
-    getEl('cancel-add-music-btn-url').addEventListener('click', () => addMusicModal.classList.remove('visible'));
+    cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
-
-    getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
+    getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('.tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('.tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
 
     musicFileInput.addEventListener('change', (e) => {
         const files = e.target.files;
-        if (files.length === 0) return;
-        
+        if (files.length > 0) {
+            processFiles(files);
+            addMusicModal.classList.remove('visible');
+            musicFileInput.value = '';
+        }
+    });
+
+    confirmAddUrlBtn.addEventListener('click', () => {
+        const lines = musicUrlInput.value.trim().split('\n');
         let addedCount = 0;
-        const filesToProcess = Array.from(files);
-        
-        filesToProcess.forEach(file => {
+        for (const line of lines) {
+            if (!line.trim()) continue;
+            const separatorIndex = line.search(/:|：/);
+            if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) continue;
+            
+            const meta = line.substring(0, separatorIndex).trim();
+            const url = line.substring(separatorIndex + 1).trim();
+            
+            const parts = meta.split(' - ');
+            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
+            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta;
+            
+            const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false };
+            appState.music.playlist.push(newSong);
+            addedCount++;
+        }
+        musicUrlInput.value = '';
+        if (addedCount > 0) {
+            showToast(`成功添加 ${addedCount} 首歌曲`);
+            renderMusicList();
+            saveState();
+        }
+        addMusicModal.classList.remove('visible');
+    });
+
+    function processFiles(files) {
+        let addedCount = 0;
+        const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc'));
+        for (const file of audioFiles) {
             const isLrc = file.name.toLowerCase().endsWith('.lrc');
             const baseName = file.name.replace(/\.[^/.]+$/, "");
-            
             if (isLrc) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const lrcData = parseLRC(e.target.result);
                     const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName);
-                    if (matchingSong) {
-                        appState.music.lyrics[matchingSong.id] = lrcData;
-                        showToast(`歌词已匹配到: ${matchingSong.title}`);
-                    } else {
-                        showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error');
-                    }
+                    if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } 
+                    else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); }
                     saveState();
                 };
                 reader.readAsText(file);
             } else {
                 const parts = baseName.split(' - ');
                 const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-                const title = parts.length > 1 ? parts[1].trim() : baseName;
-                
+                const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName;
                 const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true };
                 appState.music.playlist.push(newSong);
                 addedCount++;
             }
-        });
-
-        if (addedCount > 0) {
-            showToast(`成功添加 ${addedCount} 首歌曲`);
-            appState.music.playQueue = [...appState.music.playlist];
-            renderMusicList();
-            saveState();
         }
-        addMusicModal.classList.remove('visible');
-        musicFileInput.value = '';
-    });
-
-    confirmAddUrlBtn.addEventListener('click', () => {
-        let addedCount = 0;
-        const lines = musicUrlInput.value.trim().split('\n');
-        for (const line of lines) {
-            if (!line.trim()) continue;
-            const splitIndex = line.indexOf(':http');
-            if (splitIndex > -1) {
-                const meta = line.substring(0, splitIndex);
-                const url = line.substring(splitIndex + 1);
-                const parts = meta.split(' - ');
-                const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-                const title = parts.length > 1 ? parts[1].trim() : meta;
-                const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url: url.trim(), duration: NaN, isLocal: false };
-                appState.music.playlist.push(newSong);
-                addedCount++;
-            }
-        }
-        if (addedCount > 0) {
-            showToast(`成功添加 ${addedCount} 首歌曲`);
-            appState.music.playQueue = [...appState.music.playlist];
-            renderMusicList();
-            saveState();
-        }
-        musicUrlInput.value = '';
-        addMusicModal.classList.remove('visible');
-    });
+        if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); }
+    }
 
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
-    saveEditSongBtn.addEventListener('click', () => {
-        const songId = editSongIdInput.value;
-        const song = appState.music.playlist.find(s => s.id === songId);
-        if (song) {
-            song.title = editSongTitleInput.value.trim();
-            song.artist = editSongArtistInput.value.trim();
-            appState.music.playQueue = [...appState.music.playlist];
-            renderMusicList();
-            saveState();
-            showToast("歌曲信息已更新");
-        }
-        editSongModal.classList.remove('visible');
-    });
+    saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 灵动岛 & 新播放器 UI ---
+    // --- 灵动岛 & 歌词 & 播放器 UI ---
     // ===================================================================
-    function updatePlayerUI(song, isPlaying) {
-        // Dynamic Island
+    function updateAllPlayerUI(song) {
+        updateDynamicIsland(true, song);
+        updateMusicListPlayingStatus();
+        lyricsContainer.classList.add('visible');
+        playerSongTitle.textContent = song.title;
+        playerSongArtist.textContent = song.artist;
+        renderPlayerQueue();
+    }
+
+    function updateDynamicIsland(isPlaying, song) {
         if (isPlaying && song) {
             dynamicIsland.classList.add('music-active');
             islandMusicInfo.querySelector('.title').textContent = song.title;
@@ -817,241 +811,125 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             dynamicIsland.classList.remove('music-active');
         }
-        // Player Modal
-        if (song) {
-            playerSongTitle.textContent = song.title;
-            playerSongArtist.textContent = song.artist;
-            updateLyricsUI();
-        }
-        // Music List
-        document.querySelectorAll('.music-list-item').forEach(item => {
-            item.classList.toggle('playing', isPlaying && song && item.dataset.id === song.id);
-        });
     }
 
-    function showPlayerModal() { musicPlayerModal.classList.add('visible'); }
-    function hidePlayerModal() { musicPlayerModal.classList.remove('visible'); }
-    closePlayerBtn.addEventListener('click', hidePlayerModal);
-    dynamicIsland.addEventListener('click', () => { if (appState.music.currentQueueIndex > -1) showPlayerModal(); });
-
-    playerPlayPauseBtn.addEventListener('click', togglePlayPause);
-    playerNextBtn.addEventListener('click', playNext);
-    playerPrevBtn.addEventListener('click', playPrev);
-    playerModeBtn.addEventListener('click', togglePlaybackMode);
-
-    playerProgressBar.addEventListener('input', (e) => {
-        const newTime = (e.target.value / 100) * audioPlayer.duration;
-        if (isFinite(newTime)) audioPlayer.currentTime = newTime;
-    });
-
-    audioPlayer.addEventListener('timeupdate', () => {
-        if (audioPlayer.duration) {
-            playerProgressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-        }
-        updateLyricsUI();
-    });
-
-    function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) result.push({ time, text }); } } return result.sort((a, b) => a.time - b.time); }
+    function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) { result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
 
     let currentLyricIndex = -1;
-    function updateLyricsUI() {
-        const song = appState.music.playQueue[appState.music.currentQueueIndex];
+    function updateLyrics(currentTime) {
+        const song = appState.music.queue[appState.music.currentQueueIndex];
         if (!song) return;
         const lyrics = appState.music.lyrics[song.id];
         if (!lyrics || lyrics.length === 0) {
-            if (playerLyricsContainer.innerHTML !== '<p>暂无歌词</p>') playerLyricsContainer.innerHTML = '<p>暂无歌词</p>';
+            lyricsLine.textContent = '♪ ♪ ♪';
+            playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>';
             return;
         }
-        if (playerLyricsContainer.dataset.songId !== song.id) {
-            playerLyricsContainer.innerHTML = lyrics.map((line, index) => `<p data-index="${index}">${line.text}</p>`).join('');
-            playerLyricsContainer.dataset.songId = song.id;
-        }
-        const currentTime = audioPlayer.currentTime;
-        let newLyricIndex = -1;
-        for (let i = lyrics.length - 1; i >= 0; i--) { if (currentTime >= lyrics[i].time) { newLyricIndex = i; break; } }
+        let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time));
+        if (newLyricIndex === -1) newLyricIndex = 0;
         if (newLyricIndex !== currentLyricIndex) {
-            const oldLine = playerLyricsContainer.querySelector(`p[data-index="${currentLyricIndex}"]`);
-            if (oldLine) oldLine.classList.remove('active');
-            const newLine = playerLyricsContainer.querySelector(`p[data-index="${newLyricIndex}"]`);
-            if (newLine) {
-                newLine.classList.add('active');
-                newLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
             currentLyricIndex = newLyricIndex;
+            lyricsLine.textContent = lyrics[currentLyricIndex].text;
+            renderPlayerLyrics(lyrics, currentLyricIndex);
         }
     }
 
-    togglePlaylistViewBtn.addEventListener('click', () => {
-        musicPlayerModal.classList.toggle('playlist-mode');
-        if (musicPlayerModal.classList.contains('playlist-mode')) {
-            renderPlayerQueue();
+    function renderPlayerLyrics(lyrics, activeIndex) {
+        playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join('');
+        const activeLine = playerLyricsView.querySelector('.lyric-line.active');
+        if (activeLine) {
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+    }
+
+    lyricsContainer.addEventListener('click', () => playerModal.classList.add('show'));
+    hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
+    playerPlayPauseBtn.addEventListener('click', togglePlayPause);
+    playerNextBtn.addEventListener('click', playNext);
+    playerPrevBtn.addEventListener('click', playPrev);
+    playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
+
+    togglePlaylistViewBtn.addEventListener('click', () => {
+        playerLyricsView.classList.toggle('active');
+        playerPlaylistViewContainer.classList.toggle('active');
     });
 
     function renderPlayerQueue() {
-        playerPlaylistList.innerHTML = '';
-        appState.music.playQueue.forEach((song, index) => {
+        playerPlaylistView.innerHTML = '';
+        appState.music.queue.forEach((song, index) => {
             const li = document.createElement('li');
-            li.dataset.index = index;
+            li.className = 'player-playlist-item';
             li.classList.toggle('playing', index === appState.music.currentQueueIndex);
+            li.dataset.index = index;
             li.innerHTML = `
-                <div class="song-details">
-                    <span class="title">${song.title}</span>
-                    <span class="artist">${song.artist}</span>
+                <div class="info">
+                    <div class="title">${song.title}</div>
+                    <div class="artist">${song.artist}</div>
                 </div>
-                <button class="icon-btn delete-from-queue-btn" data-id="${song.id}">
-                    <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                <button class="icon-btn delete-from-queue-btn">
+                    <svg viewBox="0 0 1024 1024"><path d="M213.333333 298.666667h597.333334v85.333333H213.333333v-85.333333z m85.333334 128h426.666666v469.333333H298.666667V426.666667z m128-213.333334h170.666666v85.333334H426.666667v-85.333334zM128 298.666667v-85.333334h768v85.333334H128z"></path></svg>
                 </button>
             `;
-            playerPlaylistList.appendChild(li);
+            playerPlaylistView.appendChild(li);
         });
     }
 
-    playerPlaylistList.addEventListener('click', (e) => {
-        const deleteBtn = e.target.closest('.delete-from-queue-btn');
-        if (deleteBtn) {
-            const songId = deleteBtn.dataset.id;
-            const indexToRemove = appState.music.playQueue.findIndex(s => s.id === songId);
-            if (indexToRemove > -1) {
-                if (confirm(`确定要从播放列表中移除 "${appState.music.playQueue[indexToRemove].title}" 吗？`)) {
-                    appState.music.playQueue.splice(indexToRemove, 1);
-                    if (indexToRemove === appState.music.currentQueueIndex) {
-                        playSong(indexToRemove); // Play next song or stop
-                    } else if (indexToRemove < appState.music.currentQueueIndex) {
-                        appState.music.currentQueueIndex--;
+    playerPlaylistView.addEventListener('click', (e) => {
+        const item = e.target.closest('.player-playlist-item');
+        if (!item) return;
+        const index = parseInt(item.dataset.index);
+        if (e.target.closest('.delete-from-queue-btn')) {
+            if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) {
+                appState.music.queue.splice(index, 1);
+                if (index === appState.music.currentQueueIndex) {
+                    if (appState.music.queue.length > 0) {
+                        playSongFromQueue(index % appState.music.queue.length);
+                    } else {
+                        stopPlayback();
                     }
-                    renderPlayerQueue();
-                    saveState();
+                } else if (index < appState.music.currentQueueIndex) {
+                    appState.music.currentQueueIndex--;
                 }
+                renderPlayerQueue();
+                saveState();
             }
         } else {
-            const li = e.target.closest('li');
-            if (li) {
-                playSong(parseInt(li.dataset.index));
-                musicPlayerModal.classList.remove('playlist-mode');
-            }
+            playSongFromQueue(index);
         }
     });
 
     restorePlaylistBtn.addEventListener('click', () => {
-        appState.music.playQueue = [...appState.music.playlist];
+        appState.music.queue = [...appState.music.playlist];
         renderPlayerQueue();
         saveState();
-        showToast("播放列表已恢复默认");
+        showToast("播放列表已还原");
     });
 
+    let isDraggingLyrics = false, offsetX, offsetY;
+    const handleLyricsDragStart = (e) => { isDraggingLyrics = true; lyricsContainer.style.cursor = 'grabbing'; const rect = lyricsContainer.getBoundingClientRect(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; offsetX = clientX - rect.left; offsetY = clientY - rect.top; };
+    const handleLyricsDragMove = (e) => { if (!isDraggingLyrics) return; e.preventDefault(); const parentRect = phoneScreen.getBoundingClientRect(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; let newTop = clientY - parentRect.top - offsetY; let newLeft = clientX - parentRect.left - offsetX; newTop = Math.max(50, Math.min(newTop, parentRect.height - lyricsContainer.offsetHeight - 20)); newLeft = Math.max(0, Math.min(newLeft, parentRect.width - lyricsContainer.offsetWidth)); lyricsContainer.style.top = `${newTop}px`; lyricsContainer.style.left = `${newLeft}px`; lyricsContainer.style.transform = 'none'; };
+    const handleLyricsDragEnd = () => { if (!isDraggingLyrics) return; isDraggingLyrics = false; lyricsContainer.style.cursor = 'grab'; appState.music.lyricsPosition = { top: lyricsContainer.style.top, left: lyricsContainer.style.left }; saveState(); };
+    lyricsContainer.addEventListener('mousedown', handleLyricsDragStart); document.addEventListener('mousemove', handleLyricsDragMove); document.addEventListener('mouseup', handleLyricsDragEnd);
+    lyricsContainer.addEventListener('touchstart', handleLyricsDragStart, { passive: false }); document.addEventListener('touchmove', handleLyricsDragMove, { passive: false }); document.addEventListener('touchend', handleLyricsDragEnd);
+
     // ===================================================================
-    // --- 通用列表滑动交互 ---
+    // --- 通用列表滑动交互 (优化版) ---
     // ===================================================================
     function createListSwipeHandler(listElement, contentSelector, actionsSelector, onDelete, onEdit) {
-        let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, isActionClicked = false;
-
-        const resetSwipedItems = (exceptThisOne = null) => {
-            listElement.querySelectorAll('li').forEach(item => {
-                if (item !== exceptThisOne) {
-                    item.querySelector(contentSelector).style.transform = 'translateX(0px)';
-                    item.dataset.swiped = 'false';
-                }
-            });
-        };
-
-        const handleDragStart = (e) => {
-            const target = e.target.closest(contentSelector);
-            if (!target) return;
-            isActionClicked = false;
-            isDragging = true;
-            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-            target.style.transition = 'none';
-            swipedItem = target.parentElement;
-            resetSwipedItems(swipedItem);
-            document.body.style.cursor = 'grabbing';
-        };
-
-        const handleDragMove = (e) => {
-            if (!isDragging || !swipedItem) return;
-            currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
-            let diff = currentX - startX;
-            if (diff > 0) diff = 0;
-            const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth;
-            if (diff < -actionsWidth - 20) diff = -actionsWidth - 20;
-            swipedItem.querySelector(contentSelector).style.transform = `translateX(${diff}px)`;
-        };
-
-        const handleDragEnd = () => {
-            if (!isDragging || !swipedItem) return;
-            isDragging = false;
-            document.body.style.cursor = 'default';
-            const content = swipedItem.querySelector(contentSelector);
-            content.style.transition = 'transform 0.3s ease';
-            const transformMatrix = new WebKitCSSMatrix(window.getComputedStyle(content).transform);
-            const currentTranslateX = transformMatrix.m41;
-            const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth;
-
-            if (currentTranslateX < dragThreshold) {
-                content.style.transform = `translateX(-${actionsWidth}px)`;
-                swipedItem.dataset.swiped = 'true';
-            } else {
-                content.style.transform = 'translateX(0px)';
-                swipedItem.dataset.swiped = 'false';
-                swipedItem = null;
-            }
-        };
-
-        listElement.addEventListener('mousedown', handleDragStart);
-        listElement.addEventListener('touchstart', handleDragStart, { passive: true });
-        document.addEventListener('mousemove', handleDragMove);
-        document.addEventListener('mouseup', handleDragEnd);
-        document.addEventListener('touchmove', handleDragMove, { passive: true });
-        document.addEventListener('touchend', handleDragEnd);
-
-        listElement.addEventListener('click', (e) => {
-            const item = e.target.closest('li');
-            if (!item) return;
-            if (e.target.classList.contains('delete-action')) {
-                isActionClicked = true;
-                onDelete(item);
-            }
-            if (e.target.classList.contains('edit-action')) {
-                isActionClicked = true;
-                onEdit(item);
-            }
-        });
+        let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, justSwiped = false;
+        const handleDragStart = (e) => { const target = e.target.closest(contentSelector); if (!target) return; if (swipedItem && swipedItem !== target.parentElement) { swipedItem.querySelector(contentSelector).style.transform = 'translateX(0px)'; } isDragging = true; startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; target.style.transition = 'none'; swipedItem = target.parentElement; document.body.style.cursor = 'grabbing'; };
+        const handleDragMove = (e) => { if (!isDragging || !swipedItem) return; currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; let diff = currentX - startX; if (diff > 0) diff = 0; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (diff < -actionsWidth - 20) diff = -actionsWidth - 20; swipedItem.querySelector(contentSelector).style.transform = `translateX(${diff}px)`; };
+        const handleDragEnd = () => { if (!isDragging || !swipedItem) return; isDragging = false; document.body.style.cursor = 'default'; const content = swipedItem.querySelector(contentSelector); content.style.transition = 'transform 0.3s ease'; const transformMatrix = new WebKitCSSMatrix(window.getComputedStyle(content).transform); const currentTranslateX = transformMatrix.m41; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (currentTranslateX < dragThreshold) { content.style.transform = `translateX(-${actionsWidth}px)`; justSwiped = true; setTimeout(() => justSwiped = false, 300); } else { content.style.transform = 'translateX(0px)'; swipedItem = null; } };
+        listElement.addEventListener('mousedown', handleDragStart); listElement.addEventListener('touchstart', handleDragStart, { passive: true });
+        document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd);
+        document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd);
+        listElement.addEventListener('click', (e) => { if (justSwiped) { e.preventDefault(); e.stopPropagation(); return; } const item = e.target.closest('li'); if (!item) return; if (e.target.classList.contains('delete-action')) onDelete(item); if (e.target.classList.contains('edit-action')) onEdit(item); });
     }
 
-    createListSwipeHandler(presetListEl, '.preset-item-content', '.preset-item-actions', 
-        (item) => {}, (item) => {} // Logic is already in the main click listener for this list
-    );
-
+    createListSwipeHandler(presetListEl, '.preset-item-content', '.preset-item-actions', (item) => {}, (item) => {});
     createListSwipeHandler(musicListEl, '.music-item-content', '.music-item-actions',
-        (item) => { // onDelete
-            const songId = item.dataset.id;
-            const songIndex = appState.music.playlist.findIndex(s => s.id === songId);
-            if (songIndex > -1) {
-                const song = appState.music.playlist[songIndex];
-                if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) {
-                    appState.music.playlist.splice(songIndex, 1);
-                    delete appState.music.lyrics[songId];
-                    appState.music.playQueue = [...appState.music.playlist];
-                    const currentSong = appState.music.playQueue[appState.music.currentQueueIndex];
-                    if (currentSong && currentSong.id === songId) {
-                        stopPlayback();
-                    }
-                    renderMusicList();
-                    saveState();
-                    showToast("歌曲已删除");
-                }
-            }
-        },
-        (item) => { // onEdit
-            const songId = item.dataset.id;
-            const song = appState.music.playlist.find(s => s.id === songId);
-            if (song) {
-                editSongIdInput.value = song.id;
-                editSongTitleInput.value = song.title;
-                editSongArtistInput.value = song.artist;
-                editSongModal.classList.add('visible');
-            }
-        }
+        (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } },
+        (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } }
     );
 
     // ===================================================================
