@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>土皇帝小手机</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
@@ -111,9 +111,20 @@
         .app-icon .label { color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
 
         /* --- 底部 Dock 栏 --- */
-        #dock { padding: 10px 20px 20px 20px; margin: 15px; background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 25px; display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; }
-
-        /* --- APP 界面通用样式 --- */
+#dock { 
+    /* 原来的 padding: 10px 20px 20px 20px; 可以先注释或删除 */
+    padding: 10px 20px; /* 上、左右的 padding */
+    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* 核心修改在这里 */
+    margin: 15px; 
+    background-color: rgba(255, 255, 255, 0.2); 
+    backdrop-filter: blur(15px); 
+    -webkit-backdrop-filter: blur(15px); 
+    border-radius: 25px; 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center; 
+    flex-shrink: 0; 
+}        /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
         .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; position: relative; min-height: 44px; box-sizing: content-box; }
