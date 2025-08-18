@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- 优化6: 添加iPhone适配代码 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
     <title>土皇帝小手机</title>
-    
     <style>
         /* --- 全局与基础样式 --- */
         :root {
@@ -160,9 +159,9 @@
         .player-body { flex-grow: 1; overflow: hidden; position: relative; }
         .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .player-view.active { opacity: 1; pointer-events: auto; }
-        /* BUG 1 修复: 使用Flexbox强制居中 */
-        .player-lyrics-view { padding: 10px 0; font-size: 18px; line-height: 1.6; display: flex; flex-direction: column; align-items: center; }
-        .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; padding: 0 20px; text-align: center; }
+        /* BUG 1: 播放器歌词居中终极解决方案 */
+        .player-lyrics-view { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px 20px; font-size: 18px; line-height: 1.6; box-sizing: border-box; height: 100%; }
+        .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; width: 100%; flex-shrink: 0; }
         .player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
         .player-playlist-view { list-style: none; padding: 0; margin: 0; }
         .player-playlist-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -202,39 +201,18 @@
         .font-color-btn { background: none; border: 1px solid var(--border-color); border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 14px; }
         .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
         .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        /* 优化4: 图标与气泡布局 */
-        #icon-grid, #bubble-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        /* 优化4: 图标布局 */
+        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
         .icon-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-        .icon-item .icon-preview { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .icon-item .icon-preview { width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
         .icon-item .icon-preview img { max-width: 100%; max-height: 100%; }
-        .icon-item .icon-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; word-break: break-all; }
-        .bubble-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; border: 1px solid var(--border-color); padding: 5px; border-radius: 8px; }
-        .bubble-item .bubble-preview-container { width: 100%; height: 30px; display: flex; justify-content: center; align-items: center; background-color: #f0f0f0; border-radius: 5px; overflow: hidden; }
-        .bubble-item .bubble-preview-container > * { transform: scale(0.8); white-space: nowrap; }
-        .bubble-item .bubble-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; word-break: break-all; }
-
-        /* --- 音乐详情页 --- */
-        #music-detail-screen { z-index: 20; }
-        #music-detail-screen .app-content { display: flex; flex-direction: column; padding: 0; }
-        .detail-song-info { padding: 20px; text-align: center; flex-shrink: 0; border-bottom: 1px solid var(--border-color); }
-        .detail-song-info .title { font-size: 22px; font-weight: bold; }
-        .detail-song-info .artist { font-size: 16px; color: var(--secondary-text-color); margin-top: 5px; }
-        #detail-lyrics-view { flex-grow: 1; overflow-y: auto; padding: 20px 0; font-size: 18px; line-height: 2; display: flex; flex-direction: column; align-items: center; }
-        #detail-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; padding: 0 25px; text-align: center; }
-        #detail-lyrics-view .lyric-line.active { color: var(--primary-text-color); opacity: 1; transform: scale(1.1); font-weight: bold; }
-        .comments-section { flex-shrink: 0; background-color: #f9f9f9; padding: 15px; border-top: 1px solid var(--border-color); }
-        .comments-section h3 { margin: 0 0 15px 0; font-size: 16px; }
-        #comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
-        .comment-item { display: flex; gap: 10px; margin-bottom: 15px; }
-        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; }
-        .comment-content { flex-grow: 1; }
-        .comment-user { font-weight: bold; font-size: 14px; }
-        .comment-text { font-size: 15px; margin: 4px 0; }
-        .comment-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; font-size: 12px; color: var(--secondary-text-color); }
-        .comment-actions button { background: none; border: none; cursor: pointer; color: inherit; }
-        #comment-form { display: flex; gap: 10px; }
-        #comment-input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 18px; padding: 8px 15px; font-size: 15px; }
-        #submit-comment-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 18px; padding: 8px 15px; cursor: pointer; }
+        .icon-item .icon-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
+        /* 优化4: 气泡布局 */
+        #bubble-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .bubble-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
+        .bubble-item .bubble-preview-container { width: 100%; height: 40px; display: flex; justify-content: center; align-items: center; background-color: #f0f0f0; border-radius: 5px; overflow: hidden; }
+        .bubble-item .bubble-preview-container > * { transform: scale(0.8); }
+        .bubble-item .bubble-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
 
         /* --- 弹窗/模态框样式 --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
@@ -265,11 +243,11 @@
         .inline-inputs { display: flex; gap: 10px; }
         .inline-inputs .form-group { flex: 1; }
         .inline-inputs input { text-align: center; }
-        /* 优化1: 统一预览框大小 */
-        #bubble-preview-wrapper { width: 100%; height: 80px; border: 1px dashed var(--border-color); margin-top: 15px; display: flex; justify-content: center; align-items: center; border-radius: 8px; overflow: hidden; }
-        #bubble-preview { transform: scale(0.8); }
+        /* 优化1: 统一气泡预览框 */
+        #bubble-preview-wrapper { width: 100%; height: 80px; border: 1px dashed var(--border-color); margin-top: 15px; display: flex; justify-content: center; align-items: center; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+        #bubble-preview { display: flex; justify-content: center; align-items: center; }
         .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-        .hidden { display: none !important; }
+        .hidden-by-logic { display: none !important; }
 
         /* --- 预设管理列表 --- */
         #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
@@ -280,6 +258,28 @@
         .edit-action { background-color: var(--edit-color); }
         .delete-action { background-color: var(--danger-color); }
         
+        /* --- 歌曲详情页 --- */
+        #song-detail-screen .app-header { background-color: transparent; border-bottom: none; color: var(--primary-text-color); }
+        #song-detail-screen .app-header .back-btn { color: var(--primary-text-color); }
+        #song-detail-screen .app-content { display: flex; flex-direction: column; }
+        #song-detail-info { text-align: center; padding: 10px 20px; flex-shrink: 0; }
+        #song-detail-info .title { font-size: 22px; font-weight: bold; }
+        #song-detail-info .artist { font-size: 16px; color: var(--secondary-text-color); }
+        #song-detail-lyrics-container { flex-grow: 1; overflow-y: auto; padding: 20px; font-size: 18px; line-height: 2; }
+        #song-detail-lyrics-container .lyric-line { text-align: center; transition: color 0.3s, transform 0.3s; opacity: 0.5; }
+        #song-detail-lyrics-container .lyric-line.active { color: var(--primary-text-color); opacity: 1; transform: scale(1.1); font-weight: bold; }
+        #song-detail-comments-section { flex-shrink: 0; background-color: var(--item-bg); border-top: 1px solid var(--border-color); padding: 15px; }
+        .comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
+        .comment-item { display: flex; gap: 10px; margin-bottom: 15px; }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; }
+        .comment-body { flex-grow: 1; }
+        .comment-author { font-weight: bold; font-size: 15px; }
+        .comment-text { font-size: 14px; margin-top: 4px; }
+        .comment-actions { display: flex; justify-content: flex-end; align-items: center; gap: 15px; font-size: 12px; color: var(--secondary-text-color); }
+        .comment-actions button { background: none; border: none; cursor: pointer; color: inherit; }
+        .comment-input-area { display: flex; gap: 10px; }
+        .comment-input-area input { flex-grow: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 18px; }
+
         /* --- 提示消息 --- */
         #toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events: none; }
         #toast.show { opacity: 1; bottom: 100px; }
@@ -337,19 +337,15 @@
             <div class="app-content" style="padding:0;"><ul id="music-list"></ul></div>
         </div>
 
-        <!-- 音乐详情页 -->
-        <div id="music-detail-screen" class="app-screen">
+        <!-- 歌曲详情页 -->
+        <div id="song-detail-screen" class="app-screen">
             <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
             <div class="app-content">
-                <div class="detail-song-info"><h2 class="title">歌曲名称</h2><p class="artist">歌手</p></div>
-                <div id="detail-lyrics-view"></div>
-                <div class="comments-section">
-                    <h3>评论</h3>
-                    <ul id="comment-list"></ul>
-                    <form id="comment-form" onsubmit="return false;">
-                        <input type="text" id="comment-input" placeholder="发表评论...">
-                        <button type="submit" id="submit-comment-btn" data-bubble-id="music-submit-comment">发送</button>
-                    </form>
+                <div id="song-detail-info"><h2 class="title">歌曲名</h2><p class="artist">歌手</p></div>
+                <div id="song-detail-lyrics-container"></div>
+                <div id="song-detail-comments-section">
+                    <ul class="comment-list" id="comment-list"></ul>
+                    <div class="comment-input-area"><input type="text" placeholder="发表评论..."></div>
                 </div>
             </div>
         </div>
@@ -410,7 +406,7 @@
     <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn" data-bubble-id="modal-set-wallpaper">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn" data-bubble-id="modal-set-chat-bg">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn" data-bubble-id="modal-cancel-wallpaper">取消</button></div></div></div>
     <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div class="modal-tabs" id="add-font-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="tab-content active"><button id="upload-font-btn" class="settings-button" data-bubble-id="modal-upload-font">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="tab-content"><textarea id="font-url-input" rows="5" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button" data-bubble-id="modal-add-font-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn" data-bubble-id="modal-cancel-font">取消</button></div></div></div>
     <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div class="modal-tabs" id="replace-icon-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="tab-content active"><button id="upload-icon-btn" class="settings-button" data-bubble-id="modal-upload-icon">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="tab-content"><input type="text" id="icon-url-input" placeholder="输入图片URL"><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;" data-bubble-id="modal-confirm-icon-url">确认</button></div></div><div class="modal-actions"><button id="restore-icon-btn" class="danger-btn" style="margin-top: 10px;">还原</button><button id="cancel-replace-icon-btn" class="cancel-btn">取消</button></div></div></div>
-    <div id="edit-bubble-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑气泡</h3><div class="modal-body"><input type="hidden" id="edit-bubble-id"><div id="bubble-image-settings"><div class="checkbox-group"><input type="checkbox" id="replace-bg-only-checkbox"><label for="replace-bg-only-checkbox">仅替换底图</label></div><button class="settings-button" id="upload-bubble-btn">上传图片</button><input type="file" id="bubble-file-input" accept="image/*" style="display:none;"><p style="text-align:center; margin: 5px 0; color: var(--secondary-text-color); font-size: 12px;">或</p><input type="text" id="bubble-url-input" placeholder="输入图片URL"><hr style="margin:15px 0; border:none; border-top:1px solid var(--border-color);"></div><div class="inline-inputs"><div class="form-group"><label>宽度</label><input type="text" id="bubble-width-input"></div><div class="form-group"><label>高度</label><input type="text" id="bubble-height-input"></div></div><div class="inline-inputs"><div class="form-group"><label>X偏移</label><input type="text" id="bubble-pos-x-input"></div><div class="form-group"><label>Y偏移</label><input type="text" id="bubble-pos-y-input"></div></div><div id="bubble-color-settings"><div class="form-group"><label>文字颜色</label><input type="text" id="bubble-color-input"></div><div class="form-group"><label>背景颜色</label><input type="text" id="bubble-bg-color-input"></div><div class="form-group"><label>边框颜色</label><input type="text" id="bubble-border-color-input"></div></div><label>预览</label><div id="bubble-preview-wrapper"><div id="bubble-preview"><span>预览文字</span></div></div></div><div class="modal-actions"><button id="save-bubble-btn" class="confirm-btn">保存</button><button id="restore-bubble-btn" class="danger-btn">还原</button><button id="cancel-edit-bubble-btn" class="cancel-btn">取消</button></div></div></div>
+    <div id="edit-bubble-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑气泡</h3><div class="modal-body"><input type="hidden" id="edit-bubble-id"><div class="form-group"><div class="checkbox-group"><input type="checkbox" id="replace-bg-only-checkbox"><label for="replace-bg-only-checkbox">仅替换底图</label></div><button class="settings-button" id="upload-bubble-btn">上传图片</button><input type="file" id="bubble-file-input" accept="image/*" style="display:none;"><hr style="margin:15px 0; border:none; border-top:1px solid var(--border-color);"><input type="text" id="bubble-url-input" placeholder="或输入图片URL"><button class="settings-button" id="confirm-bubble-url-btn" style="margin-top:10px;">确认URL</button></div><div class="inline-inputs"><div class="form-group"><label>宽度</label><input type="text" id="bubble-width-input"></div><div class="form-group"><label>高度</label><input type="text" id="bubble-height-input"></div></div><div class="inline-inputs"><div class="form-group"><label>X偏移</label><input type="text" id="bubble-pos-x-input"></div><div class="form-group"><label>Y偏移</label><input type="text" id="bubble-pos-y-input"></div></div><div class="form-group bubble-color-group"><label>文字颜色</label><input type="text" id="bubble-color-input"></div><div class="form-group bubble-color-group"><label>背景颜色</label><input type="text" id="bubble-bg-color-input"></div><div class="form-group bubble-color-group"><label>边框颜色</label><input type="text" id="bubble-border-color-input"></div><label>预览</label><div id="bubble-preview-wrapper"><div id="bubble-preview"><span></span></div></div></div><div class="modal-actions"><button id="save-bubble-btn" class="confirm-btn">保存</button><button id="restore-bubble-btn" class="danger-btn">还原</button><button id="cancel-edit-bubble-btn" class="cancel-btn">取消</button></div></div></div>
     
     <div id="toast"></div>
 
@@ -441,7 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicAppScreen = getEl('music-app-screen');
     const beautifyAppBtn = getEl('beautify-app-btn');
     const beautifyAppScreen = getEl('beautify-app-screen');
-    const musicDetailScreen = getEl('music-detail-screen');
 
     // --- 设置 APP ---
     const apiUrlInput = getEl('api-url');
@@ -482,12 +477,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditSongBtn = getEl('save-edit-song-btn');
     const cancelEditSongBtn = getEl('cancel-edit-song-btn');
 
-    // --- 音乐详情页 ---
-    const detailSongTitle = query('#music-detail-screen .detail-song-info .title');
-    const detailSongArtist = query('#music-detail-screen .detail-song-info .artist');
-    const detailLyricsView = getEl('detail-lyrics-view');
-    const commentList = getEl('comment-list');
-    const submitCommentBtn = getEl('submit-comment-btn');
+    // --- 歌曲详情页 ---
+    const songDetailScreen = getEl('song-detail-screen');
+    const songDetailTitle = query('#song-detail-info .title');
+    const songDetailArtist = query('#song-detail-info .artist');
+    const songDetailLyricsContainer = getEl('song-detail-lyrics-container');
+    const commentListEl = getEl('comment-list');
 
     // --- 浮动歌词 & 播放器 ---
     const lyricsContainer = getEl('lyrics-container');
@@ -540,8 +535,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 气泡编辑弹窗 ---
     const editBubbleModal = getEl('edit-bubble-modal');
     const editBubbleIdInput = getEl('edit-bubble-id');
-    const bubbleImageSettings = getEl('bubble-image-settings');
-    const bubbleColorSettings = getEl('bubble-color-settings');
     const bubbleWidthInput = getEl('bubble-width-input');
     const bubbleHeightInput = getEl('bubble-height-input');
     const bubblePosXInput = getEl('bubble-pos-x-input');
@@ -554,6 +547,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const uploadBubbleBtn = getEl('upload-bubble-btn');
     const bubbleFileInput = getEl('bubble-file-input');
     const bubbleUrlInput = getEl('bubble-url-input');
+    const confirmBubbleUrlBtn = getEl('confirm-bubble-url-btn');
     const saveBubbleBtn = getEl('save-bubble-btn');
     const restoreBubbleBtn = getEl('restore-bubble-btn');
     const cancelEditBubbleBtn = getEl('cancel-edit-bubble-btn');
@@ -581,7 +575,6 @@ document.addEventListener('DOMContentLoaded', () => {
             bubbles: {}
         }
     };
-    let originalIconContents = {};
 
     // ===================================================================
     // --- 状态保存与加载 ---
@@ -658,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeCurrentApp = () => { const activeApp = document.querySelector('.app-screen.active'); if (activeApp) { if (activeApp.id === 'beautify-app-screen' && activeApp.classList.contains('selection-mode')) { exitWallpaperSelectionMode(); } activeApp.classList.remove('active'); } };
     let toastTimer;
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
-    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
+    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 1500); }
 
     // ===================================================================
     // --- 设置 APP (无变更) ---
@@ -707,14 +700,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
     function updateMusicListPlayingStatus() { const currentSong = appState.music.queue[appState.music.currentQueueIndex]; queryAll('.music-list-item').forEach(item => { item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id); }); }
     
-    let longPressMusicTimer;
-    musicListEl.addEventListener('mousedown', (e) => { const item = e.target.closest('.music-item-content'); if (item) { longPressMusicTimer = setTimeout(() => { longPressMusicTimer = null; openMusicDetail(item.parentElement.dataset.id); }, 500); } });
-    musicListEl.addEventListener('mouseup', () => clearTimeout(longPressMusicTimer));
-    musicListEl.addEventListener('mouseleave', () => clearTimeout(longPressMusicTimer));
-    musicListEl.addEventListener('touchstart', (e) => { const item = e.target.closest('.music-item-content'); if (item) { longPressMusicTimer = setTimeout(() => { longPressMusicTimer = null; openMusicDetail(item.parentElement.dataset.id); }, 500); } });
-    musicListEl.addEventListener('touchend', () => clearTimeout(longPressMusicTimer));
-    musicListEl.addEventListener('click', (e) => { if (!longPressMusicTimer) return; clearTimeout(longPressMusicTimer); const content = e.target.closest('.music-item-content'); if (content) { const songId = content.parentElement.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); } } } });
-    
+    // 音乐列表长按进入详情页
+    let musicListLongPressTimer;
+    musicListEl.addEventListener('mousedown', (e) => { const item = e.target.closest('.music-list-item'); if (item) { musicListLongPressTimer = setTimeout(() => { openSongDetail(item.dataset.id); musicListLongPressTimer = null; }, 500); } });
+    musicListEl.addEventListener('mouseup', () => clearTimeout(musicListLongPressTimer));
+    musicListEl.addEventListener('mouseleave', () => clearTimeout(musicListLongPressTimer));
+    musicListEl.addEventListener('touchstart', (e) => { const item = e.target.closest('.music-list-item'); if (item) { musicListLongPressTimer = setTimeout(() => { openSongDetail(item.dataset.id); musicListLongPressTimer = null; }, 500); } });
+    musicListEl.addEventListener('touchend', () => clearTimeout(musicListLongPressTimer));
+    musicListEl.addEventListener('click', (e) => { if (musicListLongPressTimer) { clearTimeout(musicListLongPressTimer); const content = e.target.closest('.music-item-content'); if (content) { const songId = content.parentElement.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); } } } } });
+
     addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
@@ -727,12 +721,71 @@ document.addEventListener('DOMContentLoaded', () => {
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 音乐详情页功能 ---
+    // --- 歌曲详情页功能 ---
     // ===================================================================
-    function openMusicDetail(songId) { const song = appState.music.playlist.find(s => s.id === songId); if (!song) return; detailSongTitle.textContent = song.title; detailSongArtist.textContent = song.artist; const lyrics = appState.music.lyrics[song.id]; const currentSong = appState.music.queue[appState.music.currentQueueIndex]; const isPlayingThisSong = currentSong && currentSong.id === songId; const currentTime = isPlayingThisSong ? audioPlayer.currentTime : 0; renderDetailLyrics(lyrics, findCurrentLyricIndex(lyrics, currentTime)); renderPlaceholderComments(); openApp(musicDetailScreen); }
-    function renderPlaceholderComments() { commentList.innerHTML = ''; const comments = [ { user: '音乐爱好者', text: '这首歌太棒了，单曲循环！', likes: 12 }, { user: '路人甲', text: '前奏一响，我的青春就回来了。', likes: 5 }, { user: '隔壁老王', text: '评论区人好少，我来占个座。', likes: 2 } ]; comments.forEach(c => { const li = document.createElement('li'); li.className = 'comment-item'; li.innerHTML = ` <div class="comment-avatar"></div> <div class="comment-content"> <div class="comment-user">${c.user}</div> <div class="comment-text">${c.text}</div> </div> <div class="comment-actions"> <button class="like-btn">👍 ${c.likes}</button> <button class="reply-btn">💬</button> </div> `; commentList.appendChild(li); }); }
-    commentList.addEventListener('click', (e) => { if (e.target.closest('.like-btn') || e.target.closest('.reply-btn')) { showToast('评论功能待开发'); } });
-    submitCommentBtn.addEventListener('click', () => showToast('评论功能待开发'));
+    let currentDetailSongId = null;
+    function openSongDetail(songId) {
+        const song = appState.music.playlist.find(s => s.id === songId);
+        if (!song) return;
+        currentDetailSongId = songId;
+        songDetailTitle.textContent = song.title;
+        songDetailArtist.textContent = song.artist;
+        renderSongDetailLyrics();
+        renderComments();
+        openApp(songDetailScreen);
+    }
+    function renderSongDetailLyrics() {
+        const song = appState.music.playlist.find(s => s.id === currentDetailSongId);
+        if (!song) return;
+        const lyrics = appState.music.lyrics[song.id];
+        const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex];
+        const isPlayingThisSong = currentPlayingSong && currentPlayingSong.id === song.id;
+        
+        if (!lyrics || lyrics.length === 0) {
+            songDetailLyricsContainer.innerHTML = '<div class="lyric-line active">暂无歌词</div>';
+            return;
+        }
+
+        let activeIndex = -1;
+        if (isPlayingThisSong) {
+            const currentTime = audioPlayer.currentTime;
+            activeIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time));
+        }
+
+        songDetailLyricsContainer.innerHTML = lyrics.map((line, index) => 
+            `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`
+        ).join('');
+
+        const activeLine = songDetailLyricsContainer.querySelector('.lyric-line.active');
+        if (activeLine) {
+            activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+    function renderComments() {
+        const comments = [
+            { avatar: '', author: '土皇帝', text: '这首歌太好听了，单曲循环！', likes: 10, replies: 2 },
+            { avatar: '', author: '小手机', text: '前奏一响，我的DNA就动了！', likes: 5, replies: 0 },
+            { avatar: '', author: '路人甲', text: '评论区观光团报到。', likes: 2, replies: 1 }
+        ];
+        commentListEl.innerHTML = comments.map(comment => `
+            <li class="comment-item">
+                <div class="comment-avatar"></div>
+                <div class="comment-body">
+                    <div class="comment-author">${comment.author}</div>
+                    <div class="comment-text">${comment.text}</div>
+                </div>
+                <div class="comment-actions">
+                    <button>👍 ${comment.likes}</button>
+                    <button>💬 ${comment.replies}</button>
+                </div>
+            </li>
+        `).join('');
+        commentListEl.addEventListener('click', (e) => {
+            if (e.target.closest('button')) {
+                showToast('评论功能待开发');
+            }
+        });
+    }
 
     // ===================================================================
     // --- 灵动岛 & 歌词 & 播放器 UI ---
@@ -741,10 +794,44 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
     function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) { result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
     let currentLyricIndex = -1;
-    function findCurrentLyricIndex(lyrics, currentTime) { if (!lyrics || lyrics.length === 0) return -1; let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1 && lyrics.length > 0) newLyricIndex = 0; return newLyricIndex; }
-    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; if (musicDetailScreen.classList.contains('active')) { detailLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; } return; } const newLyricIndex = findCurrentLyricIndex(lyrics, currentTime); if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; lyricsLine.textContent = lyrics[currentLyricIndex]?.text || '♪ ♪ ♪'; renderPlayerLyrics(lyrics, currentLyricIndex); if (musicDetailScreen.classList.contains('active')) { renderDetailLyrics(lyrics, currentLyricIndex); } } }
-    function renderPlayerLyrics(lyrics, activeIndex) { if (!lyrics) { playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
-    function renderDetailLyrics(lyrics, activeIndex) { if (!lyrics) { detailLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } detailLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = detailLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+    function updateLyrics(currentTime) {
+        const song = appState.music.queue[appState.music.currentQueueIndex];
+        if (!song) return;
+        const lyrics = appState.music.lyrics[song.id];
+        
+        const updateView = (view, lyricsData, isDetailView = false) => {
+            if (!lyricsData || lyricsData.length === 0) {
+                if (!isDetailView) lyricsLine.textContent = '♪ ♪ ♪';
+                view.innerHTML = '<div class="lyric-line active">暂无歌词</div>';
+                return;
+            }
+            let newLyricIndex = lyricsData.findIndex((line, i) => currentTime >= line.time && (!lyricsData[i + 1] || currentTime < lyricsData[i + 1].time));
+            if (newLyricIndex === -1) newLyricIndex = 0;
+            
+            if (!isDetailView) {
+                if (newLyricIndex !== currentLyricIndex) {
+                    currentLyricIndex = newLyricIndex;
+                    lyricsLine.textContent = lyricsData[currentLyricIndex].text;
+                    renderPlayerLyrics(lyricsData, currentLyricIndex);
+                }
+            } else {
+                const activeLine = view.querySelector('.lyric-line.active');
+                if (!activeLine || parseInt(activeLine.dataset.index) !== newLyricIndex) {
+                    view.innerHTML = lyricsData.map((line, index) => `<div class="lyric-line ${index === newLyricIndex ? 'active' : ''}" data-index="${index}">${line.text}</div>`).join('');
+                    const newActiveLine = view.querySelector('.lyric-line.active');
+                    if (newActiveLine) {
+                        newActiveLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        };
+
+        updateView(playerLyricsView, lyrics);
+        if (songDetailScreen.classList.contains('active') && currentDetailSongId === song.id) {
+            updateView(songDetailLyricsContainer, lyrics, true);
+        }
+    }
+    function renderPlayerLyrics(lyrics, activeIndex) { playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
     lyricsContainer.addEventListener('click', () => playerModal.classList.add('show'));
     hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
     playerPlayPauseBtn.addEventListener('click', togglePlayPause);
@@ -785,10 +872,11 @@ document.addEventListener('DOMContentLoaded', () => {
     setAsChatBgBtn.addEventListener('click', () => { showToast('聊天功能待开发'); wallpaperActionModal.classList.remove('visible'); });
 
     // 字体功能
-    function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name)); }
+    function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name)); applyBubbleChangeForRenderedFonts(); }
+    function applyBubbleChangeForRenderedFonts() { const colorBtn = fontListEl.querySelector('.font-color-btn'); if (colorBtn) { const bubbleId = colorBtn.dataset.bubbleId; if (appState.beautify.bubbles[bubbleId]) { applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId], true); } } }
     fontListEl.addEventListener('click', (e) => { const content = e.target.closest('.font-item-content'); if (content && !e.target.classList.contains('font-color-btn')) { const fontName = content.parentElement.dataset.name; if (confirm(`确定要将系统字体更换为 "${fontName === 'default' ? '默认系统字体' : fontName}" 吗？`)) { applyFont(fontName); } } if (e.target.classList.contains('font-color-btn')) { const newColor = prompt("请输入新的字体颜色 (HEX或RGB/A):", appState.beautify.fontColor); if (newColor && isValidColor(newColor)) { appState.beautify.fontColor = newColor; document.documentElement.style.setProperty('--system-font-color', newColor); saveState(); showToast('字体颜色已更新'); } else if (newColor) { showToast('无效的颜色格式', 'error'); } } });
     function isValidColor(str) { return /^#([0-9A-F]{3}){1,2}$/i.test(str) || /^(rgb|rgba)\(/i.test(str); }
-    function applyFont(fontName, isInitialLoad = false) { const oldStyle = document.getElementById('custom-font-style'); if (oldStyle) oldStyle.remove(); if (fontName === 'default') { document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'); } else { const font = appState.beautify.fonts.find(f => f.name === fontName); if (font) { const style = document.createElement('style'); style.id = 'custom-font-style'; style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`; document.head.appendChild(style); document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`); } } appState.beautify.currentFont = fontName; if (!isInitialLoad) { saveState(); showToast(`字体已应用: ${fontName === 'default' ? '默认系统字体' : fontName}`); } renderFonts(); }
+    function applyFont(fontName, isInitialLoad = false) { const oldStyle = document.getElementById('custom-font-style'); if (oldStyle) oldStyle.remove(); if (fontName === 'default') { document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'); } else { const font = appState.beautify.fonts.find(f => f.name === fontName); if (font) { const style = document.createElement('style'); style.id = 'custom-font-style'; style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`; document.head.appendChild(style); document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`); } } appState.beautify.currentFont = fontName; if (!isInitialLoad) { saveState(); showToast(`字体已应用: ${fontName}`); } renderFonts(); }
     cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
     getEl('add-font-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-font-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-font-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-font-${tabId}`).classList.add('active'); } });
     uploadFontBtn.addEventListener('click', () => fontFileInput.click());
@@ -796,34 +884,33 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
 
     // 图标功能
-    const iconNameMap = { 'status-battery': '状态栏 电量', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 日记', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-magic': 'Dock 魔法', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '模式 循环', 'player-mode-repeat-one': '模式 单曲', 'player-mode-shuffle': '模式 随机' };
-    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); const createIconItem = (id, content) => { if (renderedIds.has(id)) return; const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML = customSrc ? `<img src="${customSrc}">` : content; item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${iconNameMap[id] || id}</span>`; iconGrid.appendChild(item); renderedIds.add(id); }; iconElements.forEach(el => { const id = el.dataset.iconId; if (!originalIconContents[id]) originalIconContents[id] = el.innerHTML; const imgChild = el.querySelector('img'); const content = imgChild ? `<img src="${imgChild.src}">` : el.textContent; createIconItem(id, content); }); const extraIcons = [ { id: 'player-mode-repeat', content: '🔁' }, { id: 'player-mode-repeat-one', content: '🔂' }, { id: 'player-mode-shuffle', content: '🔀' } ]; extraIcons.forEach(icon => { if (!originalIconContents[icon.id]) originalIconContents[icon.id] = icon.content; createIconItem(icon.id, icon.content); }); }
+    const iconNameMap = { 'status-battery': '状态栏 电量', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 日记', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-magic': 'Dock 魔法', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '播放模式 循环', 'player-mode-repeat-one': '播放模式 单曲', 'player-mode-shuffle': '播放模式 随机' };
+    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); const createIconItem = (id, content) => { if (renderedIds.has(id)) return; const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML = customSrc ? `<img src="${customSrc}">` : content; item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${iconNameMap[id] || id}</span>`; iconGrid.appendChild(item); renderedIds.add(id); }; iconElements.forEach(el => { const id = el.dataset.iconId; const imgChild = el.querySelector('img'); const content = imgChild ? `<img src="${imgChild.src}">` : el.textContent; createIconItem(id, content); }); const extraIcons = [ { id: 'player-mode-repeat', content: '🔁' }, { id: 'player-mode-repeat-one', content: '🔂' }, { id: 'player-mode-shuffle', content: '🔀' } ]; extraIcons.forEach(icon => createIconItem(icon.id, icon.content)); }
     iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
     cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
     getEl('replace-icon-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#replace-icon-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#replace-icon-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-icon-${tabId}`).classList.add('active'); } });
     uploadIconBtn.addEventListener('click', () => iconFileInput.click());
     iconFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { applyIconChange(replaceIconIdInput.value, event.target.result); }; reader.readAsDataURL(file); iconFileInput.value = ''; } });
     confirmReplaceIconUrlBtn.addEventListener('click', () => { const url = iconUrlInput.value.trim(); if (url) { applyIconChange(replaceIconIdInput.value, url); iconUrlInput.value = ''; } });
-    restoreIconBtn.addEventListener('click', () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { applyIconChange(iconId, null); showToast('图标已还原'); } });
-    function applyIconChange(iconId, newSrc, isInitialLoad = false) { if (newSrc === null) { delete appState.beautify.icons[iconId]; } else { appState.beautify.icons[iconId] = newSrc; } queryAll(`[data-icon-id="${iconId}"]`).forEach(targetEl => { if (targetEl) { const content = newSrc ? `<img src="${newSrc}" style="max-width:100%; max-height:100%; object-fit: contain;">` : originalIconContents[iconId]; targetEl.innerHTML = content || ''; } }); if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); } }
+    restoreIconBtn.addEventListener('click', () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { delete appState.beautify.icons[iconId]; saveState(); applyIconChange(iconId, null, false, true); replaceIconModal.classList.remove('visible'); } });
+    function applyIconChange(iconId, newSrc, isInitialLoad = false, isRestoring = false) { queryAll(`[data-icon-id="${iconId}"]`).forEach(targetEl => { if (targetEl) { if (isRestoring) { window.location.reload(); return; } const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%; object-fit: contain;">`; } } }); if (!isRestoring) { appState.beautify.icons[iconId] = newSrc; } if (!isInitialLoad) { saveState(); renderIcons(); showToast('图标已更新'); } }
 
     // 气泡功能
-    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chat-bg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'font-color-btn': '字体 颜色按钮', 'music-submit-comment': '音乐 发送评论' };
-    function renderBubbles() { bubbleGrid.innerHTML = ''; const bubbleElements = queryAll('[data-bubble-id]'); bubbleElements.forEach(el => { const id = el.dataset.bubbleId; const item = document.createElement('div'); item.className = 'bubble-item'; item.dataset.id = id; const previewEl = el.cloneNode(true); previewEl.removeAttribute('id'); previewEl.style = ''; item.innerHTML = `<div class="bubble-preview-container"></div><span class="bubble-name">${bubbleNameMap[id] || id}</span>`; item.querySelector('.bubble-preview-container').appendChild(previewEl); const customStyles = appState.beautify.bubbles[id]; if (customStyles) { applyBubbleChange(id, customStyles, true, previewEl); } bubbleGrid.appendChild(item); }); }
+    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chat-bg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'font-color-btn': '字体 颜色按钮' };
+    function renderBubbles() { bubbleGrid.innerHTML = ''; const bubbleElements = queryAll('[data-bubble-id]'); bubbleElements.forEach(el => { const id = el.dataset.bubbleId; const item = document.createElement('div'); item.className = 'bubble-item'; item.dataset.id = id; const clonedEl = el.cloneNode(true); clonedEl.style.cssText = ''; if (appState.beautify.bubbles[id]) { Object.assign(clonedEl.style, appState.beautify.bubbles[id]); } item.innerHTML = `<div class="bubble-preview-container"></div><span class="bubble-name">${bubbleNameMap[id] || id}</span>`; item.querySelector('.bubble-preview-container').appendChild(clonedEl); bubbleGrid.appendChild(item); }); }
     bubbleGrid.addEventListener('click', (e) => { const item = e.target.closest('.bubble-item'); if (item) { openBubbleEditor(item.dataset.id); } });
-    function openBubbleEditor(bubbleId) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; editBubbleIdInput.value = bubbleId; const computedStyle = getComputedStyle(targetEl); const customStyles = appState.beautify.bubbles[bubbleId] || {}; bubbleWidthInput.value = customStyles.width || computedStyle.width; bubbleHeightInput.value = customStyles.height || computedStyle.height; bubblePosXInput.value = customStyles.transform ? (customStyles.transform.match(/translateX\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubblePosYInput.value = customStyles.transform ? (customStyles.transform.match(/translateY\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubbleColorInput.value = customStyles.color || computedStyle.color; bubbleBgColorInput.value = customStyles.backgroundColor || computedStyle.backgroundColor; bubbleBorderColorInput.value = customStyles.borderColor || computedStyle.borderColor; replaceBgOnlyCheckbox.checked = customStyles.replaceBgOnly || false; bubbleUrlInput.value = (typeof customStyles.backgroundImage === 'string' && customStyles.backgroundImage.startsWith('url("http')) ? customStyles.backgroundImage.slice(5, -2) : ''; manageBubbleEditorView(customStyles.backgroundImage); updateBubblePreview(); editBubbleModal.classList.add('visible'); }
-    function manageBubbleEditorView(bgImage) { const hasImage = !!bgImage; bubbleColorSettings.classList.toggle('hidden', hasImage); uploadBubbleBtn.classList.toggle('hidden', !!bubbleUrlInput.value.trim()); bubbleUrlInput.parentElement.classList.toggle('hidden', !bubbleUrlInput.value.trim() && hasImage && !bubbleUrlInput.value.trim().startsWith('http')); }
-    bubbleUrlInput.addEventListener('input', () => manageBubbleEditorView());
-    function updateBubblePreview() { const previewBtn = bubblePreview.querySelector('span'); const targetEl = query(`[data-bubble-id="${editBubbleIdInput.value}"]`); if (!targetEl) return; previewBtn.textContent = targetEl.textContent; const styles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, borderWidth: '1px', borderStyle: 'solid', borderRadius: getComputedStyle(targetEl).borderRadius, display: 'flex', alignItems: 'center', justifyContent: 'center' }; Object.assign(bubblePreview.style, styles); }
-    [bubbleWidthInput, bubbleHeightInput, bubblePosXInput, bubblePosYInput, bubbleColorInput, bubbleBgColorInput, bubbleBorderColorInput].forEach(input => input.addEventListener('input', updateBubblePreview));
+    function openBubbleEditor(bubbleId) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; editBubbleIdInput.value = bubbleId; const computedStyle = getComputedStyle(targetEl); const customStyles = appState.beautify.bubbles[bubbleId] || {}; bubbleWidthInput.value = customStyles.width || computedStyle.width; bubbleHeightInput.value = customStyles.height || computedStyle.height; bubblePosXInput.value = customStyles.transform ? (customStyles.transform.match(/translateX\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubblePosYInput.value = customStyles.transform ? (customStyles.transform.match(/translateY\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubbleColorInput.value = customStyles.color || computedStyle.color; bubbleBgColorInput.value = customStyles.backgroundColor || computedStyle.backgroundColor; bubbleBorderColorInput.value = customStyles.borderColor || computedStyle.borderColor; replaceBgOnlyCheckbox.checked = customStyles.replaceBgOnly || false; toggleBubbleEditorInputs(!!customStyles.backgroundImage); updateBubblePreview(); editBubbleModal.classList.add('visible'); }
+    function updateBubblePreview() { const previewBtn = bubblePreview.querySelector('span'); const targetEl = query(`[data-bubble-id="${editBubbleIdInput.value}"]`); if (!targetEl) return; previewBtn.textContent = targetEl.textContent; const customStyles = appState.beautify.bubbles[editBubbleIdInput.value] || {}; const hasImage = !!customStyles.backgroundImage; const styles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: hasImage && !replaceBgOnlyCheckbox.checked ? 'transparent' : bubbleColorInput.value, backgroundColor: hasImage ? 'transparent' : bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, borderWidth: '1px', borderStyle: 'solid', borderRadius: getComputedStyle(targetEl).borderRadius, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundImage: hasImage ? `url(${customStyles.backgroundImage})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }; Object.assign(bubblePreview.style, styles); }
+    [bubbleWidthInput, bubbleHeightInput, bubblePosXInput, bubblePosYInput, bubbleColorInput, bubbleBgColorInput, bubbleBorderColorInput, replaceBgOnlyCheckbox].forEach(input => input.addEventListener('input', updateBubblePreview));
     cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.remove('visible'));
-    saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const currentBubbleState = appState.beautify.bubbles[bubbleId] || {}; const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImage: currentBubbleState.backgroundImage }; appState.beautify.bubbles[bubbleId] = newStyles; applyBubbleChange(bubbleId, newStyles); saveState(); editBubbleModal.classList.remove('visible'); renderBubbles(); showToast('气泡样式已保存'); });
-    restoreBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的默认样式吗？`)) { applyBubbleChange(bubbleId, null); editBubbleModal.classList.remove('visible'); showToast('气泡已还原'); } });
+    saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const currentBubbleState = appState.beautify.bubbles[bubbleId] || {}; const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImage: currentBubbleState.backgroundImage }; appState.beautify.bubbles[bubbleId] = newStyles; applyBubbleChange(bubbleId, newStyles); saveState(); editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
+    restoreBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的默认样式吗？`)) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (targetEl) { targetEl.style.cssText = ''; } delete appState.beautify.bubbles[bubbleId]; saveState(); renderBubbles(); editBubbleModal.classList.remove('visible'); showToast('气泡已还原'); } });
     uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
     bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { handleBubbleImage(event.target.result); }; reader.readAsDataURL(file); bubbleFileInput.value = ''; } });
-    bubbleUrlInput.addEventListener('input', () => { const url = bubbleUrlInput.value.trim(); if (url) { handleBubbleImage(`url("${url}")`); } else { handleBubbleImage(null); } });
-    function handleBubbleImage(imageUrl) { const bubbleId = editBubbleIdInput.value; if (!appState.beautify.bubbles[bubbleId]) appState.beautify.bubbles[bubbleId] = {}; appState.beautify.bubbles[bubbleId].backgroundImage = imageUrl; appState.beautify.bubbles[bubbleId].replaceBgOnly = replaceBgOnlyCheckbox.checked; applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId]); saveState(); manageBubbleEditorView(imageUrl); renderBubbles(); }
-    function applyBubbleChange(bubbleId, styles, isInitialLoad = false, element = null) { const targetElements = element ? [element] : queryAll(`[data-bubble-id="${bubbleId}"]`); if (styles === null) { delete appState.beautify.bubbles[bubbleId]; if (!isInitialLoad) saveState(); targetElements.forEach(el => el.style = ''); if (!isInitialLoad) renderBubbles(); return; } targetElements.forEach(targetEl => { if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; Object.assign(targetEl.style, styles); if (styles.backgroundImage) { if (styles.replaceBgOnly) { targetEl.style.backgroundImage = styles.backgroundImage; targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.color = styles.color || ''; } else { targetEl.innerHTML = ''; targetEl.style.backgroundImage = styles.backgroundImage; targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; } } }); }
+    confirmBubbleUrlBtn.addEventListener('click', () => { const url = bubbleUrlInput.value.trim(); if (url) { handleBubbleImage(url); bubbleUrlInput.value = ''; } });
+    function handleBubbleImage(imageUrl) { const bubbleId = editBubbleIdInput.value; if (!appState.beautify.bubbles[bubbleId]) appState.beautify.bubbles[bubbleId] = {}; appState.beautify.bubbles[bubbleId].backgroundImage = imageUrl; toggleBubbleEditorInputs(true); updateBubblePreview(); }
+    function toggleBubbleEditorInputs(hasImage) { queryAll('.bubble-color-group').forEach(el => el.classList.toggle('hidden-by-logic', hasImage)); getEl('upload-bubble-btn').classList.toggle('hidden-by-logic', hasImage && bubbleUrlInput.value); getEl('bubble-url-input').parentElement.classList.toggle('hidden-by-logic', hasImage && !bubbleUrlInput.value); }
+    function applyBubbleChange(bubbleId, styles, isInitialLoad = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; Object.assign(targetEl.style, styles); if (styles.backgroundImage) { if (styles.replaceBgOnly) { targetEl.style.backgroundImage = `url(${styles.backgroundImage})`; targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.color = styles.color || ''; } else { targetEl.innerHTML = ''; targetEl.style.backgroundImage = `url(${styles.backgroundImage})`; targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.color = 'transparent'; } } }
 
     // ===================================================================
     // --- 通用列表滑动交互 ---
@@ -837,9 +924,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 初始化 ---
     // ===================================================================
     function init() {
-        queryAll('[data-icon-id]').forEach(el => {
-            originalIconContents[el.dataset.iconId] = el.innerHTML;
-        });
         loadState();
         updateTime();
         updateBattery();
@@ -854,5 +938,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
-
