@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>土皇帝小手机</title>
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
     <style>
@@ -54,38 +54,26 @@
         @media (min-width: 450px) {
              #phone-screen { aspect-ratio: 9 / 19.5; height: 90vh; width: auto; }
         }
+        @media (min-aspect-ratio: 9/18) {
+            #phone-screen {
+                max-width: 100%; max-height: 100%;
+                width: 100%; height: 100%;
+                border-radius: 0;
+            }
+            .app-header {
+                padding-top: calc(env(safe-area-inset-top, 15px) + 15px);
+            }
+        }
 
         /* --- 顶部区域 (状态栏 + 灵动岛) --- */
-        #top-area {
-            position: absolute; top: 0; left: 0; right: 0;
-            padding: 15px 10px 10px 10px;
-            display: flex; justify-content: center; align-items: flex-start;
-            z-index: 50; pointer-events: none;
-        }
-        /* 优化3：修复状态栏对齐问题 */
-        #status-bar {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            color: white; font-weight: 600; font-size: 15px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            padding: 0 25px 0 25px; /* 调整左右内边距 */
-        }
-        #time { flex-shrink: 0; }
-        #battery-status { flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
+        #top-area { position: absolute; top: 0; left: 0; right: 0; padding: 15px 10px 10px 10px; display: flex; justify-content: center; align-items: flex-start; z-index: 50; pointer-events: none; }
+        #status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; font-size: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); padding: 0 5px 0 20px; }
+        #time { min-width: 60px; text-align: left; }
+        #battery-status { display: flex; justify-content: flex-end; align-items: center; gap: 5px; position: relative; right: 0px; /* 优化1 */ }
         #battery-icon { font-size: 20px; }
 
         /* --- 灵动岛 --- */
-        #dynamic-island {
-            position: absolute; top: 12px;
-            height: 36px; width: 125px;
-            max-width: 55%;
-            background-color: black;
-            border-radius: 18px;
-            transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-            pointer-events: auto;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8px; box-sizing: border-box;
-            overflow: hidden;
-        }
+        #dynamic-island { position: absolute; top: 12px; height: 36px; width: 125px; max-width: 55%; background-color: black; border-radius: 18px; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); pointer-events: auto; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
         #dynamic-island.music-active { width: 220px; }
         .island-content { color: white; font-size: 13px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #dynamic-island.music-active .island-content { opacity: 1; }
@@ -118,11 +106,10 @@
         /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
-        /* 优化1：修复APP标题对齐 */
-        .app-header { display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; padding: 15px 10px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; }
-        .app-header .back-btn { grid-column: 1; justify-self: start; font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; }
-        .app-header .title { grid-column: 2; text-align: center; font-size: 17px; font-weight: 600; }
-        .app-header .action-btn { grid-column: 3; justify-self: end; font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; position: relative; min-height: 44px; /* Bug 2: 统一高度 */ }
+        .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; white-space: nowrap; }
+        .app-header .title { font-size: 17px; font-weight: 600; position: absolute; left: 50%; transform: translateX(-50%); }
+        .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
         .app-content { flex-grow: 1; overflow-y: auto; }
 
         /* --- 设置 APP 特定样式 --- */
@@ -154,24 +141,22 @@
         .music-list-item.playing .music-item-info .title, .music-list-item.playing .music-item-info .artist { color: var(--accent-color); }
 
         /* --- 浮动歌词 --- */
-        /* 优化5：调整歌词初始位置 */
-        #lyrics-container { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        #lyrics-container { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         #lyrics-container.visible { opacity: 1; visibility: visible; }
         #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
 
         /* --- 音乐播放器模态框 --- */
-        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
+        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(50, 50, 50, 0.2); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
         #player-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; }
-        .player-header .icon-btn img, .player-header .icon-btn svg { width: 22px; height: 22px; }
+        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; font-size: 22px; color: white; }
         .player-song-info { text-align: center; }
         .player-song-info .title { font-size: 16px; font-weight: bold; }
         .player-song-info .artist { font-size: 13px; color: #ccc; }
         .player-body { flex-grow: 1; overflow: hidden; position: relative; }
         .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .player-view.active { opacity: 1; pointer-events: auto; }
-        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; }
+        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; /* Bug 1: 强制居中 */ }
         .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; }
         .player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
         .player-playlist-view { list-style: none; padding: 0; margin: 0; }
@@ -180,7 +165,7 @@
         .player-playlist-item .info { flex-grow: 1; }
         .player-playlist-item .info .title { font-size: 15px; }
         .player-playlist-item .info .artist { font-size: 12px; color: #aaa; }
-        .player-playlist-item .delete-from-queue-btn img { width: 18px; height: 18px; }
+        .delete-from-queue-btn { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; }
         .player-playlist-header { padding: 10px 20px; display: flex; justify-content: flex-end; }
         .player-footer { padding: 15px 20px; flex-shrink: 0; }
         #progress-bar { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
@@ -197,36 +182,40 @@
         .app-bottom-tabs { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background-color: var(--item-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 5; }
         .tab-link { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; color: var(--secondary-text-color); border-top: 2px solid transparent; }
         .tab-link.active { color: var(--accent-color); border-top-color: var(--accent-color); }
-        .beautify-tab-content { display: none; }
+        .beautify-tab-content { display: none; padding: 15px; }
         .beautify-tab-content.active { display: block; }
-        #font-tab-content, #wallpaper-tab-content, #icon-tab-content { padding: 15px; }
         /* 壁纸 */
         #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .wallpaper-item { aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; }
         .wallpaper-item::after { content: '✓'; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background-color: var(--accent-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; transform: scale(0); transition: transform 0.2s; }
         #beautify-app-screen.selection-mode .wallpaper-item.selected::after { transform: scale(1); }
-        /* 字体 (优化2) */
+        /* 字体 */
         #font-list { list-style: none; padding: 0; margin: 0; }
         .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .font-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
-        .font-item-content.active .font-name { color: var(--accent-color); font-weight: bold; }
-        .change-font-color-btn-inline { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
+        .font-item-content.active { color: var(--accent-color); font-weight: bold; }
+        .font-color-btn { background: none; border: 1px solid var(--border-color); border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 14px; }
         .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
         .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         /* 图标 */
-        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
+        #icon-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
         .icon-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
         .icon-item .icon-preview { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 28px; }
         .icon-item .icon-preview img { max-width: 100%; max-height: 100%; }
         .icon-item .icon-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
+        /* 气泡 */
+        #bubble-grid { display: flex; flex-direction: column; gap: 10px; }
+        .bubble-item { display: flex; align-items: center; gap: 15px; padding: 10px; background-color: var(--item-bg); border-radius: 8px; cursor: pointer; }
+        .bubble-item .bubble-preview { padding: 8px 12px; border-radius: 6px; background-color: var(--button-bg); color: var(--button-text-color); font-size: 14px; border: 1px solid transparent; }
+        .bubble-item .bubble-name { font-size: 14px; color: var(--primary-text-color); }
 
         /* --- 弹窗/模态框样式 --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
         .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background-color: var(--app-screen-bg); padding: 20px; border-radius: 14px; width: 85%; max-width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
+        .modal-content { background-color: var(--app-screen-bg); padding: 20px; border-radius: 14px; width: 90%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         .modal-title { font-size: 18px; font-weight: 600; text-align: center; margin-bottom: 15px; }
-        .modal-body { margin-bottom: 20px; }
+        .modal-body { margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
         .modal-body .form-group { margin-bottom: 12px; }
         .modal-body .form-group label { display: block; font-size: 14px; margin-bottom: 5px; color: var(--secondary-text-color); }
         .modal-body .form-group input, .modal-body .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit; }
@@ -235,14 +224,19 @@
         .modal-actions button { width: 100%; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; }
         .modal-actions .confirm-btn { background-color: var(--accent-color); color: white; }
         .modal-actions .cancel-btn { background-color: #e5e5ea; color: var(--accent-color); }
+        .modal-actions .restore-btn { background-color: #ffc107; color: black; }
         .modal-actions.row { flex-direction: row; } .modal-actions.row button { flex: 1; }
-        #add-music-tabs, #add-font-tabs, #replace-icon-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        #add-music-tabs, #add-font-tabs, #replace-icon-tabs, #edit-bubble-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--secondary-text-color); border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        #tab-content-url #music-url-input, #add-font-modal #font-url-input, #replace-icon-modal #icon-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; } /* 优化4：统一URL输入框样式 */
+        #tab-content-url #music-url-input, #add-font-modal #font-url-input, #replace-icon-modal #icon-url-input, #edit-bubble-modal #bubble-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         #add-music-modal .modal-actions .single-button { flex: none; width: 100%; }
+        .inline-inputs { display: flex; gap: 10px; align-items: center; }
+        .inline-inputs label { flex-shrink: 0; }
+        .inline-inputs input { flex-grow: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 
         /* --- 预设管理列表 --- */
         #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
@@ -295,12 +289,12 @@
 
         <!-- 设置APP界面 -->
         <div id="settings-app-screen" class="app-screen">
-            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2><div class="action-btn" style="visibility: hidden;"></div></div>
+            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2><div></div></div>
             <div class="app-content">
-                <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button">确认并加载模型</button></div>
+                <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button" data-bubble-id="settings-load-model">加载模型</button></div>
                 <div class="settings-group"><div class="group-title">模型选择</div><div class="group-content"><div class="settings-item"><select id="model-select"><option value="">请先加载模型</option></select></div></div></div>
-                <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button">保存预设</button><button id="manage-presets-btn" class="settings-button secondary">管理预设</button></div></div>
-                <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group"><button id="export-data-btn" class="settings-button">导出数据</button><button id="import-data-btn" class="settings-button secondary">导入数据</button><input type="file" id="import-file-input" accept=".json" style="display: none;"></div></div>
+                <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button" data-bubble-id="settings-save-preset">保存预设</button><button id="manage-presets-btn" class="settings-button secondary" data-bubble-id="settings-manage-preset">管理预设</button></div></div>
+                <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group"><button id="export-data-btn" class="settings-button" data-bubble-id="settings-export">导出数据</button><button id="import-data-btn" class="settings-button secondary" data-bubble-id="settings-import">导入数据</button><input type="file" id="import-file-input" accept=".json" style="display: none;"></div></div>
             </div>
         </div>
 
@@ -318,20 +312,16 @@
                 <button class="action-btn" id="beautify-action-btn" data-icon-id="beautify-add">+</button>
             </div>
             <div class="app-content">
-                <div id="wallpaper-tab-content" class="beautify-tab-content active">
-                    <div id="wallpaper-grid"></div>
-                </div>
-                <div id="font-tab-content" class="beautify-tab-content">
-                    <ul id="font-list"></ul>
-                </div>
-                <div id="icon-tab-content" class="beautify-tab-content">
-                    <div id="icon-grid"></div>
-                </div>
+                <div id="wallpaper-tab-content" class="beautify-tab-content active"><div id="wallpaper-grid"></div></div>
+                <div id="font-tab-content" class="beautify-tab-content"><ul id="font-list"></ul></div>
+                <div id="icon-tab-content" class="beautify-tab-content"><div id="icon-grid"></div></div>
+                <div id="bubble-tab-content" class="beautify-tab-content"><div id="bubble-grid"></div></div>
             </div>
             <div class="app-bottom-tabs">
                 <div class="tab-link active" data-tab="wallpaper">壁纸</div>
                 <div class="tab-link" data-tab="font">字体</div>
                 <div class="tab-link" data-tab="icon">图标</div>
+                <div class="tab-link" data-tab="bubble">气泡</div>
             </div>
         </div>
     </div>
@@ -340,14 +330,14 @@
     <div id="lyrics-container"><div id="lyrics-line">...</div></div>
     <div id="player-modal">
         <div class="player-header">
-            <button class="icon-btn" id="hide-player-btn" data-icon-id="player-close"><img src="https://i.postimg.cc/L6bJ1wYw/close.png"></button>
+            <button class="icon-btn" id="hide-player-btn" data-icon-id="player-close">🔽</button>
             <div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div></div>
-            <button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist"><img src="https://i.postimg.cc/W1dfGjD9/playlist.png"></button>
+            <button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist">📜</button>
         </div>
         <div class="player-body">
             <div id="player-lyrics-view" class="player-view active"></div>
             <div id="player-playlist-view-container" class="player-view">
-                <div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;">还原</button></div>
+                <div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;" data-bubble-id="player-restore-playlist">还原</button></div>
                 <ul class="player-playlist-view"></ul>
             </div>
         </div>
@@ -357,20 +347,21 @@
                 <button class="icon-btn" id="player-prev-btn" data-icon-id="player-prev"><img src="https://i.postimg.cc/m2n6nDp1/z-aigei-com.png"></button>
                 <button class="icon-btn play-pause-btn" id="player-play-pause-btn" data-icon-id="player-play"><img src="https://i.postimg.cc/v83KWXWz/z-aigei-com.png"></button>
                 <button class="icon-btn" id="player-next-btn" data-icon-id="player-next"><img src="https://i.postimg.cc/K8gsh2Cq/z-aigei-com.png"></button>
-                <button class="icon-btn" id="player-playback-mode-btn" data-icon-id="player-mode">🔁</button>
+                <button class="icon-btn" id="player-playback-mode-btn" data-icon-id="player-mode-repeat">🔁</button>
             </div>
         </div>
     </div>
 
     <!-- 弹窗集合 -->
-    <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 10px;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions row"><button id="close-manage-modal-btn" class="cancel-btn">关闭</button></div></div></div>
-    <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions row"><button id="cancel-edit-btn" class="cancel-btn">取消</button><button id="save-edit-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-music-btn" class="cancel-btn single-button">取消</button></div></div></div>
-    <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions row"><button id="cancel-edit-song-btn" class="cancel-btn">取消</button><button id="save-edit-song-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn">取消</button></div></div></div>
-    <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div id="add-font-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="tab-content active"><button id="upload-font-btn" class="settings-button">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="tab-content"><textarea id="font-url-input" rows="5" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn">取消</button></div></div></div>
-    <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div id="replace-icon-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="tab-content active"><button id="upload-icon-btn" class="settings-button">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="tab-content"><input type="text" id="icon-url-input" placeholder="输入图片URL"><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;">确认</button></div></div><div class="modal-actions row"><button id="cancel-replace-icon-btn" class="cancel-btn">取消</button></div></div></div>
-    
+    <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 10px;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions row"><button id="close-manage-modal-btn" class="cancel-btn" data-bubble-id="modal-close-preset">关闭</button></div></div></div>
+    <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions row"><button id="cancel-edit-btn" class="cancel-btn" data-bubble-id="modal-cancel">取消</button><button id="save-edit-btn" class="confirm-btn" data-bubble-id="modal-save">保存</button></div></div></div>
+    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button" data-bubble-id="modal-select-file">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button" data-bubble-id="modal-add-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-music-btn" class="cancel-btn single-button" data-bubble-id="modal-cancel-music">取消</button></div></div></div>
+    <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions row"><button id="cancel-edit-song-btn" class="cancel-btn" data-bubble-id="modal-cancel-song">取消</button><button id="save-edit-song-btn" class="confirm-btn" data-bubble-id="modal-save-song">保存</button></div></div></div>
+    <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn" data-bubble-id="modal-set-wallpaper">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn" data-bubble-id="modal-set-chatbg">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn" data-bubble-id="modal-cancel-wallpaper">取消</button></div></div></div>
+    <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div id="add-font-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="tab-content active"><button id="upload-font-btn" class="settings-button" data-bubble-id="modal-upload-font">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="tab-content"><textarea id="font-url-input" rows="5" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button" data-bubble-id="modal-add-font-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn" data-bubble-id="modal-cancel-font">取消</button></div></div></div>
+    <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div id="replace-icon-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="tab-content active"><button id="upload-icon-btn" class="settings-button" data-bubble-id="modal-upload-icon">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="tab-content"><input type="text" id="icon-url-input" placeholder="输入图片URL"><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;" data-bubble-id="modal-confirm-icon-url">确认</button></div></div><div class="modal-actions"><button id="restore-icon-btn" class="restore-btn">还原为默认</button><button id="cancel-replace-icon-btn" class="cancel-btn">取消</button></div></div></div>
+    <div id="edit-bubble-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑气泡</h3><div class="modal-body"><input type="hidden" id="edit-bubble-id"><div id="edit-bubble-tabs"><button class="tab-btn active" data-tab="style">样式</button><button class="tab-btn" data-tab="image">图片</button></div><div id="tab-content-bubble-style" class="tab-content active"><div class="form-group"><label>位置 (X, Y)</label><div class="inline-inputs"><input type="number" id="bubble-pos-x" placeholder="X"><input type="number" id="bubble-pos-y" placeholder="Y"></div></div><div class="form-group"><label>尺寸 (宽, 高)</label><div class="inline-inputs"><input type="number" id="bubble-size-w" placeholder="宽"><input type="number" id="bubble-size-h" placeholder="高"></div></div><div class="form-group"><label for="bubble-color-text">文字颜色</label><input type="text" id="bubble-color-text" placeholder="#RRGGBB 或 rgb(r,g,b)"></div><div class="form-group"><label for="bubble-color-border">边框颜色</label><input type="text" id="bubble-color-border" placeholder="#RRGGBB 或 rgb(r,g,b)"></div><div class="form-group"><label for="bubble-color-bg">背景颜色</label><input type="text" id="bubble-color-bg" placeholder="#RRGGBB 或 rgb(r,g,b)"></div></div><div id="tab-content-bubble-image" class="tab-content"><div class="checkbox-group"><input type="checkbox" id="bubble-replace-bg-only"><label for="bubble-replace-bg-only">仅替换底图</label></div><button id="upload-bubble-btn" class="settings-button" data-bubble-id="modal-upload-bubble-img">上传图片</button><input type="file" id="bubble-file-input" accept="image/*" style="display:none;"><hr style="margin:15px 0; border:none; border-top:1px solid var(--border-color);"><input type="text" id="bubble-url-input" placeholder="或输入图片URL"><button id="confirm-bubble-url-btn" class="settings-button" style="margin-top:10px;" data-bubble-id="modal-confirm-bubble-url">确认URL</button></div></div><div class="modal-actions"><button id="save-bubble-btn" class="confirm-btn">保存</button><button id="restore-bubble-btn" class="restore-btn">还原为默认</button><button id="cancel-bubble-btn" class="cancel-btn">取消</button></div></div></div>
+
     <div id="toast"></div>
 
 <script>
@@ -466,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const wallpaperGrid = getEl('wallpaper-grid');
     const fontListEl = getEl('font-list');
     const iconGrid = getEl('icon-grid');
+    const bubbleGrid = getEl('bubble-grid');
     const wallpaperActionModal = getEl('wallpaper-action-modal');
     const setAsWallpaperBtn = getEl('set-as-wallpaper-btn');
     const setAsChatBgBtn = getEl('set-as-chat-bg-btn');
@@ -483,8 +475,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const iconUrlInput = getEl('icon-url-input');
     const confirmReplaceIconUrlBtn = getEl('confirm-replace-icon-url-btn');
     const cancelReplaceIconBtn = getEl('cancel-replace-icon-btn');
+    const restoreIconBtn = getEl('restore-icon-btn');
     let wallpaperSelection = [];
     let currentWallpaperActionId = null;
+
+    // --- 气泡编辑 ---
+    const editBubbleModal = getEl('edit-bubble-modal');
+    const editBubbleIdInput = getEl('edit-bubble-id');
+    const bubblePosXInput = getEl('bubble-pos-x');
+    const bubblePosYInput = getEl('bubble-pos-y');
+    const bubbleSizeWInput = getEl('bubble-size-w');
+    const bubbleSizeHInput = getEl('bubble-size-h');
+    const bubbleColorTextInput = getEl('bubble-color-text');
+    const bubbleColorBorderInput = getEl('bubble-color-border');
+    const bubbleColorBgInput = getEl('bubble-color-bg');
+    const bubbleReplaceBgOnlyCheckbox = getEl('bubble-replace-bg-only');
+    const uploadBubbleBtn = getEl('upload-bubble-btn');
+    const bubbleFileInput = getEl('bubble-file-input');
+    const bubbleUrlInput = getEl('bubble-url-input');
+    const confirmBubbleUrlBtn = getEl('confirm-bubble-url-btn');
+    const saveBubbleBtn = getEl('save-bubble-btn');
+    const restoreBubbleBtn = getEl('restore-bubble-btn');
+    const cancelBubbleBtn = getEl('cancel-bubble-btn');
 
     // --- 全局状态管理 ---
     const DB_KEY = 'EmperorPhoneData';
@@ -497,15 +509,16 @@ document.addEventListener('DOMContentLoaded', () => {
             playlist: [], queue: [], lyrics: {},
             currentQueueIndex: -1,
             playbackMode: 'repeat',
-            lyricsPosition: { top: '60px', left: '50%' } // 优化5：更新初始位置
+            lyricsPosition: { top: '60px', left: '50%' }
         },
         beautify: {
             wallpapers: [],
             currentWallpaper: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302',
             fonts: [],
-            currentFont: '系统默认', // 优化2：默认字体名称
+            currentFont: 'default',
             fontColor: '#000000',
-            icons: {}
+            icons: {},
+            bubbles: {}
         }
     };
 
@@ -537,12 +550,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 music: { ...appState.music, ...savedState.music },
                 beautify: { ...appState.beautify, ...savedState.beautify }
             };
+            if (!appState.music.lyricsPosition) appState.music.lyricsPosition = { top: '60px', left: '50%' };
             if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
             if (!Array.isArray(appState.music.playlist)) appState.music.playlist = [];
             if (!Array.isArray(appState.music.queue)) appState.music.queue = [];
             if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = [];
             if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = [];
-            if (typeof appState.beautify.icons !== 'object') appState.beautify.icons = {};
+            if (typeof appState.beautify.icons !== 'object' || appState.beautify.icons === null) appState.beautify.icons = {};
+            if (typeof appState.beautify.bubbles !== 'object' || appState.beautify.bubbles === null) appState.beautify.bubbles = {};
         }
         updateUIFromState();
     }
@@ -567,6 +582,9 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(appState.beautify.icons).forEach(iconId => {
             applyIconChange(iconId, appState.beautify.icons[iconId], true);
         });
+        Object.keys(appState.beautify.bubbles).forEach(bubbleId => {
+            applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId], true);
+        });
     }
 
     // ===================================================================
@@ -578,15 +596,15 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeCurrentApp = () => { const activeApp = document.querySelector('.app-screen.active'); if (activeApp) { if (activeApp.id === 'beautify-app-screen' && activeApp.classList.contains('selection-mode')) { exitWallpaperSelectionMode(); } activeApp.classList.remove('active'); } };
     let toastTimer;
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
-    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 3000); } // 优化6：缩短停留时间
+    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 1500); }
 
     // ===================================================================
-    // --- 设置 APP (无变更) ---
+    // --- 设置 APP ---
     // ===================================================================
     settingsAppBtn.addEventListener('click', () => openApp(settingsAppScreen));
     apiUrlInput.addEventListener('input', () => { appState.settings.apiUrl = apiUrlInput.value.trim(); saveState(); });
     apiKeyInput.addEventListener('input', () => { appState.settings.apiKey = apiKeyInput.value.trim(); saveState(); });
-    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { saveState(); updateModelSelect(); confirmApiBtn.textContent = '确认并加载模型'; confirmApiBtn.disabled = false; } });
+    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { saveState(); updateModelSelect(); confirmApiBtn.textContent = '加载模型'; confirmApiBtn.disabled = false; } });
     function updateModelSelect() { modelSelect.innerHTML = ''; if (appState.settings.availableModels.length === 0) { modelSelect.innerHTML = '<option value="">请先加载模型</option>'; } else { appState.settings.availableModels.forEach(modelId => { const option = document.createElement('option'); option.value = modelId; option.textContent = modelId; option.selected = modelId === appState.settings.selectedModel; modelSelect.appendChild(option); }); } }
     modelSelect.addEventListener('change', () => { appState.settings.selectedModel = modelSelect.value; saveState(); });
     function updatePresetSelect() { presetSelect.innerHTML = '<option value="">无</option>'; appState.settings.presets.forEach((preset, index) => { const option = document.createElement('option'); option.value = index; option.textContent = preset.name; presetSelect.appendChild(option); }); }
@@ -603,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
     importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
     // ===================================================================
-    // --- 音乐播放器核心 ---
+    // --- 音乐播放器核心 (无变更) ---
     // ===================================================================
     function playSongFromQueue(queueIndex) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); }
     function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); }
@@ -611,7 +629,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playNext() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let nextIndex; if (playbackMode === 'shuffle') { nextIndex = Math.floor(Math.random() * queue.length); } else { nextIndex = (currentQueueIndex + 1) % queue.length; } playSongFromQueue(nextIndex); }
     function playPrev() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let prevIndex; if (playbackMode === 'shuffle') { prevIndex = Math.floor(Math.random() * queue.length); } else { prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length; } playSongFromQueue(prevIndex); }
     function togglePlaybackMode() { const modes = ['repeat', 'repeat-one', 'shuffle']; const currentModeIndex = modes.indexOf(appState.music.playbackMode); appState.music.playbackMode = modes[(currentModeIndex + 1) % modes.length]; updatePlaybackModeIcon(); saveState(); }
-    function updatePlaybackModeIcon() { const icons = { 'repeat': '🔁', 'repeat-one': '🔂', 'shuffle': '🔀' }; playerPlaybackModeBtn.textContent = icons[appState.music.playbackMode]; }
+    function updatePlaybackModeIcon() { const icons = { 'repeat': '🔁', 'repeat-one': '🔂', 'shuffle': '🔀' }; const iconIds = { 'repeat': 'player-mode-repeat', 'repeat-one': 'player-mode-repeat-one', 'shuffle': 'player-mode-shuffle' }; const currentMode = appState.music.playbackMode; playerPlaybackModeBtn.textContent = icons[currentMode]; playerPlaybackModeBtn.dataset.iconId = iconIds[currentMode]; }
     audioPlayer.addEventListener('play', () => { playerPlayPauseBtn.querySelector('img').src = pauseIconSrc; islandWaveform.classList.remove('paused'); });
     audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.querySelector('img').src = playIconSrc; islandWaveform.classList.add('paused'); });
     audioPlayer.addEventListener('ended', () => { if (appState.music.playbackMode === 'repeat-one') { playSongFromQueue(appState.music.currentQueueIndex); } else { playNext(); } });
@@ -620,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI ---
+    // --- 音乐 APP UI & 歌词匹配 (无变更) ---
     // ===================================================================
     musicAppBtn.addEventListener('click', () => openApp(musicAppScreen));
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
@@ -632,88 +650,20 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
     getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-music-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-music-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    
-    // 优化7：修复URL歌词匹配Bug
-    confirmAddUrlBtn.addEventListener('click', async () => {
-        const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim());
-        if (lines.length === 0) return;
-
-        let musicEntries = [];
-        let lrcEntries = [];
-
-        for (const line of lines) {
-            const separatorIndex = line.search(/:|：/);
-            if (separatorIndex === -1) continue;
-            const meta = line.substring(0, separatorIndex).trim();
-            const url = line.substring(separatorIndex + 1).trim();
-            if (!url.startsWith('http')) continue;
-
-            const entry = { meta, url };
-            if (url.toLowerCase().endsWith('.lrc')) {
-                lrcEntries.push(entry);
-            } else {
-                musicEntries.push(entry);
-            }
-        }
-
-        let addedSongsCount = 0;
-        for (const entry of musicEntries) {
-            const parts = entry.meta.split(' - ');
-            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
-            const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url: entry.url, duration: NaN, isLocal: false };
-            appState.music.playlist.push(newSong);
-            addedSongsCount++;
-        }
-
-        let matchedLrcCount = 0;
-        for (const entry of lrcEntries) {
-            const parts = entry.meta.split(' - ');
-            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
-            
-            const matchingSong = appState.music.playlist.find(s => s.title === title && s.artist === artist);
-            if (matchingSong) {
-                try {
-                    const response = await fetch(entry.url);
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    const lrcText = await response.text();
-                    const lrcData = parseLRC(lrcText);
-                    appState.music.lyrics[matchingSong.id] = lrcData;
-                    matchedLrcCount++;
-                } catch (error) {
-                    console.error(`获取歌词失败: ${entry.url}`, error);
-                    showToast(`获取歌词失败: ${title}`, 'error');
-                }
-            }
-        }
-
-        musicUrlInput.value = '';
-        addMusicModal.classList.remove('visible');
-        if (addedSongsCount > 0) {
-            showToast(`成功添加 ${addedSongsCount} 首歌曲`);
-            renderMusicList();
-        }
-        if (matchedLrcCount > 0) {
-            showToast(`成功匹配 ${matchedLrcCount} 份歌词`);
-        }
-        if (addedSongsCount > 0 || matchedLrcCount > 0) {
-            saveState();
-        }
-    });
-
-    function processFiles(files) { let addedCount = 0; const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc')); for (const file of audioFiles) { const isLrc = file.name.toLowerCase().endsWith('.lrc'); const baseName = file.name.replace(/\.[^/.]+$/, ""); if (isLrc) { const reader = new FileReader(); reader.onload = (e) => { const lrcData = parseLRC(e.target.result); const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); } saveState(); }; reader.readAsText(file); } else { const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; } } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }
+    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) return; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); saveState(); } for (const { meta, url } of lrcUrls) { try { const response = await fetch(url); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { showToast(`无法加载歌词: ${meta}`, 'error'); } } });
+    function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); } lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); saveState(); }
+    function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); saveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 灵动岛 & 歌词 & 播放器 UI ---
+    // --- 灵动岛 & 歌词 & 播放器 UI (无变更) ---
     // ===================================================================
     function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
     function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
     function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) { result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
     let currentLyricIndex = -1;
-    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active" style="text-align: center;">暂无歌词</div>'; return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; lyricsLine.textContent = lyrics[currentLyricIndex].text; renderPlayerLyrics(lyrics, currentLyricIndex); } }
+    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active" style="text-align: center; padding: 0 20px;">暂无歌词</div>'; return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; lyricsLine.textContent = lyrics[currentLyricIndex].text; renderPlayerLyrics(lyrics, currentLyricIndex); } }
     function renderPlayerLyrics(lyrics, activeIndex) { playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
     lyricsContainer.addEventListener('click', () => playerModal.classList.add('show'));
     hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
@@ -722,7 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerPrevBtn.addEventListener('click', playPrev);
     playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
     togglePlaylistViewBtn.addEventListener('click', () => { playerLyricsView.classList.toggle('active'); playerPlaylistViewContainer.classList.toggle('active'); });
-    function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="icon-btn delete-from-queue-btn" data-icon-id="player-delete"><img src="https://i.postimg.cc/P50g1f5J/delete.png"></button>`; playerPlaylistView.appendChild(li); }); }
+    function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="delete-from-queue-btn" data-icon-id="player-delete">🗑️</button>`; playerPlaylistView.appendChild(li); }); }
     playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); saveState(); } } else { playSongFromQueue(index); } });
     restorePlaylistBtn.addEventListener('click', () => { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); saveState(); showToast("播放列表已还原"); });
     let isDraggingLyrics = false, offsetX, offsetY;
@@ -736,7 +686,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 美化 APP ---
     // ===================================================================
     beautifyAppBtn.addEventListener('click', () => { openApp(beautifyAppScreen); renderWallpapers(); });
-    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('.beautify-tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); beautifyActionBtn.style.display = (tabId === 'icon') ? 'none' : 'block'; if (tabId === 'wallpaper') { renderWallpapers(); } else if (tabId === 'font') { renderFonts(); } else if (tabId === 'icon') { renderIcons(); } } });
+    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('.beautify-tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); beautifyActionBtn.style.display = (['icon', 'bubble'].includes(tabId)) ? 'none' : 'block'; if (tabId === 'wallpaper') { renderWallpapers(); } else if (tabId === 'font') { renderFonts(); } else if (tabId === 'icon') { renderIcons(); } else if (tabId === 'bubble') { renderBubbles(); } } });
     beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (beautifyAppScreen.classList.contains('selection-mode')) { if (wallpaperSelection.length > 0 && confirm(`确定要删除选中的 ${wallpaperSelection.length} 张壁纸吗？`)) { appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !wallpaperSelection.includes(wp.id)); saveState(); renderWallpapers(); } exitWallpaperSelectionMode(); } else if (activeTab === 'wallpaper') { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.multiple = true; input.onchange = (e) => { const files = e.target.files; if (files.length > 0) { let lastUrl = ''; Array.from(files).forEach(file => { const url = URL.createObjectURL(file); appState.beautify.wallpapers.push({ id: 'local_' + Date.now() + Math.random(), url: url, isLocal: true }); lastUrl = url; }); if (lastUrl) { appState.beautify.currentWallpaper = lastUrl; phoneScreen.style.backgroundImage = `url(${lastUrl})`; } saveState(); renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } }; input.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
 
     // 壁纸功能
@@ -754,76 +704,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setAsWallpaperBtn.addEventListener('click', () => { const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === currentWallpaperActionId); if (wallpaper) { appState.beautify.currentWallpaper = wallpaper.url; phoneScreen.style.backgroundImage = `url(${wallpaper.url})`; saveState(); showToast('壁纸已更换'); } wallpaperActionModal.classList.remove('visible'); });
     setAsChatBgBtn.addEventListener('click', () => { showToast('聊天功能待开发'); wallpaperActionModal.classList.remove('visible'); });
 
-    // 字体功能 (优化2：重构)
-    function renderFonts() {
-        fontListEl.innerHTML = '';
-        const allFonts = [{ name: '系统默认', isDefault: true }, ...appState.beautify.fonts];
-        allFonts.forEach(font => {
-            const isActive = font.name === appState.beautify.currentFont;
-            const li = document.createElement('li');
-            li.className = 'font-list-item';
-            li.dataset.name = font.name;
-            li.dataset.isDefault = font.isDefault || false;
-            const colorBtnHTML = isActive ? `<button class="change-font-color-btn-inline" data-icon-id="font-color">🎨</button>` : '';
-            li.innerHTML = `
-                <div class="font-item-content ${isActive ? 'active' : ''}">
-                    <span class="font-name">${font.name}</span>
-                    ${colorBtnHTML}
-                </div>
-                <div class="font-item-actions">
-                    <div class="edit-action">编辑</div>
-                    <div class="delete-action">删除</div>
-                </div>`;
-            fontListEl.appendChild(li);
-        });
-    }
-    fontListEl.addEventListener('click', (e) => {
-        const content = e.target.closest('.font-item-content');
-        if (e.target.classList.contains('change-font-color-btn-inline')) {
-            const newColor = prompt("请输入新的字体颜色 (Hex格式, 如 #RRGGBB):", appState.beautify.fontColor);
-            if (newColor && /^#[0-9A-F]{6}$/i.test(newColor)) {
-                appState.beautify.fontColor = newColor;
-                document.documentElement.style.setProperty('--system-font-color', newColor);
-                saveState();
-                showToast('字体颜色已更新');
-            } else if (newColor) {
-                showToast('无效的颜色格式', 'error');
-            }
-        } else if (content) {
-            const fontName = content.parentElement.dataset.name;
-            if (fontName !== appState.beautify.currentFont) {
-                if (confirm(`确定要将系统字体更换为 "${fontName}" 吗？`)) {
-                    applyFont(fontName);
-                }
-            }
-        }
-    });
-    function applyFont(fontName, isInitialLoad = false) {
-        const oldStyle = document.getElementById('custom-font-style');
-        if (oldStyle) oldStyle.remove();
-        if (fontName === '系统默认') {
-            document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
-        } else {
-            const font = appState.beautify.fonts.find(f => f.name === fontName);
-            if (font) {
-                const style = document.createElement('style');
-                style.id = 'custom-font-style';
-                style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`;
-                document.head.appendChild(style);
-                document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`);
-            } else {
-                // Fallback if font not found
-                fontName = '系统默认';
-                document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
-            }
-        }
-        appState.beautify.currentFont = fontName;
-        if (!isInitialLoad) {
-            saveState();
-            renderFonts();
-            showToast(`字体已应用: ${fontName}`);
-        }
-    }
+    // 字体功能
+    function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn">颜色</button>` : ''; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span>${fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name)); }
+    fontListEl.addEventListener('click', (e) => { const content = e.target.closest('.font-item-content'); if (content && !e.target.classList.contains('font-color-btn')) { const fontName = content.parentElement.dataset.name; if (confirm(`确定要将系统字体更换为 "${fontName}" 吗？`)) { applyFont(fontName); } } if (e.target.classList.contains('font-color-btn')) { const newColor = prompt("请输入新的字体颜色 (Hex格式, 如 #RRGGBB):", appState.beautify.fontColor); if (newColor && /^#([0-9A-F]{3}){1,2}$/i.test(newColor)) { appState.beautify.fontColor = newColor; document.documentElement.style.setProperty('--system-font-color', newColor); saveState(); showToast('字体颜色已更新'); } else if (newColor) { showToast('无效的颜色格式', 'error'); } } });
+    function applyFont(fontName, isInitialLoad = false) { const oldStyle = document.getElementById('custom-font-style'); if (oldStyle) oldStyle.remove(); if (fontName === 'default') { document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'); } else { const font = appState.beautify.fonts.find(f => f.name === fontName); if (font) { const style = document.createElement('style'); style.id = 'custom-font-style'; style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`; document.head.appendChild(style); document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`); } } appState.beautify.currentFont = fontName; if (!isInitialLoad) { saveState(); showToast(`字体已应用: ${fontName}`); } renderFonts(); }
     cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
     getEl('add-font-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-font-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-font-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-font-${tabId}`).classList.add('active'); } });
     uploadFontBtn.addEventListener('click', () => fontFileInput.click());
@@ -831,14 +715,30 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
 
     // 图标功能
-    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); iconElements.forEach(el => { const id = el.dataset.iconId; const name = id.replace('-', ' - '); const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML; if (customSrc) { previewHTML = `<img src="${customSrc}">`; } else { const imgChild = el.querySelector('img'); if (imgChild) { previewHTML = `<img src="${imgChild.src}">`; } else { previewHTML = el.textContent; } } item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${name}</span>`; iconGrid.appendChild(item); }); }
+    const iconNameMap = { 'status-battery': '状态栏 电池', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 日记', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-magic': 'Dock 魔法', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-next': '播放器 下一首', 'player-mode-repeat': '播放器 循环', 'player-mode-repeat-one': '播放器 单曲循环', 'player-mode-shuffle': '播放器 随机', 'player-delete': '播放器 删除' };
+    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); const createIconItem = (id, content) => { if (renderedIds.has(id)) return; const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML = customSrc ? `<img src="${customSrc}">` : content; item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${iconNameMap[id] || id.replace(/-/g, ' ')}</span>`; iconGrid.appendChild(item); renderedIds.add(id); }; iconElements.forEach(el => { const id = el.dataset.iconId; const imgChild = el.querySelector('img'); const content = imgChild ? `<img src="${imgChild.src}">` : el.textContent; createIconItem(id, content); }); const extraIcons = [ { id: 'player-mode-repeat', content: '🔁' }, { id: 'player-mode-repeat-one', content: '🔂' }, { id: 'player-mode-shuffle', content: '🔀' } ]; extraIcons.forEach(icon => createIconItem(icon.id, icon.content)); }
     iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
     cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
     getEl('replace-icon-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#replace-icon-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#replace-icon-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-icon-${tabId}`).classList.add('active'); } });
     uploadIconBtn.addEventListener('click', () => iconFileInput.click());
     iconFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { applyIconChange(replaceIconIdInput.value, event.target.result); }; reader.readAsDataURL(file); iconFileInput.value = ''; } });
     confirmReplaceIconUrlBtn.addEventListener('click', () => { const url = iconUrlInput.value.trim(); if (url) { applyIconChange(replaceIconIdInput.value, url); iconUrlInput.value = ''; } });
-    function applyIconChange(iconId, newSrc, isInitialLoad = false) { const targetEl = query(`[data-icon-id="${iconId}"]`); if (targetEl) { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%;">`; } } appState.beautify.icons[iconId] = newSrc; if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } }
+    function applyIconChange(iconId, newSrc, isInitialLoad = false) { queryAll(`[data-icon-id="${iconId}"]`).forEach(targetEl => { if (targetEl) { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%; object-fit: contain;">`; } } }); appState.beautify.icons[iconId] = newSrc; if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } }
+    restoreIconBtn.addEventListener('click', () => { if (confirm('确定要将此图标还原为默认样式吗？')) { const iconId = replaceIconIdInput.value; delete appState.beautify.icons[iconId]; saveState(); showToast('图标已还原'); replaceIconModal.classList.remove('visible'); setTimeout(() => window.location.reload(), 500); } });
+
+    // 气泡功能
+    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-preset': '设置 管理预设', 'settings-export': '设置 导出数据', 'settings-import': '设置 导入数据', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chatbg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'modal-upload-bubble-img': '弹窗 上传气泡图', 'modal-confirm-bubble-url': '弹窗 确认气泡URL' };
+    function renderBubbles() { bubbleGrid.innerHTML = ''; const bubbleElements = queryAll('[data-bubble-id]'); bubbleElements.forEach(el => { const id = el.dataset.bubbleId; const item = document.createElement('div'); item.className = 'bubble-item'; item.dataset.id = id; item.innerHTML = `<div class="bubble-preview">${el.textContent}</div><span class="bubble-name">${bubbleNameMap[id] || id}</span>`; bubbleGrid.appendChild(item); }); }
+    bubbleGrid.addEventListener('click', (e) => { const item = e.target.closest('.bubble-item'); if (item) { const bubbleId = item.dataset.id; editBubbleIdInput.value = bubbleId; const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (targetEl) { const styles = window.getComputedStyle(targetEl); const rect = targetEl.getBoundingClientRect(); bubblePosXInput.value = Math.round(rect.left); bubblePosYInput.value = Math.round(rect.top); bubbleSizeWInput.value = Math.round(rect.width); bubbleSizeHInput.value = Math.round(rect.height); bubbleColorTextInput.value = styles.color; bubbleColorBorderInput.value = styles.borderColor; bubbleColorBgInput.value = styles.backgroundColor; } editBubbleModal.classList.add('visible'); } });
+    getEl('edit-bubble-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#edit-bubble-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#edit-bubble-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-bubble-${tabId}`).classList.add('active'); } });
+    cancelBubbleBtn.addEventListener('click', () => editBubbleModal.classList.remove('visible'));
+    saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const newStyles = { posX: bubblePosXInput.value, posY: bubblePosYInput.value, width: bubbleSizeWInput.value, height: bubbleSizeHInput.value, color: bubbleColorTextInput.value, borderColor: bubbleColorBorderInput.value, backgroundColor: bubbleColorBgInput.value, }; appState.beautify.bubbles[bubbleId] = { ...appState.beautify.bubbles[bubbleId], ...newStyles }; applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId]); saveState(); showToast('气泡样式已保存'); editBubbleModal.classList.remove('visible'); });
+    uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
+    bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { handleBubbleImageReplace(event.target.result); }; reader.readAsDataURL(file); bubbleFileInput.value = ''; } });
+    confirmBubbleUrlBtn.addEventListener('click', () => { const url = bubbleUrlInput.value.trim(); if (url) { handleBubbleImageReplace(url); bubbleUrlInput.value = ''; } });
+    function handleBubbleImageReplace(src) { const bubbleId = editBubbleIdInput.value; const replaceBgOnly = bubbleReplaceBgOnlyCheckbox.checked; appState.beautify.bubbles[bubbleId] = { ...appState.beautify.bubbles[bubbleId], image: src, replaceBgOnly }; applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId]); saveState(); showToast('气泡图片已更新'); editBubbleModal.classList.remove('visible'); }
+    function applyBubbleChange(bubbleId, styles, isInitialLoad = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (styles.image) { if (styles.replaceBgOnly) { targetEl.style.backgroundImage = `url(${styles.image})`; targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.backgroundColor = 'transparent'; } else { targetEl.innerHTML = `<img src="${styles.image}" style="width:100%; height:100%; object-fit:contain;">`; } } else { if (styles.backgroundColor) targetEl.style.backgroundColor = styles.backgroundColor; if (styles.color) targetEl.style.color = styles.color; if (styles.borderColor) { targetEl.style.borderColor = styles.borderColor; targetEl.style.borderWidth = '1px'; targetEl.style.borderStyle = 'solid'; } } if (styles.width) targetEl.style.width = `${styles.width}px`; if (styles.height) targetEl.style.height = `${styles.height}px`; }
+    restoreBubbleBtn.addEventListener('click', () => { if (confirm('确定要将此气泡还原为默认样式吗？')) { const bubbleId = editBubbleIdInput.value; delete appState.beautify.bubbles[bubbleId]; saveState(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); setTimeout(() => window.location.reload(), 500); } });
 
     // ===================================================================
     // --- 通用列表滑动交互 ---
@@ -846,32 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function createListSwipeHandler(listElement, contentSelector, actionsSelector, onDelete, onEdit) { let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, justSwiped = false; const handleDragStart = (e) => { const target = e.target.closest(contentSelector); if (!target) return; if (swipedItem && swipedItem !== target.parentElement) { swipedItem.querySelector(contentSelector).style.transform = 'translateX(0px)'; } isDragging = true; startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; target.style.transition = 'none'; swipedItem = target.parentElement; document.body.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging || !swipedItem) return; currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; let diff = currentX - startX; if (diff > 0) diff = 0; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (diff < -actionsWidth - 20) diff = -actionsWidth - 20; swipedItem.querySelector(contentSelector).style.transform = `translateX(${diff}px)`; }; const handleDragEnd = () => { if (!isDragging || !swipedItem) return; isDragging = false; document.body.style.cursor = 'default'; const content = swipedItem.querySelector(contentSelector); content.style.transition = 'transform 0.3s ease'; const transformMatrix = new WebKitCSSMatrix(window.getComputedStyle(content).transform); const currentTranslateX = transformMatrix.m41; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (currentTranslateX < dragThreshold) { content.style.transform = `translateX(-${actionsWidth}px)`; justSwiped = true; setTimeout(() => justSwiped = false, 300); } else { content.style.transform = 'translateX(0px)'; swipedItem = null; } }; listElement.addEventListener('mousedown', handleDragStart); listElement.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); listElement.addEventListener('click', (e) => { if (justSwiped) { e.preventDefault(); e.stopPropagation(); return; } const item = e.target.closest('li'); if (!item) return; if (e.target.classList.contains('delete-action')) onDelete(item); if (e.target.classList.contains('edit-action')) onEdit(item); }); }
     createListSwipeHandler(presetListEl, '.preset-item-content', '.preset-item-actions', (item) => {}, (item) => {});
     createListSwipeHandler(musicListEl, '.music-item-content', '.music-item-actions', (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } }, (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } });
-    createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions', 
-        (item) => { // onDelete
-            if (item.dataset.isDefault === 'true') { showToast('默认字体无法删除', 'error'); return; }
-            const fontName = item.dataset.name;
-            if (confirm(`确定要删除字体 "${fontName}" 吗？`)) {
-                appState.beautify.fonts = appState.beautify.fonts.filter(f => f.name !== fontName);
-                if (appState.beautify.currentFont === fontName) { applyFont('系统默认'); }
-                saveState(); renderFonts(); showToast('字体已删除');
-            }
-        }, 
-        (item) => { // onEdit
-            if (item.dataset.isDefault === 'true') { showToast('默认字体无法编辑', 'error'); return; }
-            const oldName = item.dataset.name;
-            const newName = prompt(`请输入新的字体名称:`, oldName);
-            if (newName && newName.trim() !== '' && newName !== oldName) {
-                const font = appState.beautify.fonts.find(f => f.name === oldName);
-                if (font) {
-                    font.name = newName.trim();
-                    if (appState.beautify.currentFont === oldName) {
-                        appState.beautify.currentFont = newName.trim();
-                    }
-                    saveState(); renderFonts(); showToast('字体名称已更新');
-                }
-            }
-        }
-    );
+    createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions', (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法删除', 'error'); return; } if (confirm(`确定要删除字体 "${fontName}" 吗？`)) { appState.beautify.fonts = appState.beautify.fonts.filter(f => f.name !== fontName); if (appState.beautify.currentFont === fontName) { applyFont('default'); } saveState(); renderFonts(); showToast('字体已删除'); } }, (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法编辑', 'error'); return; } const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { const newName = prompt('请输入新的字体名称:', fontName); if (newName && newName.trim() !== '') { appState.beautify.fonts[fontIndex].name = newName.trim(); if (appState.beautify.currentFont === fontName) { appState.beautify.currentFont = newName.trim(); } saveState(); renderFonts(); showToast('字体名称已更新'); } } });
 
     // ===================================================================
     // --- 初始化 ---
