@@ -2,11 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>土皇帝小手机</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
     <style>
         /* --- 全局与基础样式 --- */
         :root {
@@ -31,14 +29,14 @@
         }
 
         html, body {
-    margin: 0; padding: 0; width: 100%; height: 100%;
-    overflow: hidden;
-    font-family: var(--system-font-family);
-    background-color: #000; /* 背景可以设为纯黑，更像App加载时的颜色 */
-    user-select: none; -webkit-user-select: none;
-    /* display:flex 和相关居中属性被移除了 */
-}
-
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden;
+            font-family: var(--system-font-family);
+            background-color: #333;
+            display: flex; justify-content: center; align-items: center;
+            user-select: none; -webkit-user-select: none;
+        }
+        
         body, .app-screen, .modal-content, .settings-item label, .music-item-info .title, .preset-item-content {
             color: var(--system-font-color);
         }
@@ -46,20 +44,32 @@
         *:focus { outline: none; -webkit-tap-highlight-color: transparent; }
 
         /* --- 手机屏幕容器 --- */
- #phone-screen {
-    width: 100%; 
-    height: 100vh; /* 核心：必须是 100vh */
-    background-image: url('https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302');
-    background-size: cover; 
-    background-position: center;
-    display: flex; 
-    flex-direction: column;
-    position: relative; 
-    overflow: hidden;
-    transition: background-image 0.5s ease-in-out;
-}
+        #phone-screen {
+            width: 100%; height: 100%;
+            max-width: 430px; max-height: 932px;
+            background-image: url('https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            border-radius: 40px;
+            transition: background-image 0.5s ease-in-out;
+        }
         
-          
+        @media (min-width: 450px) {
+             #phone-screen { aspect-ratio: 9 / 19.5; height: 90vh; width: auto; }
+        }
+        @media (min-aspect-ratio: 9/18) {
+            #phone-screen {
+                max-width: 100%; max-height: 100%;
+                width: 100%; height: 100%;
+                border-radius: 0;
+            }
+            .app-header {
+                padding-top: calc(env(safe-area-inset-top, 15px) + 15px);
+            }
+        }
+
         /* --- 顶部区域 (状态栏 + 灵动岛) --- */
         #top-area { position: absolute; top: 0; left: 0; right: 0; padding: 15px 10px 10px 10px; display: flex; justify-content: center; align-items: flex-start; z-index: 50; pointer-events: none; }
         #status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; font-size: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); padding: 0 5px 0 20px; }
@@ -96,21 +106,9 @@
         .app-icon .label { color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
 
         /* --- 底部 Dock 栏 --- */
-/* --- 底部 Dock 栏 (最终修正版) --- */
-#dock { 
-    padding: 10px 20px 20px 20px; 
-    margin: 15px; 
-    margin-bottom: calc(15px + env(safe-area-inset-bottom)); /* 核心：用 margin 把它推上来 */
-    background-color: rgba(255, 255, 255, 0.2); 
-    backdrop-filter: blur(15px); 
-    -webkit-backdrop-filter: blur(15px); 
-    border-radius: 25px; 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: center; 
-    flex-shrink: 0; 
-}
-     /* --- APP 界面通用样式 --- */
+        #dock { padding: 10px 20px 20px 20px; margin: 15px; background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 25px; display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; }
+
+        /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
         .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; position: relative; min-height: 44px; box-sizing: content-box; }
