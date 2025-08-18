@@ -111,11 +111,11 @@
         .app-icon .label { color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
 
         /* --- 底部 Dock 栏 --- */
+/* --- 底部 Dock 栏 (最终修正版) --- */
 #dock { 
-    /* 原来的 padding: 10px 20px 20px 20px; 可以先注释或删除 */
-    padding: 10px 20px; /* 上、左右的 padding */
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* 核心修改在这里 */
-    margin: 15px; 
+    padding: 10px 20px 20px 20px; /* 保持你原来的内边距，这样不会变丑 */
+    margin: 15px;                 /* 保持原来的上、左、右外边距 */
+    margin-bottom: calc(15px + env(safe-area-inset-bottom)); /* 核心：只修改下外边距 */
     background-color: rgba(255, 255, 255, 0.2); 
     backdrop-filter: blur(15px); 
     -webkit-backdrop-filter: blur(15px); 
@@ -124,7 +124,8 @@
     justify-content: space-around; 
     align-items: center; 
     flex-shrink: 0; 
-}        /* --- APP 界面通用样式 --- */
+}
+     /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
         .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; position: relative; min-height: 44px; box-sizing: content-box; }
