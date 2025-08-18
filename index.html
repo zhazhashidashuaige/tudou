@@ -2,12 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>土皇帝小手机</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         /* --- 全局与基础样式 --- */
         :root {
@@ -26,9 +25,12 @@
             --item-active-bg: #e5e5ea;
             --system-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --system-font-color: #000000;
+            --online-color: #34c759;
+            --busy-color: #ff9500;
+            --offline-color: #8e8e93;
         }
 
-       html, body {
+        html, body {
     margin: 0; padding: 0; width: 100%; height: 100%;
     overflow: hidden;
     font-family: var(--system-font-family);
@@ -36,10 +38,12 @@
     user-select: none; -webkit-user-select: none;
     /* display:flex 和相关居中属性被移除了 */
 }
-        
+
         body, .app-screen, .modal-content, .settings-item label, .music-item-info .title, .preset-item-content {
             color: var(--system-font-color);
         }
+        
+        *:focus { outline: none; -webkit-tap-highlight-color: transparent; }
 
         /* --- 手机屏幕容器 --- */
       #phone-screen {
@@ -55,42 +59,31 @@
     /* max-width, max-height, box-shadow, border-radius 都被移除了 */
     transition: background-image 0.5s ease-in-out;
 }
+
         
         @media (min-width: 450px) {
              #phone-screen { aspect-ratio: 9 / 19.5; height: 90vh; width: auto; }
         }
+        @media (min-aspect-ratio: 9/18) {
+            #phone-screen {
+                max-width: 100%; max-height: 100%;
+                width: 100%; height: 100%;
+                border-radius: 0;
+            }
+            .app-header {
+                padding-top: calc(env(safe-area-inset-top, 15px) + 15px);
+            }
+        }
 
         /* --- 顶部区域 (状态栏 + 灵动岛) --- */
-        #top-area {
-            position: absolute; top: 0; left: 0; right: 0;
-            padding: 15px 10px 10px 10px;
-            display: flex; justify-content: center; align-items: flex-start;
-            z-index: 50; pointer-events: none;
-        }
-        /* 优化3：修复状态栏对齐问题 */
-        #status-bar {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            color: white; font-weight: 600; font-size: 15px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-            padding: 0 25px 0 25px; /* 调整左右内边距 */
-        }
-        #time { flex-shrink: 0; }
-        #battery-status { flex-shrink: 0; display: flex; justify-content: flex-end; align-items: center; gap: 5px; }
+        #top-area { position: absolute; top: 0; left: 0; right: 0; padding: 15px 10px 10px 10px; display: flex; justify-content: center; align-items: flex-start; z-index: 50; pointer-events: none; }
+        #status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; font-size: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); padding: 0 5px 0 20px; }
+        #time { min-width: 60px; text-align: left; }
+        #battery-status { display: flex; justify-content: flex-end; align-items: center; gap: 5px; position: relative; right: 0px; }
         #battery-icon { font-size: 20px; }
 
         /* --- 灵动岛 --- */
-        #dynamic-island {
-            position: absolute; top: 12px;
-            height: 36px; width: 125px;
-            max-width: 55%;
-            background-color: black;
-            border-radius: 18px;
-            transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-            pointer-events: auto;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 8px; box-sizing: border-box;
-            overflow: hidden;
-        }
+        #dynamic-island { position: absolute; top: 12px; height: 36px; width: 125px; max-width: 55%; background-color: black; border-radius: 18px; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); pointer-events: auto; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
         #dynamic-island.music-active { width: 220px; }
         .island-content { color: white; font-size: 13px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #dynamic-island.music-active .island-content { opacity: 1; }
@@ -118,31 +111,22 @@
         .app-icon .label { color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); }
 
         /* --- 底部 Dock 栏 --- */
-        #dock { 
-    /* 原来的 padding: 10px 20px 20px 20px; 可以先注释或删除 */
-    padding: 10px 20px; /* 上、左右的 padding */
-    padding-bottom: calc(20px + env(safe-area-inset-bottom)); /* 核心修改在这里 */
-    margin: 15px; 
-    background-color: rgba(255, 255, 255, 0.2); 
-    backdrop-filter: blur(15px); 
-    -webkit-backdrop-filter: blur(15px); 
-    border-radius: 25px; 
-    display: flex; 
-    justify-content: space-around; 
-    align-items: center; 
-    flex-shrink: 0; 
-}
-
+        #dock { padding: 10px 20px 20px 20px; margin: 15px; background-color: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 25px; display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; }
 
         /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
-        /* 优化1：修复APP标题对齐 */
-        .app-header { display: grid; grid-template-columns: 60px 1fr 60px; align-items: center; padding: 15px 10px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; }
-        .app-header .back-btn { grid-column: 1; justify-self: start; font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; }
-        .app-header .title { grid-column: 2; text-align: center; font-size: 17px; font-weight: 600; }
-        .app-header .action-btn { grid-column: 3; justify-self: end; font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: 50px; position: relative; min-height: 44px; box-sizing: content-box; }
+        .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; white-space: nowrap; }
+        .app-header .title { font-size: 17px; font-weight: 600; position: absolute; left: 50%; transform: translateX(-50%); }
+        .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
         .app-content { flex-grow: 1; overflow-y: auto; }
+        .app-bottom-tabs { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background-color: var(--item-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 5; }
+        .tab-link { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; color: var(--secondary-text-color); border-top: 2px solid transparent; }
+        .tab-link.active { color: var(--accent-color); border-top-color: var(--accent-color); }
+        .tab-content-wrapper { flex-grow: 1; overflow: hidden; position: relative; }
+        .tab-content { display: none; padding: 15px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; box-sizing: border-box; }
+        .tab-content.active { display: block; }
 
         /* --- 设置 APP 特定样式 --- */
         .settings-group { margin-bottom: 25px; padding: 0 20px; }
@@ -168,38 +152,34 @@
         .music-item-info .title { font-size: 16px; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .music-item-info .artist { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
         .music-item-duration { font-size: 14px; color: var(--secondary-text-color); flex-shrink: 0; padding-left: 10px; }
-        .music-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
-        .music-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .music-list-item.playing .music-item-info .title, .music-list-item.playing .music-item-info .artist { color: var(--accent-color); }
 
         /* --- 浮动歌词 --- */
-        /* 优化5：调整歌词初始位置 */
-        #lyrics-container { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+        #lyrics-container { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 380px; background-color: rgba(0,0,0,0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: white; border-radius: 12px; padding: 10px; box-sizing: border-box; font-size: 14px; text-align: center; z-index: 40; cursor: grab; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
         #lyrics-container.visible { opacity: 1; visibility: visible; }
         #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
 
         /* --- 音乐播放器模态框 --- */
-        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(20, 20, 20, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
+        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(50, 50, 50, 0.2); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
         #player-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; }
-        .player-header .icon-btn img, .player-header .icon-btn svg { width: 22px; height: 22px; }
+        .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; font-size: 22px; color: white; }
         .player-song-info { text-align: center; }
         .player-song-info .title { font-size: 16px; font-weight: bold; }
         .player-song-info .artist { font-size: 13px; color: #ccc; }
         .player-body { flex-grow: 1; overflow: hidden; position: relative; }
         .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .player-view.active { opacity: 1; pointer-events: auto; }
-        .player-lyrics-view { padding: 10px 20px; text-align: center; font-size: 18px; line-height: 1.6; }
-        .player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s; opacity: 0.5; }
-        .player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
+        #player-lyrics-view { padding: 10px 20px; font-size: 16px; line-height: 1.8; text-align: center; }
+        #player-lyrics-view .lyric-line { transition: color 0.3s, transform 0.3s, opacity 0.3s; opacity: 0.5; }
+        #player-lyrics-view .lyric-line.active { color: white; opacity: 1; transform: scale(1.1); font-weight: bold; }
         .player-playlist-view { list-style: none; padding: 0; margin: 0; }
         .player-playlist-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
         .player-playlist-item.playing .info .title { color: var(--accent-color); }
         .player-playlist-item .info { flex-grow: 1; }
         .player-playlist-item .info .title { font-size: 15px; }
         .player-playlist-item .info .artist { font-size: 12px; color: #aaa; }
-        .player-playlist-item .delete-from-queue-btn img { width: 18px; height: 18px; }
+        .delete-from-queue-btn { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; }
         .player-playlist-header { padding: 10px 20px; display: flex; justify-content: flex-end; }
         .player-footer { padding: 15px 20px; flex-shrink: 0; }
         #progress-bar { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; outline: none; }
@@ -213,65 +193,145 @@
 
         /* --- 美化 APP --- */
         #beautify-app-screen .app-content { padding-bottom: 60px; }
-        .app-bottom-tabs { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background-color: var(--item-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 5; }
-        .tab-link { flex: 1; text-align: center; padding: 10px 0; cursor: pointer; color: var(--secondary-text-color); border-top: 2px solid transparent; }
-        .tab-link.active { color: var(--accent-color); border-top-color: var(--accent-color); }
-        .beautify-tab-content { display: none; }
-        .beautify-tab-content.active { display: block; }
-        #font-tab-content, #wallpaper-tab-content, #icon-tab-content { padding: 15px; }
-        /* 壁纸 */
         #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .wallpaper-item { aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; }
         .wallpaper-item::after { content: '✓'; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background-color: var(--accent-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; transform: scale(0); transition: transform 0.2s; }
         #beautify-app-screen.selection-mode .wallpaper-item.selected::after { transform: scale(1); }
-        /* 字体 (优化2) */
         #font-list { list-style: none; padding: 0; margin: 0; }
         .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .font-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
-        .font-item-content.active .font-name { color: var(--accent-color); font-weight: bold; }
-        .change-font-color-btn-inline { background: none; border: none; cursor: pointer; font-size: 20px; padding: 0 5px; }
-        .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
-        .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        /* 图标 */
-        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; }
+        .font-item-content.active { color: var(--accent-color); font-weight: bold; }
+        .font-color-btn { background: none; border: 1px solid var(--border-color); border-radius: 5px; padding: 3px 8px; cursor: pointer; font-size: 14px; }
+        #icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
         .icon-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-        .icon-item .icon-preview { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 28px; }
+        .icon-item .icon-preview { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; font-size: 24px; }
         .icon-item .icon-preview img { max-width: 100%; max-height: 100%; }
-        .icon-item .icon-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
+        .icon-item .icon-name { font-size: 9px; color: var(--secondary-text-color); text-align: center; word-break: break-word; }
+        #bubble-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .bubble-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; padding: 10px; border-radius: 8px; }
+        .bubble-item .bubble-preview-container { width: 100%; height: 40px; display: flex; justify-content: center; align-items: center; }
+        .bubble-item .bubble-preview-container button { background-color: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 10px; font-size: 14px; color: var(--accent-color); }
+        .bubble-item .bubble-name { font-size: 10px; color: var(--secondary-text-color); text-align: center; }
 
         /* --- 弹窗/模态框样式 --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
         .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background-color: var(--app-screen-bg); padding: 20px; border-radius: 14px; width: 85%; max-width: 320px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
+        .modal-content { background-color: var(--app-screen-bg); padding: 20px; border-radius: 14px; width: 90%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.visible .modal-content { transform: scale(1); }
         .modal-title { font-size: 18px; font-weight: 600; text-align: center; margin-bottom: 15px; }
-        .modal-body { margin-bottom: 20px; }
+        .modal-body { margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
         .modal-body .form-group { margin-bottom: 12px; }
         .modal-body .form-group label { display: block; font-size: 14px; margin-bottom: 5px; color: var(--secondary-text-color); }
         .modal-body .form-group input, .modal-body .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit; }
-        .modal-body .form-group textarea { resize: vertical; min-height: 100px; }
+        /* Optimization 1 Fix: Standardize URL input width */
+        .modal-body textarea { resize: vertical; min-height: 100px; }
         .modal-actions { display: flex; justify-content: space-around; gap: 10px; flex-direction: column; }
         .modal-actions button { width: 100%; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; }
         .modal-actions .confirm-btn { background-color: var(--accent-color); color: white; }
         .modal-actions .cancel-btn { background-color: #e5e5ea; color: var(--accent-color); }
+        .modal-actions .danger-btn { background-color: var(--danger-color); color: white; }
         .modal-actions.row { flex-direction: row; } .modal-actions.row button { flex: 1; }
-        #add-music-tabs, #add-font-tabs, #replace-icon-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .modal-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
         .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--secondary-text-color); border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        #tab-content-url #music-url-input, #add-font-modal #font-url-input, #replace-icon-modal #icon-url-input { width: 100%; box-sizing: border-box; margin-bottom: 10px; } /* 优化4：统一URL输入框样式 */
+        .modal-tab-content { display: none; }
+        .modal-tab-content.active { display: block; }
         #add-music-modal .modal-actions .single-button { flex: none; width: 100%; }
+        .inline-inputs { display: flex; gap: 10px; }
+        .inline-inputs .form-group { flex: 1; }
+        .inline-inputs input { text-align: center; }
+        #bubble-preview-wrapper { width: 100%; height: 80px; border: 1px dashed var(--border-color); margin-top: 15px; display: flex; justify-content: center; align-items: center; border-radius: 8px; overflow: hidden; }
+        #bubble-preview { display: flex; justify-content: center; align-items: center; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .hidden-by-logic { display: none !important; }
 
-        /* --- 预设管理列表 --- */
-        #preset-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; }
-        .preset-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
-        .preset-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; cursor: grab; position: relative; z-index: 2; }
-        .preset-item-actions, .music-item-actions, .font-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
-        .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        /* --- 列表滑动通用样式 --- */
+        .preset-list-item, .preset-data-item, .music-list-item, .font-list-item, .contact-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
+        .preset-item-content, .preset-data-item-content, .music-item-content, .font-item-content, .contact-item-content { background-color: var(--item-bg); transition: transform 0.3s ease; cursor: pointer; position: relative; z-index: 2; }
+        .preset-item-actions, .music-item-actions, .font-item-actions, .preset-data-item-actions, .contact-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div, .preset-data-item-actions > div, .contact-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .edit-action { background-color: var(--edit-color); }
         .delete-action { background-color: var(--danger-color); }
+        #manage-presets-modal .modal-content { min-height: 300px; }
+        #manage-presets-modal .modal-body p { margin-top: 0; margin-bottom: 15px; }
         
+        /* --- 歌曲详情页 --- */
+        #song-details-screen { background-color: var(--app-screen-bg); display: flex; flex-direction: column; }
+        #song-details-screen .app-content { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+        .details-song-info { text-align: center; padding: 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .details-song-info .title { font-size: 20px; font-weight: bold; }
+        .details-song-info .artist { font-size: 16px; color: var(--secondary-text-color); }
+        .details-lyrics-container { flex: 1; overflow-y: auto; padding: 20px; font-size: 18px; line-height: 2; text-align: center; }
+        .details-lyrics-container .lyric-line { transition: color 0.3s, transform 0.3s, opacity 0.3s; opacity: 0.4; }
+        .details-lyrics-container .lyric-line.active { color: var(--primary-text-color); opacity: 1; transform: scale(1.1); font-weight: bold; }
+        .details-comments-section { flex: 1; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .details-comments-list { flex-grow: 1; overflow-y: auto; padding: 15px; }
+        .comment-item { display: flex; gap: 10px; margin-bottom: 20px; }
+        .comment-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; }
+        .comment-content { flex-grow: 1; }
+        .comment-header { display: flex; justify-content: space-between; align-items: center; }
+        .comment-author { font-weight: bold; font-size: 15px; }
+        .comment-actions { display: flex; gap: 15px; font-size: 14px; color: var(--secondary-text-color); }
+        .comment-actions span { cursor: pointer; }
+        .comment-text { margin-top: 5px; font-size: 15px; line-height: 1.5; }
+        .comment-input-area { padding: 10px; border-top: 1px solid var(--border-color); background-color: #f9f9f9; flex-shrink: 0; }
+        .comment-input-area input { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 20px; box-sizing: border-box; }
+
+        /* --- 资料(预设) APP --- */
+        #data-app-screen .app-content { padding: 0; display: flex; flex-direction: column; }
+        .preset-data-item-content { display: flex; align-items: center; gap: 15px; padding: 15px; }
+        .preset-data-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #e0e0e0; background-size: cover; background-position: center; flex-shrink: 0; }
+        .preset-data-info { overflow: hidden; }
+        .preset-data-name { font-size: 16px; font-weight: 500; }
+        .preset-data-excerpt { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .modal-avatar-preview { width: 80px; height: 80px; border-radius: 50%; background-color: #f0f0f0; margin: 0 auto 15px; background-size: cover; background-position: center; }
+        .modal-avatar-actions { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; }
+        .modal-avatar-actions button { flex: 1; }
+
+        /* --- 新功能: 聊天 APP --- */
+        #chat-app-screen .app-content { padding: 0; }
+        #message-list { list-style: none; padding: 0; margin: 0; }
+        .contact-item-content { display: flex; align-items: center; gap: 12px; padding: 10px 15px; }
+        .contact-avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #e0e0e0; background-size: cover; background-position: center; flex-shrink: 0; }
+        .contact-info { flex-grow: 1; overflow: hidden; }
+        .contact-name { font-size: 17px; font-weight: 500; }
+        .contact-last-msg { font-size: 14px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+        .contact-meta { text-align: right; flex-shrink: 0; font-size: 12px; color: var(--secondary-text-color); }
+        .contact-status { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+        .status-indicator { width: 8px; height: 8px; border-radius: 50%; }
+        .status-indicator.online { background-color: var(--online-color); }
+        .status-indicator.busy { background-color: var(--busy-color); }
+        .status-indicator.offline { background-color: var(--offline-color); }
+        #single-chat-screen { display: flex; flex-direction: column; }
+        #single-chat-screen .app-header .title { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
+        #single-chat-screen .chat-header-name-status { font-size: 16px; font-weight: 600; cursor: pointer; }
+        #single-chat-screen .chat-header-signature { font-size: 11px; color: var(--secondary-text-color); cursor: pointer; }
+        #single-chat-screen .app-content { flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column-reverse; }
+        #chat-messages-view { display: flex; flex-direction: column; gap: 15px; }
+        .message-bubble { max-width: 70%; padding: 8px 12px; border-radius: 18px; line-height: 1.5; word-wrap: break-word; }
+        .message-item { display: flex; align-items: flex-end; gap: 8px; }
+        .message-item.user { justify-content: flex-end; }
+        .message-item.contact { justify-content: flex-start; }
+        .message-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; cursor: pointer; }
+        .message-item.user .avatar { order: 2; }
+        .message-item.user .message-bubble { background-color: var(--accent-color); color: white; border-bottom-right-radius: 4px; }
+        .message-item.contact .message-bubble { background-color: white; color: black; border-bottom-left-radius: 4px; }
+        .message-timestamp { width: 100%; text-align: center; font-size: 12px; color: var(--secondary-text-color); margin: 10px 0; }
+        .typing-indicator { text-align: center; font-size: 12px; color: var(--secondary-text-color); padding: 5px; }
+        #chat-footer { flex-shrink: 0; background-color: #f7f7f7; border-top: 1px solid var(--border-color); padding: 8px; display: flex; flex-direction: column; }
+        .chat-input-area { display: flex; align-items: center; gap: 8px; }
+        #chat-send-real-btn { background: none; border: none; font-size: 16px; font-weight: 500; color: var(--accent-color); cursor: pointer; padding: 8px; }
+        #chat-input { flex-grow: 1; border: none; background-color: white; border-radius: 18px; padding: 8px 15px; font-size: 16px; resize: none; max-height: 100px; }
+        #chat-input-buttons .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; padding: 5px; }
+        .chat-toolbar { display: flex; justify-content: space-around; padding-top: 10px; }
+        .chat-toolbar .icon-btn { background: none; border: none; font-size: 22px; color: #555; cursor: pointer; }
+        #emoji-picker-panel { position: absolute; bottom: 0; left: 0; right: 0; height: 250px; background-color: #f9f9f9; border-top: 1px solid var(--border-color); transform: translateY(100%); transition: transform 0.3s ease; z-index: 20; display: flex; flex-direction: column; }
+        #emoji-picker-panel.visible { transform: translateY(0); }
+        .emoji-picker-header { padding: 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .emoji-picker-header button { background: none; border: none; font-size: 16px; color: var(--accent-color); cursor: pointer; }
+        #emoji-grid { flex-grow: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+        .emoji-item { width: 40px; height: 40px; background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; }
+
         /* --- 提示消息 --- */
         #toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events: none; }
         #toast.show { opacity: 1; bottom: 100px; }
@@ -297,10 +357,10 @@
         <!-- 主屏幕APP图标 -->
         <div id="main-content">
             <div id="app-grid">
-                <div class="app-icon"><div class="icon" data-icon-id="app-chat">💬</div><span class="label">聊天</span></div>
+                <div class="app-icon" id="chat-app-btn"><div class="icon" data-icon-id="app-chat">💬</div><span class="label">聊天</span></div>
                 <div class="app-icon" id="music-app-btn"><div class="icon" data-icon-id="app-music">🎵</div><span class="label">音乐</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-shop">🛒</div><span class="label">购物</span></div>
-                <div class="app-icon"><div class="icon" data-icon-id="app-diary">📔</div><span class="label">日记</span></div>
+                <div class="app-icon"><div class="icon" data-icon-id="app-diary">📔</div><span class="label">手账</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-mail">✉️</div><span class="label">信箱</span></div>
             </div>
         </div>
@@ -309,17 +369,17 @@
         <div id="dock">
             <div class="app-icon" id="settings-app-btn"><div class="icon" data-icon-id="dock-settings">⚙️</div></div>
             <div class="app-icon" id="beautify-app-btn"><div class="icon" data-icon-id="dock-beautify">🎨</div></div>
-            <div class="app-icon"><div class="icon" data-icon-id="dock-magic">✨</div></div>
+            <div class="app-icon" id="data-app-btn"><div class="icon" data-icon-id="dock-data">✨</div></div>
         </div>
 
         <!-- 设置APP界面 -->
         <div id="settings-app-screen" class="app-screen">
-            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2><div class="action-btn" style="visibility: hidden;"></div></div>
+            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">设置</h2><div></div></div>
             <div class="app-content">
-                <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button">确认并加载模型</button></div>
+                <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button" data-bubble-id="settings-load-model">加载模型</button></div>
                 <div class="settings-group"><div class="group-title">模型选择</div><div class="group-content"><div class="settings-item"><select id="model-select"><option value="">请先加载模型</option></select></div></div></div>
-                <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button">保存预设</button><button id="manage-presets-btn" class="settings-button secondary">管理预设</button></div></div>
-                <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group"><button id="export-data-btn" class="settings-button">导出数据</button><button id="import-data-btn" class="settings-button secondary">导入数据</button><input type="file" id="import-file-input" accept=".json" style="display: none;"></div></div>
+                <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button" data-bubble-id="settings-save-preset">保存预设</button><button id="manage-presets-btn" class="settings-button secondary" data-bubble-id="settings-manage-presets">管理预设</button></div></div>
+                <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group"><button id="export-data-btn" class="settings-button" data-bubble-id="settings-export">导出数据</button><button id="import-data-btn" class="settings-button secondary" data-bubble-id="settings-import">导入数据</button><input type="file" id="import-file-input" accept=".json" style="display: none;"></div></div>
             </div>
         </div>
 
@@ -329,28 +389,92 @@
             <div class="app-content" style="padding:0;"><ul id="music-list"></ul></div>
         </div>
 
+        <!-- 歌曲详情页 -->
+        <div id="song-details-screen" class="app-screen">
+            <div class="app-header"><button class="back-btn" id="song-details-back-btn">&lt; 返回</button><h2 class="title">歌曲详情</h2><div></div></div>
+            <div class="app-content">
+                <div class="details-song-info"><div class="title" id="details-song-title">歌曲名</div><div class="artist" id="details-song-artist">歌手</div></div>
+                <div class="details-lyrics-container" id="details-lyrics-view"></div>
+                <div class="details-comments-section">
+                    <div class="details-comments-list" id="details-comments-list"></div>
+                    <div class="comment-input-area"><input type="text" placeholder="发表你的评论..."></div>
+                </div>
+            </div>
+        </div>
+
         <!-- 美化APP界面 -->
         <div id="beautify-app-screen" class="app-screen">
-            <div class="app-header">
-                <button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button>
-                <h2 class="title">美化</h2>
-                <button class="action-btn" id="beautify-action-btn" data-icon-id="beautify-add">+</button>
-            </div>
-            <div class="app-content">
-                <div id="wallpaper-tab-content" class="beautify-tab-content active">
-                    <div id="wallpaper-grid"></div>
-                </div>
-                <div id="font-tab-content" class="beautify-tab-content">
-                    <ul id="font-list"></ul>
-                </div>
-                <div id="icon-tab-content" class="beautify-tab-content">
-                    <div id="icon-grid"></div>
-                </div>
+            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">美化</h2><button class="action-btn" id="beautify-action-btn" data-icon-id="beautify-add">+</button></div>
+            <div class="app-content tab-content-wrapper">
+                <div id="wallpaper-tab-content" class="tab-content active"><div id="wallpaper-grid"></div></div>
+                <div id="font-tab-content" class="tab-content"><ul id="font-list"></ul></div>
+                <div id="icon-tab-content" class="tab-content"><div id="icon-grid"></div></div>
+                <div id="bubble-tab-content" class="tab-content"><div id="bubble-grid"></div></div>
             </div>
             <div class="app-bottom-tabs">
-                <div class="tab-link active" data-tab="wallpaper">壁纸</div>
-                <div class="tab-link" data-tab="font">字体</div>
-                <div class="tab-link" data-tab="icon">图标</div>
+                <div class="tab-link active" data-tab="wallpaper">壁纸</div><div class="tab-link" data-tab="font">字体</div><div class="tab-link" data-tab="icon">图标</div><div class="tab-link" data-tab="bubble">气泡</div>
+            </div>
+        </div>
+
+        <!-- 资料APP界面 -->
+        <div id="data-app-screen" class="app-screen">
+            <div class="app-header"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button><h2 class="title">资料</h2><button class="action-btn" id="data-action-btn">+</button></div>
+            <div class="app-content tab-content-wrapper">
+                <div id="world-book-tab-content" class="tab-content active"><ul id="world-book-list" class="preset-data-list"></ul></div>
+                <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
+                <div id="info-tab-content" class="tab-content"><ul id="info-list" class="preset-data-list"></ul></div>
+                <div id="memory-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">记忆功能待开发...</p></div>
+            </div>
+            <div class="app-bottom-tabs">
+                <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div><div class="tab-link" data-tab="memory">记忆</div>
+            </div>
+        </div>
+
+        <!-- 聊天APP界面 -->
+        <div id="chat-app-screen" class="app-screen">
+            <div class="app-header"><h2 class="title">消息</h2><button class="action-btn" id="add-contact-btn">+</button></div>
+            <div class="app-content tab-content-wrapper">
+                <div id="message-list-tab-content" class="tab-content active" style="padding:0;"><ul id="message-list"></ul></div>
+                <div id="moments-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">动态功能待开发...</p></div>
+            </div>
+            <div class="app-bottom-tabs">
+                <div class="tab-link active" data-tab="message-list">消息</div><div class="tab-link" data-tab="moments">动态</div>
+            </div>
+        </div>
+
+        <!-- 单聊界面 -->
+        <div id="single-chat-screen" class="app-screen">
+            <div class="app-header">
+                <button class="back-btn" id="chat-back-btn">&lt; 消息</button>
+                <div class="title">
+                    <div class="chat-header-name-status" id="chat-header-name-status">联系人</div>
+                    <div class="chat-header-signature" id="chat-header-signature">个性签名</div>
+                </div>
+                <button class="action-btn" id="chat-settings-btn">⚙️</button>
+            </div>
+            <div class="app-content">
+                <div id="chat-messages-view"></div>
+            </div>
+            <div id="chat-footer">
+                <div class="typing-indicator" id="typing-indicator" style="display: none;">对方正在输入...</div>
+                <div class="chat-input-area">
+                    <button id="chat-send-real-btn">发送</button>
+                    <textarea id="chat-input" rows="1" placeholder="输入消息..."></textarea>
+                    <div id="chat-input-buttons">
+                        <button class="icon-btn" id="chat-emoji-btn">😀</button>
+                        <button class="icon-btn" id="chat-send-fake-btn" style="display: none;">🔼</button>
+                    </div>
+                </div>
+                <div class="chat-toolbar">
+                    <button class="icon-btn">🔄</button><button class="icon-btn">🎤</button><button class="icon-btn">🖼️</button><button class="icon-btn">📷</button><button class="icon-btn">🎵</button><button class="icon-btn">🔗</button><button class="icon-btn">🧧</button><button class="icon-btn">🛒</button>
+                </div>
+            </div>
+            <div id="emoji-picker-panel">
+                <div class="emoji-picker-header">
+                    <button id="close-emoji-picker-btn">关闭</button>
+                    <div><button id="upload-emoji-btn">上传</button><button id="add-emoji-btn">添加</button></div>
+                </div>
+                <div id="emoji-grid"></div>
             </div>
         </div>
     </div>
@@ -358,37 +482,23 @@
     <!-- 浮动歌词 & 音乐播放器 -->
     <div id="lyrics-container"><div id="lyrics-line">...</div></div>
     <div id="player-modal">
-        <div class="player-header">
-            <button class="icon-btn" id="hide-player-btn" data-icon-id="player-close"><img src="https://i.postimg.cc/L6bJ1wYw/close.png"></button>
-            <div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div></div>
-            <button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist"><img src="https://i.postimg.cc/W1dfGjD9/playlist.png"></button>
-        </div>
-        <div class="player-body">
-            <div id="player-lyrics-view" class="player-view active"></div>
-            <div id="player-playlist-view-container" class="player-view">
-                <div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;">还原</button></div>
-                <ul class="player-playlist-view"></ul>
-            </div>
-        </div>
-        <div class="player-footer">
-            <input type="range" id="progress-bar" value="0" step="1">
-            <div class="player-controls">
-                <button class="icon-btn" id="player-prev-btn" data-icon-id="player-prev"><img src="https://i.postimg.cc/m2n6nDp1/z-aigei-com.png"></button>
-                <button class="icon-btn play-pause-btn" id="player-play-pause-btn" data-icon-id="player-play"><img src="https://i.postimg.cc/v83KWXWz/z-aigei-com.png"></button>
-                <button class="icon-btn" id="player-next-btn" data-icon-id="player-next"><img src="https://i.postimg.cc/K8gsh2Cq/z-aigei-com.png"></button>
-                <button class="icon-btn" id="player-playback-mode-btn" data-icon-id="player-mode">🔁</button>
-            </div>
-        </div>
+        <div class="player-header"><button class="icon-btn" id="hide-player-btn" data-icon-id="player-close">🔽</button><div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div></div><button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist">📜</button></div>
+        <div class="player-body"><div id="player-lyrics-view" class="player-view active"></div><div id="player-playlist-view-container" class="player-view"><div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;" data-bubble-id="player-restore-playlist">还原</button></div><ul class="player-playlist-view"></ul></div></div>
+        <div class="player-footer"><input type="range" id="progress-bar" value="0" step="1"><div class="player-controls"><button class="icon-btn" id="player-prev-btn" data-icon-id="player-prev"><img src="https://i.postimg.cc/m2n6nDp1/z-aigei-com.png"></button><button class="icon-btn play-pause-btn" id="player-play-pause-btn" data-icon-id="player-play"><img src="https://i.postimg.cc/v83KWXWz/z-aigei-com.png"></button><button class="icon-btn" id="player-next-btn" data-icon-id="player-next"><img src="https://i.postimg.cc/K8gsh2Cq/z-aigei-com.png"></button><button class="icon-btn" id="player-playback-mode-btn" data-icon-id="player-mode-repeat">🔁</button></div></div>
     </div>
 
     <!-- 弹窗集合 -->
-    <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center; margin-top: -10px; margin-bottom: 10px;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions row"><button id="close-manage-modal-btn" class="cancel-btn">关闭</button></div></div></div>
-    <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions row"><button id="cancel-edit-btn" class="cancel-btn">取消</button><button id="save-edit-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div id="add-music-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-upload" class="tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-url" class="tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-music-btn" class="cancel-btn single-button">取消</button></div></div></div>
-    <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions row"><button id="cancel-edit-song-btn" class="cancel-btn">取消</button><button id="save-edit-song-btn" class="confirm-btn">保存</button></div></div></div>
-    <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn">取消</button></div></div></div>
-    <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div id="add-font-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="tab-content active"><button id="upload-font-btn" class="settings-button">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="tab-content"><textarea id="font-url-input" rows="5" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn">取消</button></div></div></div>
-    <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div id="replace-icon-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="tab-content active"><button id="upload-icon-btn" class="settings-button">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="tab-content"><input type="text" id="icon-url-input" placeholder="输入图片URL"><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;">确认</button></div></div><div class="modal-actions row"><button id="cancel-replace-icon-btn" class="cancel-btn">取消</button></div></div></div>
+    <div id="manage-presets-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">管理API预设</h3><div class="modal-body"><p style="font-size: 12px; color: #888; text-align: center;">向左滑动可进行编辑或删除</p><ul id="preset-list"></ul></div><div class="modal-actions row"><button id="close-manage-modal-btn" class="cancel-btn" data-bubble-id="modal-close-preset">关闭</button></div></div></div>
+    <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions row"><button id="cancel-edit-btn" class="cancel-btn" data-bubble-id="modal-cancel">取消</button><button id="save-edit-btn" class="confirm-btn" data-bubble-id="modal-save">保存</button></div></div></div>
+    <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-music-upload" class="modal-tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button" data-bubble-id="modal-select-file">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-music-url" class="modal-tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" rows="5"></textarea><button id="confirm-add-url-btn" class="settings-button" data-bubble-id="modal-add-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-music-btn" class="cancel-btn single-button" data-bubble-id="modal-cancel-music">取消</button></div></div></div>
+    <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions row"><button id="cancel-edit-song-btn" class="cancel-btn" data-bubble-id="modal-cancel-song">取消</button><button id="save-edit-song-btn" class="confirm-btn" data-bubble-id="modal-save-song">保存</button></div></div></div>
+    <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn" data-bubble-id="modal-set-wallpaper">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn" data-bubble-id="modal-set-chat-bg">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn" data-bubble-id="modal-cancel-wallpaper">取消</button></div></div></div>
+    <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="modal-tab-content active"><button id="upload-font-btn" class="settings-button" data-bubble-id="modal-upload-font">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="modal-tab-content"><textarea id="font-url-input" rows="5" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button" data-bubble-id="modal-add-font-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn" data-bubble-id="modal-cancel-font">取消</button></div></div></div>
+    <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="modal-tab-content active"><button id="upload-icon-btn" class="settings-button" data-bubble-id="modal-upload-icon">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="modal-tab-content"><textarea id="icon-url-input" rows="1" placeholder="输入图片URL"></textarea><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;" data-bubble-id="modal-confirm-icon-url">确认</button></div></div><div class="modal-actions"><button id="restore-icon-btn" class="danger-btn" style="margin-top: 10px;">还原</button><button id="cancel-replace-icon-btn" class="cancel-btn">取消</button></div></div></div>
+    <div id="edit-bubble-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑气泡</h3><div class="modal-body"><input type="hidden" id="edit-bubble-id"><div class="form-group"><label>图片替换</label><div class="checkbox-group"><input type="checkbox" id="replace-bg-only-checkbox"><label for="replace-bg-only-checkbox">仅替换底图</label></div><button class="settings-button" id="upload-bubble-btn">上传图片</button><input type="file" id="bubble-file-input" accept="image/*" style="display:none;"><textarea id="bubble-url-input" rows="1" placeholder="或输入图片URL" style="margin-top:10px;"></textarea><hr style="margin:15px 0; border:none; border-top:1px solid var(--border-color);"></div><div class="inline-inputs"><div class="form-group"><label>宽度</label><input type="text" id="bubble-width-input"></div><div class="form-group"><label>高度</label><input type="text" id="bubble-height-input"></div></div><div class="inline-inputs"><div class="form-group"><label>X偏移</label><input type="text" id="bubble-pos-x-input"></div><div class="form-group"><label>Y偏移</label><input type="text" id="bubble-pos-y-input"></div></div><div class="form-group bubble-color-group"><label>文字颜色</label><input type="text" id="bubble-color-input"></div><div class="form-group bubble-color-group"><label>背景颜色</label><input type="text" id="bubble-bg-color-input"></div><div class="form-group bubble-color-group"><label>边框颜色</label><input type="text" id="bubble-border-color-input"></div><label>预览</label><div id="bubble-preview-wrapper"><div id="bubble-preview"><span>预览文字</span></div></div></div><div class="modal-actions"><button id="save-bubble-btn" class="confirm-btn">保存</button><button id="restore-bubble-btn" class="danger-btn">还原</button><button id="cancel-edit-bubble-btn" class="cancel-btn">取消</button></div></div></div>
+    <div id="data-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="data-modal-title">创建条目</h3><div class="modal-body"><input type="hidden" id="data-editing-id"><div class="form-group avatar-group" style="display:none;"><div id="data-avatar-preview" class="modal-avatar-preview"></div><div class="modal-avatar-actions"><button id="data-upload-avatar-btn" class="settings-button secondary">上传</button><button id="data-add-avatar-url-btn" class="settings-button secondary">添加</button></div><input type="file" id="data-avatar-file-input" accept="image/*" style="display:none;"></div><div class="form-group"><label for="data-name">名称</label><input type="text" id="data-name"></div><div class="form-group"><label for="data-content">内容</label><textarea id="data-content" rows="6"></textarea></div></div><div class="modal-actions row"><button id="cancel-data-btn" class="cancel-btn">取消</button><button id="save-data-btn" class="confirm-btn">保存</button></div></div></div>
+    <div id="add-contact-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加联系人</h3><div class="modal-body"><div class="form-group"><label for="new-contact-name">名字</label><input type="text" id="new-contact-name" placeholder="输入联系人名字"></div></div><div class="modal-actions row"><button id="cancel-add-contact-btn" class="cancel-btn">取消</button><button id="confirm-add-contact-btn" class="confirm-btn">添加</button></div></div></div>
+    <div id="add-emoji-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加表情包</h3><div class="modal-body"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-emoji-upload" class="modal-tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">上传图片后，输入文字描述。</p><button id="upload-emoji-file-btn" class="settings-button">选择文件</button><input type="file" id="emoji-file-input" accept="image/*" style="display:none;"><input type="text" id="upload-emoji-desc" placeholder="表情包文字描述" style="margin-top:10px; width:100%; box-sizing: border-box; padding: 8px;"><button id="confirm-upload-emoji-btn" class="settings-button" style="margin-top:10px;">确认上传</button></div><div id="tab-content-emoji-url" class="modal-tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">每行一条，格式为“文字描述:http://链接”。</p><textarea id="emoji-url-input" rows="5"></textarea><button id="confirm-add-emoji-url-btn" class="settings-button">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-emoji-btn" class="cancel-btn single-button">取消</button></div></div></div>
     
     <div id="toast"></div>
 
@@ -419,6 +529,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const musicAppScreen = getEl('music-app-screen');
     const beautifyAppBtn = getEl('beautify-app-btn');
     const beautifyAppScreen = getEl('beautify-app-screen');
+    const dataAppBtn = getEl('data-app-btn'); // Renamed from presetAppBtn
+    const dataAppScreen = getEl('data-app-screen'); // Renamed from presetAppScreen
+    const songDetailsScreen = getEl('song-details-screen');
+    const chatAppBtn = getEl('chat-app-btn');
+    const chatAppScreen = getEl('chat-app-screen');
+    const singleChatScreen = getEl('single-chat-screen');
 
     // --- 设置 APP ---
     const apiUrlInput = getEl('api-url');
@@ -442,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveEditBtn = getEl('save-edit-btn');
     const cancelEditBtn = getEl('cancel-edit-btn');
 
-    // --- 音乐 APP ---
+    // --- 音乐 APP & 歌曲详情 ---
     const audioPlayer = getEl('audio-player');
     const musicListEl = getEl('music-list');
     const addMusicBtn = getEl('add-music-btn');
@@ -458,6 +574,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const editSongArtistInput = getEl('edit-song-artist');
     const saveEditSongBtn = getEl('save-edit-song-btn');
     const cancelEditSongBtn = getEl('cancel-edit-song-btn');
+    const songDetailsBackBtn = getEl('song-details-back-btn');
+    const detailsSongTitle = getEl('details-song-title');
+    const detailsSongArtist = getEl('details-song-artist');
+    const detailsLyricsView = getEl('details-lyrics-view');
+    const detailsCommentsList = getEl('details-comments-list');
 
     // --- 浮动歌词 & 播放器 ---
     const lyricsContainer = getEl('lyrics-container');
@@ -481,10 +602,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 美化 APP ---
     const beautifyActionBtn = getEl('beautify-action-btn');
-    const beautifyTabs = query('.app-bottom-tabs');
+    const beautifyTabs = query('#beautify-app-screen .app-bottom-tabs');
     const wallpaperGrid = getEl('wallpaper-grid');
     const fontListEl = getEl('font-list');
     const iconGrid = getEl('icon-grid');
+    const bubbleGrid = getEl('bubble-grid');
     const wallpaperActionModal = getEl('wallpaper-action-modal');
     const setAsWallpaperBtn = getEl('set-as-wallpaper-btn');
     const setAsChatBgBtn = getEl('set-as-chat-bg-btn');
@@ -502,91 +624,108 @@ document.addEventListener('DOMContentLoaded', () => {
     const iconUrlInput = getEl('icon-url-input');
     const confirmReplaceIconUrlBtn = getEl('confirm-replace-icon-url-btn');
     const cancelReplaceIconBtn = getEl('cancel-replace-icon-btn');
+    const restoreIconBtn = getEl('restore-icon-btn');
     let wallpaperSelection = [];
     let currentWallpaperActionId = null;
+
+    // --- 气泡编辑弹窗 ---
+    const editBubbleModal = getEl('edit-bubble-modal');
+    const editBubbleIdInput = getEl('edit-bubble-id');
+    const bubbleWidthInput = getEl('bubble-width-input');
+    const bubbleHeightInput = getEl('bubble-height-input');
+    const bubblePosXInput = getEl('bubble-pos-x-input');
+    const bubblePosYInput = getEl('bubble-pos-y-input');
+    const bubbleColorInput = getEl('bubble-color-input');
+    const bubbleBgColorInput = getEl('bubble-bg-color-input');
+    const bubbleBorderColorInput = getEl('bubble-border-color-input');
+    const bubblePreviewWrapper = getEl('bubble-preview-wrapper');
+    const bubblePreview = getEl('bubble-preview');
+    const replaceBgOnlyCheckbox = getEl('replace-bg-only-checkbox');
+    const uploadBubbleBtn = getEl('upload-bubble-btn');
+    const bubbleFileInput = getEl('bubble-file-input');
+    const bubbleUrlInput = getEl('bubble-url-input');
+    const saveBubbleBtn = getEl('save-bubble-btn');
+    const restoreBubbleBtn = getEl('restore-bubble-btn');
+    const cancelEditBubbleBtn = getEl('cancel-edit-bubble-btn');
+
+    // --- 资料 APP ---
+    const dataAppTabs = query('#data-app-screen .app-bottom-tabs');
+    const dataActionBtn = getEl('data-action-btn');
+    const worldBookListEl = getEl('world-book-list');
+    const archiveListEl = getEl('archive-list');
+    const infoListEl = getEl('info-list');
+    const dataModal = getEl('data-modal');
+    const dataModalTitle = getEl('data-modal-title');
+    const dataEditingIdInput = getEl('data-editing-id');
+    const dataAvatarGroup = query('#data-modal .avatar-group');
+    const dataAvatarPreview = getEl('data-avatar-preview');
+    const dataUploadAvatarBtn = getEl('data-upload-avatar-btn');
+    const dataAddAvatarUrlBtn = getEl('data-add-avatar-url-btn');
+    const dataAvatarFileInput = getEl('data-avatar-file-input');
+    const dataNameInput = getEl('data-name');
+    const dataContentInput = getEl('data-content');
+    const saveDataBtn = getEl('save-data-btn');
+    const cancelDataBtn = getEl('cancel-data-btn');
+
+    // --- 聊天 APP ---
+    const chatAppTabs = query('#chat-app-screen .app-bottom-tabs');
+    const addContactBtn = getEl('add-contact-btn');
+    const messageListEl = getEl('message-list');
+    const addContactModal = getEl('add-contact-modal');
+    const newContactNameInput = getEl('new-contact-name');
+    const confirmAddContactBtn = getEl('confirm-add-contact-btn');
+    const cancelAddContactBtn = getEl('cancel-add-contact-btn');
+    const chatBackBtn = getEl('chat-back-btn');
+    const chatHeaderNameStatus = getEl('chat-header-name-status');
+    const chatHeaderSignature = getEl('chat-header-signature');
+    const chatSettingsBtn = getEl('chat-settings-btn');
+    const chatMessagesView = getEl('chat-messages-view');
+    const typingIndicator = getEl('typing-indicator');
+    const chatInput = getEl('chat-input');
+    const chatSendRealBtn = getEl('chat-send-real-btn');
+    const chatInputButtons = getEl('chat-input-buttons');
+    const chatEmojiBtn = getEl('chat-emoji-btn');
+    const chatSendFakeBtn = getEl('chat-send-fake-btn');
+    const chatToolbar = query('.chat-toolbar');
+    const emojiPickerPanel = getEl('emoji-picker-panel');
+    const closeEmojiPickerBtn = getEl('close-emoji-picker-btn');
+    const uploadEmojiBtn = getEl('upload-emoji-btn');
+    const addEmojiBtn = getEl('add-emoji-btn');
+    const emojiGrid = getEl('emoji-grid');
+    const addEmojiModal = getEl('add-emoji-modal');
+    const cancelAddEmojiBtn = getEl('cancel-add-emoji-btn');
+    const uploadEmojiFileBtn = getEl('upload-emoji-file-btn');
+    const emojiFileInput = getEl('emoji-file-input');
+    const uploadEmojiDescInput = getEl('upload-emoji-desc');
+    const confirmUploadEmojiBtn = getEl('confirm-upload-emoji-btn');
+    const emojiUrlInput = getEl('emoji-url-input');
+    const confirmAddEmojiUrlBtn = getEl('confirm-add-emoji-url-btn');
 
     // --- 全局状态管理 ---
     const DB_KEY = 'EmperorPhoneData';
     let appState = {
-        settings: {
-            apiUrl: '', apiKey: '', selectedModel: '',
-            availableModels: [], presets: []
-        },
-        music: {
-            playlist: [], queue: [], lyrics: {},
-            currentQueueIndex: -1,
-            playbackMode: 'repeat',
-            lyricsPosition: { top: '60px', left: '50%' } // 优化5：更新初始位置
-        },
-        beautify: {
-            wallpapers: [],
-            currentWallpaper: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302',
-            fonts: [],
-            currentFont: '系统默认', // 优化2：默认字体名称
-            fontColor: '#000000',
-            icons: {}
+        settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
+        music: { playlist: [], queue: [], lyrics: {}, currentQueueIndex: -1, playbackMode: 'repeat', lyricsPosition: { top: '60px', left: '50%' } },
+        beautify: { wallpapers: [], currentWallpaper: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302', fonts: [], currentFont: 'default', fontColor: '#000000', icons: {}, bubbles: {} },
+        data: { worldBooks: [], archives: [], infos: [] }, // Renamed from presetsData
+        chat: {
+            contacts: [],
+            emojis: [],
+            userProfile: { avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', signature: '...' }
         }
     };
+    let originalIconContent = {};
+    let isDetailsAnimatingIn = false;
+    let currentChatId = null;
+    let messageQueue = [];
 
     // ===================================================================
     // --- 状态保存与加载 ---
     // ===================================================================
-    function saveState() {
-        try {
-            const stateToSave = JSON.parse(JSON.stringify(appState));
-            stateToSave.music.playlist = stateToSave.music.playlist.filter(song => !song.isLocal);
-            stateToSave.music.queue = stateToSave.music.queue.filter(song => !song.isLocal);
-            stateToSave.beautify.wallpapers = stateToSave.beautify.wallpapers.filter(wp => !wp.isLocal);
-            stateToSave.beautify.fonts = stateToSave.beautify.fonts.filter(font => !font.isLocal);
-            localStorage.setItem(DB_KEY, JSON.stringify(stateToSave));
-        } catch (error) {
-            console.error("保存状态失败:", error);
-            showToast("保存数据失败！", 'error');
-        }
-    }
-
-    function loadState() {
-        const savedStateJSON = localStorage.getItem(DB_KEY);
-        if (savedStateJSON) {
-            const savedState = JSON.parse(savedStateJSON);
-            appState = {
-                ...appState,
-                ...savedState,
-                settings: { ...appState.settings, ...savedState.settings },
-                music: { ...appState.music, ...savedState.music },
-                beautify: { ...appState.beautify, ...savedState.beautify }
-            };
-            if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
-            if (!Array.isArray(appState.music.playlist)) appState.music.playlist = [];
-            if (!Array.isArray(appState.music.queue)) appState.music.queue = [];
-            if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = [];
-            if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = [];
-            if (typeof appState.beautify.icons !== 'object') appState.beautify.icons = {};
-        }
-        updateUIFromState();
-    }
-
-    function updateUIFromState() {
-        apiUrlInput.value = appState.settings.apiUrl || '';
-        apiKeyInput.value = appState.settings.apiKey || '';
-        updateModelSelect();
-        updatePresetSelect();
-        renderMusicList();
-        updatePlaybackModeIcon();
-        lyricsContainer.style.top = appState.music.lyricsPosition.top;
-        lyricsContainer.style.left = appState.music.lyricsPosition.left;
-        lyricsContainer.style.transform = `translateX(-50%)`;
-        applyAllCustomizations();
-    }
-    
-    function applyAllCustomizations() {
-        phoneScreen.style.backgroundImage = `url(${appState.beautify.currentWallpaper})`;
-        document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor);
-        applyFont(appState.beautify.currentFont, true);
-        Object.keys(appState.beautify.icons).forEach(iconId => {
-            applyIconChange(iconId, appState.beautify.icons[iconId], true);
-        });
-    }
+    function saveState() { try { const stateToSave = JSON.parse(JSON.stringify(appState)); stateToSave.music.playlist = stateToSave.music.playlist.filter(song => !song.isLocal); stateToSave.music.queue = stateToSave.music.queue.filter(song => !song.isLocal); stateToSave.beautify.wallpapers = stateToSave.beautify.wallpapers.filter(wp => !wp.isLocal); stateToSave.beautify.fonts = stateToSave.beautify.fonts.filter(font => !font.isLocal); stateToSave.data.archives = stateToSave.data.archives.filter(item => !item.isLocal); stateToSave.data.infos = stateToSave.data.infos.filter(item => !item.isLocal); stateToSave.chat.emojis = stateToSave.chat.emojis.filter(item => !item.isLocal); localStorage.setItem(DB_KEY, JSON.stringify(stateToSave)); } catch (error) { console.error("保存状态失败:", error); showToast("保存数据失败！", 'error'); } }
+    function loadState() { const savedStateJSON = localStorage.getItem(DB_KEY); if (savedStateJSON) { const savedState = JSON.parse(savedStateJSON); appState = { ...appState, ...savedState, settings: { ...appState.settings, ...savedState.settings }, music: { ...appState.music, ...savedState.music }, beautify: { ...appState.beautify, ...savedState.beautify }, data: { ...appState.data, ...(savedState.data || savedState.presetsData) }, chat: { ...appState.chat, ...savedState.chat } }; if (!appState.music.lyricsPosition) appState.music.lyricsPosition = { top: '60px', left: '50%' }; if (!Array.isArray(appState.settings.presets)) appState.settings.presets = []; if (!Array.isArray(appState.music.playlist)) appState.music.playlist = []; if (!Array.isArray(appState.music.queue)) appState.music.queue = []; if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = []; if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = []; if (typeof appState.beautify.icons !== 'object' || appState.beautify.icons === null) appState.beautify.icons = {}; if (typeof appState.beautify.bubbles !== 'object' || appState.beautify.bubbles === null) appState.beautify.bubbles = {}; if (!appState.data) appState.data = { worldBooks: [], archives: [], infos: [] }; if (!appState.data.worldBooks) appState.data.worldBooks = []; if (!appState.data.archives) appState.data.archives = []; if (!appState.data.infos) appState.data.infos = []; if (!appState.chat) appState.chat = { contacts: [], emojis: [], userProfile: { avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', signature: '...' } }; if (!appState.chat.contacts) appState.chat.contacts = []; if (!appState.chat.emojis) appState.chat.emojis = []; if (!appState.chat.userProfile) appState.chat.userProfile = { avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', signature: '...' }; } updateUIFromState(); }
+    function updateUIFromState() { apiUrlInput.value = appState.settings.apiUrl || ''; apiKeyInput.value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); lyricsContainer.style.top = appState.music.lyricsPosition.top; lyricsContainer.style.left = appState.music.lyricsPosition.left; lyricsContainer.style.transform = `translateX(-50%)`; applyAllCustomizations(); }
+    function applyAllCustomizations() { phoneScreen.style.backgroundImage = `url(${appState.beautify.currentWallpaper})`; document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(appState.beautify.bubbles).forEach(bubbleId => { applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId], true); }); }
 
     // ===================================================================
     // --- 基础 UI & 系统功能 ---
@@ -597,7 +736,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.closeCurrentApp = () => { const activeApp = document.querySelector('.app-screen.active'); if (activeApp) { if (activeApp.id === 'beautify-app-screen' && activeApp.classList.contains('selection-mode')) { exitWallpaperSelectionMode(); } activeApp.classList.remove('active'); } };
     let toastTimer;
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
-    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 3000); } // 优化6：缩短停留时间
+    function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
 
     // ===================================================================
     // --- 设置 APP (无变更) ---
@@ -605,7 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsAppBtn.addEventListener('click', () => openApp(settingsAppScreen));
     apiUrlInput.addEventListener('input', () => { appState.settings.apiUrl = apiUrlInput.value.trim(); saveState(); });
     apiKeyInput.addEventListener('input', () => { appState.settings.apiKey = apiKeyInput.value.trim(); saveState(); });
-    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { saveState(); updateModelSelect(); confirmApiBtn.textContent = '确认并加载模型'; confirmApiBtn.disabled = false; } });
+    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { saveState(); updateModelSelect(); confirmApiBtn.textContent = '加载模型'; confirmApiBtn.disabled = false; } });
     function updateModelSelect() { modelSelect.innerHTML = ''; if (appState.settings.availableModels.length === 0) { modelSelect.innerHTML = '<option value="">请先加载模型</option>'; } else { appState.settings.availableModels.forEach(modelId => { const option = document.createElement('option'); option.value = modelId; option.textContent = modelId; option.selected = modelId === appState.settings.selectedModel; modelSelect.appendChild(option); }); } }
     modelSelect.addEventListener('change', () => { appState.settings.selectedModel = modelSelect.value; saveState(); });
     function updatePresetSelect() { presetSelect.innerHTML = '<option value="">无</option>'; appState.settings.presets.forEach((preset, index) => { const option = document.createElement('option'); option.value = index; option.textContent = preset.name; presetSelect.appendChild(option); }); }
@@ -622,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
     importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
     // ===================================================================
-    // --- 音乐播放器核心 ---
+    // --- 音乐播放器核心 (无变更) ---
     // ===================================================================
     function playSongFromQueue(queueIndex) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); }
     function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); }
@@ -630,109 +769,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function playNext() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let nextIndex; if (playbackMode === 'shuffle') { nextIndex = Math.floor(Math.random() * queue.length); } else { nextIndex = (currentQueueIndex + 1) % queue.length; } playSongFromQueue(nextIndex); }
     function playPrev() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let prevIndex; if (playbackMode === 'shuffle') { prevIndex = Math.floor(Math.random() * queue.length); } else { prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length; } playSongFromQueue(prevIndex); }
     function togglePlaybackMode() { const modes = ['repeat', 'repeat-one', 'shuffle']; const currentModeIndex = modes.indexOf(appState.music.playbackMode); appState.music.playbackMode = modes[(currentModeIndex + 1) % modes.length]; updatePlaybackModeIcon(); saveState(); }
-    function updatePlaybackModeIcon() { const icons = { 'repeat': '🔁', 'repeat-one': '🔂', 'shuffle': '🔀' }; playerPlaybackModeBtn.textContent = icons[appState.music.playbackMode]; }
-    audioPlayer.addEventListener('play', () => { playerPlayPauseBtn.querySelector('img').src = pauseIconSrc; islandWaveform.classList.remove('paused'); });
-    audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.querySelector('img').src = playIconSrc; islandWaveform.classList.add('paused'); });
+    function updatePlaybackModeIcon() { const icons = { 'repeat': '🔁', 'repeat-one': '🔂', 'shuffle': '🔀' }; const iconIds = { 'repeat': 'player-mode-repeat', 'repeat-one': 'player-mode-repeat-one', 'shuffle': 'player-mode-shuffle' }; const currentMode = appState.music.playbackMode; playerPlaybackModeBtn.textContent = icons[currentMode]; playerPlaybackModeBtn.dataset.iconId = iconIds[currentMode]; }
+    audioPlayer.addEventListener('play', () => { playerPlayPauseBtn.dataset.iconId = 'player-pause'; const customIcon = appState.beautify.icons['player-pause']; playerPlayPauseBtn.querySelector('img').src = customIcon || pauseIconSrc; islandWaveform.classList.remove('paused'); });
+    audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.dataset.iconId = 'player-play'; const customIcon = appState.beautify.icons['player-play']; playerPlayPauseBtn.querySelector('img').src = customIcon || playIconSrc; islandWaveform.classList.add('paused'); });
     audioPlayer.addEventListener('ended', () => { if (appState.music.playbackMode === 'repeat-one') { playSongFromQueue(appState.music.currentQueueIndex); } else { playNext(); } });
     audioPlayer.addEventListener('loadedmetadata', () => { const song = appState.music.queue[appState.music.currentQueueIndex]; if (song && isNaN(song.duration)) { song.duration = audioPlayer.duration; const mainPlaylistSong = appState.music.playlist.find(s => s.id === song.id); if (mainPlaylistSong) mainPlaylistSong.duration = audioPlayer.duration; renderMusicList(); } progressBar.max = audioPlayer.duration; });
     audioPlayer.addEventListener('timeupdate', () => { progressBar.value = audioPlayer.currentTime; updateLyrics(audioPlayer.currentTime); });
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI ---
+    // --- 音乐 APP UI & 歌词匹配 (无变更) ---
     // ===================================================================
     musicAppBtn.addEventListener('click', () => openApp(musicAppScreen));
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
     function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
     function updateMusicListPlayingStatus() { const currentSong = appState.music.queue[appState.music.currentQueueIndex]; queryAll('.music-list-item').forEach(item => { item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id); }); }
-    musicListEl.addEventListener('click', (e) => { const content = e.target.closest('.music-item-content'); if (content) { const songId = content.parentElement.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); } } } });
+    let longPressSongTimer;
+    musicListEl.addEventListener('mousedown', (e) => { const item = e.target.closest('.music-list-item'); if (item) { longPressSongTimer = setTimeout(() => { longPressSongTimer = null; openSongDetails(item.dataset.id); }, 500); } });
+    musicListEl.addEventListener('mouseup', () => clearTimeout(longPressSongTimer));
+    musicListEl.addEventListener('mouseleave', () => clearTimeout(longPressSongTimer));
+    musicListEl.addEventListener('touchstart', (e) => { const item = e.target.closest('.music-list-item'); if (item) { longPressSongTimer = setTimeout(() => { longPressSongTimer = null; openSongDetails(item.dataset.id); }, 500); } });
+    musicListEl.addEventListener('touchend', () => clearTimeout(longPressSongTimer));
+    musicListEl.addEventListener('click', (e) => { if (!longPressSongTimer) return; clearTimeout(longPressSongTimer); const content = e.target.closest('.music-item-content'); if (content) { const songId = content.parentElement.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); } } } });
     addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
-    getEl('add-music-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-music-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-music-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-${tabId}`).classList.add('active'); } });
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    
-    // 优化7：修复URL歌词匹配Bug
-    confirmAddUrlBtn.addEventListener('click', async () => {
-        const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim());
-        if (lines.length === 0) return;
-
-        let musicEntries = [];
-        let lrcEntries = [];
-
-        for (const line of lines) {
-            const separatorIndex = line.search(/:|：/);
-            if (separatorIndex === -1) continue;
-            const meta = line.substring(0, separatorIndex).trim();
-            const url = line.substring(separatorIndex + 1).trim();
-            if (!url.startsWith('http')) continue;
-
-            const entry = { meta, url };
-            if (url.toLowerCase().endsWith('.lrc')) {
-                lrcEntries.push(entry);
-            } else {
-                musicEntries.push(entry);
-            }
-        }
-
-        let addedSongsCount = 0;
-        for (const entry of musicEntries) {
-            const parts = entry.meta.split(' - ');
-            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
-            const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url: entry.url, duration: NaN, isLocal: false };
-            appState.music.playlist.push(newSong);
-            addedSongsCount++;
-        }
-
-        let matchedLrcCount = 0;
-        for (const entry of lrcEntries) {
-            const parts = entry.meta.split(' - ');
-            const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
-            const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : entry.meta;
-            
-            const matchingSong = appState.music.playlist.find(s => s.title === title && s.artist === artist);
-            if (matchingSong) {
-                try {
-                    const response = await fetch(entry.url);
-                    if (!response.ok) throw new Error('Network response was not ok');
-                    const lrcText = await response.text();
-                    const lrcData = parseLRC(lrcText);
-                    appState.music.lyrics[matchingSong.id] = lrcData;
-                    matchedLrcCount++;
-                } catch (error) {
-                    console.error(`获取歌词失败: ${entry.url}`, error);
-                    showToast(`获取歌词失败: ${title}`, 'error');
-                }
-            }
-        }
-
-        musicUrlInput.value = '';
-        addMusicModal.classList.remove('visible');
-        if (addedSongsCount > 0) {
-            showToast(`成功添加 ${addedSongsCount} 首歌曲`);
-            renderMusicList();
-        }
-        if (matchedLrcCount > 0) {
-            showToast(`成功匹配 ${matchedLrcCount} 份歌词`);
-        }
-        if (addedSongsCount > 0 || matchedLrcCount > 0) {
-            saveState();
-        }
-    });
-
-    function processFiles(files) { let addedCount = 0; const audioFiles = Array.from(files).filter(f => f.type.startsWith('audio/') || f.name.toLowerCase().endsWith('.lrc')); for (const file of audioFiles) { const isLrc = file.name.toLowerCase().endsWith('.lrc'); const baseName = file.name.replace(/\.[^/.]+$/, ""); if (isLrc) { const reader = new FileReader(); reader.onload = (e) => { const lrcData = parseLRC(e.target.result); const matchingSong = appState.music.playlist.find(s => s.title === baseName || `${s.artist} - ${s.title}` === baseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); } else { showToast(`未找到歌曲以匹配歌词: ${file.name}`, 'error'); } saveState(); }; reader.readAsText(file); } else { const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; } } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }
+    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex === -1 || !line.substring(separatorIndex + 1).trim().startsWith('http')) return; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); saveState(); } for (const { meta, url } of lrcUrls) { try { const response = await fetch(url); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { showToast(`无法加载歌词: ${meta}`, 'error'); } } });
+    function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: URL.createObjectURL(file), duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); } lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); saveState(); }
+    function normalizeString(str) { return str.trim().toLowerCase().replace(/\s+/g, ' '); }
+    function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeString(baseName); const matchingSong = appState.music.playlist.find(s => normalizeString(s.title) === normalizedBaseName || normalizeString(`${s.artist} - ${s.title}`) === normalizedBaseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); saveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 灵动岛 & 歌词 & 播放器 UI ---
+    // --- 灵动岛 & 歌词 & 播放器 UI (无变更) ---
     // ===================================================================
-    function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
+    function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.style.left = '50%'; lyricsContainer.style.transform = 'translateX(-50%)'; lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
     function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
-    function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/; for (const line of lines) { const match = line.match(timeRegex); if (match) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; const text = line.replace(timeRegex, '').trim(); if (text) { result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
+    function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})[.:](\d{2,3})\]/g; for (const line of lines) { const text = line.replace(/\[.*?\]/g, '').trim(); if (text) { let match; while ((match = timeRegex.exec(line)) !== null) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
     let currentLyricIndex = -1;
-    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active" style="text-align: center;">暂无歌词</div>'; return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; lyricsLine.textContent = lyrics[currentLyricIndex].text; renderPlayerLyrics(lyrics, currentLyricIndex); } }
+    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; } return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1 && lyrics.length > 0) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; if (lyrics[currentLyricIndex]) { lyricsLine.textContent = lyrics[currentLyricIndex].text; } renderPlayerLyrics(lyrics, currentLyricIndex); if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { renderSongDetailsLyrics(lyrics, currentLyricIndex); } } }
     function renderPlayerLyrics(lyrics, activeIndex) { playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
     lyricsContainer.addEventListener('click', () => playerModal.classList.add('show'));
     hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
@@ -741,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerPrevBtn.addEventListener('click', playPrev);
     playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
     togglePlaylistViewBtn.addEventListener('click', () => { playerLyricsView.classList.toggle('active'); playerPlaylistViewContainer.classList.toggle('active'); });
-    function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="icon-btn delete-from-queue-btn" data-icon-id="player-delete"><img src="https://i.postimg.cc/P50g1f5J/delete.png"></button>`; playerPlaylistView.appendChild(li); }); }
+    function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="delete-from-queue-btn" data-icon-id="player-delete">🗑️</button>`; playerPlaylistView.appendChild(li); }); }
     playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); saveState(); } } else { playSongFromQueue(index); } });
     restorePlaylistBtn.addEventListener('click', () => { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); saveState(); showToast("播放列表已还原"); });
     let isDraggingLyrics = false, offsetX, offsetY;
@@ -752,13 +829,20 @@ document.addEventListener('DOMContentLoaded', () => {
     lyricsContainer.addEventListener('touchstart', handleLyricsDragStart, { passive: false }); document.addEventListener('touchmove', handleLyricsDragMove, { passive: false }); document.addEventListener('touchend', handleLyricsDragEnd);
 
     // ===================================================================
-    // --- 美化 APP ---
+    // --- 歌曲详情页 (无变更) ---
+    // ===================================================================
+    function openSongDetails(songId) { const song = appState.music.playlist.find(s => s.id === songId); if (!song) return; songDetailsScreen.dataset.songId = songId; detailsSongTitle.textContent = song.title; detailsSongArtist.textContent = song.artist; const lyrics = appState.music.lyrics[song.id]; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; let activeIndex = -1; if (currentPlayingSong && currentPlayingSong.id === songId) { activeIndex = currentLyricIndex; } renderSongDetailsLyrics(lyrics, activeIndex, true); renderSongComments(); openApp(songDetailsScreen); isDetailsAnimatingIn = true; setTimeout(() => { isDetailsAnimatingIn = false; const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'auto', block: 'center' }); } }, 350); }
+    function renderSongDetailsLyrics(lyrics, activeIndex, isOpening = false) { if (!lyrics || lyrics.length === 0) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } detailsLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine && !isOpening && !isDetailsAnimatingIn) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+    function renderSongComments() { detailsCommentsList.innerHTML = ` <div class="comment-item"> <div class="comment-avatar"></div> <div class="comment-content"> <div class="comment-header"> <span class="comment-author">小土豆</span> <div class="comment-actions"><span>👍 10</span> <span>💬</span></div> </div> <p class="comment-text">这首歌太好听了，单曲循环一整天！</p> </div> </div> <div class="comment-item"> <div class="comment-avatar"></div> <div class="comment-content"> <div class="comment-header"> <span class="comment-author">音乐发烧友</span> <div class="comment-actions"><span>👍 5</span> <span>💬</span></div> </div> <p class="comment-text">前奏一响，我的DNA就动了！</p> </div> </div> <div class="comment-item"> <div class="comment-avatar"></div> <div class="comment-content"> <div class="comment-header"> <span class="comment-author">路人甲</span> <div class="comment-actions"><span>👍 2</span> <span>💬</span></div> </div> <p class="comment-text">评论区功能还没做好吗？</p> </div> </div> `; }
+    detailsCommentsList.addEventListener('click', (e) => { if (e.target.closest('.comment-actions')) { showToast('评论功能待开发'); } });
+    songDetailsBackBtn.addEventListener('click', () => songDetailsScreen.classList.remove('active'));
+
+    // ===================================================================
+    // --- 美化 APP (无变更) ---
     // ===================================================================
     beautifyAppBtn.addEventListener('click', () => { openApp(beautifyAppScreen); renderWallpapers(); });
-    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('.beautify-tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); beautifyActionBtn.style.display = (tabId === 'icon') ? 'none' : 'block'; if (tabId === 'wallpaper') { renderWallpapers(); } else if (tabId === 'font') { renderFonts(); } else if (tabId === 'icon') { renderIcons(); } } });
+    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const showActionBtn = ['wallpaper', 'font'].includes(tabId); beautifyActionBtn.style.display = showActionBtn ? 'block' : 'none'; if (tabId === 'wallpaper') { renderWallpapers(); } else if (tabId === 'font') { renderFonts(); } else if (tabId === 'icon') { renderIcons(); } else if (tabId === 'bubble') { renderBubbles(); } } });
     beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (beautifyAppScreen.classList.contains('selection-mode')) { if (wallpaperSelection.length > 0 && confirm(`确定要删除选中的 ${wallpaperSelection.length} 张壁纸吗？`)) { appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !wallpaperSelection.includes(wp.id)); saveState(); renderWallpapers(); } exitWallpaperSelectionMode(); } else if (activeTab === 'wallpaper') { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.multiple = true; input.onchange = (e) => { const files = e.target.files; if (files.length > 0) { let lastUrl = ''; Array.from(files).forEach(file => { const url = URL.createObjectURL(file); appState.beautify.wallpapers.push({ id: 'local_' + Date.now() + Math.random(), url: url, isLocal: true }); lastUrl = url; }); if (lastUrl) { appState.beautify.currentWallpaper = lastUrl; phoneScreen.style.backgroundImage = `url(${lastUrl})`; } saveState(); renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } }; input.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
-
-    // 壁纸功能
     function renderWallpapers() { wallpaperGrid.innerHTML = ''; appState.beautify.wallpapers.forEach(wp => { const item = document.createElement('div'); item.className = 'wallpaper-item'; item.style.backgroundImage = `url(${wp.url})`; item.dataset.id = wp.id; wallpaperGrid.appendChild(item); }); }
     let longPressTimer;
     wallpaperGrid.addEventListener('mousedown', (e) => { if (e.target.classList.contains('wallpaper-item')) { longPressTimer = setTimeout(() => enterWallpaperSelectionMode(e.target), 500); } });
@@ -772,135 +856,125 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelWallpaperActionBtn.addEventListener('click', () => wallpaperActionModal.classList.remove('visible'));
     setAsWallpaperBtn.addEventListener('click', () => { const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === currentWallpaperActionId); if (wallpaper) { appState.beautify.currentWallpaper = wallpaper.url; phoneScreen.style.backgroundImage = `url(${wallpaper.url})`; saveState(); showToast('壁纸已更换'); } wallpaperActionModal.classList.remove('visible'); });
     setAsChatBgBtn.addEventListener('click', () => { showToast('聊天功能待开发'); wallpaperActionModal.classList.remove('visible'); });
-
-    // 字体功能 (优化2：重构)
-    function renderFonts() {
-        fontListEl.innerHTML = '';
-        const allFonts = [{ name: '系统默认', isDefault: true }, ...appState.beautify.fonts];
-        allFonts.forEach(font => {
-            const isActive = font.name === appState.beautify.currentFont;
-            const li = document.createElement('li');
-            li.className = 'font-list-item';
-            li.dataset.name = font.name;
-            li.dataset.isDefault = font.isDefault || false;
-            const colorBtnHTML = isActive ? `<button class="change-font-color-btn-inline" data-icon-id="font-color">🎨</button>` : '';
-            li.innerHTML = `
-                <div class="font-item-content ${isActive ? 'active' : ''}">
-                    <span class="font-name">${font.name}</span>
-                    ${colorBtnHTML}
-                </div>
-                <div class="font-item-actions">
-                    <div class="edit-action">编辑</div>
-                    <div class="delete-action">删除</div>
-                </div>`;
-            fontListEl.appendChild(li);
-        });
-    }
-    fontListEl.addEventListener('click', (e) => {
-        const content = e.target.closest('.font-item-content');
-        if (e.target.classList.contains('change-font-color-btn-inline')) {
-            const newColor = prompt("请输入新的字体颜色 (Hex格式, 如 #RRGGBB):", appState.beautify.fontColor);
-            if (newColor && /^#[0-9A-F]{6}$/i.test(newColor)) {
-                appState.beautify.fontColor = newColor;
-                document.documentElement.style.setProperty('--system-font-color', newColor);
-                saveState();
-                showToast('字体颜色已更新');
-            } else if (newColor) {
-                showToast('无效的颜色格式', 'error');
-            }
-        } else if (content) {
-            const fontName = content.parentElement.dataset.name;
-            if (fontName !== appState.beautify.currentFont) {
-                if (confirm(`确定要将系统字体更换为 "${fontName}" 吗？`)) {
-                    applyFont(fontName);
-                }
-            }
-        }
-    });
-    function applyFont(fontName, isInitialLoad = false) {
-        const oldStyle = document.getElementById('custom-font-style');
-        if (oldStyle) oldStyle.remove();
-        if (fontName === '系统默认') {
-            document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
-        } else {
-            const font = appState.beautify.fonts.find(f => f.name === fontName);
-            if (font) {
-                const style = document.createElement('style');
-                style.id = 'custom-font-style';
-                style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`;
-                document.head.appendChild(style);
-                document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`);
-            } else {
-                // Fallback if font not found
-                fontName = '系统默认';
-                document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif');
-            }
-        }
-        appState.beautify.currentFont = fontName;
-        if (!isInitialLoad) {
-            saveState();
-            renderFonts();
-            showToast(`字体已应用: ${fontName}`);
-        }
-    }
+    function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name)); }
+    fontListEl.addEventListener('click', (e) => { const content = e.target.closest('.font-item-content'); if (content && !e.target.classList.contains('font-color-btn')) { const fontName = content.parentElement.dataset.name; if (confirm(`确定要将系统字体更换为 "${fontName === 'default' ? '默认系统字体' : fontName}" 吗？`)) { applyFont(fontName); } } if (e.target.classList.contains('font-color-btn')) { const newColor = prompt("请输入新的字体颜色 (HEX或RGB/A):", appState.beautify.fontColor); if (newColor && isValidColor(newColor)) { appState.beautify.fontColor = newColor; document.documentElement.style.setProperty('--system-font-color', newColor); saveState(); showToast('字体颜色已更新'); } else if (newColor) { showToast('无效的颜色格式', 'error'); } } });
+    function isValidColor(str) { return /^#([0-9A-F]{3}){1,2}$/i.test(str) || /^(rgb|rgba)\(/i.test(str); }
+    function applyFont(fontName, isInitialLoad = false) { const oldStyle = document.getElementById('custom-font-style'); if (oldStyle) oldStyle.remove(); if (fontName === 'default') { document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'); } else { const font = appState.beautify.fonts.find(f => f.name === fontName); if (font) { const style = document.createElement('style'); style.id = 'custom-font-style'; style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`; document.head.appendChild(style); document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`); } } appState.beautify.currentFont = fontName; if (!isInitialLoad) { saveState(); showToast(`字体已应用: ${fontName}`); } renderFonts(); }
     cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
-    getEl('add-font-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#add-font-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#add-font-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-font-${tabId}`).classList.add('active'); } });
     uploadFontBtn.addEventListener('click', () => fontFileInput.click());
     fontFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { Array.from(files).forEach(file => { const fontName = file.name.replace(/\.[^/.]+$/, ""); appState.beautify.fonts.push({ name: fontName, url: URL.createObjectURL(file), isLocal: true }); }); saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
     confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
-
-    // 图标功能
-    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); iconElements.forEach(el => { const id = el.dataset.iconId; const name = id.replace('-', ' - '); const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML; if (customSrc) { previewHTML = `<img src="${customSrc}">`; } else { const imgChild = el.querySelector('img'); if (imgChild) { previewHTML = `<img src="${imgChild.src}">`; } else { previewHTML = el.textContent; } } item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${name}</span>`; iconGrid.appendChild(item); }); }
+    const iconNameMap = { 'status-battery': '状态栏 电量', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '模式 循环', 'player-mode-repeat-one': '模式 单曲', 'player-mode-shuffle': '模式 随机' };
+    function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); const createIconItem = (id, content) => { if (renderedIds.has(id) || !iconNameMap[id]) return; const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML = customSrc ? `<img src="${customSrc}">` : content; item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${iconNameMap[id]}</span>`; iconGrid.appendChild(item); renderedIds.add(id); }; iconElements.forEach(el => { const id = el.dataset.iconId; const imgChild = el.querySelector('img'); const content = imgChild ? `<img src="${imgChild.src}">` : el.textContent; createIconItem(id, content); }); const extraIcons = [ { id: 'player-pause', content: `<img src="${pauseIconSrc}">` }, { id: 'player-mode-repeat', content: '🔁' }, { id: 'player-mode-repeat-one', content: '🔂' }, { id: 'player-mode-shuffle', content: '🔀' } ]; extraIcons.forEach(icon => createIconItem(icon.id, icon.content)); }
     iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
     cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
-    getEl('replace-icon-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; queryAll('#replace-icon-modal .tab-btn').forEach(btn => btn.classList.remove('active')); queryAll('#replace-icon-modal .tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); getEl(`tab-content-icon-${tabId}`).classList.add('active'); } });
     uploadIconBtn.addEventListener('click', () => iconFileInput.click());
     iconFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { applyIconChange(replaceIconIdInput.value, event.target.result); }; reader.readAsDataURL(file); iconFileInput.value = ''; } });
     confirmReplaceIconUrlBtn.addEventListener('click', () => { const url = iconUrlInput.value.trim(); if (url) { applyIconChange(replaceIconIdInput.value, url); iconUrlInput.value = ''; } });
-    function applyIconChange(iconId, newSrc, isInitialLoad = false) { const targetEl = query(`[data-icon-id="${iconId}"]`); if (targetEl) { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%;">`; } } appState.beautify.icons[iconId] = newSrc; if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } }
+    restoreIconBtn.addEventListener('click', () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { delete appState.beautify.icons[iconId]; saveState(); queryAll(`[data-icon-id="${iconId}"]`).forEach(el => { el.innerHTML = originalIconContent[iconId]; }); if (iconId === 'player-play' || iconId === 'player-pause') { playerPlayPauseBtn.querySelector('img').src = audioPlayer.paused ? playIconSrc : pauseIconSrc; } renderIcons(); showToast('图标已还原'); replaceIconModal.classList.remove('visible'); } });
+    function applyIconChange(iconId, newSrc, isInitialLoad = false) { if (newSrc) { appState.beautify.icons[iconId] = newSrc; } queryAll(`[data-icon-id="${iconId}"]`).forEach(targetEl => { if (targetEl) { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = newSrc; } else { targetEl.innerHTML = `<img src="${newSrc}" style="max-width:100%; max-height:100%; object-fit: contain;">`; } } }); if (!isInitialLoad) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } }
+    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chat-bg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'font-color-btn': '字体 颜色按钮' };
+    function renderBubbles() { bubbleGrid.innerHTML = ''; const bubbleElements = queryAll('[data-bubble-id]'); bubbleElements.forEach(el => { const id = el.dataset.bubbleId; const item = document.createElement('div'); item.className = 'bubble-item'; item.dataset.id = id; item.innerHTML = `<div class="bubble-preview-container"><button style="pointer-events: none;">${el.textContent}</button></div><span class="bubble-name">${bubbleNameMap[id] || id}</span>`; bubbleGrid.appendChild(item); }); }
+    bubbleGrid.addEventListener('click', (e) => { const item = e.target.closest('.bubble-item'); if (item) { openBubbleEditor(item.dataset.id); } });
+    function openBubbleEditor(bubbleId) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; editBubbleIdInput.value = bubbleId; const computedStyle = getComputedStyle(targetEl); const customStyles = appState.beautify.bubbles[bubbleId] || {}; bubbleWidthInput.value = customStyles.width || computedStyle.width; bubbleHeightInput.value = customStyles.height || computedStyle.height; bubblePosXInput.value = customStyles.transform ? (customStyles.transform.match(/translateX\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubblePosYInput.value = customStyles.transform ? (customStyles.transform.match(/translateY\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubbleColorInput.value = customStyles.color || computedStyle.color; bubbleBgColorInput.value = customStyles.backgroundColor || computedStyle.backgroundColor; bubbleBorderColorInput.value = customStyles.borderColor || computedStyle.borderColor; replaceBgOnlyCheckbox.checked = customStyles.replaceBgOnly || false; bubbleUrlInput.value = (customStyles.backgroundImage && customStyles.backgroundImage.startsWith('url("http')) ? customStyles.backgroundImage.slice(5, -2) : ''; toggleBubbleColorInputs(customStyles.backgroundImage); updateBubblePreview(); editBubbleModal.classList.add('visible'); }
+    function updateBubblePreview() { const previewBtn = bubblePreview.querySelector('span'); const targetEl = query(`[data-bubble-id="${editBubbleIdInput.value}"]`); if (!targetEl) return; previewBtn.textContent = targetEl.textContent; const styles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, borderWidth: '1px', borderStyle: 'solid', borderRadius: getComputedStyle(targetEl).borderRadius, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundSize: 'cover', backgroundPosition: 'center' }; const customStyles = appState.beautify.bubbles[editBubbleIdInput.value] || {}; if (customStyles.backgroundImage) { styles.backgroundImage = customStyles.backgroundImage; if (!replaceBgOnlyCheckbox.checked) { previewBtn.textContent = ''; } } Object.assign(bubblePreview.style, styles); const wrapperRect = bubblePreviewWrapper.getBoundingClientRect(); const w = parseFloat(styles.width) || 100; const h = parseFloat(styles.height) || 40; const scale = Math.min(wrapperRect.width / w, wrapperRect.height / h, 1); bubblePreview.style.transform = `scale(${scale})`; }
+    [bubbleWidthInput, bubbleHeightInput, bubblePosXInput, bubblePosYInput, bubbleColorInput, bubbleBgColorInput, bubbleBorderColorInput].forEach(input => input.addEventListener('input', updateBubblePreview));
+    cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.remove('visible'));
+    saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const currentBubbleState = appState.beautify.bubbles[bubbleId] || {}; const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImage: currentBubbleState.backgroundImage }; appState.beautify.bubbles[bubbleId] = newStyles; applyBubbleChange(bubbleId, newStyles); saveState(); editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
+    restoreBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的默认样式吗？`)) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (targetEl) targetEl.style.cssText = ''; delete appState.beautify.bubbles[bubbleId]; saveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
+    uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
+    bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { handleBubbleImage(`url(${event.target.result})`); }; reader.readAsDataURL(file); bubbleFileInput.value = ''; } });
+    bubbleUrlInput.addEventListener('input', () => handleBubbleImage(`url("${bubbleUrlInput.value.trim()}")`));
+    function toggleBubbleColorInputs(hasImage) { queryAll('.bubble-color-group').forEach(el => el.classList.toggle('hidden-by-logic', !!hasImage)); }
+    function handleBubbleImage(imageUrl) { const bubbleId = editBubbleIdInput.value; if (!appState.beautify.bubbles[bubbleId]) appState.beautify.bubbles[bubbleId] = {}; appState.beautify.bubbles[bubbleId].backgroundImage = imageUrl; toggleBubbleColorInputs(imageUrl); updateBubblePreview(); }
+    function applyBubbleChange(bubbleId, styles, isInitialLoad = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; Object.keys(styles).forEach(key => { if (key !== 'backgroundImage' && key !== 'replaceBgOnly') { targetEl.style[key] = styles[key]; } }); if (styles.backgroundImage) { targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.backgroundImage = styles.backgroundImage; if (styles.replaceBgOnly) { targetEl.style.color = styles.color || ''; } else { targetEl.textContent = ''; } } }
+
+    // ===================================================================
+    // --- 资料 APP ---
+    // ===================================================================
+    dataAppBtn.addEventListener('click', () => { openApp(dataAppScreen); renderWorldBooks(); });
+    dataAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#data-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#data-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); dataActionBtn.style.display = (tabId === 'memory') ? 'none' : 'block'; if (tabId === 'world-book') renderWorldBooks(); else if (tabId === 'archive') renderArchives(); else if (tabId === 'info') renderInfos(); } });
+    dataActionBtn.addEventListener('click', () => { const activeTab = query('#data-app-screen .tab-link.active').dataset.tab; const typeMap = { 'world-book': 'worldBook', 'archive': 'archive', 'info': 'info' }; openDataEditor(typeMap[activeTab]); });
+    function openDataEditor(type, id = null) { dataModal.dataset.type = type; dataEditingIdInput.value = id || ''; dataNameInput.value = ''; dataContentInput.value = ''; dataAvatarPreview.style.backgroundImage = 'none'; const typeConfig = { worldBook: { title: '世界书', hasAvatar: false }, archive: { title: '档案', hasAvatar: true }, info: { title: '信息', hasAvatar: true } }; const config = typeConfig[type]; dataModalTitle.textContent = (id ? '编辑' : '创建') + config.title; dataAvatarGroup.style.display = config.hasAvatar ? 'block' : 'none'; if (id) { const item = appState.data[type + 's'].find(i => i.id === id); if (item) { dataNameInput.value = item.name; dataContentInput.value = item.content; if (config.hasAvatar && item.avatar) { dataAvatarPreview.style.backgroundImage = `url(${item.avatar})`; } } } dataModal.classList.add('visible'); }
+    cancelDataBtn.addEventListener('click', () => dataModal.classList.remove('visible'));
+    saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatar = dataAvatarPreview.style.backgroundImage.slice(5, -2); if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatar) item.avatar = avatar; } } else { const newItem = { id: 'data_' + Date.now(), name, content }; if (avatar) newItem.avatar = avatar; dataArray.push(newItem); } saveState(); dataModal.classList.remove('visible'); const renderFunc = window['render' + type.charAt(0).toUpperCase() + type.slice(1) + 's']; if (renderFunc) renderFunc(); });
+    dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
+    dataAvatarFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { dataAvatarPreview.style.backgroundImage = `url(${event.target.result})`; }; reader.readAsDataURL(file); dataAvatarFileInput.value = ''; } });
+    dataAddAvatarUrlBtn.addEventListener('click', () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { dataAvatarPreview.style.backgroundImage = `url(${url})`; } else if (url) { showToast('无效的URL', 'error'); } });
+    function renderWorldBooks() { worldBookListEl.innerHTML = appState.data.worldBooks.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无世界书</div></li>'; }
+    function renderArchives() { archiveListEl.innerHTML = appState.data.archives.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; }
+    function renderInfos() { infoListEl.innerHTML = appState.data.infos.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无信息</div></li>'; }
+
+    // ===================================================================
+    // --- 聊天 APP ---
+    // ===================================================================
+    chatAppBtn.addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); });
+    chatAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
+    addContactBtn.addEventListener('click', () => addContactModal.classList.add('visible'));
+    cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
+    confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: 'contact_' + Date.now(), name: name, avatar: `https://api.multiavatar.com/${name}.png`, status: 'offline', signature: '这个人很懒，什么都没留下。', lastMessage: '我们已经是好友了，开始聊天吧！', lastMessageTime: new Date().getTime(), isGroup: false, conversation: [] }; appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+    function renderMessageList() { messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length})</span>` : `<div class="contact-status">${statusIndicator} ${contact.status}</div>`; li.innerHTML = `<div class="contact-item-content"><div class="contact-avatar" style="background-image: url(${contact.avatar})"></div><div class="contact-info"><div class="contact-name">${contact.name}</div><div class="contact-last-msg">${contact.lastMessage}</div></div><div class="contact-meta"><div class="contact-time">${time}</div>${metaHTML}</div></div><div class="contact-item-actions"><div class="delete-action">删除</div></div>`; messageListEl.appendChild(li); }); }
+    messageListEl.addEventListener('click', (e) => { const content = e.target.closest('.contact-item-content'); if (content) { openSingleChat(content.parentElement.dataset.id); } });
+    function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; currentChatId = contactId; messageQueue = []; chatHeaderNameStatus.textContent = `${contact.name} [${contact.status}]`; chatHeaderSignature.textContent = contact.signature; renderConversation(); openApp(singleChatScreen); }
+    chatBackBtn.addEventListener('click', () => { singleChatScreen.classList.remove('active'); currentChatId = null; });
+    chatSettingsBtn.addEventListener('click', () => showToast('聊天设置待开发'));
+    function renderConversation() { chatMessagesView.innerHTML = ''; const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const fullConversation = [...contact.conversation, ...messageQueue]; let lastTimestamp = 0; fullConversation.forEach(msg => { if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) { const timeEl = document.createElement('div'); timeEl.className = 'message-timestamp'; timeEl.textContent = new Date(msg.timestamp).toLocaleString(); chatMessagesView.appendChild(timeEl); lastTimestamp = msg.timestamp; } const msgItem = document.createElement('div'); msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`; const avatarUrl = msg.sender === 'user' ? appState.chat.userProfile.avatar : contact.avatar; let contentHTML = ''; if (msg.type === 'text') { contentHTML = msg.content; } else if (msg.type === 'emoji') { contentHTML = `<img src="${msg.content}" alt="${msg.description}" style="max-width: 100px; max-height: 100px;">`; } else if (msg.type === 'notification') { contentHTML = `<div class="message-timestamp">${msg.content}</div>`; chatMessagesView.appendChild(msgItem); msgItem.outerHTML = contentHTML; return; } msgItem.innerHTML = `<div class="avatar" style="background-image: url(${avatarUrl})"></div><div class="message-bubble">${contentHTML}</div>`; chatMessagesView.appendChild(msgItem); }); chatMessagesView.scrollTop = chatMessagesView.scrollHeight; }
+    chatInput.addEventListener('input', () => { const hasText = chatInput.value.trim().length > 0; chatEmojiBtn.style.display = hasText ? 'none' : 'inline-block'; chatSendFakeBtn.style.display = hasText ? 'inline-block' : 'none'; });
+    chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; messageQueue.push({ type: 'text', content, sender: 'user', timestamp: new Date().getTime() }); renderConversation(); chatInput.value = ''; chatInput.dispatchEvent(new Event('input')); });
+    chatSendRealBtn.addEventListener('click', () => { if (messageQueue.length === 0) return showToast('没有要发送的消息'); const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.conversation.push(...messageQueue); messageQueue = []; typingIndicator.style.display = 'block'; typingIndicator.textContent = `${contact.name}正在输入中...`; setTimeout(() => { const reply = { type: 'text', content: '这是AI的自动回复。', sender: contact.id, timestamp: new Date().getTime() }; contact.conversation.push(reply); contact.lastMessage = reply.content; contact.lastMessageTime = reply.timestamp; saveState(); renderConversation(); renderMessageList(); typingIndicator.style.display = 'none'; }, 2000 + Math.random() * 2000); });
+    chatEmojiBtn.addEventListener('click', () => { renderEmojiPicker(); emojiPickerPanel.classList.add('visible'); });
+    closeEmojiPickerBtn.addEventListener('click', () => emojiPickerPanel.classList.remove('visible'));
+    function renderEmojiPicker() { emojiGrid.innerHTML = ''; appState.chat.emojis.forEach(emoji => { const item = document.createElement('div'); item.className = 'emoji-item'; item.style.backgroundImage = `url(${emoji.url})`; item.dataset.id = emoji.id; emojiGrid.appendChild(item); }); }
+    emojiGrid.addEventListener('click', (e) => { if (e.target.classList.contains('emoji-item')) { const emoji = appState.chat.emojis.find(em => em.id === e.target.dataset.id); if (emoji) { messageQueue.push({ type: 'emoji', content: emoji.url, description: emoji.description, sender: 'user', timestamp: new Date().getTime() }); renderConversation(); emojiPickerPanel.classList.remove('visible'); } } });
+    uploadEmojiBtn.addEventListener('click', () => { addEmojiModal.classList.add('visible'); });
+    addEmojiBtn.addEventListener('click', () => { addEmojiModal.classList.add('visible'); });
+    cancelAddEmojiBtn.addEventListener('click', () => addEmojiModal.classList.remove('visible'));
+    uploadEmojiFileBtn.addEventListener('click', () => emojiFileInput.click());
+    confirmUploadEmojiBtn.addEventListener('click', () => { const file = emojiFileInput.files[0]; const desc = uploadEmojiDescInput.value.trim(); if (!file || !desc) return showToast('请选择文件并输入描述', 'error'); const reader = new FileReader(); reader.onload = (e) => { appState.chat.emojis.push({ id: 'emoji_' + Date.now(), description: desc, url: e.target.result, isLocal: true }); saveState(); showToast('表情包已添加'); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; }; reader.readAsDataURL(file); });
+    confirmAddEmojiUrlBtn.addEventListener('click', () => { const lines = emojiUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const desc = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (desc && url.startsWith('http')) { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + Math.random(), description: desc, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); showToast(`成功添加 ${addedCount} 个表情包`); } addEmojiModal.classList.remove('visible'); emojiUrlInput.value = ''; });
+    chatToolbar.addEventListener('click', () => showToast('此功能待开发'));
+    chatHeaderNameStatus.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const newStatus = prompt('修改状态 (online, busy, offline):', contact.status); if (['online', 'busy', 'offline'].includes(newStatus)) { contact.status = newStatus; saveState(); chatHeaderNameStatus.textContent = `${contact.name} [${contact.status}]`; renderMessageList(); } });
+    chatHeaderSignature.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const newSig = prompt('修改签名:', contact.signature); if (newSig !== null) { contact.signature = newSig; saveState(); chatHeaderSignature.textContent = newSig; } });
+    chatMessagesView.addEventListener('click', (e) => { const avatar = e.target.closest('.avatar'); if (!avatar) return; const msgItem = avatar.closest('.message-item'); const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (msgItem.classList.contains('user')) { messageQueue.push({ type: 'notification', content: '你拍了拍自己', timestamp: new Date().getTime() }); renderConversation(); } else { messageQueue.push({ type: 'notification', content: `你拍了拍"${contact.name}"`, timestamp: new Date().getTime() }); renderConversation(); } });
+    chatMessagesView.addEventListener('contextmenu', (e) => { e.preventDefault(); const avatar = e.target.closest('.avatar'); if (!avatar) return; const msgItem = avatar.closest('.message-item'); if (msgItem.classList.contains('user')) { const newSig = prompt('修改你的签名:', appState.chat.userProfile.signature); if (newSig !== null) { appState.chat.userProfile.signature = newSig; saveState(); showToast('签名已修改'); } } });
 
     // ===================================================================
     // --- 通用列表滑动交互 ---
     // ===================================================================
-    function createListSwipeHandler(listElement, contentSelector, actionsSelector, onDelete, onEdit) { let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, justSwiped = false; const handleDragStart = (e) => { const target = e.target.closest(contentSelector); if (!target) return; if (swipedItem && swipedItem !== target.parentElement) { swipedItem.querySelector(contentSelector).style.transform = 'translateX(0px)'; } isDragging = true; startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; target.style.transition = 'none'; swipedItem = target.parentElement; document.body.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging || !swipedItem) return; currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; let diff = currentX - startX; if (diff > 0) diff = 0; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (diff < -actionsWidth - 20) diff = -actionsWidth - 20; swipedItem.querySelector(contentSelector).style.transform = `translateX(${diff}px)`; }; const handleDragEnd = () => { if (!isDragging || !swipedItem) return; isDragging = false; document.body.style.cursor = 'default'; const content = swipedItem.querySelector(contentSelector); content.style.transition = 'transform 0.3s ease'; const transformMatrix = new WebKitCSSMatrix(window.getComputedStyle(content).transform); const currentTranslateX = transformMatrix.m41; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (currentTranslateX < dragThreshold) { content.style.transform = `translateX(-${actionsWidth}px)`; justSwiped = true; setTimeout(() => justSwiped = false, 300); } else { content.style.transform = 'translateX(0px)'; swipedItem = null; } }; listElement.addEventListener('mousedown', handleDragStart); listElement.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); listElement.addEventListener('click', (e) => { if (justSwiped) { e.preventDefault(); e.stopPropagation(); return; } const item = e.target.closest('li'); if (!item) return; if (e.target.classList.contains('delete-action')) onDelete(item); if (e.target.classList.contains('edit-action')) onEdit(item); }); }
+    function createListSwipeHandler(listElement, contentSelector, actionsSelector, onDelete, onEdit) { let startX, currentX, isDragging = false, swipedItem = null, dragThreshold = -40, justSwiped = false; const handleDragStart = (e) => { const target = e.target.closest(contentSelector); if (!target) return; if (swipedItem && swipedItem !== target.parentElement) { swipedItem.querySelector(contentSelector).style.transform = 'translateX(0px)'; } isDragging = true; startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; target.style.transition = 'none'; swipedItem = target.parentElement; document.body.style.cursor = 'grabbing'; document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); }; const handleDragMove = (e) => { if (!isDragging || !swipedItem) return; currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX; let diff = currentX - startX; if (diff > 0) diff = 0; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (diff < -actionsWidth - 20) diff = -actionsWidth - 20; swipedItem.querySelector(contentSelector).style.transform = `translateX(${diff}px)`; }; const handleDragEnd = () => { if (!isDragging || !swipedItem) return; isDragging = false; document.body.style.cursor = 'default'; document.removeEventListener('mousemove', handleDragMove); document.removeEventListener('mouseup', handleDragEnd); document.removeEventListener('touchmove', handleDragMove); document.removeEventListener('touchend', handleDragEnd); const content = swipedItem.querySelector(contentSelector); content.style.transition = 'transform 0.3s ease'; const transformMatrix = new WebKitCSSMatrix(window.getComputedStyle(content).transform); const currentTranslateX = transformMatrix.m41; const actionsWidth = swipedItem.querySelector(actionsSelector).offsetWidth; if (currentTranslateX < dragThreshold) { content.style.transform = `translateX(-${actionsWidth}px)`; justSwiped = true; setTimeout(() => justSwiped = false, 300); } else { content.style.transform = 'translateX(0px)'; swipedItem = null; } }; listElement.addEventListener('mousedown', handleDragStart); listElement.addEventListener('touchstart', handleDragStart, { passive: true }); listElement.addEventListener('click', (e) => { if (justSwiped) { e.preventDefault(); e.stopPropagation(); return; } const item = e.target.closest('li'); if (!item) return; if (e.target.classList.contains('delete-action')) onDelete(item); if (e.target.classList.contains('edit-action')) onEdit(item); }); }
     createListSwipeHandler(presetListEl, '.preset-item-content', '.preset-item-actions', (item) => {}, (item) => {});
     createListSwipeHandler(musicListEl, '.music-item-content', '.music-item-actions', (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } }, (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } });
-    createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions', 
-        (item) => { // onDelete
-            if (item.dataset.isDefault === 'true') { showToast('默认字体无法删除', 'error'); return; }
-            const fontName = item.dataset.name;
-            if (confirm(`确定要删除字体 "${fontName}" 吗？`)) {
-                appState.beautify.fonts = appState.beautify.fonts.filter(f => f.name !== fontName);
-                if (appState.beautify.currentFont === fontName) { applyFont('系统默认'); }
-                saveState(); renderFonts(); showToast('字体已删除');
-            }
-        }, 
-        (item) => { // onEdit
-            if (item.dataset.isDefault === 'true') { showToast('默认字体无法编辑', 'error'); return; }
-            const oldName = item.dataset.name;
-            const newName = prompt(`请输入新的字体名称:`, oldName);
-            if (newName && newName.trim() !== '' && newName !== oldName) {
-                const font = appState.beautify.fonts.find(f => f.name === oldName);
-                if (font) {
-                    font.name = newName.trim();
-                    if (appState.beautify.currentFont === oldName) {
-                        appState.beautify.currentFont = newName.trim();
-                    }
-                    saveState(); renderFonts(); showToast('字体名称已更新');
-                }
-            }
-        }
-    );
+    createListSwipeHandler(fontListEl, '.font-item-content', '.font-item-actions', (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法删除', 'error'); return; } if (confirm(`确定要删除字体 "${fontName}" 吗？`)) { appState.beautify.fonts = appState.beautify.fonts.filter(f => f.name !== fontName); if (appState.beautify.currentFont === fontName) { applyFont('default'); } saveState(); renderFonts(); showToast('字体已删除'); } }, (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法编辑', 'error'); return; } const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { const newName = prompt('请输入新的字体名称:', fontName); if (newName && newName.trim() !== '') { appState.beautify.fonts[fontIndex].name = newName.trim(); if (appState.beautify.currentFont === fontName) { appState.beautify.currentFont = newName.trim(); } saveState(); renderFonts(); showToast('字体名称已更新'); } } });
+    const createDataSwipeHandler = (listEl, type) => { createListSwipeHandler(listEl, '.preset-data-item-content', '.preset-data-item-actions', (item) => { const id = item.dataset.id; const dataArray = appState.data[type + 's']; const itemIndex = dataArray.findIndex(i => i.id === id); if (itemIndex > -1) { if (confirm(`确定要删除 "${dataArray[itemIndex].name}" 吗？`)) { dataArray.splice(itemIndex, 1); saveState(); window['render' + type.charAt(0).toUpperCase() + type.slice(1) + 's'](); } } }, (item) => { openDataEditor(type, item.dataset.id); }); };
+    createDataSwipeHandler(worldBookListEl, 'worldBook');
+    createDataSwipeHandler(archiveListEl, 'archive');
+    createDataSwipeHandler(infoListEl, 'info');
+    createListSwipeHandler(messageListEl, '.contact-item-content', '.contact-item-actions', (item) => { const contactId = item.dataset.id; const contactIndex = appState.chat.contacts.findIndex(c => c.id === contactId); if (contactIndex > -1) { if (confirm(`确定要永久删除联系人 "${appState.chat.contacts[contactIndex].name}" 吗？此操作不可逆。`)) { appState.chat.contacts.splice(contactIndex, 1); saveState(); renderMessageList(); showToast('联系人已删除'); } } }, (item) => {});
+
+    // ===================================================================
+    // --- 弹窗标签页通用逻辑 ---
+    // ===================================================================
+    function setupModalTabs(modalElement) { const tabsContainer = modalElement.querySelector('.modal-tabs'); if (!tabsContainer) return; tabsContainer.addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) { const tabId = e.target.dataset.tab; modalElement.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); modalElement.querySelectorAll('.modal-tab-content').forEach(content => content.classList.remove('active')); e.target.classList.add('active'); const activeContent = modalElement.querySelector(`.modal-tab-content[id*="-${tabId}"]`); if (activeContent) { activeContent.classList.add('active'); } } }); }
 
     // ===================================================================
     // --- 初始化 ---
     // ===================================================================
     function init() {
+        queryAll('[data-icon-id]').forEach(el => { originalIconContent[el.dataset.iconId] = el.innerHTML; });
         loadState();
+        appState.music.currentQueueIndex = -1;
+        updateMusicListPlayingStatus();
         updateTime();
         updateBattery();
         setInterval(updateTime, 30000);
         showNotification("欢迎使用土皇帝小手机！");
+        renderFonts();
+
+        // 初始化所有带标签页的弹窗
+        setupModalTabs(addMusicModal);
+        setupModalTabs(addFontModal);
+        setupModalTabs(replaceIconModal);
+        setupModalTabs(addEmojiModal);
     }
 
     init();
