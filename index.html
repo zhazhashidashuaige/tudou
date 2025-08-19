@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>土皇帝小手机</title>
     <!-- Safari PWA/Fullscreen Meta Tags -->
-<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
@@ -65,7 +65,7 @@
             padding-top: calc(env(safe-area-inset-top, 10px)); /* PWA Safe Area */
             display: flex; justify-content: center; align-items: flex-start; 
             z-index: 50; pointer-events: none; 
-            height: 44px; /* Increased height for better spacing */
+            height: 49px; /* Increased height for better spacing */
             box-sizing: border-box;
         }
         #status-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 600; font-size: 14px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); padding: 0 15px; }
@@ -74,14 +74,13 @@
         #battery-icon { font-size: 18px; }
 
         /* --- 灵动岛 --- */
-        #dynamic-island { position: absolute; top: calc(env(safe-area-inset-top, 8px)); height: 20px; width: 100px; max-width: 50%; background-color: black; border-radius: 10px; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); pointer-events: auto; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
-        #dynamic-island.music-active { width: 200px; }
+        #dynamic-island { position: absolute; top: calc(env(safe-area-inset-top, 10px)); height: 20px; width: 100px; max-width: 50%; background-color: black; border-radius: 10px; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); pointer-events: auto; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; box-sizing: border-box; overflow: hidden; }
+        #dynamic-island.music-active { width: 240px; }
         .island-content { color: white; font-size: 11px; opacity: 0; transition: opacity 0.3s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #dynamic-island.music-active .island-content { opacity: 1; }
         .island-music-info { flex-grow: 1; text-align: left; padding: 0 5px; }
-        .island-music-info .title { font-weight: bold; }
-        .island-music-info .artist { font-size: 10px; color: #aaa; }
-        .island-waveform { width: 20px; height: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .island-music-info .artist-title { display: inline-block; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .island-waveform { width: 20px; height: 12px; display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0; }
         .island-waveform span { width: 2px; height: 100%; background-color: #34c759; border-radius: 1px; animation: waveform-dance 1.2s infinite ease-in-out; }
         .island-waveform span:nth-child(2) { animation-delay: -1.0s; }
         .island-waveform span:nth-child(3) { animation-delay: -0.8s; }
@@ -107,7 +106,7 @@
         /* --- APP 界面通用样式 --- */
         .app-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); transform: translateY(100%); transition: transform 0.3s ease-in-out; display: flex; flex-direction: column; z-index: 10; }
         .app-screen.active { transform: translateY(0); }
-        .app-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: calc(env(safe-area-inset-top, 10px) + 10px); position: relative; min-height: 44px; box-sizing: content-box; }
+        .app-header { display: flex; align-items: center; justify-content: space-between; padding: 15px; background-color: var(--app-screen-bg); border-bottom: 1px solid var(--border-color); flex-shrink: 0; padding-top: calc(env(safe-area-inset-top, 10px) + 15px); position: relative; min-height: 44px; box-sizing: content-box; }
         .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; white-space: nowrap; }
         .app-header .title { font-size: 17px; font-weight: 600; position: absolute; left: 50%; transform: translateX(-50%); }
         .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; }
@@ -159,8 +158,14 @@
         .player-song-info { text-align: center; }
         .player-song-info .title { font-size: 16px; font-weight: bold; }
         .player-song-info .artist { font-size: 13px; color: #ccc; }
-        #listen-together-info { font-size: 12px; color: var(--listen-together-color); margin-top: 4px; display: none; animation: heartbeat 1.5s infinite; }
-        @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        #listen-together-info { font-size: 12px; color: var(--listen-together-color); margin-top: 4px; display: none; align-items: center; justify-content: center; gap: 5px; }
+        .heart-icon { position: relative; width: 12px; height: 12px; }
+        .heart-icon::before, .heart-icon::after { content: ''; position: absolute; top: 0; width: 6px; height: 10px; background: var(--listen-together-color); border-radius: 6px 6px 0 0; transform: rotate(-45deg); transform-origin: 0 100%; }
+        .heart-icon::after { left: 0; transform: rotate(45deg); transform-origin: 100% 100%; }
+        .heart-icon { animation: heartbeat-scale 1.2s infinite; }
+        .heart-ripple { position: absolute; width: 12px; height: 12px; border: 1px solid var(--listen-together-color); border-radius: 50%; transform: scale(1); opacity: 1; animation: heartbeat-ripple 1.2s infinite; }
+        @keyframes heartbeat-scale { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        @keyframes heartbeat-ripple { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
         .player-body { flex-grow: 1; overflow: hidden; position: relative; }
         .player-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         .player-view.active { opacity: 1; pointer-events: auto; }
@@ -217,7 +222,6 @@
         .modal-body .form-group { margin-bottom: 12px; }
         .modal-body .form-group label { display: block; font-size: 14px; margin-bottom: 5px; color: var(--secondary-text-color); }
         .modal-body .form-group input, .modal-body .form-group select { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; box-sizing: border-box; }
-        /* GLOBAL FIX for textareas */
         .wide-textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; box-sizing: border-box; resize: vertical; min-height: 120px; font-family: inherit; }
         #bubble-url-input { resize: none; height: 40px; min-height: 40px; }
         .modal-actions { display: flex; justify-content: space-around; gap: 10px; flex-direction: column; }
@@ -250,7 +254,7 @@
         #manage-presets-modal .modal-content { min-height: 300px; }
         #manage-presets-modal .modal-body p { margin-top: 0; margin-bottom: 15px; }
         
-        /* --- 歌曲详情页 (评论区重构) --- */
+        /* --- 歌曲详情页 (评论区) --- */
         #song-details-screen { background-color: var(--app-screen-bg); display: flex; flex-direction: column; }
         #song-details-screen .app-content { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
         .details-song-info { text-align: center; padding: 15px; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
@@ -271,9 +275,9 @@
         .comment-actions-inline .icon-btn { background: none; border: none; cursor: pointer; padding: 0 5px; display: flex; align-items: center; gap: 4px; }
         .comment-actions-inline .icon-btn.liked { color: var(--like-color); }
         .comment-text { margin-top: 5px; font-size: 15px; line-height: 1.5; }
-        .comment-replies { margin-left: 50px; margin-top: 10px; border-left: 2px solid #eee; padding-left: 10px; }
-        .reply-item { font-size: 14px; margin-bottom: 8px; position: relative; cursor: pointer; }
-        .reply-item .delete-reply-btn { position: absolute; right: 0; top: 0; cursor: pointer; display: none; color: var(--danger-color); font-weight: bold; }
+        .comment-replies { margin-top: 10px; border-left: 2px solid #eee; padding-left: 10px; }
+        .reply-item { font-size: 14px; margin-bottom: 8px; position: relative; cursor: pointer; padding: 5px; border-radius: 5px; }
+        .reply-item .delete-reply-btn { position: absolute; right: 5px; top: 5px; cursor: pointer; display: none; color: var(--danger-color); font-weight: bold; }
         .reply-item:hover .delete-reply-btn { display: block; }
         .reply-author { font-weight: bold; }
         .reply-target { color: var(--accent-color); }
@@ -312,11 +316,13 @@
         .status-indicator.offline { background-color: var(--offline-color); }
         #single-chat-screen { display: flex; flex-direction: column; }
         #single-chat-screen .app-header .title { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
-        #single-chat-screen .chat-header-name-status { font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        #single-chat-screen .chat-header-signature { font-size: 11px; color: var(--secondary-text-color); cursor: pointer; }
+        #single-chat-screen .chat-header-name { font-size: 16px; font-weight: 600; cursor: pointer; }
+        #single-chat-screen .chat-header-status { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--secondary-text-color); cursor: pointer; }
+        #single-chat-screen .chat-header-signature { font-size: 11px; color: var(--secondary-text-color); cursor: pointer; margin-top: 2px; }
         #single-chat-screen .app-content { flex-grow: 1; padding: 10px; overflow-y: auto; display: flex; flex-direction: column-reverse; }
         #chat-messages-view { display: flex; flex-direction: column; gap: 15px; padding-bottom: 10px; }
-        .message-item { display: flex; align-items: flex-end; gap: 5px; }
+        .message-item { display: flex; align-items: flex-end; gap: 5px; position: relative; }
+        .message-item.selected::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 122, 255, 0.2); border-radius: 8px; pointer-events: none; }
         .message-bubble { max-width: 80%; padding: 8px 12px; border-radius: 18px; line-height: 1.5; word-wrap: break-word; }
         .message-item.user { justify-content: flex-end; }
         .message-item.contact { justify-content: flex-start; }
@@ -324,7 +330,7 @@
         .message-item.user .avatar { order: 2; }
         .message-item.user .message-bubble { background-color: var(--accent-color); color: white; border-bottom-right-radius: 4px; }
         .message-item.contact .message-bubble { background-color: white; color: black; border-bottom-left-radius: 4px; }
-        .message-timestamp { width: 100%; text-align: center; font-size: 12px; color: var(--secondary-text-color); margin: 10px 0; }
+        .message-timestamp { width: 100%; text-align: center; font-size: 12px; color: var(--secondary-text-color); margin: 10px 0; cursor: pointer; }
         .typing-indicator { text-align: center; font-size: 12px; color: var(--secondary-text-color); padding: 5px; }
         #chat-footer { flex-shrink: 0; background-color: #f7f7f7; border-top: 1px solid var(--border-color); padding: 5px 8px; padding-bottom: calc(env(safe-area-inset-bottom, 5px)); display: flex; flex-direction: column; }
         .chat-input-area { display: flex; align-items: center; gap: 8px; }
@@ -342,10 +348,8 @@
         /* New Message Bubble Types */
         .message-bubble.voice { padding: 5px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .voice-waveform-container { width: 120px; height: 20px; display: flex; align-items: center; gap: 2px; }
-        .voice-waveform-container span { width: 2px; height: 50%; background-color: #888; border-radius: 1px; animation: voice-wave 1.2s infinite ease-in-out; }
+        .voice-waveform-container span { width: 2px; background-color: #888; border-radius: 1px; transition: height 0.3s; }
         .message-item.user .voice-waveform-container span { background-color: white; }
-        .voice-waveform-container span:nth-child(odd) { animation-delay: -0.6s; }
-        @keyframes voice-wave { 0%, 100% { height: 10%; } 50% { height: 100%; } }
         .voice-duration { font-size: 12px; }
         .voice-text { display: none; margin-top: 5px; padding: 8px; background-color: #f0f0f0; border-radius: 8px; font-size: 14px; }
         .message-bubble.image img { max-width: 100%; border-radius: 12px; }
@@ -353,15 +357,21 @@
         .message-bubble.camera img { max-width: 100%; border-radius: 12px; display: block; }
         .camera-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; color: black; display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px; box-sizing: border-box; border-radius: 12px; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
         .message-bubble.camera.show-text .camera-text-overlay { opacity: 1; visibility: visible; }
-        .message-bubble.link { background-color: white; padding: 10px; display: flex; gap: 10px; align-items: center; cursor: pointer; }
-        .link-icon { font-size: 24px; }
+        .message-bubble.link { background-color: white; padding: 10px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; border: 1px solid #eee; }
         .link-info .title { font-weight: bold; }
-        .link-info .summary { font-size: 12px; color: var(--secondary-text-color); }
+        .link-info .source { font-size: 12px; color: var(--secondary-text-color); }
+        .link-info .summary { font-size: 13px; margin-top: 4px; }
         .message-bubble.red-packet { background-color: #fa9d3b; color: white; width: 200px; cursor: pointer; }
         .red-packet-header { display: flex; align-items: center; gap: 8px; }
         .red-packet-icon { font-size: 24px; }
         .red-packet-body { margin-top: 5px; font-size: 14px; }
         .red-packet-footer { font-size: 10px; color: #eee; border-top: 1px solid rgba(255,255,255,0.5); margin-top: 8px; padding-top: 4px; }
+
+        /* --- 消息长按菜单 --- */
+        #message-context-menu { position: absolute; z-index: 110; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 8px; display: flex; padding: 5px; opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95); transition: all 0.15s ease-out; }
+        #message-context-menu.visible { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        #message-context-menu button { background: none; border: none; color: white; padding: 8px 12px; font-size: 14px; cursor: pointer; }
+        #message-context-menu button:disabled { color: #666; }
 
         /* --- 提示消息 --- */
         #toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events: none; }
@@ -375,7 +385,7 @@
     <div id="phone-screen">
         <div id="top-area">
             <div id="dynamic-island">
-                <div class="island-content island-music-info"><div class="artist">...</div> - <div class="title">未播放</div></div>
+                <div class="island-content island-music-info"><span class="artist-title"></span></div>
                 <div class="island-content island-waveform"><span></span><span></span><span></span></div>
             </div>
             <div id="status-bar">
@@ -482,7 +492,8 @@
             <div class="app-header">
                 <button class="back-btn" id="chat-back-btn">&lt; 消息</button>
                 <div class="title">
-                    <div class="chat-header-name-status" id="chat-header-name-status">联系人</div>
+                    <div class="chat-header-name" id="chat-header-name">联系人</div>
+                    <div class="chat-header-status" id="chat-header-status"></div>
                     <div class="chat-header-signature" id="chat-header-signature">个性签名</div>
                 </div>
                 <button class="action-btn" id="chat-settings-btn">⚙️</button>
@@ -518,9 +529,19 @@
     <!-- 浮动歌词 & 音乐播放器 -->
     <div id="lyrics-container"><div id="lyrics-line">...</div></div>
     <div id="player-modal">
-        <div class="player-header"><button class="icon-btn" id="hide-player-btn" data-icon-id="player-close">🔽</button><div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div><div id="listen-together-info"></div></div><button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist">📜</button></div>
+        <div class="player-header"><button class="icon-btn" id="hide-player-btn" data-icon-id="player-close">🔽</button><div class="player-song-info"><div class="title">歌曲名</div><div class="artist">歌手</div><div id="listen-together-info"><div class="heart-icon"><div class="heart-ripple"></div></div><span class="listen-text"></span></div></div><button class="icon-btn" id="toggle-playlist-view-btn" data-icon-id="player-playlist">📜</button></div>
         <div class="player-body"><div id="player-lyrics-view" class="player-view active"></div><div id="player-playlist-view-container" class="player-view"><div class="player-playlist-header"><button class="settings-button secondary" id="restore-playlist-btn" style="padding: 5px 10px; font-size: 12px;" data-bubble-id="player-restore-playlist">还原</button></div><ul class="player-playlist-view"></ul></div></div>
         <div class="player-footer"><input type="range" id="progress-bar" value="0" step="1"><div class="player-controls"><button class="icon-btn" id="player-prev-btn" data-icon-id="player-prev"><img src="https://i.postimg.cc/m2n6nDp1/z-aigei-com.png"></button><button class="icon-btn play-pause-btn" id="player-play-pause-btn" data-icon-id="player-play"><img src="https://i.postimg.cc/v83KWXWz/z-aigei-com.png"></button><button class="icon-btn" id="player-next-btn" data-icon-id="player-next"><img src="https://i.postimg.cc/K8gsh2Cq/z-aigei-com.png"></button><button class="icon-btn" id="player-playback-mode-btn" data-icon-id="player-mode-repeat">🔁</button></div></div>
+    </div>
+
+    <!-- 消息长按菜单 -->
+    <div id="message-context-menu">
+        <button data-action="edit">编辑</button>
+        <button data-action="quote">引用</button>
+        <button data-action="recall">撤回</button>
+        <button data-action="copy">复制</button>
+        <button data-action="select">多选</button>
+        <button data-action="cancel">取消</button>
     </div>
 
     <!-- 弹窗集合 -->
@@ -543,6 +564,7 @@
     <div id="red-packet-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">发红包</h3><div class="modal-body"><div class="form-group"><label>金额</label><input type="number" id="red-packet-amount-input" placeholder="0.00"></div><div class="form-group"><label>留言</label><input type="text" id="red-packet-message-input" placeholder="恭喜发财，大吉大利！"></div></div><div class="modal-actions row"><button id="cancel-red-packet-btn" class="cancel-btn">取消</button><button id="confirm-red-packet-btn" class="confirm-btn">塞钱进红包</button></div></div></div>
     <div id="edit-comment-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑评论</h3><div class="modal-body"><textarea id="edit-comment-input" class="wide-textarea"></textarea></div><div class="modal-actions row"><button id="cancel-edit-comment-btn" class="cancel-btn">取消</button><button id="save-edit-comment-btn" class="confirm-btn">保存</button></div></div></div>
     <div id="view-content-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="view-content-title"></h3><div class="modal-body" id="view-content-body"></div><div class="modal-actions"><button id="close-view-content-btn" class="cancel-btn">关闭</button></div></div></div>
+    <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><select id="edit-message-type-select"><option value="text">文本</option><option value="voice">语音</option><option value="camera">文字图</option><option value="link">链接</option><option value="redPacket">红包</option></select></div><div id="edit-form-text" class="edit-form-content"><textarea class="wide-textarea"></textarea></div><div id="edit-form-voice" class="edit-form-content" style="display:none;"><textarea class="wide-textarea" placeholder="语音的文字内容..."></textarea></div><div id="edit-form-camera" class="edit-form-content" style="display:none;"><textarea class="wide-textarea" placeholder="图片的文字描述..."></textarea></div><div id="edit-form-link" class="edit-form-content" style="display:none;"><div class="form-group"><label>标题</label><input type="text"></div><div class="form-group"><label>摘要</label><input type="text"></div><div class="form-group"><label>来源</label><input type="text"></div><div class="form-group"><label>内容</label><textarea class="wide-textarea" rows="3"></textarea></div></div><div id="edit-form-redPacket" class="edit-form-content" style="display:none;"><div class="form-group"><label>金额</label><input type="number"></div><div class="form-group"><label>留言</label><input type="text"></div></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn">取消</button><button id="save-edit-message-btn" class="confirm-btn">保存</button></div></div></div>
 
     <div id="toast"></div>
 
@@ -562,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 灵动岛 & 通知 ---
     const dynamicIsland = getEl('dynamic-island');
-    const islandMusicInfo = query('.island-music-info');
+    const islandMusicInfo = query('.island-music-info .artist-title');
     const islandWaveform = query('.island-waveform');
     const notificationContainer = getEl('notification-container');
 
@@ -638,6 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerSongTitle = query('#player-modal .player-song-info .title');
     const playerSongArtist = query('#player-modal .player-song-info .artist');
     const listenTogetherInfo = getEl('listen-together-info');
+    const listenTogetherText = query('#listen-together-info .listen-text');
     const togglePlaylistViewBtn = getEl('toggle-playlist-view-btn');
     const playerLyricsView = getEl('player-lyrics-view');
     const playerPlaylistViewContainer = getEl('player-playlist-view-container');
@@ -729,7 +752,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmAddContactBtn = getEl('confirm-add-contact-btn');
     const cancelAddContactBtn = getEl('cancel-add-contact-btn');
     const chatBackBtn = getEl('chat-back-btn');
-    const chatHeaderNameStatus = getEl('chat-header-name-status');
+    const chatHeaderName = getEl('chat-header-name');
+    const chatHeaderStatus = getEl('chat-header-status');
     const chatHeaderSignature = getEl('chat-header-signature');
     const chatSettingsBtn = getEl('chat-settings-btn');
     const chatMessagesView = getEl('chat-messages-view');
@@ -785,6 +809,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const viewContentTitle = getEl('view-content-title');
     const viewContentBody = getEl('view-content-body');
     const closeViewContentBtn = getEl('close-view-content-btn');
+    const messageContextMenu = getEl('message-context-menu');
+    const editMessageModal = getEl('edit-message-modal');
+    const editingMessageIdInput = getEl('editing-message-id');
+    const editMessageTypeSelect = getEl('edit-message-type-select');
+    const saveEditMessageBtn = getEl('save-edit-message-btn');
+    const cancelEditMessageBtn = getEl('cancel-edit-message-btn');
 
     // --- 全局状态管理 ---
     const DB_KEY = 'EmperorPhoneData';
@@ -805,6 +835,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let contactSelection = [];
     let patTarget = { type: null, element: null };
     let editingComment = { songId: null, commentId: null, replyId: null };
+    let listenTogetherTimer = null;
+    let contextMenuTarget = null;
+    let isMultiSelectMode = false;
+    let selectedMessages = [];
 
     // ===================================================================
     // --- 状态保存与加载 ---
@@ -850,17 +884,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // --- 音乐播放器核心 ---
     // ===================================================================
-    let listenTogetherTimer = null;
-    function playSongFromQueue(queueIndex, isListenTogether = false) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); clearInterval(listenTogetherTimer); if (isListenTogether) { listenTogetherInfo.style.display = 'block'; let seconds = 0; listenTogetherTimer = setInterval(() => { seconds++; const h = String(Math.floor(seconds / 3600)).padStart(2, '0'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0'); const s = String(seconds % 60).padStart(2, '0'); listenTogetherInfo.textContent = `一起听了 ${h}:${m}:${s}`; }, 1000); } else { listenTogetherInfo.style.display = 'none'; } }
-    function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); clearInterval(listenTogetherTimer); listenTogetherInfo.style.display = 'none'; }
+    function playSongFromQueue(queueIndex, isListenTogether = false) { if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return; appState.music.currentQueueIndex = queueIndex; const song = appState.music.queue[queueIndex]; audioPlayer.src = song.url; audioPlayer.play().catch(e => console.error("播放失败:", e)); updateAllPlayerUI(song); clearInterval(listenTogetherTimer); if (isListenTogether) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (!contact.listenTogetherDuration) contact.listenTogetherDuration = 0; listenTogetherInfo.style.display = 'flex'; const updateTimer = () => { const seconds = contact.listenTogetherDuration; const h = String(Math.floor(seconds / 3600)).padStart(2, '0'); const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0'); const s = String(seconds % 60).padStart(2, '0'); listenTogetherText.textContent = `一起听了 ${h}:${m}:${s}`; }; updateTimer(); listenTogetherTimer = setInterval(() => { contact.listenTogetherDuration++; updateTimer(); if (contact.listenTogetherDuration % 10 === 0) saveState(); }, 1000); } else { listenTogetherInfo.style.display = 'none'; } }
+    function stopPlayback() { audioPlayer.pause(); audioPlayer.src = ''; appState.music.currentQueueIndex = -1; updateDynamicIsland(false); lyricsContainer.classList.remove('visible'); playerModal.classList.remove('show'); updateMusicListPlayingStatus(); clearInterval(listenTogetherTimer); listenTogetherInfo.style.display = 'none'; saveState(); }
     function togglePlayPause() { if (audioPlayer.paused) { if (appState.music.currentQueueIndex === -1 && appState.music.queue.length > 0) { playSongFromQueue(0); } else { audioPlayer.play(); } } else { audioPlayer.pause(); } }
-    function playNext() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let nextIndex; if (playbackMode === 'shuffle') { nextIndex = Math.floor(Math.random() * queue.length); } else { nextIndex = (currentQueueIndex + 1) % queue.length; } playSongFromQueue(nextIndex); }
-    function playPrev() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let prevIndex; if (playbackMode === 'shuffle') { prevIndex = Math.floor(Math.random() * queue.length); } else { prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length; } playSongFromQueue(prevIndex); }
+    function playNext() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let nextIndex; if (playbackMode === 'shuffle') { nextIndex = Math.floor(Math.random() * queue.length); } else { nextIndex = (currentQueueIndex + 1) % queue.length; } playSongFromQueue(nextIndex, listenTogetherInfo.style.display === 'flex'); }
+    function playPrev() { const { currentQueueIndex, queue, playbackMode } = appState.music; if (queue.length === 0) return; let prevIndex; if (playbackMode === 'shuffle') { prevIndex = Math.floor(Math.random() * queue.length); } else { prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length; } playSongFromQueue(prevIndex, listenTogetherInfo.style.display === 'flex'); }
     function togglePlaybackMode() { const modes = ['repeat', 'repeat-one', 'shuffle']; const currentModeIndex = modes.indexOf(appState.music.playbackMode); appState.music.playbackMode = modes[(currentModeIndex + 1) % modes.length]; updatePlaybackModeIcon(); saveState(); }
     function updatePlaybackModeIcon() { const icons = { 'repeat': '🔁', 'repeat-one': '🔂', 'shuffle': '🔀' }; const iconIds = { 'repeat': 'player-mode-repeat', 'repeat-one': 'player-mode-repeat-one', 'shuffle': 'player-mode-shuffle' }; const currentMode = appState.music.playbackMode; playerPlaybackModeBtn.textContent = icons[currentMode]; playerPlaybackModeBtn.dataset.iconId = iconIds[currentMode]; }
     audioPlayer.addEventListener('play', () => { playerPlayPauseBtn.dataset.iconId = 'player-pause'; const customIcon = appState.beautify.icons['player-pause']; playerPlayPauseBtn.querySelector('img').src = customIcon || pauseIconSrc; islandWaveform.classList.remove('paused'); });
-    audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.dataset.iconId = 'player-play'; const customIcon = appState.beautify.icons['player-play']; playerPlayPauseBtn.querySelector('img').src = customIcon || playIconSrc; islandWaveform.classList.add('paused'); });
-    audioPlayer.addEventListener('ended', () => { if (appState.music.playbackMode === 'repeat-one') { playSongFromQueue(appState.music.currentQueueIndex); } else { playNext(); } });
+    audioPlayer.addEventListener('pause', () => { playerPlayPauseBtn.dataset.iconId = 'player-play'; const customIcon = appState.beautify.icons['player-play']; playerPlayPauseBtn.querySelector('img').src = customIcon || playIconSrc; islandWaveform.classList.add('paused'); clearInterval(listenTogetherTimer); saveState(); });
+    audioPlayer.addEventListener('ended', () => { if (appState.music.playbackMode === 'repeat-one') { playSongFromQueue(appState.music.currentQueueIndex, listenTogetherInfo.style.display === 'flex'); } else { playNext(); } });
     audioPlayer.addEventListener('loadedmetadata', () => { const song = appState.music.queue[appState.music.currentQueueIndex]; if (song && isNaN(song.duration)) { song.duration = audioPlayer.duration; const mainPlaylistSong = appState.music.playlist.find(s => s.id === song.id); if (mainPlaylistSong) mainPlaylistSong.duration = audioPlayer.duration; renderMusicList(); } progressBar.max = audioPlayer.duration; });
     audioPlayer.addEventListener('timeupdate', () => { progressBar.value = audioPlayer.currentTime; updateLyrics(audioPlayer.currentTime); });
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
@@ -894,7 +927,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 灵动岛 & 歌词 & 播放器 UI ---
     // ===================================================================
     function updateAllPlayerUI(song) { updateDynamicIsland(true, song); updateMusicListPlayingStatus(); lyricsContainer.style.left = '50%'; lyricsContainer.style.transform = 'translateX(-50%)'; lyricsContainer.classList.add('visible'); playerSongTitle.textContent = song.title; playerSongArtist.textContent = song.artist; renderPlayerQueue(); }
-    function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.querySelector('.title').textContent = song.title; islandMusicInfo.querySelector('.artist').textContent = song.artist; } else { dynamicIsland.classList.remove('music-active'); } }
+    function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.textContent = `${song.artist} - ${song.title}`; } else { dynamicIsland.classList.remove('music-active'); } }
     function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})[.:](\d{2,3})\]/g; for (const line of lines) { const text = line.replace(/\[.*?\]/g, '').trim(); if (text) { let match; while ((match = timeRegex.exec(line)) !== null) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
     let currentLyricIndex = -1;
     function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { lyricsLine.textContent = '♪ ♪ ♪'; playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; } return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1 && lyrics.length > 0) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; if (lyrics[currentLyricIndex]) { lyricsLine.textContent = lyrics[currentLyricIndex].text; } renderPlayerLyrics(lyrics, currentLyricIndex); if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { renderSongDetailsLyrics(lyrics, currentLyricIndex); } } }
@@ -907,7 +940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
     togglePlaylistViewBtn.addEventListener('click', () => { playerLyricsView.classList.toggle('active'); playerPlaylistViewContainer.classList.toggle('active'); });
     function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="delete-from-queue-btn" data-icon-id="player-delete">🗑️</button>`; playerPlaylistView.appendChild(li); }); }
-    playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); saveState(); } } else { playSongFromQueue(index); } });
+    playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length, listenTogetherInfo.style.display === 'flex'); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); saveState(); } } else { playSongFromQueue(index, listenTogetherInfo.style.display === 'flex'); } });
     restorePlaylistBtn.addEventListener('click', () => { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); saveState(); showToast("播放列表已还原"); });
     let isDraggingLyrics = false, offsetX, offsetY;
     const handleLyricsDragStart = (e) => { isDraggingLyrics = true; lyricsContainer.style.cursor = 'grabbing'; const rect = lyricsContainer.getBoundingClientRect(); const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; offsetX = clientX - rect.left; offsetY = clientY - rect.top; };
@@ -917,7 +950,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lyricsContainer.addEventListener('touchstart', handleLyricsDragStart, { passive: false }); document.addEventListener('touchmove', handleLyricsDragMove, { passive: false }); document.addEventListener('touchend', handleLyricsDragEnd);
 
     // ===================================================================
-    // --- 歌曲详情页 (评论区重构) ---
+    // --- 歌曲详情页 (无变更) ---
     // ===================================================================
     function openSongDetails(songId) { const song = appState.music.playlist.find(s => s.id === songId); if (!song) return; songDetailsScreen.dataset.songId = songId; detailsSongTitle.textContent = song.title; detailsSongArtist.textContent = song.artist; const lyrics = appState.music.lyrics[song.id]; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; let activeIndex = -1; if (currentPlayingSong && currentPlayingSong.id === songId) { activeIndex = currentLyricIndex; } renderSongDetailsLyrics(lyrics, activeIndex, true); renderSongComments(songId); openApp(songDetailsScreen); isDetailsAnimatingIn = true; setTimeout(() => { isDetailsAnimatingIn = false; const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'auto', block: 'center' }); } }, 350); }
     function renderSongDetailsLyrics(lyrics, activeIndex, isOpening = false) { if (!lyrics || lyrics.length === 0) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } detailsLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine && !isOpening && !isDetailsAnimatingIn) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
@@ -1005,9 +1038,9 @@ document.addEventListener('DOMContentLoaded', () => {
     chatAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); if (tabId === 'moments') { chatListTitle.textContent = '动态'; chatListActionBtn.style.display = 'none'; } else { chatListTitle.textContent = '消息'; chatListActionBtn.style.display = 'block'; } } });
     chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (contactSelection.length < 2) { showToast('至少需要选择两位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, contactSelection); } } else { addContactModal.classList.add('visible'); } });
     cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-    confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: 'contact_' + Date.now(), name: name, avatar: `https://api.multiavatar.com/${name}.png`, status: 'offline', statusText: '离线', signature: '这个人很懒，什么都没留下。', lastMessage: '我们已经是好友了，开始聊天吧！', lastMessageTime: new Date().getTime(), isGroup: false, conversation: [], userSignature: '...' }; appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+    confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: 'contact_' + Date.now(), name: name, remark: '', avatar: `https://api.multiavatar.com/${name}.png`, status: 'offline', statusText: '离线', signature: '这个人很懒，什么都没留下。', lastMessage: '我们已经是好友了，开始聊天吧！', lastMessageTime: new Date().getTime(), isGroup: false, conversation: [], userSignature: '...', listenTogetherDuration: 0 }; appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
     const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
-    function renderMessageList() { messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; li.innerHTML = `<div class="contact-item-content"><div class="contact-avatar" style="background-image: url(${contact.avatar})"></div><div class="contact-info"><div class="contact-name">${contact.name}</div><div class="contact-last-msg">${contact.lastMessage}</div></div><div class="contact-meta"><div class="contact-time">${time}</div>${metaHTML}</div></div><div class="contact-item-actions"><div class="delete-action">删除</div></div>`; messageListEl.appendChild(li); }); }
+    function renderMessageList() { messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; const displayName = contact.remark || contact.name; li.innerHTML = `<div class="contact-item-content"><div class="contact-avatar" style="background-image: url(${contact.avatar})"></div><div class="contact-info"><div class="contact-name">${displayName}</div><div class="contact-last-msg">${contact.lastMessage}</div></div><div class="contact-meta"><div class="contact-time">${time}</div>${metaHTML}</div></div><div class="contact-item-actions"><div class="delete-action">删除</div></div>`; messageListEl.appendChild(li); }); }
     let contactLongPressTimer;
     messageListEl.addEventListener('mousedown', (e) => { const item = e.target.closest('.contact-list-item'); if (item && !chatAppScreen.classList.contains('selection-mode')) { contactLongPressTimer = setTimeout(() => { contactLongPressTimer = null; enterContactSelectionMode(item); }, 500); } });
     messageListEl.addEventListener('mouseup', () => clearTimeout(contactLongPressTimer));
@@ -1018,12 +1051,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function enterContactSelectionMode(item) { chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); contactSelection.push(item.dataset.id); }
     function exitContactSelectionMode() { chatAppScreen.classList.remove('selection-mode'); chatListBackBtn.textContent = '< 返回'; chatListActionBtn.textContent = '+'; chatListActionBtn.classList.remove('small'); queryAll('.contact-list-item.selected').forEach(i => i.classList.remove('selected')); contactSelection = []; }
     function createGroup(name, memberIds) { const members = memberIds.map(id => appState.chat.contacts.find(c => c.id === id)); const newGroup = { id: 'group_' + Date.now(), name, avatar: `https://api.multiavatar.com/${name}.png`, lastMessage: '群聊已创建', lastMessageTime: Date.now(), isGroup: true, members: memberIds, conversation: [] }; appState.chat.contacts.unshift(newGroup); saveState(); renderMessageList(); exitContactSelectionMode(); }
-    function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; currentChatId = contactId; const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderNameStatus.innerHTML = `${contact.name} ${statusIndicatorHTML} [${statusMap[contact.status] || '未知'}]`; chatHeaderSignature.textContent = contact.signature; renderConversation(); openApp(singleChatScreen); }
-    chatBackBtn.addEventListener('click', () => { singleChatScreen.classList.remove('active'); currentChatId = null; });
-    chatSettingsBtn.addEventListener('click', () => showToast('聊天设置待开发'));
-    function renderConversation() { chatMessagesView.innerHTML = ''; const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; let lastTimestamp = 0; contact.conversation.forEach(msg => { if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) { const timeEl = document.createElement('div'); timeEl.className = 'message-timestamp'; timeEl.textContent = new Date(msg.timestamp).toLocaleString(); chatMessagesView.appendChild(timeEl); lastTimestamp = msg.timestamp; } const msgItem = document.createElement('div'); msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`; const avatarUrl = msg.sender === 'user' ? appState.chat.userProfile.avatar : contact.avatar; let contentHTML = ''; if (msg.type === 'text') { contentHTML = `<div class="message-bubble">${msg.content}</div>`; } else if (msg.type === 'emoji') { contentHTML = `<div class="message-bubble image"><img src="${msg.content}" alt="${msg.description}" style="max-width: 100px; max-height: 100px;"></div>`; } else if (msg.type === 'notification') { contentHTML = `<div class="message-timestamp">${msg.content}</div>`; chatMessagesView.appendChild(msgItem); msgItem.outerHTML = contentHTML; return; } else if (msg.type === 'voice') { const waveformSpans = Array(15).fill('<span></span>').join(''); contentHTML = `<div class="message-bubble voice"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`; } else if (msg.type === 'image') { contentHTML = `<div class="message-bubble image"><img src="${msg.content}"></div>`; } else if (msg.type === 'camera') { contentHTML = `<div class="message-bubble camera"><img src="${msg.placeholder}"><div class="camera-text-overlay">(${msg.content})</div></div>`; } else if (msg.type === 'link') { contentHTML = `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><span class="link-icon">🔗</span><div class="link-info"><div class="title">${msg.title}</div><div class="summary">${msg.summary}</div></div></div>`; } else if (msg.type === 'redPacket') { contentHTML = `<div class="message-bubble red-packet" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body"></div><div class="red-packet-footer">红包</div></div>`; } msgItem.innerHTML = `<div class="avatar" style="background-image: url(${avatarUrl})"></div><div class="message-content-wrapper">${contentHTML}</div>`; chatMessagesView.appendChild(msgItem); }); chatMessagesView.scrollTop = chatMessagesView.scrollHeight; }
+    function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; currentChatId = contactId; const displayName = contact.remark || contact.name; chatHeaderName.textContent = displayName; const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderStatus.innerHTML = `${statusIndicatorHTML} ${statusMap[contact.status] || '未知'}`; chatHeaderSignature.textContent = contact.signature; renderConversation(); openApp(singleChatScreen); }
+    chatBackBtn.addEventListener('click', () => { if (isMultiSelectMode) { exitMultiSelectMode(); } else { singleChatScreen.classList.remove('active'); currentChatId = null; } });
+    chatSettingsBtn.addEventListener('click', () => { if (isMultiSelectMode) { if (selectedMessages.length > 0 && confirm(`确定要删除选中的 ${selectedMessages.length} 条消息吗？`)) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); contact.conversation = contact.conversation.filter(msg => !selectedMessages.includes(msg.id)); saveState(); renderConversation(); exitMultiSelectMode(); } } else { showToast('聊天设置待开发'); } });
+    function renderConversation() { chatMessagesView.innerHTML = ''; const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; let lastTimestamp = 0; contact.conversation.forEach(msg => { if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) { const timeEl = document.createElement('div'); timeEl.className = 'message-timestamp'; timeEl.textContent = new Date(msg.timestamp).toLocaleString(); chatMessagesView.appendChild(timeEl); lastTimestamp = msg.timestamp; } const msgItem = document.createElement('div'); msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`; msgItem.dataset.messageId = msg.id; const avatarUrl = msg.sender === 'user' ? appState.chat.userProfile.avatar : contact.avatar; let contentHTML = ''; if (msg.type === 'text') { contentHTML = `<div class="message-bubble">${msg.content}</div>`; } else if (msg.type === 'emoji') { contentHTML = `<div class="message-bubble image"><img src="${msg.content}" alt="${msg.description}" style="max-width: 100px; max-height: 100px;"></div>`; } else if (msg.type === 'notification') { contentHTML = `<div class="message-timestamp" data-recalled-content="${msg.recalledContent || ''}">${msg.content}</div>`; chatMessagesView.appendChild(msgItem); msgItem.outerHTML = contentHTML; return; } else if (msg.type === 'voice') { const waveformSpans = Array(15).fill('<span></span>').join(''); contentHTML = `<div class="message-bubble voice"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`; } else if (msg.type === 'image') { contentHTML = `<div class="message-bubble image"><img src="${msg.content}"></div>`; } else if (msg.type === 'camera') { contentHTML = `<div class="message-bubble camera"><img src="${msg.placeholder}"><div class="camera-text-overlay">(${msg.content})</div></div>`; } else if (msg.type === 'link') { contentHTML = `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="link-info"><div class="title">${msg.title}</div><div class="source">${msg.source || ''}</div><div class="summary">${msg.summary || ''}</div></div></div>`; } else if (msg.type === 'redPacket') { contentHTML = `<div class="message-bubble red-packet" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body"></div><div class="red-packet-footer">红包</div></div>`; } msgItem.innerHTML = `<div class="avatar" style="background-image: url(${avatarUrl})"></div><div class="message-content-wrapper">${contentHTML}</div>`; chatMessagesView.appendChild(msgItem); const waveformContainer = msgItem.querySelector('.voice-waveform-container'); if (waveformContainer) { Array.from(waveformContainer.children).forEach((span, index) => { span.style.height = `${100 - index * 6}%`; }); } }); chatMessagesView.scrollTop = chatMessagesView.scrollHeight; }
     chatInput.addEventListener('input', () => { const hasText = chatInput.value.trim().length > 0; chatEmojiBtn.style.display = hasText ? 'none' : 'inline-block'; chatSendFakeBtn.style.display = hasText ? 'inline-block' : 'none'; });
-    function addMessageToConversation(message) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.conversation.push(message); contact.lastMessage = message.type === 'text' ? message.content : `[${message.type}]`; contact.lastMessageTime = message.timestamp; saveState(); renderConversation(); renderMessageList(); }
+    function addMessageToConversation(message) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (!message.id) message.id = 'msg_' + Date.now() + Math.random(); contact.conversation.push(message); contact.lastMessage = message.type === 'text' ? message.content : `[${message.type}]`; contact.lastMessageTime = message.timestamp; saveState(); renderConversation(); renderMessageList(); }
     chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; addMessageToConversation({ type: 'text', content, sender: 'user', timestamp: new Date().getTime(), status: 'pending' }); chatInput.value = ''; chatInput.dispatchEvent(new Event('input')); });
     chatSendRealBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const pendingMessages = contact.conversation.filter(m => m.status === 'pending'); if (pendingMessages.length === 0) return showToast('没有要发送的消息'); pendingMessages.forEach(m => m.status = 'sent'); saveState(); typingIndicator.style.display = 'block'; typingIndicator.textContent = `${contact.name}正在输入中...`; const replies = ["这是AI的自动回复。", "嗯嗯，我明白你的意思了。", "让我想想..."]; const sendReply = (index) => { if (index >= replies.length) { typingIndicator.style.display = 'none'; return; } const reply = { type: 'text', content: replies[index], sender: contact.id, timestamp: new Date().getTime(), status: 'sent' }; addMessageToConversation(reply); setTimeout(() => sendReply(index + 1), 300 + Math.random() * 200); }; setTimeout(() => sendReply(0), 1000); });
     chatEmojiBtn.addEventListener('click', () => { renderEmojiPicker(); emojiPickerPanel.classList.add('visible'); });
@@ -1035,14 +1068,15 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadEmojiFileBtn.addEventListener('click', () => { if (!uploadEmojiDescInput.value.trim()) { showToast('请先输入表情包描述', 'error'); return; } emojiFileInput.click(); });
     emojiFileInput.addEventListener('change', (e) => { const files = e.target.files; const descs = uploadEmojiDescInput.value.trim().split('\n').filter(d => d); if (files.length === 0 || descs.length === 0) return; if (files.length !== descs.length) { showToast(`文件数量(${files.length})与描述数量(${descs.length})不匹配`, 'error'); return; } Array.from(files).forEach((file, index) => { const reader = new FileReader(); reader.onload = (event) => { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + index, description: descs[index], url: event.target.result, isLocal: true }); saveState(); }; reader.readAsDataURL(file); }); showToast(`成功添加 ${files.length} 个表情包`); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; });
     confirmAddEmojiUrlBtn.addEventListener('click', () => { const lines = emojiUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const desc = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (desc && url.startsWith('http')) { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + Math.random(), description: desc, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); showToast(`成功添加 ${addedCount} 个表情包`); } addEmojiModal.classList.remove('visible'); emojiUrlInput.value = ''; });
-    chatHeaderNameStatus.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; statusDescInput.value = contact.statusText || ''; statusSelect.value = contact.status; editStatusModal.classList.add('visible'); });
+    chatHeaderName.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const newRemark = prompt('修改备注:', contact.remark || ''); if (newRemark !== null) { contact.remark = newRemark.trim(); saveState(); chatHeaderName.textContent = contact.remark || contact.name; renderMessageList(); } });
+    chatHeaderStatus.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; statusDescInput.value = contact.statusText || ''; statusSelect.value = contact.status; editStatusModal.classList.add('visible'); });
     cancelEditStatusBtn.addEventListener('click', () => editStatusModal.classList.remove('visible'));
-    confirmEditStatusBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.status = statusSelect.value; contact.statusText = statusDescInput.value.trim(); saveState(); const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderNameStatus.innerHTML = `${contact.name} ${statusIndicatorHTML} [${statusMap[contact.status]}]`; renderMessageList(); editStatusModal.classList.remove('visible'); });
+    confirmEditStatusBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.status = statusSelect.value; contact.statusText = statusDescInput.value.trim(); saveState(); const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderStatus.innerHTML = `${statusIndicatorHTML} ${statusMap[contact.status]}`; renderMessageList(); editStatusModal.classList.remove('visible'); });
     chatHeaderSignature.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const newSig = prompt('修改签名:', contact.signature); if (newSig !== null) { contact.signature = newSig; saveState(); chatHeaderSignature.textContent = newSig; } });
     let avatarClickTimer = null;
     chatMessagesView.addEventListener('mousedown', (e) => { const avatar = e.target.closest('.avatar'); if (!avatar) return; e.preventDefault(); avatarClickTimer = setTimeout(() => { avatarClickTimer = null; const msgItem = avatar.closest('.message-item'); if (msgItem.classList.contains('user')) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); const newSig = prompt('修改你的签名:', contact.userSignature); if (newSig !== null) { contact.userSignature = newSig; saveState(); showToast('签名已修改'); } } }, 500); });
     chatMessagesView.addEventListener('mouseup', (e) => { clearTimeout(avatarClickTimer); });
-    chatMessagesView.addEventListener('click', (e) => { if (avatarClickTimer) clearTimeout(avatarClickTimer); const avatar = e.target.closest('.avatar'); if (avatar) { patTarget.element = avatar; patTarget.type = avatar.closest('.message-item').classList.contains('user') ? 'user' : 'contact'; patSuffixModal.classList.add('visible'); patSuffixInput.focus(); return; } const voiceBubble = e.target.closest('.message-bubble.voice'); if (voiceBubble) { const voiceText = voiceBubble.nextElementSibling; if (voiceText) voiceText.style.display = voiceText.style.display === 'block' ? 'none' : 'block'; return; } const cameraBubble = e.target.closest('.message-bubble.camera'); if (cameraBubble) { cameraBubble.classList.toggle('show-text'); return; } const linkBubble = e.target.closest('.message-bubble.link'); if (linkBubble) { const linkData = JSON.parse(decodeURIComponent(linkBubble.dataset.linkContent)); viewContentTitle.textContent = linkData.title; viewContentBody.innerHTML = `<p><strong>来源:</strong> ${linkData.source || '未知'}</p><hr><p>${linkData.content.replace(/\n/g, '<br>') || '无详细内容'}</p>`; viewContentModal.classList.add('visible'); return; } const packetBubble = e.target.closest('.message-bubble.red-packet'); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); viewContentTitle.textContent = '红包详情'; viewContentBody.innerHTML = `<p><strong>来自:</strong> ${packetBubble.closest('.message-item.user') ? '你' : appState.chat.contacts.find(c=>c.id===currentChatId).name}</p><p><strong>金额:</strong> ${packetData.amount.toFixed(2)}</p><p><strong>留言:</strong> ${packetData.message}</p>`; viewContentModal.classList.add('visible'); return; } });
+    chatMessagesView.addEventListener('click', (e) => { if (isMultiSelectMode) { const msgItem = e.target.closest('.message-item'); if (msgItem) { toggleMessageSelection(msgItem); } return; } if (avatarClickTimer) clearTimeout(avatarClickTimer); const avatar = e.target.closest('.avatar'); if (avatar) { patTarget.element = avatar; patTarget.type = avatar.closest('.message-item').classList.contains('user') ? 'user' : 'contact'; patSuffixModal.classList.add('visible'); patSuffixInput.focus(); return; } const voiceBubble = e.target.closest('.message-bubble.voice'); if (voiceBubble) { const voiceText = voiceBubble.nextElementSibling; if (voiceText) voiceText.style.display = voiceText.style.display === 'block' ? 'none' : 'block'; return; } const cameraBubble = e.target.closest('.message-bubble.camera'); if (cameraBubble) { cameraBubble.classList.toggle('show-text'); return; } const linkBubble = e.target.closest('.message-bubble.link'); if (linkBubble) { const linkData = JSON.parse(decodeURIComponent(linkBubble.dataset.linkContent)); viewContentTitle.textContent = linkData.title; viewContentBody.innerHTML = `<p><strong>来源:</strong> ${linkData.source || '未知'}</p><hr><p>${linkData.content.replace(/\n/g, '<br>') || '无详细内容'}</p>`; viewContentModal.classList.add('visible'); return; } const packetBubble = e.target.closest('.message-bubble.red-packet'); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); viewContentTitle.textContent = '红包详情'; viewContentBody.innerHTML = `<p><strong>来自:</strong> ${packetBubble.closest('.message-item.user') ? '你' : appState.chat.contacts.find(c=>c.id===currentChatId).name}</p><p><strong>金额:</strong> ${packetData.amount.toFixed(2)}</p><p><strong>留言:</strong> ${packetData.message}</p>`; viewContentModal.classList.add('visible'); return; } const recalledMsg = e.target.closest('.message-timestamp[data-recalled-content]'); if (recalledMsg) { const content = recalledMsg.dataset.recalledContent; if (content) showToast(`撤回内容: ${content}`); } });
     closeViewContentBtn.addEventListener('click', () => viewContentModal.classList.remove('visible'));
     cancelPatBtn.addEventListener('click', () => patSuffixModal.classList.remove('visible'));
     confirmPatBtn.addEventListener('click', () => { const suffix = patSuffixInput.value.trim(); const contact = appState.chat.contacts.find(c => c.id === currentChatId); let notificationText; if (patTarget.type === 'user') { notificationText = `你拍了拍自己${suffix ? ` ${suffix}` : ''}`; } else { notificationText = `你拍了拍"${contact.name}"${suffix ? ` ${suffix}` : ''}`; } addMessageToConversation({ type: 'notification', content: notificationText, timestamp: new Date().getTime() }); patSuffixModal.classList.remove('visible'); patSuffixInput.value = ''; });
@@ -1067,6 +1101,29 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelRedPacketBtn.addEventListener('click', () => redPacketModal.classList.remove('visible'));
     confirmRedPacketBtn.addEventListener('click', () => { const amount = parseFloat(redPacketAmountInput.value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); const message = redPacketMessageInput.value.trim() || '恭喜发财，大吉大利！'; addMessageToConversation({ type: 'redPacket', amount, message, sender: 'user', timestamp: new Date().getTime(), status: 'pending' }); redPacketModal.classList.remove('visible'); redPacketAmountInput.value = ''; redPacketMessageInput.value = ''; });
     query('#chat-shop-btn').addEventListener('click', () => showToast('购物功能待开发'));
+
+    // ===================================================================
+    // --- 消息长按菜单逻辑 ---
+    // ===================================================================
+    let messageLongPressTimer = null;
+    chatMessagesView.addEventListener('mousedown', (e) => { if (isMultiSelectMode) return; const item = e.target.closest('.message-item'); if (item) { messageLongPressTimer = setTimeout(() => { showContextMenu(item); }, 500); } });
+    chatMessagesView.addEventListener('mouseup', () => clearTimeout(messageLongPressTimer));
+    chatMessagesView.addEventListener('mouseleave', () => clearTimeout(messageLongPressTimer));
+    chatMessagesView.addEventListener('touchstart', (e) => { if (isMultiSelectMode) return; const item = e.target.closest('.message-item'); if (item) { messageLongPressTimer = setTimeout(() => { showContextMenu(item); }, 500); } });
+    chatMessagesView.addEventListener('touchend', () => clearTimeout(messageLongPressTimer));
+    function showContextMenu(item) { contextMenuTarget = item; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const msg = contact.conversation.find(m => m.id === item.dataset.messageId); if (!msg) return; const rect = item.getBoundingClientRect(); const menuRect = messageContextMenu.getBoundingClientRect(); const phoneRect = phoneScreen.getBoundingClientRect(); let top = rect.top - menuRect.height - 10; if (top < phoneRect.top + 50) { top = rect.bottom + 10; } messageContextMenu.style.top = `${top}px`; messageContextMenu.style.left = `${rect.left + (rect.width / 2) - (menuRect.width / 2)}px`; const isUserMsg = msg.sender === 'user'; const canRecall = isUserMsg && (Date.now() - msg.timestamp < 2 * 60 * 1000); const canCopy = ['text', 'voice', 'camera'].includes(msg.type); query('#message-context-menu button[data-action="edit"]').disabled = !isUserMsg; query('#message-context-menu button[data-action="recall"]').disabled = !canRecall; query('#message-context-menu button[data-action="copy"]').disabled = !canCopy; messageContextMenu.classList.add('visible'); }
+    function hideContextMenu() { messageContextMenu.classList.remove('visible'); contextMenuTarget = null; }
+    document.addEventListener('click', (e) => { if (!messageContextMenu.contains(e.target) && !e.target.closest('.message-item')) { hideContextMenu(); } });
+    messageContextMenu.addEventListener('click', (e) => { const action = e.target.dataset.action; if (!action || e.target.disabled) return; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const msg = contact.conversation.find(m => m.id === contextMenuTarget.dataset.messageId); if (!msg) return; switch (action) { case 'edit': openMessageEditor(msg); break; case 'quote': showToast('引用功能待开发'); break; case 'recall': recallMessage(msg); break; case 'copy': copyMessage(msg); break; case 'select': enterMultiSelectMode(contextMenuTarget); break; case 'cancel': break; } hideContextMenu(); });
+    function recallMessage(msg) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); const msgIndex = contact.conversation.findIndex(m => m.id === msg.id); if (msgIndex > -1) { const originalContent = msg.content; contact.conversation[msgIndex] = { id: msg.id, type: 'notification', content: msg.sender === 'user' ? '你撤回了一条消息' : `${contact.name}撤回了一条消息`, timestamp: msg.timestamp, recalledContent: originalContent }; saveState(); renderConversation(); } }
+    function copyMessage(msg) { navigator.clipboard.writeText(msg.content).then(() => showToast('已复制到剪贴板')).catch(() => showToast('复制失败', 'error')); }
+    function enterMultiSelectMode(initialItem) { isMultiSelectMode = true; chatBackBtn.textContent = '取消'; chatSettingsBtn.textContent = '删除'; chatSettingsBtn.style.fontSize = '16px'; singleChatScreen.classList.add('selection-mode'); toggleMessageSelection(initialItem); }
+    function exitMultiSelectMode() { isMultiSelectMode = false; selectedMessages = []; chatBackBtn.textContent = '< 消息'; chatSettingsBtn.textContent = '⚙️'; chatSettingsBtn.style.fontSize = '28px'; singleChatScreen.classList.remove('selection-mode'); queryAll('.message-item.selected').forEach(item => item.classList.remove('selected')); }
+    function toggleMessageSelection(item) { const msgId = item.dataset.messageId; item.classList.toggle('selected'); if (item.classList.contains('selected')) { if (!selectedMessages.includes(msgId)) selectedMessages.push(msgId); } else { selectedMessages = selectedMessages.filter(id => id !== msgId); } }
+    function openMessageEditor(msg) { editingMessageIdInput.value = msg.id; editMessageTypeSelect.value = msg.type; queryAll('.edit-form-content').forEach(el => el.style.display = 'none'); const formEl = getEl(`edit-form-${msg.type}`); formEl.style.display = 'block'; switch (msg.type) { case 'text': formEl.querySelector('textarea').value = msg.content; break; case 'voice': case 'camera': formEl.querySelector('textarea').value = msg.content; break; case 'link': formEl.querySelectorAll('input, textarea').forEach((input, i) => input.value = [msg.title, msg.summary, msg.source, msg.content][i]); break; case 'redPacket': formEl.querySelectorAll('input').forEach((input, i) => input.value = [msg.amount, msg.message][i]); break; } editMessageModal.classList.add('visible'); }
+    editMessageTypeSelect.addEventListener('change', (e) => { queryAll('.edit-form-content').forEach(el => el.style.display = 'none'); getEl(`edit-form-${e.target.value}`).style.display = 'block'; });
+    cancelEditMessageBtn.addEventListener('click', () => editMessageModal.classList.remove('visible'));
+    saveEditMessageBtn.addEventListener('click', () => { const msgId = editingMessageIdInput.value; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const msgIndex = contact.conversation.findIndex(m => m.id === msgId); if (msgIndex === -1) return; const newType = editMessageTypeSelect.value; const formEl = getEl(`edit-form-${newType}`); let newContent = {}; switch (newType) { case 'text': newContent.content = formEl.querySelector('textarea').value; break; case 'voice': newContent.content = formEl.querySelector('textarea').value; newContent.duration = Math.max(1, Math.round(newContent.content.length / 5)); break; case 'camera': newContent.content = formEl.querySelector('textarea').value; newContent.placeholder = 'https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg'; break; case 'link': const linkInputs = formEl.querySelectorAll('input, textarea'); newContent = { title: linkInputs[0].value, summary: linkInputs[1].value, source: linkInputs[2].value, content: linkInputs[3].value }; break; case 'redPacket': const rpInputs = formEl.querySelectorAll('input'); newContent = { amount: parseFloat(rpInputs[0].value), message: rpInputs[1].value }; break; } contact.conversation[msgIndex] = { ...contact.conversation[msgIndex], type: newType, ...newContent }; saveState(); renderConversation(); editMessageModal.classList.remove('visible'); });
 
     // ===================================================================
     // --- 通用列表滑动交互 ---
@@ -1115,4 +1172,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-
