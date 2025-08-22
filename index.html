@@ -1192,7 +1192,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let contactSelection = [];
     let patTarget = { type: null, element: null, memberId: null };
     let editingComment = { songId: null, commentId: null, replyId: null };
-    let longPressTimer = null;
     let contextMenuTarget = null;
     let chatSelectionMode = false;
     let selectedMessages = [];
@@ -1205,6 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let tempGcsMemberSettings = {};
     let gcsManageContext = { type: '', selection: [] };
     let gcsMemberActionContext = { memberId: null };
+    let realtimeActivityTimers = {}; // OPTIMIZATION: Timer manager
 
     // ===================================================================
     // --- 状态保存与加载 ---
@@ -1286,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showNotification(message) { const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => banner.remove(), { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
 
     // ===================================================================
-    // --- APP导航与路由 (核心修复) ---
+    // --- APP导航与路由 ---
     // ===================================================================
     function openApp(appScreen) {
         phoneScreen.classList.add('app-open');
@@ -1489,19 +1489,43 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyBubbleChange(bubbleId, styles, isInitialLoad = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; Object.keys(styles).forEach(key => { if (key !== 'backgroundImage' && key !== 'replaceBgOnly') { targetEl.style[key] = styles[key]; } }); if (styles.backgroundImage) { targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.backgroundImage = styles.backgroundImage; if (styles.replaceBgOnly) { targetEl.style.color = styles.color || ''; } else { targetEl.textContent = ''; } } }
 
     // ===================================================================
-    // --- 资料 APP ---
+    // --- 资料 APP (OPTIMIZATION: Real-time refresh) ---
     // ===================================================================
     dataAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#data-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#data-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); dataActionBtn.style.display = (tabId === 'memory') ? 'none' : 'block'; if (tabId === 'world-book') renderWorldBooks(); else if (tabId === 'archive') renderArchives(); else if (tabId === 'info') renderInfos(); } });
     dataActionBtn.addEventListener('click', () => { const activeTab = query('#data-app-screen .tab-link.active').dataset.tab; const typeMap = { 'world-book': 'worldBook', 'archive': 'archive', 'info': 'info' }; openDataEditor(typeMap[activeTab]); });
     function openDataEditor(type, id = null) { dataModal.dataset.type = type; dataEditingIdInput.value = id || ''; dataNameInput.value = ''; dataContentInput.value = ''; dataAvatarPreview.style.backgroundImage = 'none'; const typeConfig = { worldBook: { title: '世界书', hasAvatar: false }, archive: { title: '档案', hasAvatar: true }, info: { title: '信息', hasAvatar: true } }; const config = typeConfig[type]; dataModalTitle.textContent = (id ? '编辑' : '创建') + config.title; dataAvatarGroup.style.display = config.hasAvatar ? 'block' : 'none'; if (id) { const item = appState.data[type + 's'].find(i => i.id === id); if (item) { dataNameInput.value = item.name; dataContentInput.value = item.content; if (config.hasAvatar && item.avatar) { dataAvatarPreview.style.backgroundImage = `url(${item.avatar})`; } } } dataModal.classList.add('visible'); }
     cancelDataBtn.addEventListener('click', () => dataModal.classList.remove('visible'));
-    saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatar = dataAvatarPreview.style.backgroundImage.slice(5, -2); if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatar) item.avatar = avatar; } } else { const newItem = { id: 'data_' + Date.now(), name, content }; if (avatar) newItem.avatar = avatar; dataArray.push(newItem); } saveState(); dataModal.classList.remove('visible'); const renderFunc = window['render' + type.charAt(0).toUpperCase() + type.slice(1) + 's']; if (renderFunc) renderFunc(); });
+    saveDataBtn.addEventListener('click', () => {
+        const type = dataModal.dataset.type;
+        const id = dataEditingIdInput.value;
+        const name = dataNameInput.value.trim();
+        const content = dataContentInput.value.trim();
+        if (!name) return showToast('名称不能为空', 'error');
+        const dataArray = appState.data[type + 's'];
+        const avatar = dataAvatarPreview.style.backgroundImage.slice(5, -2);
+        if (id) {
+            const item = dataArray.find(i => i.id === id);
+            if (item) { item.name = name; item.content = content; if (avatar) item.avatar = avatar; }
+        } else {
+            const newItem = { id: 'data_' + Date.now(), name, content };
+            if (avatar) newItem.avatar = avatar;
+            dataArray.push(newItem);
+        }
+        saveState();
+        dataModal.classList.remove('visible');
+        // OPTIMIZATION: Immediately re-render the correct list after saving.
+        switch (type) {
+            case 'worldBook': renderWorldBooks(); break;
+            case 'archive': renderArchives(); break;
+            case 'info': renderInfos(); break;
+        }
+    });
     dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
     dataAvatarFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { dataAvatarPreview.style.backgroundImage = `url(${event.target.result})`; }; reader.readAsDataURL(file); dataAvatarFileInput.value = ''; } });
     dataAddAvatarUrlBtn.addEventListener('click', () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { dataAvatarPreview.style.backgroundImage = `url(${url})`; } else if (url) { showToast('无效的URL', 'error'); } });
-    function renderWorldBooks() { worldBookListEl.innerHTML = appState.data.worldBooks.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无世界书</div></li>'; }
-    function renderArchives() { archiveListEl.innerHTML = appState.data.archives.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; }
-    function renderInfos() { infoListEl.innerHTML = appState.data.infos.map(item => `<li class="preset-data-item" data-id="${item.id}"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无信息</div></li>'; }
+    function renderWorldBooks() { worldBookListEl.innerHTML = appState.data.worldBooks.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="worldBook"><div class="preset-data-item-content"><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无世界书</div></li>'; }
+    function renderArchives() { archiveListEl.innerHTML = appState.data.archives.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="archive"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; }
+    function renderInfos() { infoListEl.innerHTML = appState.data.infos.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="info"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无信息</div></li>'; }
     
     // ===================================================================
     // --- 聊天 APP (核心交互重构与优化) ---
@@ -1672,7 +1696,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; addMessageToConversation({ id: 'msg_' + Date.now(), type: 'text', content, sender: 'user', timestamp: new Date().getTime(), status: 'pending' }); chatInput.value = ''; updateChatInputButtons(); });
-    async function triggerAiResponse(targetChatId = currentChatId) {
+    async function triggerAiResponse(targetChatId = currentChatId, isProactive = false) {
         const contact = appState.chat.contacts.find(c => c.id === targetChatId);
         if (!contact) return;
         const { apiUrl, apiKey, selectedModel } = appState.settings;
@@ -1691,20 +1715,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!apiUrl || !apiKey || !selectedModel) {
                 throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
             }
-            let systemPrompt;
             const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
-            if (contact.isGroup) {
-                const memberProfiles = Object.entries(contact.groupSettings.members).map(([id, settings]) => {
-                    if (id === 'user') return ''; // Don't include user's persona in system prompt for AI
-                    const char = findUserById(id);
-                    return `- ${settings.nickname} (ID: ${id}, Title: ${settings.title}): ${settings.persona || char.charSettings?.persona}`;
-                }).filter(Boolean).join('\n');
-                const globalWorldBookContent = contact.groupSettings.linkedWorldBooks.map(id => appState.data.worldBooks.find(wb => wb.id === id)?.content).filter(Boolean).join('\n\n');
-                systemPrompt = `# Role and Goal\nYou are an AI managing a group chat. Your task is to generate responses for multiple characters based on their individual personas and the ongoing conversation. The group name is "${contact.groupSettings.name}". You must respond in the format "SENDER_ID: message". Each response must be on a new line. You can have multiple characters respond. \n\n# Group Settings\n${globalWorldBookContent || 'No global world settings.'}\n\n# Group Members\n${memberProfiles}\n\n# User Persona\nThe user you are talking to is named ${contact.userSettings.name}. Their persona is:\n${contact.userSettings.persona}`;
-            } else {
-                const worldBookContent = contact.charSettings.linkedWorldBooks.map(id => appState.data.worldBooks.find(wb => wb.id === id)?.content).filter(Boolean).join('\n\n');
-                systemPrompt = `# Role and Goal\nYou are an AI character for immersive role-playing. Your name is ${contact.charSettings.name}. You must strictly adhere to your persona and the provided world settings. Engage with the user naturally and stay in character at all times.\n\n# Persona\n${contact.charSettings.persona}\n\n# World Settings\n${worldBookContent || 'No specific world settings provided.'}\n\n# User Persona\nThe user you are talking to is named ${contact.userSettings.name}. Their persona is:\n${contact.userSettings.persona}`;
-            }
+            const systemPrompt = constructSystemPrompt(contact, isProactive); // OPTIMIZATION: Use new prompt builder
             const history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: msg.type === 'notification' ? `[System Notification: ${msg.content}]` : msg.content }));
             const messages = [{ role: 'system', content: systemPrompt }, ...history];
             const response = await fetch(`${apiUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: selectedModel, messages: messages, stream: false }) });
@@ -1715,23 +1727,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             const replyContent = data.choices[0]?.message?.content;
             if (replyContent) {
-                if (contact.isGroup) {
-                    const replies = replyContent.split('\n').filter(line => line.trim());
-                    for (let i = 0; i < replies.length; i++) {
-                        const line = replies[i];
-                        const separatorIndex = line.indexOf(':');
-                        if (separatorIndex > 0) {
-                            const senderId = line.substring(0, separatorIndex).trim();
-                            const content = line.substring(separatorIndex + 1).trim();
-                            if (contact.groupSettings.members[senderId]) {
-                                await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 200));
-                                addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'text', content, sender: senderId, timestamp: new Date().getTime(), status: 'sent' }, true);
-                            }
-                        }
-                    }
-                } else {
-                    addMessageToConversation({ id: 'msg_' + Date.now(), type: 'text', content: replyContent, sender: contact.id, timestamp: new Date().getTime(), status: 'sent' }, true);
-                }
+                await processAiReply(replyContent, contact);
             } else {
                 throw new Error("API返回了空回复。");
             }
@@ -1802,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('input', updateChatInputButtons);
 
     // ===================================================================
-    // --- 统一列表交互处理器 (核心修复) ---
+    // --- 统一列表交互处理器 ---
     // ===================================================================
     class ListInteractionHandler {
         constructor(listElement, options) {
@@ -1994,95 +1990,20 @@ document.addEventListener('DOMContentLoaded', () => {
     saveEditMessageBtn.addEventListener('click', () => { const msgId = editingMessageIdInput.value; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const msgIndex = contact.conversation.findIndex(m => m.id === msgId); if (msgIndex === -1) return; const msg = contact.conversation[msgIndex]; const newType = query('input[name="edit-msg-type"]:checked').value; const inputs = editMessageInputsContainer.querySelectorAll('input, textarea'); msg.type = newType; switch (newType) { case 'voice': msg.content = inputs[0].value; msg.duration = Math.max(1, Math.round(msg.content.length / 5)); break; case 'camera': msg.content = inputs[0].value; msg.placeholder = msg.placeholder || 'https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg'; break; case 'link': [msg.title, msg.summary, msg.source, msg.content] = Array.from(inputs).map(i => i.value); break; case 'redPacket': msg.amount = parseFloat(inputs[0].value); msg.message = inputs[1].value; msg.status = msg.status || 'unclaimed'; break; default: msg.content = inputs[0].value; break; } saveState(); renderConversation(); editMessageModal.classList.remove('visible'); });
 
     // ===================================================================
-    // --- 聊天界面统一事件处理器 (核心) ---
+    // --- 聊天界面统一事件处理器 ---
     // ===================================================================
     function setupChatMessageViewInteractions() {
-        let longPressTimer = null;
-        let isLongPress = false;
-        let startX = 0, startY = 0;
-
-        const handlePointerDown = (e) => {
-            // *** THE BUG FIX ***
-            // If the event target is inside the header, ignore it completely.
-            // This prevents the message view listener from interfering with header buttons.
-            if (e.target.closest('.app-header')) {
-                return;
-            }
-            // *** END BUG FIX ***
-
+        // Use 'contextmenu' for long-press, which is standard and avoids event conflicts.
+        chatMessagesView.addEventListener('contextmenu', (e) => {
+            e.preventDefault(); // Prevent default browser context menu
             const item = e.target.closest('.message-item, .message-timestamp');
-            if (!item) return;
-
-            isLongPress = false;
-            startX = e.clientX;
-            startY = e.clientY;
-
-            longPressTimer = setTimeout(() => {
-                isLongPress = true;
-                const target = e.target;
-                const avatar = target.closest('.avatar');
-                if (avatar) {
-                    const contact = appState.chat.contacts.find(c => c.id === currentChatId);
-                    if (!contact) return;
-                    const msgItem = avatar.closest('.message-item');
-                    const senderId = msgItem.dataset.sender;
-                    if (contact.isGroup) {
-                        const userIsAdminOrOwner = contact.groupSettings.owner === 'user' || contact.groupSettings.admins.includes('user');
-                        if (senderId === 'user') {
-                            const newSig = prompt('修改你的签名:', appState.chat.userProfile.signature);
-                            if (newSig !== null) {
-                                appState.chat.userProfile.signature = newSig;
-                                addSystemNotification(currentChatId, `你修改了签名: ${newSig}`);
-                            }
-                        } else if (userIsAdminOrOwner) {
-                            const member = contact.groupSettings.members[senderId];
-                            if (member) {
-                                const isMuted = member.isMuted;
-                                if (confirm(`确定要${isMuted ? '解除禁言' : '禁言'} "${member.nickname}" 吗？`)) {
-                                    member.isMuted = !isMuted;
-                                    addSystemNotification(currentChatId, `"${member.nickname}" 已被${isMuted ? '解除禁言' : '禁言'}`, true);
-                                }
-                            }
-                        }
-                    } else {
-                        if (senderId === 'user') {
-                            const newSig = prompt('修改你的签名:', appState.chat.userProfile.signature);
-                            if (newSig !== null) {
-                                appState.chat.userProfile.signature = newSig;
-                                saveState();
-                                showToast('签名已修改');
-                            }
-                        }
-                    }
-                } else {
-                    showContextMenu(item);
-                }
-            }, 500);
-        };
-
-        const handlePointerMove = (e) => {
-            if (longPressTimer) {
-                const deltaX = Math.abs(e.clientX - startX);
-                const deltaY = Math.abs(e.clientY - startY);
-                if (deltaX > 10 || deltaY > 10) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                }
+            if (item) {
+                showContextMenu(item);
             }
-        };
+        });
 
-        const handlePointerUp = () => {
-            clearTimeout(longPressTimer);
-            longPressTimer = null;
-        };
-
-        const handleClick = (e) => {
-            if (isLongPress) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            
+        // Use a single 'click' listener for all tap-based interactions.
+        chatMessagesView.addEventListener('click', (e) => {
             const item = e.target.closest('.message-item, .message-timestamp');
             if (!item) return;
             const target = e.target;
@@ -2091,6 +2012,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleMessageSelection(item);
                 return;
             }
+            
             const avatar = target.closest('.avatar');
             if (avatar) {
                 const contact = appState.chat.contacts.find(c => c.id === currentChatId);
@@ -2102,17 +2024,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 patSuffixInput.focus();
                 return;
             }
+
             const voiceBubble = target.closest('.message-bubble.voice');
             if (voiceBubble) {
                 const voiceText = voiceBubble.nextElementSibling;
                 if (voiceText) voiceText.style.display = voiceText.style.display === 'block' ? 'none' : 'block';
                 return;
             }
+
             const cameraBubble = target.closest('.message-bubble.camera');
             if (cameraBubble) {
                 cameraBubble.classList.toggle('show-text');
                 return;
             }
+
             const linkBubble = target.closest('.message-bubble.link');
             if (linkBubble) {
                 const linkData = JSON.parse(decodeURIComponent(linkBubble.dataset.linkContent));
@@ -2121,16 +2046,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 viewContentModal.classList.add('visible');
                 return;
             }
+
             const packetBubble = target.closest('.message-bubble.red-packet');
             if (packetBubble) {
                 handleRedPacketClick(packetBubble);
                 return;
             }
+
             const recalledMsg = target.closest('.message-timestamp[data-original-content]');
             if (recalledMsg && recalledMsg.dataset.originalContent) {
                 showToast(`撤回内容: ${recalledMsg.dataset.originalContent}`);
                 return;
             }
+
             const groupTitle = target.closest('.group-title');
             if (groupTitle) {
                 const memberId = groupTitle.dataset.memberId;
@@ -2146,6 +2074,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
+
             const groupNickname = target.closest('.group-nickname');
             if (groupNickname) {
                 const memberId = groupNickname.dataset.memberId;
@@ -2162,12 +2091,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
-        };
-
-        chatMessagesView.addEventListener('pointerdown', handlePointerDown);
-        chatMessagesView.addEventListener('pointermove', handlePointerMove);
-        chatMessagesView.addEventListener('pointerup', handlePointerUp);
-        chatMessagesView.addEventListener('click', handleClick);
+        });
     }
 
     // ===================================================================
@@ -2207,7 +2131,20 @@ document.addEventListener('DOMContentLoaded', () => {
         usUserAvatar.querySelector('.avatar-frame').style.backgroundImage = userSettings.avatarFrame ? `url(${userSettings.avatarFrame})` : 'none';
         usPersona.value = userSettings.persona;
     }
-    function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.charSettings = JSON.parse(JSON.stringify(tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); saveState(); updateSingleChatUI(); renderMessageList(); }
+    function saveSingleChatSettings() { 
+        const contact = appState.chat.contacts.find(c => c.id === currentChatId); 
+        if (!contact) return; 
+        const oldSettings = contact.charSettings.realtimeActivity;
+        const newSettings = tempChatSettings.charSettings.realtimeActivity;
+        contact.charSettings = JSON.parse(JSON.stringify(tempChatSettings.charSettings)); 
+        contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); 
+        if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) {
+            updateRealtimeActivityTimer(contact);
+        }
+        saveState(); 
+        updateSingleChatUI(); 
+        renderMessageList(); 
+    }
     getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); });
     query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
     csCharName.addEventListener('input', () => tempChatSettings.charSettings.name = csCharName.value);
@@ -2526,9 +2463,13 @@ document.addEventListener('DOMContentLoaded', () => {
         gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatar, persona } = tempChatSettings.userSettings; const newInfo = { id: 'data_' + Date.now(), name, avatar, content: persona }; appState.data.infos.push(newInfo); saveState(); showToast(`人设已保存到信息: ${name}`); });
         gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
         gcsMemberList.addEventListener('click', (e) => { const item = e.target.closest('.gcs-member-item'); if (item) { openGcsMemberModal(item.dataset.id); } else if (e.target.id === 'gcs-add-member-btn') { openGcsManageMembersModal('add'); } else if (e.target.id === 'gcs-remove-member-btn') { openGcsManageMembersModal('remove'); } });
-        gcsMemberList.addEventListener('pointerdown', (e) => { const item = e.target.closest('.gcs-member-item'); if (!item || item.dataset.id === 'user') return; longPressTimer = setTimeout(() => { if (longPressTimer) { handleGcsMemberLongPress(item.dataset.id); } }, 500); e.preventDefault(); });
-        gcsMemberList.addEventListener('pointerup', () => clearTimeout(longPressTimer));
-        gcsMemberList.addEventListener('pointerleave', () => clearTimeout(longPressTimer));
+        gcsMemberList.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const item = e.target.closest('.gcs-member-item');
+            if (item && item.dataset.id !== 'user') {
+                handleGcsMemberLongPress(item.dataset.id);
+            }
+        });
     }
     function openGcsMemberModal(memberId) {
         if (memberId === 'user') return; // Cannot edit user this way
@@ -2675,7 +2616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ===================================================================
-    // --- 红包逻辑 (单聊 & 群聊) [核心修复] ---
+    // --- 红包逻辑 (单聊 & 群聊) ---
     // ===================================================================
     function handleRedPacketClick(packetBubble = null) {
         const contact = appState.chat.contacts.find(c => c.id === currentChatId);
@@ -2858,19 +2799,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Data Lists (WorldBook, Archive, Info)
-        const createDataListHandler = (listEl, type) => {
+        const createDataListHandler = (listEl, type, renderFunction) => {
             new ListInteractionHandler(listEl, {
                 itemSelector: '.preset-data-item',
                 contentSelector: '.preset-data-item-content',
                 actionsSelector: '.preset-data-item-actions',
                 onTap: (item) => { const dataId = item.dataset.id; const dataItem = appState.data[type + 's'].find(d => d.id === dataId); if (dataItem) { viewContentTitle.textContent = dataItem.name; viewContentBody.innerHTML = `<p>${(dataItem.content || '').replace(/\n/g, '<br>')}</p>`; viewContentModal.classList.add('visible'); } },
-                onDelete: (item) => { const id = item.dataset.id; const dataArray = appState.data[type + 's']; const itemIndex = dataArray.findIndex(i => i.id === id); if (itemIndex > -1) { if (confirm(`确定要删除 "${dataArray[itemIndex].name}" 吗？`)) { dataArray.splice(itemIndex, 1); saveState(); window['render' + type.charAt(0).toUpperCase() + type.slice(1) + 's'](); } } },
+                onDelete: (item) => { 
+                    const id = item.dataset.id; 
+                    const dataArray = appState.data[type + 's']; 
+                    const itemIndex = dataArray.findIndex(i => i.id === id); 
+                    if (itemIndex > -1) { 
+                        if (confirm(`确定要删除 "${dataArray[itemIndex].name}" 吗？`)) { 
+                            dataArray.splice(itemIndex, 1); 
+                            saveState(); 
+                            renderFunction(); // OPTIMIZATION: Immediately re-render the correct list
+                        } 
+                    } 
+                },
                 onEdit: (item) => { openDataEditor(type, item.dataset.id); }
             });
         };
-        createDataListHandler(worldBookListEl, 'worldBook');
-        createDataListHandler(archiveListEl, 'archive');
-        createDataListHandler(infoListEl, 'info');
+        createDataListHandler(worldBookListEl, 'worldBook', renderWorldBooks);
+        createDataListHandler(archiveListEl, 'archive', renderArchives);
+        createDataListHandler(infoListEl, 'info', renderInfos);
 
         // Comments List
         new ListInteractionHandler(detailsCommentsList, {
@@ -2932,10 +2884,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loadState();
         setupAppNavigation();
         setupAllListInteractions();
-        setupChatMessageViewInteractions(); // **CRITICAL FIX:** Use the new dedicated handler
+        setupChatMessageViewInteractions();
         setupSingleChatSettingsListeners();
         setupGroupChatSettingsListeners();
         setupChatToolbarListeners();
+        initializeAllRealtimeActivity(); // OPTIMIZATION: Start timers on load
         appState.music.currentQueueIndex = -1;
         updateMusicListPlayingStatus();
         updateTime();
@@ -2966,6 +2919,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     init();
 });
+
 </script>
 <!-- SCRIPT_END -->
 
