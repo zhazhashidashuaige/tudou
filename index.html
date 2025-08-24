@@ -210,6 +210,9 @@
         #beautify-app-screen .app-content { padding-bottom: 50px; }
         #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .wallpaper-item {
+            /* BUG FIX: Revert to using img tag for better aspect ratio control */
+            width: 100%;
+            height: auto;
             aspect-ratio: 9 / 16;
             border-radius: 8px;
             cursor: pointer;
@@ -217,16 +220,14 @@
             overflow: hidden;
             border: 2px solid transparent;
             transition: border-color 0.2s;
-            background-color: #f0f0f0; /* Placeholder color */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #888;
-            background-size: cover;
-            background-position: center;
+            background-color: #f0f0f0;
         }
-        .wallpaper-item img { display: none; } /* Hide img tag, we use background-image now */
+        .wallpaper-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* This is the key to prevent squashing */
+            display: block;
+        }
         .wallpaper-item.is-wallpaper { border-color: var(--accent-color); }
         .wallpaper-item.is-chat-bg { border-color: var(--listen-together-color); }
         .wallpaper-item.is-wallpaper.is-chat-bg {
@@ -800,7 +801,7 @@
                                         <div class="wb-group-dropdown"></div>
                                     </div>
                                 </div>
-                                <div id="cs-world-book-list-container" class="world-book-list-container"><div id="cs-world-book-list"></div></div>
+                                <div id="cs-world-book-list-container" class="world-book-list-container"><div id="cs-world-book-list" class="checkbox-list"></div></div>
                             </div>
                             <div class="form-group"><label for="cs-context-memory">上下文记忆数量</label><input type="number" id="cs-context-memory" value="20"></div>
                         </div>
@@ -864,7 +865,7 @@
                                         <div class="wb-group-dropdown"></div>
                                     </div>
                                 </div>
-                                <div id="gcs-world-book-list-container" class="world-book-list-container"><div id="gcs-world-book-list"></div></div>
+                                <div id="gcs-world-book-list-container" class="world-book-list-container"><div id="gcs-world-book-list" class="checkbox-list"></div></div>
                             </div>
                             <div class="form-group"><label for="gcs-context-memory">上下文记忆数量</label><input type="number" id="gcs-context-memory" value="20"></div>
                         </div>
@@ -942,7 +943,7 @@
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
     <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">删除选中</button><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
-    <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><div id="gcs-member-world-book-list"></div></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
+    <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><div id="gcs-member-world-book-list" class="checkbox-list"></div></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
     <div id="gcs-member-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-action-title">管理成员</h3><div class="modal-body" id="gcs-member-action-body"></div><div class="modal-actions"><button id="gcs-member-action-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-action-cancel">取消</button></div></div></div>
 
@@ -1090,7 +1091,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmReplaceIconUrlBtn = getEl('confirm-replace-icon-url-btn');
     const cancelReplaceIconBtn = getEl('cancel-replace-icon-btn');
     const restoreIconBtn = getEl('restore-icon-btn');
-    let wallpaperContextMenuTarget = null;
 
     // --- 气泡编辑弹窗 ---
     const editBubbleModal = getEl('edit-bubble-modal');
@@ -1302,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadPersonaList = getEl('load-persona-list');
     const loadPersonaCancelBtn = getEl('load-persona-cancel-btn');
 
-    // --- 全局状态管理 ---
+    // --- 全局状态管理 (可序列化) ---
     const DB_KEY = 'EmperorPhoneData';
     const DEFAULT_WALLPAPER_URL = 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302';
     let appState = {
@@ -1325,6 +1325,8 @@ document.addEventListener('DOMContentLoaded', () => {
             userProfile: { name: '土皇帝', avatarId: 'default_user_avatar', avatarFrameId: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '(点击设置签名)', persona: '全网唯一土皇帝' }
         }
     };
+
+    // --- 全局运行时状态 (不可序列化) ---
     let originalIconContent = {};
     let originalBubbleContent = {};
     let isDetailsAnimatingIn = false;
@@ -1333,6 +1335,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let patTarget = { type: null, element: null, memberId: null };
     let editingComment = { songId: null, commentId: null, replyId: null };
     let contextMenuTarget = null;
+    let wallpaperContextMenuTarget = null;
     let chatSelectionMode = false;
     let selectedMessages = [];
     let quotedMessage = null;
@@ -1348,13 +1351,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeRequests = {};
     let notificationQueue = [];
     let isNotificationVisible = false;
-    let currentlyPlayingVoice = null;
+    let currentlyPlayingVoice = null; // This will now store { timer: timeoutId }
     const mediaObjectURLs = new Map();
     let emojiSelectionMode = false;
     let selectedEmojis = [];
 
     // ===================================================================
-    // --- IndexedDB 媒体存储 (全面升级) ---
+    // --- IndexedDB 媒体存储 ---
     // ===================================================================
     const IDB_NAME = 'EmperorPhoneMedia';
     const IDB_STORE_NAME = 'mediaStore';
@@ -1449,9 +1452,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ===================================================================
-    // --- 状态保存与加载 ---
+    // --- 状态保存与加载 (BUG修复) ---
     // ===================================================================
-    function saveState() { try { localStorage.setItem(DB_KEY, JSON.stringify(appState)); } catch (error) { console.error("保存状态失败:", error); showToast("保存数据失败！", 'error'); } }
+    function saveState() { 
+        try { 
+            // CRITICAL FIX: Ensure no non-serializable data is in appState
+            const stateToSave = JSON.parse(JSON.stringify(appState));
+            localStorage.setItem(DB_KEY, JSON.stringify(stateToSave)); 
+        } catch (error) { 
+            console.error("保存状态失败 (Serialization Error):", error); 
+            console.error("Failing state object:", appState);
+            showToast("保存数据失败！请检查控制台。", 'error'); 
+        } 
+    }
     function loadState() { const savedStateJSON = localStorage.getItem(DB_KEY); if (savedStateJSON) { const defaultState = JSON.parse(JSON.stringify(appState)); const savedState = JSON.parse(savedStateJSON); appState = { ...defaultState, ...savedState, settings: { ...defaultState.settings, ...savedState.settings }, music: { ...defaultState.music, ...savedState.music }, beautify: { ...defaultState.beautify, ...savedState.beautify }, data: { ...defaultState.data, ...(savedState.data || savedState.presetsData) }, chat: { ...defaultState.chat, ...savedState.chat, userProfile: { ...defaultState.chat.userProfile, ...(savedState.chat?.userProfile || {}) } } }; if (!appState.music.lyricsPosition) appState.music.lyricsPosition = { top: 'calc(env(safe-area-inset-top, 10px) + 60px)', left: '50%' }; if (!appState.music.comments) appState.music.comments = {}; if (!Array.isArray(appState.settings.presets)) appState.settings.presets = []; if (!Array.isArray(appState.music.playlist)) appState.music.playlist = []; if (!Array.isArray(appState.music.queue)) appState.music.queue = []; if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = []; if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = []; if (typeof appState.beautify.icons !== 'object' || appState.beautify.icons === null) appState.beautify.icons = {}; if (typeof appState.beautify.bubbles !== 'object' || appState.beautify.bubbles === null) appState.beautify.bubbles = {}; if (!appState.data) appState.data = { worldBooks: [], archives: [], infos: [] }; if (!appState.data.worldBooks) appState.data.worldBooks = []; if (!appState.data.archives) appState.data.archives = []; if (!appState.data.infos) appState.data.infos = []; if (!appState.chat) appState.chat = { contacts: [], emojis: [], userProfile: { name: '土皇帝', avatarId: 'default_user_avatar', avatarFrameId: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '(点击设置签名)', persona: '全网唯一土皇帝' } }; if (!appState.chat.contacts) appState.chat.contacts = []; if (!appState.chat.emojis) appState.chat.emojis = []; if (!appState.chat.userProfile) appState.chat.userProfile = { name: '土皇帝', avatarId: 'default_user_avatar', avatarFrameId: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '(点击设置签名)', persona: '全网唯一土皇帝' }; if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = '(点击设置签名)'; appState.chat.contacts.forEach(initializeContactSettings); } updateUIFromState(); }
     function initializeContactSettings(contact) {
         const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
@@ -1605,7 +1618,7 @@ document.addEventListener('DOMContentLoaded', () => {
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI & 歌词匹配 (CORS修复) ---
+    // --- 音乐 APP UI & 歌词匹配 (BUG修复) ---
     // ===================================================================
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
     function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
@@ -1616,8 +1629,8 @@ document.addEventListener('DOMContentLoaded', () => {
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
     confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); if (separatorIndex === -1) return; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); saveState(); } for (const { meta, url } of lrcUrls) { try { const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
     function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const reader = new FileReader(); reader.onload = (event) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: event.target.result, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; if (addedCount === audioFiles.length) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }; reader.readAsDataURL(file); }); lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); }
-    function normalizeString(str) { return str.trim().toLowerCase().replace(/\s+/g, ' '); }
-    function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeString(baseName); const matchingSong = appState.music.playlist.find(s => normalizeString(s.title) === normalizedBaseName || normalizeString(`${s.artist} - ${s.title}`) === normalizedBaseName || normalizeString(`${s.artist}-${s.title}`) === normalizedBaseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); saveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); } }
+    function normalizeString(str) { return str.trim().toLowerCase().replace(/\s+/g, ' ').replace(/['".,]/g, ''); }
+    function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeString(baseName); const songMap = new Map(); appState.music.playlist.forEach(s => { const songBaseName = normalizeString(`${s.artist} - ${s.title}`); songMap.set(songBaseName, s.id); }); const matchingSongId = songMap.get(normalizedBaseName); if (matchingSongId) { appState.music.lyrics[matchingSongId] = lrcData; showToast(`歌词已匹配到: ${appState.music.playlist.find(s=>s.id === matchingSongId).title}`); saveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); console.log("Failed to match lyrics. Base name:", normalizedBaseName, "Available songs:", [...songMap.keys()]); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
     saveEditSongBtn.addEventListener('click', () => { const songId = editSongIdInput.value; const song = appState.music.playlist.find(s => s.id === songId); if (song) { song.title = editSongTitleInput.value.trim(); song.artist = editSongArtistInput.value.trim(); renderMusicList(); saveState(); showToast("歌曲信息已更新"); } editSongModal.classList.remove('visible'); });
 
@@ -1661,7 +1674,7 @@ document.addEventListener('DOMContentLoaded', () => {
     songDetailsBackBtn.addEventListener('click', () => closeSubScreen(songDetailsScreen, musicAppScreen));
 
     // ===================================================================
-    // --- 美化 APP (存储架构升级) ---
+    // --- 美化 APP (存储架构升级 & BUG修复) ---
     // ===================================================================
     function handleBeautifyTabChange(tabId) {
         const titleEl = beautifyAppScreen.querySelector('.title');
@@ -1715,13 +1728,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const item = document.createElement('div');
             item.className = 'wallpaper-item';
             item.dataset.id = wp.id;
-            item.textContent = '加载中...';
+            
+            const img = document.createElement('img');
+            img.alt = '壁纸预览';
+            item.appendChild(img);
 
             if (wp.id === appState.beautify.currentWallpaperId) item.classList.add('is-wallpaper');
             if (wp.id === appState.beautify.currentChatBgId) item.classList.add('is-chat-bg');
 
             wallpaperGrid.appendChild(item);
-            setElementImage(item, wp.id).then(() => item.textContent = '');
+            setElementImage(img, wp.id, 'src');
         }
     }
 
@@ -2161,6 +2177,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 聊天工具栏新功能 (逻辑优化) ---
     // ===================================================================
     function setupChatToolbarListeners() {
+        getEl('chat-emoji-btn').addEventListener('click', (e) => {
+            if (!e.currentTarget.classList.contains('disabled')) {
+                emojiPickerPanel.classList.toggle('visible');
+                if (emojiPickerPanel.classList.contains('visible')) {
+                    renderEmojiPicker();
+                }
+            }
+        });
         getEl('chat-refresh-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) handleRefreshClick(); });
         getEl('chat-voice-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) voiceInputModal.classList.add('visible'); });
         getEl('chat-image-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) chatImageInput.click(); });
@@ -2410,7 +2434,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
     function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings })); tempChatSettings = JSON.parse(JSON.stringify(originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
-    function loadSingleChatSettingsUI() { const { charSettings, userSettings } = tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookListContainer, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona; }
+    function loadSingleChatSettingsUI() { const { charSettings, userSettings } = tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona; }
     function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } saveState(); updateSingleChatUI(); renderMessageList(); }
     getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); });
     query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
@@ -2477,7 +2501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 群聊设置界面逻辑 (新增) ---
     // ===================================================================
     function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings })); tempChatSettings = JSON.parse(JSON.stringify(originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
-    function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookListContainer, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona; }
+    function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona; }
     function renderGroupMemberList() { const { owner, admins, members } = tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id, member.nickname); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } item.innerHTML = ` <div class="avatar" data-avatar-id="${user.avatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), user.avatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
     function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); saveState(); updateSingleChatUI(); renderMessageList(); }
     function setupGroupChatSettingsListeners() {
@@ -2499,7 +2523,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gcsMemberList.addEventListener('contextmenu', (e) => { e.preventDefault(); const item = e.target.closest('.gcs-member-item'); if (item && item.dataset.id !== 'user') { handleGcsMemberLongPress(item.dataset.id); } });
     }
     function openGcsMemberModal(memberId) { if (memberId === 'user') return; const memberSettings = tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; tempGcsMemberSettings = JSON.parse(JSON.stringify(memberSettings)); gcsEditingMemberIdInput.value = memberId; loadGcsMemberModalUI(); gcsMemberModal.classList.add('visible'); }
-    function loadGcsMemberModalUI() { gcsMemberModalTitle.textContent = `设置 ${tempGcsMemberSettings.nickname}`; gcsMemberNickname.value = tempGcsMemberSettings.nickname; setupWorldBookSelector(gcsMemberWorldBookGroupSelector, gcsMemberWorldBookListContainer, tempGcsMemberSettings.linkedWorldBooks); setElementImage(gcsMemberAvatar, tempGcsMemberSettings.avatarId); setElementImage(gcsMemberAvatar.querySelector('.avatar-frame'), tempGcsMemberSettings.avatarFrameId); gcsMemberPersona.value = tempGcsMemberSettings.persona; }
+    function loadGcsMemberModalUI() { gcsMemberModalTitle.textContent = `设置 ${tempGcsMemberSettings.nickname}`; gcsMemberNickname.value = tempGcsMemberSettings.nickname; setupWorldBookSelector(gcsMemberWorldBookGroupSelector, gcsMemberWorldBookList, tempGcsMemberSettings.linkedWorldBooks); setElementImage(gcsMemberAvatar, tempGcsMemberSettings.avatarId); setElementImage(gcsMemberAvatar.querySelector('.avatar-frame'), tempGcsMemberSettings.avatarFrameId); gcsMemberPersona.value = tempGcsMemberSettings.persona; }
     gcsMemberModalCancelBtn.addEventListener('click', () => gcsMemberModal.classList.remove('visible'));
     gcsMemberModalSaveBtn.addEventListener('click', () => { const memberId = gcsEditingMemberIdInput.value; tempChatSettings.groupSettings.members[memberId] = JSON.parse(JSON.stringify(tempGcsMemberSettings)); renderGroupMemberList(); gcsMemberModal.classList.remove('visible'); });
     gcsMemberNickname.addEventListener('input', (e) => tempGcsMemberSettings.nickname = e.target.value);
@@ -2529,7 +2553,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkExpiredPackets() { const now = Date.now(); const twentyFourHours = 24 * 60 * 60 * 1000; appState.chat.contacts.forEach(contact => { let changed = false; contact.conversation.forEach(msg => { if (msg.type === 'redPacket' && msg.status === 'unclaimed' && (now - msg.timestamp > twentyFourHours)) { msg.status = 'expired'; changed = true; addSystemNotification(contact.id, `一个红包已过期，金额已退回`, true); } }); if (changed) { saveState(); if (currentChatId === contact.id) { renderConversation(); } } }); }
 
     // ===================================================================
-    // --- 核心功能重构与修复 ---
+    // --- 核心功能重构与修复 (AI动作解析) ---
     // ===================================================================
     function recallMessage(msgId) {
         const contact = appState.chat.contacts.find(c => c.id === currentChatId);
@@ -2679,34 +2703,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const actionMatch = msgText.match(/\[ACTION:\s*(\w+)\s*(.*)\]/);
-            if (actionMatch) {
+            if (actionMatch && senderId) {
                 const action = actionMatch[1].toUpperCase();
-                const args = actionMatch[2].trim();
-                // TODO: Implement action handlers
-                console.log("AI Action:", action, "Args:", args);
-                // For now, just add a text message showing the action
-                addMessageToConversation({
-                    id: 'msg_' + Date.now() + i,
-                    type: 'text',
-                    content: `(执行了动作: ${action} ${args})`,
-                    sender: senderId,
-                    timestamp: new Date().getTime(),
-                    status: 'sent',
-                    contactId: contact.id
-                }, true);
-                continue;
-            }
-
-            if (senderId && msgText) {
-                addMessageToConversation({
-                    id: 'msg_' + Date.now() + i,
-                    type: 'text',
-                    content: msgText,
-                    sender: senderId,
-                    timestamp: new Date().getTime(),
-                    status: 'sent',
-                    contactId: contact.id
-                }, true);
+                const argsStr = actionMatch[2].trim();
+                const args = argsStr.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg => arg.replace(/"/g, '')) || [];
+                
+                switch(action) {
+                    case 'SEND_EMOJI':
+                        if (args[0]) {
+                            const emoji = appState.chat.emojis.find(em => em.description.includes(args[0])) || appState.chat.emojis[0];
+                            if (emoji) {
+                                addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: senderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
+                            }
+                        }
+                        break;
+                    case 'SEND_VOICE':
+                        if (args[0]) {
+                            const cleanText = args[0].replace(/\(.*?\)|（.*?）/g, '');
+                            const duration = Math.ceil(cleanText.length / 2);
+                            addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'voice', content: args[0], duration, sender: senderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
+                        }
+                        break;
+                    case 'SEND_IMAGE':
+                        if (args[0]) {
+                            addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'camera', content: args[0], imageId: 'default_camera_image', sender: senderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
+                        }
+                        break;
+                    // Add other action handlers here...
+                    default:
+                         addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'text', content: msgText, sender: senderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
+                }
+            } else if (senderId && msgText) {
+                addMessageToConversation({ id: 'msg_' + Date.now() + i, type: 'text', content: msgText, sender: senderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
             }
             
             if (i < messages.length - 1) {
@@ -2833,13 +2861,40 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (index > -1) linkedIdsArray.splice(index, 1);
                     });
                 }
-                renderWorldBookList(listContainer.querySelector('.checkbox-list, ul'), linkedIdsArray);
+                renderWorldBookList(listContainer, linkedIdsArray);
                 updateButtonText();
             }
         });
         
-        renderWorldBookList(listContainer.querySelector('.checkbox-list, ul'), linkedIdsArray);
+        renderWorldBookList(listContainer, linkedIdsArray);
         updateButtonText();
+    }
+    function renderWorldBookList(listElement, linkedIdsArray) {
+        listElement.innerHTML = appState.data.worldBooks.map(wb => `
+            <label class="checkbox-label">
+                <input type="checkbox" value="${wb.id}" ${linkedIdsArray.includes(wb.id) ? 'checked' : ''}>
+                <span>${wb.name}</span>
+            </label>
+        `).join('');
+        
+        listElement.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                const id = e.target.value;
+                if (e.target.checked) {
+                    if (!linkedIdsArray.includes(id)) linkedIdsArray.push(id);
+                } else {
+                    const index = linkedIdsArray.indexOf(id);
+                    if (index > -1) linkedIdsArray.splice(index, 1);
+                }
+                // Re-render the group selector button text
+                const selectorContainer = listElement.closest('.chat-settings-section').querySelector('.wb-group-selector');
+                if (selectorContainer) {
+                    const btn = selectorContainer.querySelector('.wb-group-selector-btn');
+                    const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))];
+                     if (selectedGroups.length === 0) { btn.textContent = '选择分组'; } else if (selectedGroups.length === 1) { btn.textContent = selectedGroups[0]; } else { btn.textContent = `${selectedGroups.length}个分组已选`; }
+                }
+            }
+        });
     }
     async function init() {
         try {
