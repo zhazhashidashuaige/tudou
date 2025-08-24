@@ -1414,6 +1414,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function setElementImage(element, id, property = 'backgroundImage') {
         if (!element) return;
+        if (!id || id.startsWith('https://') || id.startsWith('http://')) {
+            const url = id || '';
+            if (property === 'src') {
+                element.src = url;
+            } else {
+                element.style.backgroundImage = url ? `url(${url})` : 'none';
+            }
+            return;
+        }
+        
         const url = await getMediaURL(id);
         if (url) {
             if (property === 'src') {
@@ -1422,7 +1432,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 element.style.backgroundImage = `url(${url})`;
             }
         } else {
-            // Handle fallback if needed
             if (property === 'src') {
                 element.src = '';
             } else {
@@ -1636,7 +1645,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     function openSongDetails(songId) { const song = appState.music.playlist.find(s => s.id === songId); if (!song) return; songDetailsScreen.dataset.songId = songId; detailsSongTitle.textContent = song.title; detailsSongArtist.textContent = song.artist; const lyrics = appState.music.lyrics[song.id]; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; let activeIndex = -1; if (currentPlayingSong && currentPlayingSong.id === songId) { activeIndex = currentLyricIndex; } renderSongDetailsLyrics(lyrics, activeIndex, true); renderSongComments(songId); openSubScreen(songDetailsScreen, musicAppScreen); isDetailsAnimatingIn = true; setTimeout(() => { isDetailsAnimatingIn = false; const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'auto', block: 'center' }); } }, 350); }
     function renderSongDetailsLyrics(lyrics, activeIndex, isOpening = false) { if (!lyrics || lyrics.length === 0) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; return; } detailsLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = detailsLyricsView.querySelector('.lyric-line.active'); if (activeLine && !isOpening && !isDetailsAnimatingIn) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
-    function renderSongComments(songId) { if (!appState.music.comments[songId]) { appState.music.comments[songId] = []; } const comments = appState.music.comments[songId]; detailsCommentsList.innerHTML = comments.map(comment => renderSingleComment(songId, comment)).join('') || '<p style="text-align:center; color:#888;">还没有评论，快来抢沙发吧！</p>'; }
+    function renderSongComments(songId) { if (!appState.music.comments[songId]) { appState.music.comments[songId] = []; } const comments = appState.music.comments[songId]; detailsCommentsList.innerHTML = comments.map(comment => renderSingleComment(songId, comment)).join('') || '<p style="text-align:center; color:#888;">还没有评论，快来抢沙发吧！</p>'; detailsCommentsList.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId)); }
     function renderSingleComment(songId, comment) { const author = findUserById(comment.authorId, comment.authorName); const isLiked = comment.likes.includes('user'); const repliesHTML = (comment.replies || []).map(reply => renderSingleReply(reply, comment.replies)).join(''); return ` <div class="comment-item" data-comment-id="${comment.id}"> <div class="comment-item-main"> <div class="comment-avatar" data-avatar-id="${author.avatarId}"></div> <div class="comment-content"> <div class="comment-header"> <span class="comment-author">${author.name}</span> <div class="comment-actions-inline"> <button class="icon-btn like-btn ${isLiked ? 'liked' : ''}" data-icon-id="comment-like">❤️ <span class="like-count">${comment.likes.length}</span></button> <button class="icon-btn reply-btn" data-icon-id="comment-reply">💬</button> </div> </div> <p class="comment-text">${comment.text}</p> <div class="comment-replies">${repliesHTML}</div> <div class="reply-input-container"><input type="text" placeholder="回复 ${author.name}..."><button class="settings-button secondary" style="padding: 5px 10px;" data-bubble-id="comment-reply-send">发送</button></div> </div> </div> <div class="comment-item-actions-swipe"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div> </div> `; }
     function renderSingleReply(reply, allReplies) { const author = findUserById(reply.authorId, reply.authorName); let targetHTML = ''; if (reply.replyTo) { const targetReply = allReplies.find(r => r.id === reply.replyTo); if (targetReply) { const targetAuthor = findUserById(targetReply.authorId, targetReply.authorName); targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>`; } } return `<div class="reply-item" data-reply-id="${reply.id}"><span class="reply-author">${author.name}</span> ${targetHTML}: ${reply.text}<span class="delete-reply-btn" data-icon-id="comment-reply-delete">×</span><div class="reply-input-container"><input type="text" placeholder="回复 ${author.name}..."><button class="settings-button secondary" style="padding: 5px 10px;" data-bubble-id="comment-reply-send">发送</button></div></div>`; }
     function findUserById(id, fallbackName) { if (id === 'user') return { name: appState.chat.userProfile.name, avatarId: appState.chat.userProfile.avatarId }; const contact = appState.chat.contacts.find(c => c.id === id); return contact ? { name: contact.name, avatarId: contact.charSettings.avatarId } : { name: fallbackName, avatarId: `https://api.multiavatar.com/${fallbackName}.png` }; }
@@ -1966,12 +1975,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Asynchronously set images
             li.querySelectorAll('[data-avatar-id]').forEach(el => {
-                const id = el.dataset.avatarId;
-                if (id.startsWith('https')) { // Handle default URL avatars
-                    el.style.backgroundImage = `url(${id})`;
-                } else {
-                    setElementImage(el, id);
-                }
+                setElementImage(el, el.dataset.avatarId);
             });
 
             if (contact.needsShake) {
@@ -2106,6 +2110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     chatSendRealBtn.addEventListener('click', async () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (!contact.isGroup && !contact.charSettings.isFriend) { if (confirm('你们还不是好友，要强制添加对方为好友吗？')) { contact.charSettings.isFriend = true; addSystemNotification(contact.id, '你同意了对方的好友申请'); setTimeout(() => { addMessageToConversation({ id: 'msg_' + Date.now() + '_reply', type: 'text', content: '我们已经是好友了，来聊天吧！', sender: contact.id, timestamp: new Date().getTime(), status: 'sent', contactId: contact.id }); }, 500); updateSingleChatUI(); saveState(); } return; } const pendingMessages = contact.conversation.filter(m => m.status === 'pending'); if (pendingMessages.length === 0) { showToast('没有要发送的新消息', 'error'); return; } await triggerAiResponse(currentChatId); });
+    chatEmojiBtn.addEventListener('click', (e) => { if (e.currentTarget.classList.contains('disabled')) return; renderEmojiPicker(); emojiPickerPanel.classList.add('visible'); });
     emojiPickerPanel.addEventListener('click', (e) => { const item = e.target.closest('.emoji-item'); if (item) { const emoji = appState.chat.emojis.find(em => em.id === item.dataset.emojiId); if (emoji) { addMessageToConversation({ id: 'msg_' + Date.now(), type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); emojiPickerPanel.classList.remove('visible'); } } });
     closeEmojiPickerBtn.addEventListener('click', () => emojiPickerPanel.classList.remove('visible'));
     function renderEmojiPicker() { emojiGrid.innerHTML = ''; appState.chat.emojis.forEach(emoji => { const item = document.createElement('div'); item.className = 'emoji-item'; item.dataset.emojiId = emoji.id; emojiGrid.appendChild(item); setElementImage(item, emoji.id, 'backgroundImage'); }); }
@@ -2143,7 +2148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
     confirmVoiceBtn.addEventListener('click', () => { const text = voiceTextInput.value.trim(); if (!text) return; const cleanText = text.replace(/\(.*?\)|（.*?）/g, ''); const duration = Math.ceil(cleanText.length / 2); addMessageToConversation({ id: 'msg_' + Date.now(), type: 'voice', content: text, duration: duration, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); voiceInputModal.classList.remove('visible'); voiceTextInput.value = ''; });
     cancelCameraBtn.addEventListener('click', () => cameraInputModal.classList.remove('visible'));
-    confirmCameraBtn.addEventListener('click', async () => { const text = cameraTextInput.value.trim(); if (!text) return; const response = await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg'); const blob = await response.blob(); const newId = 'image_' + Date.now(); await addMediaToDB(newId, blob); addMessageToConversation({ id: 'msg_' + Date.now(), type: 'camera', content: text, imageId: newId, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); cameraInputModal.classList.remove('visible'); cameraTextInput.value = ''; });
+    confirmCameraBtn.addEventListener('click', async () => { const text = cameraTextInput.value.trim(); if (!text) return; addMessageToConversation({ id: 'msg_' + Date.now(), type: 'camera', content: text, imageId: 'default_camera_image', sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); cameraInputModal.classList.remove('visible'); cameraTextInput.value = ''; });
     cancelLinkBtn.addEventListener('click', () => linkShareModal.classList.remove('visible'));
     confirmLinkBtn.addEventListener('click', () => { const title = linkTitleInput.value.trim(); if (!title) return showToast('标题是必填项', 'error'); const summary = linkSummaryInput.value.trim(); const source = linkSourceInput.value.trim(); const content = linkContentInput.value.trim(); addMessageToConversation({ id: 'msg_' + Date.now(), type: 'link', title, summary, source, content, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); linkShareModal.classList.remove('visible'); [linkTitleInput, linkSummaryInput, linkSourceInput, linkContentInput].forEach(i => i.value = ''); });
     cancelRedPacketBtn.addEventListener('click', () => redPacketModal.classList.remove('visible'));
@@ -2152,15 +2157,15 @@ document.addEventListener('DOMContentLoaded', () => {
     chatInput.addEventListener('input', updateChatInputButtons);
 
     // ===================================================================
-    // --- 统一列表交互处理器 ---
+    // --- 统一列表交互处理器 (BUG修复) ---
     // ===================================================================
     class ListInteractionHandler {
         constructor(listElement, options) { this.listElement = listElement; this.options = { ...{ disableSwipe: false }, ...options }; this.swipedItem = null; this.startX = 0; this.startY = 0; this.currentX = 0; this.isSwiping = false; this.isLongPress = false; this.longPressTimer = null; this.isPointerDown = false; this.handlePointerDown = this.handlePointerDown.bind(this); this.handlePointerMove = this.handlePointerMove.bind(this); this.handlePointerUp = this.handlePointerUp.bind(this); this.handlePointerCancel = this.handlePointerCancel.bind(this); this.handleClick = this.handleClick.bind(this); this.listElement.addEventListener('pointerdown', this.handlePointerDown); }
         handlePointerDown(e) { if (e.button !== 0) return; const targetItem = e.target.closest(this.options.itemSelector); if (!targetItem) return; if (this.swipedItem && this.swipedItem !== targetItem) { this.closeSwipedItem(); } this.isPointerDown = true; this.startX = e.clientX; this.startY = e.clientY; this.currentX = this.startX; this.longPressTimer = setTimeout(() => { if (this.isPointerDown && !this.isSwiping) { this.isLongPress = true; if (this.options.onLongPress) this.options.onLongPress(targetItem, e.target); } }, this.options.longPressDuration || 500); document.addEventListener('pointermove', this.handlePointerMove); document.addEventListener('pointerup', this.handlePointerUp); document.addEventListener('pointercancel', this.handlePointerCancel); this.listElement.addEventListener('click', this.handleClick, { capture: true }); }
         handlePointerMove(e) { if (!this.isPointerDown) return; this.currentX = e.clientX; const deltaX = this.currentX - this.startX; const deltaY = e.clientY - this.startY; if (!this.isSwiping && Math.abs(deltaX) > (this.options.swipeThreshold || 10)) { if (Math.abs(deltaX) > Math.abs(deltaY)) { if (this.options.disableSwipe) { this.resetState(); return; } this.isSwiping = true; clearTimeout(this.longPressTimer); } else { this.resetState(); } } if (this.isSwiping) { e.preventDefault(); const targetItem = e.target.closest(this.options.itemSelector); if (!targetItem) return; this.swipedItem = targetItem; const content = targetItem.querySelector(this.options.contentSelector); const actions = targetItem.querySelector(this.options.actionsSelector); if (!content || !actions) return; const actionsWidth = actions.offsetWidth; let diff = Math.min(0, deltaX); diff = Math.max(-actionsWidth, diff); content.style.transition = 'none'; content.style.transform = `translateX(${diff}px)`; } }
-        handlePointerUp(e) { if (!this.isPointerDown) return; if (this.isSwiping) { const content = this.swipedItem.querySelector(this.options.contentSelector); const actions = this.swipedItem.querySelector(this.options.actionsSelector); if (content && actions) { const actionsWidth = actions.offsetWidth; const currentTranslateX = new WebKitCSSMatrix(window.getComputedStyle(content).transform).m41; content.style.transition = 'transform 0.3s ease'; if (currentTranslateX < -actionsWidth / 2) { content.style.transform = `translateX(-${actionsWidth}px)`; } else { content.style.transform = 'translateX(0px)'; this.swipedItem = null; } } } this.resetState(); }
+        handlePointerUp(e) { try { if (!this.isPointerDown) return; if (this.isSwiping) { const content = this.swipedItem.querySelector(this.options.contentSelector); const actions = this.swipedItem.querySelector(this.options.actionsSelector); if (content && actions) { const actionsWidth = actions.offsetWidth; const currentTranslateX = new WebKitCSSMatrix(window.getComputedStyle(content).transform).m41; content.style.transition = 'transform 0.3s ease'; if (currentTranslateX < -actionsWidth / 2) { content.style.transform = `translateX(-${actionsWidth}px)`; } else { content.style.transform = 'translateX(0px)'; this.swipedItem = null; } } } } finally { this.resetState(); } }
         handleClick(e) { if (this.isSwiping || this.isLongPress) { e.stopPropagation(); e.preventDefault(); } else { const targetItem = e.target.closest(this.options.itemSelector); if (!targetItem) return; const actions = targetItem.querySelector(this.options.actionsSelector); if (actions && actions.contains(e.target)) { if (e.target.classList.contains('delete-action')) { if (this.options.onDelete) this.options.onDelete(targetItem); } else if (e.target.classList.contains('edit-action')) { if (this.options.onEdit) this.options.onEdit(targetItem); } this.closeSwipedItem(); } else { if (this.options.onTap) this.options.onTap(targetItem, e.target); } } this.listElement.removeEventListener('click', this.handleClick, { capture: true }); }
-        handlePointerCancel() { if (this.swipedItem) { const content = this.swipedItem.querySelector(this.options.contentSelector); if (content) { content.style.transition = 'transform 0.3s ease'; content.style.transform = 'translateX(0px)'; } } this.resetState(); }
+        handlePointerCancel() { try { if (this.swipedItem) { const content = this.swipedItem.querySelector(this.options.contentSelector); if (content) { content.style.transition = 'transform 0.3s ease'; content.style.transform = 'translateX(0px)'; } } } finally { this.resetState(); } }
         resetState() { this.isPointerDown = false; clearTimeout(this.longPressTimer); setTimeout(() => { this.isSwiping = false; this.isLongPress = false; }, 0); document.removeEventListener('pointermove', this.handlePointerMove); document.removeEventListener('pointerup', this.handlePointerUp); document.removeEventListener('pointercancel', this.handlePointerCancel); }
         closeSwipedItem() { if (this.swipedItem) { const content = this.swipedItem.querySelector(this.options.contentSelector); if (content) { content.style.transition = 'transform 0.3s ease'; content.style.transform = 'translateX(0px)'; } this.swipedItem = null; } }
     }
@@ -2784,10 +2789,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function init() {
         try {
             await initDB();
-            const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
-            await addMediaToDB('default_user_avatar', defaultAvatarBlob);
-            const defaultCameraBlob = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob();
-            await addMediaToDB('default_camera_image', defaultCameraBlob);
+            const defaultAvatarExists = await getMediaFromDB('default_user_avatar');
+            if (!defaultAvatarExists) {
+                const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
+                await addMediaToDB('default_user_avatar', defaultAvatarBlob);
+            }
+            const defaultCameraExists = await getMediaFromDB('default_camera_image');
+            if (!defaultCameraExists) {
+                const defaultCameraBlob = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob();
+                await addMediaToDB('default_camera_image', defaultCameraBlob);
+            }
         } catch (error) {
             console.error("数据库初始化失败:", error);
             alert("关键存储功能初始化失败，应用可能无法正常工作。请尝试刷新或使用支持的浏览器。");
