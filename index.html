@@ -206,12 +206,62 @@
         .player-controls .play-pause-btn img { height: 32px; }
         #player-playback-mode-btn { font-size: 20px; }
 
-        /* --- 美化 APP --- */
+        /* --- 美化 APP (壁纸重写) --- */
         #beautify-app-screen .app-content { padding-bottom: 50px; }
         #wallpaper-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .wallpaper-item { aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 8px; cursor: pointer; position: relative; overflow: hidden; }
-        .wallpaper-item::after { content: '✓'; position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background-color: var(--accent-color); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; transform: scale(0); transition: transform 0.2s; }
-        #beautify-app-screen.selection-mode .wallpaper-item.selected::after { transform: scale(1); }
+        .wallpaper-item {
+            aspect-ratio: 9 / 16;
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            background-color: #f0f0f0; /* Placeholder color */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #888;
+        }
+        .wallpaper-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .wallpaper-item.is-wallpaper { border-color: var(--accent-color); }
+        .wallpaper-item.is-chat-bg { border-color: var(--listen-together-color); }
+        .wallpaper-item.is-wallpaper.is-chat-bg {
+            border-image: linear-gradient(45deg, var(--accent-color), var(--listen-together-color)) 1;
+        }
+        .wallpaper-item::before {
+            content: '壁纸';
+            position: absolute;
+            bottom: 2px;
+            left: 4px;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            display: none;
+        }
+        .wallpaper-item.is-wallpaper::before { display: block; }
+        .wallpaper-item::after {
+            content: '背景';
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            background-color: var(--listen-together-color);
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            display: none;
+        }
+        .wallpaper-item.is-chat-bg::after { display: block; }
         #font-list { list-style: none; padding: 0; margin: 0; }
         .font-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
         .font-item-content { padding: 15px; background-color: var(--item-bg); transition: transform 0.3s ease; position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; }
@@ -386,15 +436,32 @@
         .emoji-picker-header button { background: none; border: none; font-size: 16px; color: var(--accent-color); cursor: pointer; }
         #emoji-grid { flex-grow: 1; overflow-y: auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 10px; }
         .emoji-item { width: 40px; height: 40px; background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; }
-        /* New Message Bubble Types */
+        
+        /* --- New/Modified Message Bubble Types --- */
         .message-bubble.voice { padding: 5px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .voice-waveform-container { height: 20px; display: flex; align-items: center; gap: 2px; padding-left: 5px; /* OPTIMIZATION: Add padding */ }
         .voice-waveform-container span { width: 2px; background-color: #888; border-radius: 1px; transition: height 0.2s; }
         .message-item.user .voice-waveform-container span { background-color: white; }
         .voice-duration { font-size: 12px; }
         .voice-text { display: none; margin-top: 5px; padding: 8px; background-color: #f0f0f0; border-radius: 8px; font-size: 14px; }
+        
         .message-bubble.image, .message-bubble.camera { padding: 0; background: none; max-width: 60%; }
         .message-bubble.image img, .message-bubble.camera img { max-width: 100%; border-radius: 12px; display: block; }
+        
+        /* BUG FIX: Emoji Bubble Layout */
+        .message-bubble.emoji-bubble {
+            background: none;
+            padding: 0;
+            display: inline-block;
+            line-height: 0; /* Fix potential alignment issues */
+            max-width: 100px; /* Set a max-width */
+        }
+        .message-bubble.emoji-bubble img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
         .message-bubble.camera { position: relative; cursor: pointer; }
         .camera-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; color: black; display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px; box-sizing: border-box; border-radius: 12px; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
         .message-bubble.camera.show-text .camera-text-overlay { opacity: 1; visibility: visible; }
@@ -421,9 +488,33 @@
         .message-item.user .group-message-header { justify-content: flex-end; }
 
         /* --- 长按菜单 --- */
-        #context-menu { position: absolute; display: none; background-color: rgba(40, 40, 40, 0.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 8px; padding: 5px; z-index: 110; display: flex; gap: 5px; }
-        .context-menu-btn { background: none; border: none; color: white; font-size: 13px; padding: 8px 10px; cursor: pointer; border-radius: 5px; }
+        #context-menu, #wallpaper-context-menu {
+            position: absolute;
+            display: none;
+            background-color: rgba(40, 40, 40, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 5px;
+            z-index: 110;
+            flex-direction: column; /* NEW: Set to column for wallpaper menu */
+        }
+        #context-menu { flex-direction: row; } /* Original menu remains row */
+        .context-menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 13px;
+            padding: 8px 12px; /* Adjusted padding */
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: left; /* NEW: Align text left for column layout */
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #context-menu .context-menu-btn { text-align: center; } /* Keep original centered */
         .context-menu-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .context-menu-btn.danger { color: var(--danger-color); }
 
         /* --- 自定义单选/多选按钮 --- */
         .radio-group, .checkbox-list { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -573,7 +664,10 @@
                 <div class="app-header-right"><button class="action-btn" id="beautify-action-btn" data-icon-id="beautify-add">+</button></div>
             </div>
             <div class="app-content tab-content-wrapper">
-                <div id="wallpaper-tab-content" class="tab-content active"><div id="wallpaper-grid"></div></div>
+                <div id="wallpaper-tab-content" class="tab-content active">
+                    <div id="wallpaper-grid"></div>
+                    <input type="file" id="wallpaper-file-input" multiple accept="image/*" style="display:none;">
+                </div>
                 <div id="font-tab-content" class="tab-content"><ul id="font-list"></ul></div>
                 <div id="icon-tab-content" class="tab-content"><div id="icon-grid"></div></div>
                 <div id="bubble-tab-content" class="tab-content"><div id="bubble-grid"></div></div>
@@ -796,7 +890,6 @@
     <div id="edit-preset-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑预设</h3><div class="modal-body"><input type="hidden" id="edit-preset-index"><div class="form-group"><label for="edit-preset-name">预设名称</label><input type="text" id="edit-preset-name"></div><div class="form-group"><label for="edit-preset-url">反代地址</label><input type="text" id="edit-preset-url"></div><div class="form-group"><label for="edit-preset-key">API 密钥</label><input type="text" id="edit-preset-key"></div></div><div class="modal-actions row"><button id="cancel-edit-btn" class="cancel-btn" data-bubble-id="modal-cancel">取消</button><button id="save-edit-btn" class="confirm-btn" data-bubble-id="modal-save">保存</button></div></div></div>
     <div id="add-music-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加音乐</h3><div class="modal-body"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-music-upload" class="modal-tab-content active"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:15px;">支持批量上传，文件名格式为“示例歌手 - 示例歌曲.示例主流媒体格式”。</p><button id="upload-music-btn" class="settings-button" data-bubble-id="modal-select-file">选择文件</button><input type="file" id="music-file-input" multiple accept="audio/*,.lrc" style="display:none;"></div><div id="tab-content-music-url" class="modal-tab-content"><p style="font-size:12px; color:#888; text-align:center; margin-bottom:10px;">支持批量上传，每行一条，格式为“示例歌手 - 示例歌名：http://示例链接.示例主流媒体格式”。</p><textarea id="music-url-input" class="wide-textarea"></textarea><button id="confirm-add-url-btn" class="settings-button" data-bubble-id="modal-add-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-music-btn" class="cancel-btn single-button" data-bubble-id="modal-cancel-music">取消</button></div></div></div>
     <div id="edit-song-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑歌曲信息</h3><div class="modal-body"><input type="hidden" id="edit-song-id"><div class="form-group"><label for="edit-song-title">歌名</label><input type="text" id="edit-song-title"></div><div class="form-group"><label for="edit-song-artist">歌手</label><input type="text" id="edit-song-artist"></div></div><div class="modal-actions row"><button id="cancel-edit-song-btn" class="cancel-btn" data-bubble-id="modal-cancel-song">取消</button><button id="save-edit-song-btn" class="confirm-btn" data-bubble-id="modal-save-song">保存</button></div></div></div>
-    <div id="wallpaper-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">选择操作</h3><div class="modal-actions"><button id="set-as-wallpaper-btn" class="confirm-btn" data-bubble-id="modal-set-wallpaper">设为壁纸</button><button id="set-as-chat-bg-btn" class="confirm-btn" data-bubble-id="modal-set-chat-bg">设为背景</button><button id="cancel-wallpaper-action-btn" class="cancel-btn" data-bubble-id="modal-cancel-wallpaper">取消</button></div></div></div>
     <div id="add-font-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">添加字体</h3><div class="modal-body"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-font-upload" class="modal-tab-content active"><button id="upload-font-btn" class="settings-button" data-bubble-id="modal-upload-font">选择文件</button><input type="file" id="font-file-input" multiple accept=".ttf,.otf,.woff,.woff2" style="display:none;"></div><div id="tab-content-font-url" class="modal-tab-content"><textarea id="font-url-input" class="wide-textarea" placeholder="示例字体:http://..."></textarea><button id="confirm-add-font-url-btn" class="settings-button" data-bubble-id="modal-add-font-url">添加URL</button></div></div><div class="modal-actions row"><button id="cancel-add-font-btn" class="cancel-btn" data-bubble-id="modal-cancel-font">取消</button></div></div></div>
     <div id="replace-icon-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">替换图标</h3><div class="modal-body"><input type="hidden" id="replace-icon-id"><div class="modal-tabs"><button class="tab-btn active" data-tab="upload">上传</button><button class="tab-btn" data-tab="url">URL</button></div><div id="tab-content-icon-upload" class="modal-tab-content active"><button id="upload-icon-btn" class="settings-button" data-bubble-id="modal-upload-icon">选择图片</button><input type="file" id="icon-file-input" accept="image/*" style="display:none;"></div><div id="tab-content-icon-url" class="modal-tab-content"><textarea id="icon-url-input" class="wide-textarea" rows="1" placeholder="输入图片URL"></textarea><button id="confirm-replace-icon-url-btn" class="settings-button" style="margin-top:10px;" data-bubble-id="modal-confirm-icon-url">确认</button></div></div><div class="modal-actions"><button id="restore-icon-btn" class="danger-btn" style="margin-top: 10px;" data-bubble-id="modal-restore-icon">还原</button><button id="cancel-replace-icon-btn" class="cancel-btn" data-bubble-id="modal-cancel-icon">取消</button></div></div></div>
     <div id="edit-bubble-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑气泡</h3><div class="modal-body"><input type="hidden" id="edit-bubble-id"><div class="form-group"><label>图片替换</label><div class="checkbox-group"><input type="checkbox" id="replace-bg-only-checkbox"><label for="replace-bg-only-checkbox">仅替换底图</label></div><button class="settings-button" id="upload-bubble-btn" data-bubble-id="bubble-upload-img">上传图片</button><input type="file" id="bubble-file-input" accept="image/*" style="display:none;"><textarea id="bubble-url-input" class="uniform-input-box" placeholder="或输入图片URL" style="margin-top:10px;"></textarea><hr style="margin:15px 0; border:none; border-top:1px solid var(--border-color);"></div><div class="inline-inputs"><div class="form-group"><label>宽度</label><input type="text" id="bubble-width-input"></div><div class="form-group"><label>高度</label><input type="text" id="bubble-height-input"></div></div><div class="inline-inputs"><div class="form-group"><label>X偏移</label><input type="text" id="bubble-pos-x-input"></div><div class="form-group"><label>Y偏移</label><input type="text" id="bubble-pos-y-input"></div></div><div class="form-group bubble-color-group"><label>文字颜色</label><input type="text" id="bubble-color-input"></div><div class="form-group bubble-color-group"><label>背景颜色</label><input type="text" id="bubble-bg-color-input"></div><div class="form-group bubble-color-group"><label>边框颜色</label><input type="text" id="bubble-border-color-input"></div><label>预览</label><div id="bubble-preview-wrapper"><div id="bubble-preview"><span>预览文字</span></div></div></div><div class="modal-actions"><button id="save-bubble-btn" class="confirm-btn" data-bubble-id="bubble-save">保存</button><button id="restore-bubble-btn" class="danger-btn" data-bubble-id="bubble-restore">还原</button><button id="cancel-edit-bubble-btn" class="cancel-btn" data-bubble-id="bubble-cancel">取消</button></div></div></div>
@@ -829,9 +922,16 @@
         <button class="context-menu-btn" id="context-menu-cancel">取消</button>
     </div>
 
+    <!-- 壁纸长按菜单 (NEW) -->
+    <div id="wallpaper-context-menu" style="display: none;">
+        <button class="context-menu-btn" id="wp-set-wallpaper">设为壁纸</button>
+        <button class="context-menu-btn" id="wp-set-chat-bg">设为全局背景</button>
+        <button class="context-menu-btn danger" id="wp-delete">删除</button>
+    </div>
+
     <div id="toast"></div>
 
-<!-- SCRIPT_START -->
+<!-- <script> and </script> tags will be placed here -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- 全局 DOM 元素获取 ---
@@ -933,17 +1033,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const playIconSrc = "https://i.postimg.cc/v83KWXWz/z-aigei-com.png";
     const pauseIconSrc = "https://i.postimg.cc/jd2FvNcr/z-aigei-com.png";
 
-    // --- 美化 APP ---
+    // --- 美化 APP (重写后) ---
     const beautifyActionBtn = getEl('beautify-action-btn');
     const beautifyTabs = query('#beautify-app-screen .app-bottom-tabs');
     const wallpaperGrid = getEl('wallpaper-grid');
+    const wallpaperFileInput = getEl('wallpaper-file-input');
+    const wallpaperContextMenu = getEl('wallpaper-context-menu');
     const fontListEl = getEl('font-list');
     const iconGrid = getEl('icon-grid');
     const bubbleGrid = getEl('bubble-grid');
-    const wallpaperActionModal = getEl('wallpaper-action-modal');
-    const setAsWallpaperBtn = getEl('set-as-wallpaper-btn');
-    const setAsChatBgBtn = getEl('set-as-chat-bg-btn');
-    const cancelWallpaperActionBtn = getEl('cancel-wallpaper-action-btn');
     const addFontModal = getEl('add-font-modal');
     const uploadFontBtn = getEl('upload-font-btn');
     const fontFileInput = getEl('font-file-input');
@@ -958,8 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmReplaceIconUrlBtn = getEl('confirm-replace-icon-url-btn');
     const cancelReplaceIconBtn = getEl('cancel-replace-icon-btn');
     const restoreIconBtn = getEl('restore-icon-btn');
-    let wallpaperSelection = [];
-    let currentWallpaperActionId = null;
+    let wallpaperContextMenuTarget = null;
 
     // --- 气泡编辑弹窗 ---
     const editBubbleModal = getEl('edit-bubble-modal');
@@ -1167,15 +1264,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 全局状态管理 ---
     const DB_KEY = 'EmperorPhoneData';
+    const DEFAULT_WALLPAPER = 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302';
     let appState = {
         settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
         music: { playlist: [], queue: [], lyrics: {}, comments: {}, currentQueueIndex: -1, playbackMode: 'repeat', lyricsPosition: { top: 'calc(env(safe-area-inset-top, 10px) + 60px)', left: '50%' } },
-        beautify: { wallpapers: [], currentWallpaper: 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302', currentChatBg: '', fonts: [], currentFont: 'default', fontColor: '#000000', icons: {}, bubbles: {} },
+        beautify: { 
+            wallpapers: [], // Now only stores {id: '...'} metadata
+            currentWallpaperId: 'default', 
+            currentChatBgId: 'default', 
+            fonts: [], 
+            currentFont: 'default', 
+            fontColor: '#000000', 
+            icons: {}, 
+            bubbles: {} 
+        },
         data: { worldBooks: [], archives: [], infos: [] },
         chat: {
             contacts: [],
             emojis: [],
-            userProfile: { name: 'User', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...' }
+            userProfile: { name: '土皇帝', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...', persona: '全网唯一土皇帝' }
         }
     };
     let originalIconContent = {};
@@ -1203,24 +1310,81 @@ document.addEventListener('DOMContentLoaded', () => {
     let isNotificationVisible = false;
 
     // ===================================================================
+    // --- IndexedDB 图片存储 (核心修复) ---
+    // ===================================================================
+    const IDB_NAME = 'EmperorPhoneImages';
+    const IDB_STORE_NAME = 'images';
+    let db;
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(IDB_NAME, 1);
+            request.onerror = (event) => reject("IndexedDB error: " + request.error);
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
+                    db.createObjectStore(IDB_STORE_NAME, { keyPath: 'id' });
+                }
+            };
+        });
+    }
+
+    function addImageToDB(id, blob) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not initialized");
+            const transaction = db.transaction([IDB_STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(IDB_STORE_NAME);
+            const request = store.put({ id: id, blob: blob });
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    function getImageFromDB(id) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not initialized");
+            const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
+            const store = transaction.objectStore(IDB_STORE_NAME);
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result ? request.result.blob : null);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    function deleteImageFromDB(id) {
+        return new Promise((resolve, reject) => {
+            if (!db) return reject("DB not initialized");
+            const transaction = db.transaction([IDB_STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(IDB_STORE_NAME);
+            const request = store.delete(id);
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // ===================================================================
     // --- 状态保存与加载 ---
     // ===================================================================
     function saveState() { try { localStorage.setItem(DB_KEY, JSON.stringify(appState)); } catch (error) { console.error("保存状态失败:", error); showToast("保存数据失败！", 'error'); } }
-    function loadState() { const savedStateJSON = localStorage.getItem(DB_KEY); if (savedStateJSON) { const savedState = JSON.parse(savedStateJSON); appState = { ...appState, ...savedState, settings: { ...appState.settings, ...savedState.settings }, music: { ...appState.music, ...savedState.music }, beautify: { ...appState.beautify, ...savedState.beautify }, data: { ...appState.data, ...(savedState.data || savedState.presetsData) }, chat: { ...appState.chat, ...savedState.chat } }; if (!appState.music.lyricsPosition) appState.music.lyricsPosition = { top: 'calc(env(safe-area-inset-top, 10px) + 60px)', left: '50%' }; if (!appState.music.comments) appState.music.comments = {}; if (!Array.isArray(appState.settings.presets)) appState.settings.presets = []; if (!Array.isArray(appState.music.playlist)) appState.music.playlist = []; if (!Array.isArray(appState.music.queue)) appState.music.queue = []; if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = []; if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = []; if (typeof appState.beautify.icons !== 'object' || appState.beautify.icons === null) appState.beautify.icons = {}; if (typeof appState.beautify.bubbles !== 'object' || appState.beautify.bubbles === null) appState.beautify.bubbles = {}; if (!appState.data) appState.data = { worldBooks: [], archives: [], infos: [] }; if (!appState.data.worldBooks) appState.data.worldBooks = []; if (!appState.data.archives) appState.data.archives = []; if (!appState.data.infos) appState.data.infos = []; if (!appState.chat) appState.chat = { contacts: [], emojis: [], userProfile: { name: 'User', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...' } }; if (!appState.chat.contacts) appState.chat.contacts = []; if (!appState.chat.emojis) appState.chat.emojis = []; if (!appState.chat.userProfile) appState.chat.userProfile = { name: 'User', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...' }; if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = '...'; if (!appState.chat.userProfile.avatarLibrary) appState.chat.userProfile.avatarLibrary = []; if (!appState.chat.userProfile.avatarFrameLibrary) appState.chat.userProfile.avatarFrameLibrary = []; appState.chat.contacts.forEach(initializeContactSettings); } updateUIFromState(); }
+    function loadState() { const savedStateJSON = localStorage.getItem(DB_KEY); if (savedStateJSON) { const defaultState = JSON.parse(JSON.stringify(appState)); const savedState = JSON.parse(savedStateJSON); appState = { ...defaultState, ...savedState, settings: { ...defaultState.settings, ...savedState.settings }, music: { ...defaultState.music, ...savedState.music }, beautify: { ...defaultState.beautify, ...savedState.beautify }, data: { ...defaultState.data, ...(savedState.data || savedState.presetsData) }, chat: { ...defaultState.chat, ...savedState.chat, userProfile: { ...defaultState.chat.userProfile, ...(savedState.chat?.userProfile || {}) } } }; if (!appState.music.lyricsPosition) appState.music.lyricsPosition = { top: 'calc(env(safe-area-inset-top, 10px) + 60px)', left: '50%' }; if (!appState.music.comments) appState.music.comments = {}; if (!Array.isArray(appState.settings.presets)) appState.settings.presets = []; if (!Array.isArray(appState.music.playlist)) appState.music.playlist = []; if (!Array.isArray(appState.music.queue)) appState.music.queue = []; if (!Array.isArray(appState.beautify.wallpapers)) appState.beautify.wallpapers = []; if (!Array.isArray(appState.beautify.fonts)) appState.beautify.fonts = []; if (typeof appState.beautify.icons !== 'object' || appState.beautify.icons === null) appState.beautify.icons = {}; if (typeof appState.beautify.bubbles !== 'object' || appState.beautify.bubbles === null) appState.beautify.bubbles = {}; if (!appState.data) appState.data = { worldBooks: [], archives: [], infos: [] }; if (!appState.data.worldBooks) appState.data.worldBooks = []; if (!appState.data.archives) appState.data.archives = []; if (!appState.data.infos) appState.data.infos = []; if (!appState.chat) appState.chat = { contacts: [], emojis: [], userProfile: { name: '土皇帝', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...', persona: '全网唯一土皇帝' } }; if (!appState.chat.contacts) appState.chat.contacts = []; if (!appState.chat.emojis) appState.chat.emojis = []; if (!appState.chat.userProfile) appState.chat.userProfile = { name: '土皇帝', avatar: 'https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg', avatarFrame: '', avatarLibrary: [], avatarFrameLibrary: [], signature: '...', persona: '全网唯一土皇帝' }; if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = '...'; appState.chat.contacts.forEach(initializeContactSettings); } updateUIFromState(); }
     function initializeContactSettings(contact) {
         const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
         const userProfileDefaults = appState.chat.userProfile;
 
         if (!contact.userSettings) contact.userSettings = {};
         contact.userSettings = { ...deepCopy(userProfileDefaults), ...contact.userSettings };
-        // OPTIMIZATION: Libraries are now global, so remove them from per-contact settings
-        delete contact.userSettings.avatarLibrary;
-        delete contact.userSettings.avatarFrameLibrary;
+        contact.userSettings.avatarLibrary = contact.userSettings.avatarLibrary || [];
+        contact.userSettings.avatarFrameLibrary = contact.userSettings.avatarFrameLibrary || [];
 
         if (contact.isGroup) {
             if (!contact.groupSettings) {
-                contact.groupSettings = { name: contact.name, avatar: '', avatarLibrary: [], chatBackground: '', linkedWorldBooks: [], contextMemory: 20, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} };
+                contact.groupSettings = { name: contact.name, avatar: '', avatarLibrary: [], chatBackgroundId: 'default', linkedWorldBooks: [], contextMemory: 20, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} };
             }
+            if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default';
             const allMemberIds = ['user', ...contact.members];
             allMemberIds.forEach(memberId => {
                 if (!contact.groupSettings.members[memberId]) {
@@ -1236,8 +1400,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         } else {
             if (!contact.charSettings) {
-                contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatar: contact.avatar, avatarLibrary: [contact.avatar], avatarFrame: '', avatarFrameLibrary: [], chatBackground: '', contextMemory: 20, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 } };
+                contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatar: contact.avatar, avatarLibrary: [contact.avatar], avatarFrame: '', avatarFrameLibrary: [], chatBackgroundId: 'default', contextMemory: 20, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 } };
             }
+            if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default';
             if (!contact.charSettings.realtimeActivity) {
                 contact.charSettings.realtimeActivity = { enabled: false, interval: 30 };
             }
@@ -1246,7 +1411,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); lyricsContainer.style.top = appState.music.lyricsPosition.top; lyricsContainer.style.left = appState.music.lyricsPosition.left; lyricsContainer.style.transform = `translateX(-50%)`; applyAllCustomizations(); }
-    function applyAllCustomizations() { phoneScreen.style.backgroundImage = `url(${appState.beautify.currentWallpaper})`; document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(appState.beautify.bubbles).forEach(bubbleId => { applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId], true); }); }
+    async function applyAllCustomizations() { 
+        await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen);
+        document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); 
+        applyFont(appState.beautify.currentFont, true); 
+        Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); 
+        Object.keys(appState.beautify.bubbles).forEach(bubbleId => { applyBubbleChange(bubbleId, appState.beautify.bubbles[bubbleId], true); }); 
+    }
 
     // ===================================================================
     // --- 基础 UI & 系统功能 ---
@@ -1255,47 +1426,58 @@ document.addEventListener('DOMContentLoaded', () => {
     async function updateBattery() { try { if ('getBattery' in navigator) { const battery = await navigator.getBattery(); const update = () => { const level = Math.floor(battery.level * 100); batteryLevelEl.textContent = `${level}%`; const isCharging = battery.charging; batteryIconEl.dataset.iconId = isCharging ? 'status-battery-charging' : 'status-battery'; const customIcon = appState.beautify.icons[batteryIconEl.dataset.iconId]; if (customIcon) { batteryIconEl.innerHTML = `<img src="${customIcon}" style="height: 1em;">`; } else { batteryIconEl.textContent = isCharging ? '⚡️' : (level > 20 ? '🔋' : '🪫'); } }; update(); battery.addEventListener('levelchange', update); battery.addEventListener('chargingchange', update); } else { throw new Error("getBattery not supported"); } } catch (error) { batteryLevelEl.textContent = '100%'; batteryIconEl.dataset.iconId = 'status-battery'; const customIcon = appState.beautify.icons['status-battery']; if (customIcon) { batteryIconEl.innerHTML = `<img src="${customIcon}" style="height: 1em;">`; } else { batteryIconEl.textContent = '🔋'; } } }
     let toastTimer;
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
-    function queueNotification(messageData) { notificationQueue.push(messageData); processNotificationQueue(); }
-    function processNotificationQueue() {
-        if (isNotificationVisible || notificationQueue.length === 0) return;
-        const messageData = notificationQueue[0];
-        if (singleChatScreen.classList.contains('active') && currentChatId === messageData.contactId) {
-            notificationQueue = [];
-            return;
+    function queueNotification(message) {
+        if (singleChatScreen.classList.contains('active')) {
+            const contact = appState.chat.contacts.find(c => c.id === currentChatId);
+            if (contact && message.startsWith(contact.name)) {
+                return; // Don't show notification if user is in the chat
+            }
         }
-        isNotificationVisible = true;
-        notificationQueue.shift();
-        let text = messageData.content;
-        const punctuation = /[.,!?。，！？]$/;
-        if (text.length > 15) {
-            text = text.substring(0, 15) + (punctuation.test(text) ? '' : '...');
+        
+        let displayMsg = message;
+        const punctuation = /[.,?!;。，？！；]/;
+        if (message.length > 15) {
+            if (punctuation.test(message.slice(-1))) {
+                displayMsg = message.slice(0, 14) + '...';
+            } else {
+                displayMsg = message.slice(0, 15) + '...';
+            }
         }
-        const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = `${messageData.senderName}: ${text}`; notificationContainer.appendChild(banner);
-        setTimeout(() => banner.classList.add('show'), 50);
-        let startY, currentY, isDragging = false;
-        const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => { banner.remove(); isNotificationVisible = false; processNotificationQueue(); }, { once: true }); };
-        const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; };
-        const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } };
-        const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } };
-        banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd);
-        banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd);
-        setTimeout(dismiss, 5000);
+        notificationQueue.push(displayMsg);
+        processNotificationQueue();
     }
+    function processNotificationQueue() { if (isNotificationVisible || notificationQueue.length === 0) return; isNotificationVisible = true; const message = notificationQueue.shift(); const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = message; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); let startY, currentY, isDragging = false; const dismiss = () => { banner.style.transition = 'transform 0.3s ease-out'; banner.style.transform = 'translateY(-150%)'; banner.addEventListener('transitionend', () => { banner.remove(); isNotificationVisible = false; processNotificationQueue(); }, { once: true }); }; const handleDragStart = (e) => { isDragging = true; startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; banner.style.transition = 'none'; banner.style.cursor = 'grabbing'; }; const handleDragMove = (e) => { if (!isDragging) return; currentY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY; let diff = currentY - startY; if (diff < 0) { banner.style.transform = `translateY(${diff}px)`; } }; const handleDragEnd = (e) => { if (!isDragging) return; isDragging = false; banner.style.cursor = 'grab'; const diff = currentY - startY; if (diff < -50) { dismiss(); } else { banner.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'; banner.style.transform = 'translateY(0)'; } }; banner.addEventListener('mousedown', handleDragStart); document.addEventListener('mousemove', handleDragMove); document.addEventListener('mouseup', handleDragEnd); banner.addEventListener('touchstart', handleDragStart, { passive: true }); document.addEventListener('touchmove', handleDragMove, { passive: true }); document.addEventListener('touchend', handleDragEnd); setTimeout(dismiss, 5000); }
 
     // ===================================================================
-    // --- APP导航与路由 ---
+    // --- APP导航与路由 (BUG修复) ---
     // ===================================================================
     function openApp(appScreen) { phoneScreen.classList.add('app-open'); appScreen.classList.add('active'); }
-    function closeCurrentApp() { const activeApp = document.querySelector('.app-screen.active:not(.sub-screen)'); if (activeApp) { if (activeApp.id === 'beautify-app-screen' && activeApp.classList.contains('selection-mode')) exitWallpaperSelectionMode(); if (activeApp.id === 'chat-app-screen' && activeApp.classList.contains('selection-mode')) exitContactSelectionMode(); activeApp.classList.remove('active'); phoneScreen.classList.remove('app-open'); } }
+    function closeCurrentApp() { const activeApp = document.querySelector('.app-screen.active:not(.sub-screen)'); if (activeApp) { if (activeApp.id === 'chat-app-screen' && activeApp.classList.contains('selection-mode')) exitContactSelectionMode(); activeApp.classList.remove('active'); phoneScreen.classList.remove('app-open'); } }
     window.closeCurrentApp = closeCurrentApp;
     function openSubScreen(subScreen, parentScreen) { parentScreen.classList.add('parent-hidden'); subScreen.classList.add('active'); }
     function closeSubScreen(subScreen, parentScreen) { subScreen.classList.remove('active'); parentScreen.classList.remove('parent-hidden'); }
     function setupAppNavigation() {
         getEl('settings-app-btn').addEventListener('click', () => openApp(settingsAppScreen));
         getEl('music-app-btn').addEventListener('click', () => openApp(musicAppScreen));
-        getEl('beautify-app-btn').addEventListener('click', () => { openApp(beautifyAppScreen); beautifyTabs.dispatchEvent(new Event('click', { bubbles: true })); });
-        getEl('data-app-btn').addEventListener('click', () => { openApp(dataAppScreen); dataAppTabs.dispatchEvent(new Event('click', { bubbles: true })); });
-        getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); });
+        getEl('beautify-app-btn').addEventListener('click', () => {
+            openApp(beautifyAppScreen);
+            // BUG FIX: Programmatically click the first tab to ensure it renders correctly.
+            const firstTab = query('#beautify-app-screen .tab-link');
+            if (firstTab) {
+                firstTab.click();
+            }
+        });
+        getEl('data-app-btn').addEventListener('click', () => {
+            openApp(dataAppScreen);
+            const firstTab = query('#data-app-screen .tab-link');
+            if (firstTab) {
+                firstTab.click();
+            }
+        });
+        getEl('chat-app-btn').addEventListener('click', () => {
+            openApp(chatAppScreen);
+            renderMessageList();
+        });
     }
 
     // ===================================================================
@@ -1314,7 +1496,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderPresetList() { presetListEl.innerHTML = ''; if (appState.settings.presets.length === 0) { presetListEl.innerHTML = '<li><div class="preset-item-content">暂无预设</div></li>'; return; } appState.settings.presets.forEach((preset, index) => { const li = document.createElement('li'); li.className = 'preset-list-item'; li.dataset.index = index; li.innerHTML = `<div class="preset-item-content">${preset.name}</div><div class="preset-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; presetListEl.appendChild(li); }); }
     cancelEditBtn.addEventListener('click', () => editPresetModal.classList.remove('visible'));
     saveEditBtn.addEventListener('click', () => { const index = parseInt(editPresetIndexInput.value); const newName = editPresetNameInput.value.trim(); if (!newName) return showToast("预设名称不能为空", "error"); const existingIndex = appState.settings.presets.findIndex(p => p.name === newName); if (existingIndex !== -1 && existingIndex !== index) { if (!confirm(`已存在名为 "${newName}" 的预设，要覆盖它吗？`)) return; appState.settings.presets.splice(existingIndex, 1); const newCurrentIndex = appState.settings.presets.findIndex(p => p.name === appState.settings.presets[index].name); appState.settings.presets[newCurrentIndex] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[newCurrentIndex].model }; } else { appState.settings.presets[index] = { name: newName, url: editPresetUrlInput.value.trim(), key: editPresetKeyInput.value.trim(), model: appState.settings.presets[index].model }; } saveState(); updatePresetSelect(); renderPresetList(); editPresetModal.classList.remove('visible'); showToast("预设已更新"); });
-    exportDataBtn.addEventListener('click', () => { try { const dataStr = JSON.stringify(appState, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
+    exportDataBtn.addEventListener('click', () => { try { const stateToExport = JSON.parse(JSON.stringify(appState)); const dataStr = JSON.stringify(stateToExport, null, 2); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-backup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("数据已导出"); } catch (error) { showToast("导出失败", 'error'); } });
     importDataBtn.addEventListener('click', () => importFileInput.click());
     importFileInput.addEventListener('change', (event) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedState = JSON.parse(e.target.result); if (importedState && typeof importedState === 'object' && 'settings' in importedState && 'music' in importedState) { if (confirm("这将覆盖所有当前数据，确定要导入吗？")) { localStorage.setItem(DB_KEY, JSON.stringify(importedState)); showToast("导入成功，正在刷新..."); setTimeout(() => window.location.reload(), 1500); } } else { throw new Error("文件格式无效"); } } catch (error) { showToast("导入失败，文件内容不正确", 'error'); console.error("导入错误:", error); } finally { importFileInput.value = ''; } }; reader.readAsText(file); });
 
@@ -1337,7 +1519,7 @@ document.addEventListener('DOMContentLoaded', () => {
     progressBar.addEventListener('input', () => { audioPlayer.currentTime = progressBar.value; });
 
     // ===================================================================
-    // --- 音乐 APP UI & 歌词匹配 ---
+    // --- 音乐 APP UI & 歌词匹配 (CORS修复) ---
     // ===================================================================
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
     function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
@@ -1345,9 +1527,9 @@ document.addEventListener('DOMContentLoaded', () => {
     addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
-    musicFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { await processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); if (separatorIndex === -1) return; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); saveState(); } for (const { meta, url } of lrcUrls) { try { const response = await fetch(url); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
-    async function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; for (const file of audioFiles) { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const url = await readFileAsBase64(file); const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url, duration: NaN }; appState.music.playlist.push(newSong); addedCount++; } if (addedCount > 0) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); } for (const file of lrcFiles) { const lrcContent = await readFileAsText(file); const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(lrcContent, baseName); } saveState(); }
+    musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
+    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); if (separatorIndex === -1) return; const meta = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: 'url_' + Date.now() + Math.random(), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); saveState(); } for (const { meta, url } of lrcUrls) { try { const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
+    function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const reader = new FileReader(); reader.onload = (event) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: 'local_' + Date.now() + Math.random(), title, artist, url: event.target.result, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; if (addedCount === audioFiles.length) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); saveState(); } }; reader.readAsDataURL(file); }); lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); }
     function normalizeString(str) { return str.trim().toLowerCase().replace(/\s+/g, ' '); }
     function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeString(baseName); const matchingSong = appState.music.playlist.find(s => normalizeString(s.title) === normalizedBaseName || normalizeString(`${s.artist} - ${s.title}`) === normalizedBaseName); if (matchingSong) { appState.music.lyrics[matchingSong.id] = lrcData; showToast(`歌词已匹配到: ${matchingSong.title}`); saveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); } }
     cancelEditSongBtn.addEventListener('click', () => editSongModal.classList.remove('visible'));
@@ -1393,40 +1575,245 @@ document.addEventListener('DOMContentLoaded', () => {
     songDetailsBackBtn.addEventListener('click', () => closeSubScreen(songDetailsScreen, musicAppScreen));
 
     // ===================================================================
-    // --- 美化 APP ---
+    // --- 美化 APP (壁纸功能重写与修复) ---
     // ===================================================================
-    beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const showActionBtn = ['wallpaper', 'font'].includes(tabId); beautifyActionBtn.style.display = showActionBtn ? 'block' : 'none'; const titleEl = beautifyAppScreen.querySelector('.title'); if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } } });
-    beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (beautifyAppScreen.classList.contains('selection-mode')) { if (wallpaperSelection.length > 0 && confirm(`确定要删除选中的 ${wallpaperSelection.length} 张壁纸吗？`)) { appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => !wallpaperSelection.includes(wp.id)); saveState(); renderWallpapers(); } exitWallpaperSelectionMode(); } else if (activeTab === 'wallpaper') { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.multiple = true; input.onchange = async (e) => { const files = e.target.files; if (files.length > 0) { let lastUrl = ''; for (const file of files) { const url = await readFileAsBase64(file); appState.beautify.wallpapers.push({ id: 'local_' + Date.now() + Math.random(), url: url }); lastUrl = url; } if (lastUrl) { appState.beautify.currentWallpaper = lastUrl; phoneScreen.style.backgroundImage = `url(${lastUrl})`; } saveState(); renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } }; input.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
-    function renderWallpapers() { wallpaperGrid.innerHTML = ''; appState.beautify.wallpapers.forEach(wp => { const item = document.createElement('div'); item.className = 'wallpaper-item'; item.style.backgroundImage = `url(${wp.url})`; item.dataset.id = wp.id; wallpaperGrid.appendChild(item); }); }
-    let beautifyLongPressTimer;
-    wallpaperGrid.addEventListener('mousedown', (e) => { if (e.target.classList.contains('wallpaper-item')) { beautifyLongPressTimer = setTimeout(() => enterWallpaperSelectionMode(e.target), 500); } });
-    wallpaperGrid.addEventListener('mouseup', () => clearTimeout(beautifyLongPressTimer));
-    wallpaperGrid.addEventListener('mouseleave', () => clearTimeout(beautifyLongPressTimer));
-    wallpaperGrid.addEventListener('touchstart', (e) => { if (e.target.classList.contains('wallpaper-item')) { beautifyLongPressTimer = setTimeout(() => enterWallpaperSelectionMode(e.target), 500); } });
-    wallpaperGrid.addEventListener('touchend', () => clearTimeout(beautifyLongPressTimer));
-    wallpaperGrid.addEventListener('click', (e) => { const item = e.target.closest('.wallpaper-item'); if (!item) return; if (beautifyAppScreen.classList.contains('selection-mode')) { item.classList.toggle('selected'); const id = item.dataset.id; if (item.classList.contains('selected')) { if (!wallpaperSelection.includes(id)) wallpaperSelection.push(id); } else { wallpaperSelection = wallpaperSelection.filter(selId => selId !== id); } } else { currentWallpaperActionId = item.dataset.id; wallpaperActionModal.classList.add('visible'); } });
-    function enterWallpaperSelectionMode(item) { beautifyAppScreen.classList.add('selection-mode'); beautifyActionBtn.textContent = '删除'; item.classList.add('selected'); wallpaperSelection.push(item.dataset.id); }
-    function exitWallpaperSelectionMode() { beautifyAppScreen.classList.remove('selection-mode'); beautifyActionBtn.textContent = '+'; queryAll('.wallpaper-item.selected').forEach(i => i.classList.remove('selected')); wallpaperSelection = []; }
-    cancelWallpaperActionBtn.addEventListener('click', () => wallpaperActionModal.classList.remove('visible'));
-    setAsWallpaperBtn.addEventListener('click', () => { const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === currentWallpaperActionId); if (wallpaper) { appState.beautify.currentWallpaper = wallpaper.url; phoneScreen.style.backgroundImage = `url(${wallpaper.url})`; saveState(); showToast('壁纸已更换'); } wallpaperActionModal.classList.remove('visible'); });
-    setAsChatBgBtn.addEventListener('click', () => { const wallpaper = appState.beautify.wallpapers.find(wp => wp.id === currentWallpaperActionId); if (wallpaper) { appState.beautify.currentChatBg = wallpaper.url; saveState(); showToast('已设为全局聊天背景'); } wallpaperActionModal.classList.remove('visible'); });
+    beautifyTabs.addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active'));
+            queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            
+            const showActionBtn = ['wallpaper', 'font'].includes(tabId);
+            beautifyActionBtn.style.display = showActionBtn ? 'block' : 'none';
+            
+            const titleEl = beautifyAppScreen.querySelector('.title');
+            if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } 
+            else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } 
+            else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } 
+            else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); }
+        }
+    });
+
+    beautifyActionBtn.addEventListener('click', () => {
+        const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab;
+        if (activeTab === 'wallpaper') {
+            wallpaperFileInput.click();
+        } else if (activeTab === 'font') {
+            addFontModal.classList.add('visible');
+        }
+    });
+
+    wallpaperFileInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            showToast(`正在添加 ${files.length} 张壁纸...`);
+            for (const file of files) {
+                const newId = 'wp_' + Date.now() + Math.random();
+                const blob = new Blob([file], { type: file.type });
+                await addImageToDB(newId, blob);
+                appState.beautify.wallpapers.push({ id: newId });
+            }
+            saveState();
+            await renderWallpapers();
+            showToast(`成功添加 ${files.length} 张壁纸`);
+        }
+        wallpaperFileInput.value = ''; // Reset input
+    });
+
+    async function renderWallpapers() {
+        wallpaperGrid.innerHTML = '';
+        for (const wp of appState.beautify.wallpapers) {
+            const item = document.createElement('div');
+            item.className = 'wallpaper-item';
+            item.dataset.id = wp.id;
+            item.textContent = '加载中...';
+
+            if (wp.id === appState.beautify.currentWallpaperId) item.classList.add('is-wallpaper');
+            if (wp.id === appState.beautify.currentChatBgId) item.classList.add('is-chat-bg');
+
+            wallpaperGrid.appendChild(item);
+
+            try {
+                const blob = await getImageFromDB(wp.id);
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.onload = () => {
+                        item.textContent = '';
+                        item.appendChild(img);
+                        URL.revokeObjectURL(url);
+                    };
+                    img.onerror = () => {
+                        item.textContent = '加载失败';
+                        URL.revokeObjectURL(url);
+                    };
+                } else {
+                    item.textContent = '图片丢失';
+                }
+            } catch (error) {
+                console.error(`Failed to load wallpaper ${wp.id}:`, error);
+                item.textContent = '加载错误';
+            }
+        }
+    }
+
+    function showWallpaperContextMenu(targetElement, event) {
+        event.preventDefault();
+        wallpaperContextMenuTarget = targetElement;
+        const screenRect = phoneScreen.getBoundingClientRect();
+        
+        let x = event.clientX;
+        let y = event.clientY;
+
+        if (event.touches) {
+            x = event.touches[0].clientX;
+            y = event.touches[0].clientY;
+        }
+
+        wallpaperContextMenu.style.display = 'flex';
+        const menuRect = wallpaperContextMenu.getBoundingClientRect();
+
+        let top = y - screenRect.top;
+        let left = x - screenRect.left;
+
+        if (left + menuRect.width > screenRect.width - 10) {
+            left = screenRect.width - menuRect.width - 10;
+        }
+        if (top + menuRect.height > screenRect.height - 10) {
+            top = screenRect.height - menuRect.height - 10;
+        }
+
+        wallpaperContextMenu.style.top = `${top}px`;
+        wallpaperContextMenu.style.left = `${left}px`;
+    }
+
+    function hideWallpaperContextMenu() {
+        if (wallpaperContextMenu) wallpaperContextMenu.style.display = 'none';
+        wallpaperContextMenuTarget = null;
+    }
+
+    let wallpaperLongPressTimer;
+    wallpaperGrid.addEventListener('pointerdown', (e) => {
+        const item = e.target.closest('.wallpaper-item');
+        if (item) {
+            if (e.pointerType === 'touch') {
+                wallpaperLongPressTimer = setTimeout(() => {
+                    showWallpaperContextMenu(item, e);
+                }, 500);
+            }
+        }
+    });
+    wallpaperGrid.addEventListener('pointerup', () => clearTimeout(wallpaperLongPressTimer));
+    wallpaperGrid.addEventListener('pointerleave', () => clearTimeout(wallpaperLongPressTimer));
+    wallpaperGrid.addEventListener('contextmenu', (e) => {
+        const item = e.target.closest('.wallpaper-item');
+        if (item) {
+            showWallpaperContextMenu(item, e);
+        }
+    });
+
+    document.addEventListener('pointerdown', (e) => {
+        if (wallpaperContextMenu.style.display === 'flex' && !wallpaperContextMenu.contains(e.target)) {
+            hideWallpaperContextMenu();
+        }
+    }, true);
+
+    getEl('wp-set-wallpaper').addEventListener('click', async () => {
+        if (!wallpaperContextMenuTarget) return;
+        const id = wallpaperContextMenuTarget.dataset.id;
+        appState.beautify.currentWallpaperId = id;
+        await applyWallpaperById(id, phoneScreen);
+        saveState();
+        renderWallpapers();
+        hideWallpaperContextMenu();
+        showToast('壁纸已设置');
+    });
+
+    getEl('wp-set-chat-bg').addEventListener('click', () => {
+        if (!wallpaperContextMenuTarget) return;
+        const id = wallpaperContextMenuTarget.dataset.id;
+        appState.beautify.currentChatBgId = id;
+        saveState();
+        renderWallpapers();
+        hideWallpaperContextMenu();
+        showToast('全局聊天背景已设置');
+    });
+
+    getEl('wp-delete').addEventListener('click', async () => {
+        if (!wallpaperContextMenuTarget) return;
+        if (confirm('确定要删除这张壁纸吗？')) {
+            const id = wallpaperContextMenuTarget.dataset.id;
+            
+            await deleteImageFromDB(id);
+            appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => wp.id !== id);
+
+            if (appState.beautify.currentWallpaperId === id) {
+                appState.beautify.currentWallpaperId = 'default';
+                await applyWallpaperById('default', phoneScreen);
+            }
+            if (appState.beautify.currentChatBgId === id) {
+                appState.beautify.currentChatBgId = 'default';
+            }
+            
+            appState.chat.contacts.forEach(contact => {
+                if (contact.isGroup && contact.groupSettings.chatBackgroundId === id) {
+                    contact.groupSettings.chatBackgroundId = 'default';
+                } else if (!contact.isGroup && contact.charSettings.chatBackgroundId === id) {
+                    contact.charSettings.chatBackgroundId = 'default';
+                }
+            });
+
+            saveState();
+            renderWallpapers();
+            hideWallpaperContextMenu();
+            showToast('壁纸已删除');
+        }
+    });
+
+    async function applyWallpaperById(id, element) {
+        if (id === 'default') {
+            element.style.backgroundImage = `url(${DEFAULT_WALLPAPER})`;
+            element.style.backgroundColor = 'var(--bg-color)';
+            return;
+        }
+        try {
+            const blob = await getImageFromDB(id);
+            if (blob) {
+                const url = URL.createObjectURL(blob);
+                element.style.backgroundImage = `url(${url})`;
+                element.style.backgroundColor = 'transparent';
+            } else {
+                element.style.backgroundImage = `url(${DEFAULT_WALLPAPER})`;
+                element.style.backgroundColor = 'var(--bg-color)';
+            }
+        } catch (error) {
+            console.error(`Error applying wallpaper ${id}:`, error);
+            element.style.backgroundImage = `url(${DEFAULT_WALLPAPER})`;
+            element.style.backgroundColor = 'var(--bg-color)';
+        }
+    }
+
+    // --- Other Beautify Functions (Font, Icon, Bubble) ---
     function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name)); }
     function isValidColor(str) { return /^#([0-9A-F]{3}){1,2}$/i.test(str) || /^(rgb|rgba)\(/i.test(str); }
     function applyFont(fontName, isInitialLoad = false) { const oldStyle = document.getElementById('custom-font-style'); if (oldStyle) oldStyle.remove(); if (fontName === 'default') { document.documentElement.style.setProperty('--system-font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'); } else { const font = appState.beautify.fonts.find(f => f.name === fontName); if (font) { const style = document.createElement('style'); style.id = 'custom-font-style'; style.textContent = `@font-face { font-family: "${font.name}"; src: url("${font.url}"); }`; document.head.appendChild(style); document.documentElement.style.setProperty('--system-font-family', `"${font.name}"`); } } appState.beautify.currentFont = fontName; if (!isInitialLoad) { saveState(); showToast(`字体已应用: ${fontName}`); } renderFonts(); }
     cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
     uploadFontBtn.addEventListener('click', () => fontFileInput.click());
-    fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { for (const file of files) { const fontName = file.name.replace(/\.[^/.]+$/, ""); const url = await readFileAsBase64(file); appState.beautify.fonts.push({ name: fontName, url }); } saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
-    confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
+    fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { const promises = Array.from(files).map(file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve({ name: file.name.replace(/\.[^/.]+$/, ""), url: reader.result }); reader.onerror = reject; reader.readAsDataURL(file); })); const fonts = await Promise.all(promises); fonts.forEach(font => { appState.beautify.fonts.push({ name: font.name, url: font.url, isLocal: true }); }); saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
+    confirmAddFontUrlBtn.addEventListener('click', () => { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { if (!line.trim()) return; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const name = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (name && url.startsWith('http')) { appState.beautify.fonts.push({ name, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; });
     const iconNameMap = { 'status-battery': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'data-add': '资料 添加', 'chat-add': '聊天 添加', 'chat-add-friend': '聊天 添加好友', 'header-settings': '通用 设置', 'chat-quote-close': '聊天 引用关闭', 'chat-send-real': '聊天 真发送', 'chat-emoji': '聊天 表情', 'chat-refresh': '工具栏 刷新', 'chat-voice': '工具栏 语音', 'chat-image': '工具栏 图片', 'chat-camera': '工具栏 拍照', 'chat-video': '工具栏 视频', 'chat-music': '工具栏 音乐', 'chat-link': '工具栏 链接', 'chat-redpacket': '工具栏 红包', 'chat-shop': '工具栏 购物', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '模式 循环', 'player-mode-repeat-one': '模式 单曲', 'player-mode-shuffle': '模式 随机', 'comment-like': '评论 点赞', 'comment-reply': '评论 回复', 'comment-reply-delete': '评论 删除回复' };
     function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); iconElements.forEach(el => { const id = el.dataset.iconId; if (renderedIds.has(id)) return; const customSrc = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; let previewHTML = customSrc ? `<img src="${customSrc}">` : (originalIconContent[id] || '❓'); item.innerHTML = `<div class="icon-preview">${previewHTML}</div><span class="icon-name">${iconNameMap[id] || id}</span>`; iconGrid.appendChild(item); renderedIds.add(id); }); }
     iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
     cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
     uploadIconBtn.addEventListener('click', () => iconFileInput.click());
-    iconFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); applyIconChange(replaceIconIdInput.value, url); iconFileInput.value = ''; } });
+    iconFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { applyIconChange(replaceIconIdInput.value, event.target.result); }; reader.readAsDataURL(file); iconFileInput.value = ''; } });
     confirmReplaceIconUrlBtn.addEventListener('click', () => { const url = iconUrlInput.value.trim(); if (url) { applyIconChange(replaceIconIdInput.value, url); iconUrlInput.value = ''; } });
     restoreIconBtn.addEventListener('click', () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { delete appState.beautify.icons[iconId]; applyIconChange(iconId, originalIconContent[iconId], false, true); saveState(); renderIcons(); showToast('图标已还原'); replaceIconModal.classList.remove('visible'); } });
     function applyIconChange(iconId, content, isInitialLoad = false, isRestoring = false) { if (!isRestoring) { appState.beautify.icons[iconId] = content; } queryAll(`[data-icon-id="${iconId}"]`).forEach(targetEl => { if (targetEl) { if (isRestoring) { targetEl.innerHTML = content; } else { const imgChild = targetEl.querySelector('img'); if (imgChild) { imgChild.src = content; } else { targetEl.innerHTML = `<img src="${content}" style="max-width:100%; max-height:100%; object-fit: contain;">`; } } } }); if (!isInitialLoad) { if (!isRestoring) { saveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } } }
-    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chat-bg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'modal-restore-icon': '弹窗 还原图标', 'modal-cancel-icon': '弹窗 取消图标', 'font-color-btn': '字体 颜色按钮', 'comment-send-btn': '评论 发送', 'comment-reply-send': '评论 回复发送', 'chat-send-fake-btn': '聊天 假发送', 'emoji-close': '表情 关闭', 'emoji-add': '表情 添加', 'cs-avatar-lib': '设置 Char头像库', 'cs-frame-lib': '设置 Char头像框库', 'cs-chat-bg': '设置 Char聊天背景', 'cs-save-persona': '设置 Char保存人设', 'cs-load-persona': '设置 Char读取人设', 'cs-clear-history': '设置 Char清空记录', 'cs-delete-friend': '设置 Char删除好友', 'cs-restore': '设置 Char还原更改', 'us-avatar-lib': '设置 User头像库', 'us-frame-lib': '设置 User头像框库', 'us-save-persona': '设置 User保存人设', 'us-load-persona': '设置 User读取人设', 'bubble-upload-img': '气泡 上传图片', 'bubble-save': '气泡 保存', 'bubble-restore': '气泡 还原', 'bubble-cancel': '气泡 取消', 'data-upload-avatar': '资料 上传头像', 'data-add-avatar-url': '资料 添加头像URL', 'data-cancel': '资料 取消', 'data-save': '资料 保存', 'contact-add-cancel': '联系人 添加取消', 'contact-add-confirm': '联系人 添加确认', 'emoji-upload-file': '表情 上传文件', 'emoji-add-url': '表情 添加URL', 'emoji-add-cancel': '表情 添加取消', 'pat-cancel': '拍一拍 取消', 'pat-confirm': '拍一拍 确认', 'status-edit-cancel': '状态编辑 取消', 'status-edit-confirm': '状态编辑 确认', 'voice-cancel': '语音 取消', 'voice-confirm': '语音 确认', 'camera-cancel': '拍照 取消', 'camera-confirm': '拍照 确认', 'link-cancel': '链接 取消', 'link-confirm': '链接 确认', 'rp-cancel': '红包 取消', 'rp-confirm': '红包 确认', 'grp-cancel': '群红包 取消', 'grp-confirm': '群红包 确认', 'comment-edit-cancel': '评论编辑 取消', 'comment-edit-save': '评论编辑 保存', 'view-content-close': '查看内容 关闭', 'msg-edit-cancel': '消息编辑 取消', 'msg-edit-save': '消息编辑 保存', 'lib-upload': '库 上传', 'lib-add-url': '库 添加URL', 'lib-delete': '库 删除', 'lib-close': '库 关闭', 'persona-load-cancel': '人设读取 取消', 'gcs-avatar-lib': '群设置 头像库', 'gcs-chat-bg': '群设置 背景', 'gcs-clear-history': '群设置 清空记录', 'gcs-mute-all': '群设置 全体禁言', 'gcs-disband': '群设置 解散群聊', 'gcs-us-avatar-lib': '群我的设置 头像库', 'gcs-us-frame-lib': '群我的设置 头像框', 'gcs-us-save-persona': '群我的设置 保存人设', 'gcs-us-load-persona': '群我的设置 读取人设', 'gcs-member-avatar-lib': '群成员设置 头像库', 'gcs-member-frame-lib': '群成员设置 头像框', 'gcs-member-save-persona': '群成员设置 保存人设', 'gcs-member-load-persona': '群成员设置 读取人设', 'gcs-member-cancel': '群成员设置 取消', 'gcs-member-save': '群成员设置 保存', 'gcs-manage-cancel': '群管理 取消', 'gcs-manage-confirm': '群管理 确认', 'gcs-member-action-cancel': '群成员操作 取消' };
+    const bubbleNameMap = { 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-set-wallpaper': '弹窗 设为壁纸', 'modal-set-chat-bg': '弹窗 设为背景', 'modal-cancel-wallpaper': '弹窗 取消壁纸', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'modal-restore-icon': '弹窗 还原图标', 'modal-cancel-icon': '弹窗 取消图标', 'font-color-btn': '字体 颜色按钮', 'comment-send-btn': '评论 发送', 'comment-reply-send': '评论 回复发送', 'chat-send-fake-btn': '聊天 假发送', 'emoji-close': '表情 关闭', 'emoji-add': '表情 添加', 'cs-avatar-lib': '设置 Char头像库', 'cs-frame-lib': '设置 Char头像框库', 'cs-chat-bg': '设置 Char聊天背景', 'cs-save-persona': '设置 Char保存人设', 'cs-load-persona': '设置 Char读取人设', 'cs-clear-history': '设置 Char清空记录', 'cs-delete-friend': '设置 Char删除好友', 'cs-restore': '设置 Char还原更改', 'us-avatar-lib': '设置 User头像库', 'us-frame-lib': '设置 User头像框库', 'us-save-persona': '设置 User保存人设', 'us-load-persona': '设置 User读取人设', 'bubble-upload-img': '气泡 上传图片', 'bubble-save': '气泡 保存', 'bubble-restore': '气泡 还原', 'bubble-cancel': '气泡 取消', 'data-upload-avatar': '资料 上传头像', 'data-add-avatar-url': '资料 添加头像URL', 'data-cancel': '资料 取消', 'data-save': '资料 保存', 'contact-add-cancel': '联系人 添加取消', 'contact-add-confirm': '联系人 添加确认', 'emoji-upload-file': '表情 上传文件', 'emoji-add-url': '表情 添加URL', 'emoji-add-cancel': '表情 添加取消', 'pat-cancel': '拍一拍 取消', 'pat-confirm': '拍一拍 确认', 'status-edit-cancel': '状态编辑 取消', 'status-edit-confirm': '状态编辑 确认', 'voice-cancel': '语音 取消', 'voice-confirm': '语音 确认', 'camera-cancel': '拍照 取消', 'camera-confirm': '拍照 确认', 'link-cancel': '链接 取消', 'link-confirm': '链接 确认', 'rp-cancel': '红包 取消', 'rp-confirm': '红包 确认', 'grp-cancel': '群红包 取消', 'grp-confirm': '群红包 确认', 'comment-edit-cancel': '评论编辑 取消', 'comment-edit-save': '评论编辑 保存', 'view-content-close': '查看内容 关闭', 'msg-edit-cancel': '消息编辑 取消', 'msg-edit-save': '消息编辑 保存', 'lib-upload': '库 上传', 'lib-add-url': '库 添加URL', 'lib-delete': '库 删除', 'lib-close': '库 关闭', 'persona-load-cancel': '人设读取 取消', 'gcs-avatar-lib': '群设置 头像库', 'gcs-chat-bg': '群设置 背景', 'gcs-clear-history': '群设置 清空记录', 'gcs-mute-all': '群设置 全体禁言', 'gcs-disband': '群设置 解散群聊', 'gcs-us-avatar-lib': '群我的设置 头像库', 'gcs-us-frame-lib': '群我的设置 头像框', 'gcs-us-save-persona': '群我的设置 保存人设', 'gcs-us-load-persona': '群我的设置 读取人设', 'gcs-member-avatar-lib': '群成员设置 头像库', 'gcs-member-frame-lib': '群成员设置 头像框', 'gcs-member-save-persona': '群成员设置 保存人设', 'gcs-member-load-persona': '群成员设置 读取人设', 'gcs-member-cancel': '群成员设置 取消', 'gcs-member-save': '群成员设置 保存', 'gcs-manage-cancel': '群管理 取消', 'gcs-manage-confirm': '群管理 确认', 'gcs-member-action-cancel': '群成员操作 取消' };
     function renderBubbles() { bubbleGrid.innerHTML = ''; const bubbleElements = queryAll('[data-bubble-id]'); const renderedIds = new Set(); bubbleElements.forEach(el => { const id = el.dataset.bubbleId; if (renderedIds.has(id)) return; const item = document.createElement('div'); item.className = 'bubble-item'; item.dataset.id = id; item.innerHTML = `<div class="bubble-preview-container"><button style="pointer-events: none;">${el.textContent}</button></div><span class="bubble-name">${bubbleNameMap[id] || id}</span>`; bubbleGrid.appendChild(item); renderedIds.add(id); }); }
     bubbleGrid.addEventListener('click', (e) => { const item = e.target.closest('.bubble-item'); if (item) { openBubbleEditor(item.dataset.id); } });
     function openBubbleEditor(bubbleId) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; editBubbleIdInput.value = bubbleId; const computedStyle = getComputedStyle(targetEl); const customStyles = appState.beautify.bubbles[bubbleId] || {}; bubbleWidthInput.value = customStyles.width || computedStyle.width; bubbleHeightInput.value = customStyles.height || computedStyle.height; bubblePosXInput.value = customStyles.transform ? (customStyles.transform.match(/translateX\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubblePosYInput.value = customStyles.transform ? (customStyles.transform.match(/translateY\(([^)]+)\)/)?.[1] || '0px') : '0px'; bubbleColorInput.value = customStyles.color || computedStyle.color; bubbleBgColorInput.value = customStyles.backgroundColor || computedStyle.backgroundColor; bubbleBorderColorInput.value = customStyles.borderColor || computedStyle.borderColor; replaceBgOnlyCheckbox.checked = customStyles.replaceBgOnly || false; bubbleUrlInput.value = (customStyles.backgroundImage && customStyles.backgroundImage.startsWith('url("http')) ? customStyles.backgroundImage.slice(5, -2) : ''; toggleBubbleColorInputs(customStyles.backgroundImage); updateBubblePreview(); editBubbleModal.classList.add('visible'); }
@@ -1436,7 +1823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const currentBubbleState = appState.beautify.bubbles[bubbleId] || {}; const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImage: currentBubbleState.backgroundImage }; appState.beautify.bubbles[bubbleId] = newStyles; applyBubbleChange(bubbleId, newStyles); saveState(); editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
     restoreBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的默认样式吗？`)) { delete appState.beautify.bubbles[bubbleId]; applyBubbleChange(bubbleId, originalBubbleContent[bubbleId], false, true); saveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
     uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
-    bubbleFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); handleBubbleImage(`url(${url})`); bubbleFileInput.value = ''; } });
+    bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { handleBubbleImage(`url(${event.target.result})`); }; reader.readAsDataURL(file); bubbleFileInput.value = ''; } });
     bubbleUrlInput.addEventListener('input', () => handleBubbleImage(`url("${bubbleUrlInput.value.trim()}")`));
     function toggleBubbleColorInputs(hasImage) { queryAll('.bubble-color-group').forEach(el => el.classList.toggle('hidden-by-logic', !!hasImage)); }
     function handleBubbleImage(imageUrl) { const bubbleId = editBubbleIdInput.value; if (!appState.beautify.bubbles[bubbleId]) appState.beautify.bubbles[bubbleId] = {}; appState.beautify.bubbles[bubbleId].backgroundImage = imageUrl; toggleBubbleColorInputs(imageUrl); updateBubblePreview(); }
@@ -1451,7 +1838,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cancelDataBtn.addEventListener('click', () => dataModal.classList.remove('visible'));
     saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatar = dataAvatarPreview.style.backgroundImage.slice(5, -2); if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatar) item.avatar = avatar; } } else { const newItem = { id: 'data_' + Date.now(), name, content }; if (avatar) newItem.avatar = avatar; dataArray.push(newItem); } saveState(); dataModal.classList.remove('visible'); switch (type) { case 'worldBook': renderWorldBooks(); break; case 'archive': renderArchives(); break; case 'info': renderInfos(); break; } });
     dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
-    dataAvatarFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); dataAvatarPreview.style.backgroundImage = `url(${url})`; dataAvatarFileInput.value = ''; } });
+    dataAvatarFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { dataAvatarPreview.style.backgroundImage = `url(${event.target.result})`; }; reader.readAsDataURL(file); dataAvatarFileInput.value = ''; } });
     dataAddAvatarUrlBtn.addEventListener('click', () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { dataAvatarPreview.style.backgroundImage = `url(${url})`; } else if (url) { showToast('无效的URL', 'error'); } });
     function renderWorldBooks() { worldBookListEl.innerHTML = appState.data.worldBooks.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="worldBook"><div class="preset-data-item-content"><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无世界书</div></li>'; }
     function renderArchives() { archiveListEl.innerHTML = appState.data.archives.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="archive"><div class="preset-data-item-content"><div class="preset-data-avatar" style="background-image: url(${item.avatar || ''})"></div><div class="preset-data-info"><div class="preset-data-name">${item.name}</div><div class="preset-data-excerpt">${item.content.substring(0, 20) || '无内容'}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; }
@@ -1464,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', () => {
     query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; } } });
     chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, contactSelection); } } else { addContactModal.classList.add('visible'); } });
     cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-    confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: 'contact_' + Date.now(), name: name, remark: '', avatar: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '我们已经是好友了，开始聊天吧！', lastMessageTime: new Date().getTime(), isGroup: false, conversation: [], listenTogetherDuration: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+    confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: 'contact_' + Date.now(), name: name, remark: '', avatar: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: new Date().getTime(), isGroup: false, conversation: [], listenTogetherDuration: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
     const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
     function renderMessageList() {
         appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
@@ -1508,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${avatarHTML}
                     <div class="contact-info">
                         <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.name)}</div>
-                        <div class="contact-last-msg">${contact.lastMessage}</div>
+                        <div class="contact-last-msg">${contact.lastMessage || ''}</div>
                     </div>
                     <div class="contact-meta">
                         <div class="contact-time">${time}</div>
@@ -1533,8 +1920,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); contactSelection.push(item.dataset.id); }
     function exitContactSelectionMode() { chatAppScreen.classList.remove('selection-mode'); chatListBackBtn.textContent = '< 返回'; chatListActionBtn.textContent = '+'; chatListActionBtn.classList.remove('small'); queryAll('.contact-list-item.selected').forEach(i => i.classList.remove('selected')); contactSelection = []; }
     function createGroup(name, memberIds) { const members = memberIds.map(id => appState.chat.contacts.find(c => c.id === id)); const newGroup = { id: 'group_' + Date.now(), name: name, avatar: '', lastMessage: '群聊已创建', lastMessageTime: Date.now(), isGroup: true, members: memberIds, conversation: [] }; initializeContactSettings(newGroup); const memberNames = members.map(m => `'${m.name}'`).join(', '); addSystemNotification(newGroup.id, `'${appState.chat.userProfile.name}' 邀请 ${memberNames} 加入群聊`, true); appState.chat.contacts.unshift(newGroup); saveState(); renderMessageList(); exitContactSelectionMode(); }
-    function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; currentChatId = contactId; if (contact.unreadCount > 0) { contact.unreadCount = 0; saveState(); renderMessageList(); } notificationQueue = notificationQueue.filter(n => n.contactId !== currentChatId); updateSingleChatUI(); openSubScreen(singleChatScreen, chatAppScreen); }
-    function updateSingleChatUI() {
+    function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; currentChatId = contactId; if (contact.unreadCount > 0) { contact.unreadCount = 0; saveState(); renderMessageList(); } notificationQueue = notificationQueue.filter(n => !n.startsWith(contact.name)); updateSingleChatUI(); openSubScreen(singleChatScreen, chatAppScreen); }
+    async function updateSingleChatUI() {
         const contact = appState.chat.contacts.find(c => c.id === currentChatId);
         if (!contact) return;
         const isDisbanded = contact.isGroup && contact.groupSettings.isDisbanded;
@@ -1562,7 +1949,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`;
             chatHeaderName.textContent = contact.remark || settings.name;
             chatHeaderStatus.innerHTML = `${statusIndicatorHTML} ${statusMap[contact.status] || '未知'}`;
-            chatHeaderSignature.textContent = contact.userSettings.signature || appState.chat.userProfile.signature;
+            chatHeaderSignature.textContent = contact.signature;
             chatHeaderSignature.style.display = 'block';
             addFriendBtn.style.display = settings.isFriend ? 'none' : 'block';
             chatInput.disabled = !settings.isFriend;
@@ -1571,22 +1958,45 @@ document.addEventListener('DOMContentLoaded', () => {
             chatToolbar.querySelectorAll('.icon-btn').forEach(btn => btn.classList.toggle('disabled', !settings.isFriend));
             chatEmojiBtn.classList.toggle('disabled', !settings.isFriend);
         }
-        const chatBg = (contact.isGroup ? contact.groupSettings.chatBackground : contact.charSettings?.chatBackground) || appState.beautify.currentChatBg;
-        singleChatScreen.style.backgroundImage = chatBg ? `url(${chatBg})` : 'none';
-        singleChatScreen.style.backgroundColor = chatBg ? 'transparent' : 'var(--bg-color)';
+        
+        const chatBgId = (contact.isGroup ? contact.groupSettings.chatBackgroundId : contact.charSettings?.chatBackgroundId) || appState.beautify.currentChatBgId;
+        await applyWallpaperById(chatBgId, singleChatScreen);
+
         renderConversation();
         updateChatInputButtons();
         updateTypingIndicator();
     }
     chatBackBtn.addEventListener('click', () => { closeSubScreen(singleChatScreen, chatAppScreen); currentChatId = null; if (chatSelectionMode) exitChatSelectionMode(); });
     chatSettingsBtn.addEventListener('click', () => { if (chatSelectionMode) { if (selectedMessages.length > 0 && confirm(`确定要删除选中的 ${selectedMessages.length} 条消息吗？`)) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); contact.conversation = contact.conversation.filter(msg => !selectedMessages.includes(msg.id)); updateContactLastMessage(currentChatId); saveState(); renderConversation(); renderMessageList(); } exitChatSelectionMode(); } else { openChatSettings(); } });
-    function renderConversation() { chatMessagesView.innerHTML = ''; const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; let lastTimestamp = 0; contact.conversation.forEach(msg => { if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) { const timeEl = document.createElement('div'); timeEl.className = 'message-timestamp'; timeEl.textContent = new Date(msg.timestamp).toLocaleString(); chatMessagesView.appendChild(timeEl); lastTimestamp = msg.timestamp; } const msgItem = document.createElement('div'); msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`; msgItem.dataset.id = msg.id; msgItem.dataset.sender = msg.sender; const isUser = msg.sender === 'user'; let avatarUrl, avatarFrameUrl, senderName; if (contact.isGroup) { const memberSettings = contact.groupSettings.members[msg.sender]; const userProfile = findUserById(msg.sender, '未知成员'); avatarUrl = userProfile.avatar; senderName = memberSettings?.nickname || userProfile.name; avatarFrameUrl = isUser ? appState.chat.userProfile.avatarFrame : (memberSettings?.avatarFrame || ''); } else { avatarUrl = isUser ? contact.userSettings.avatar : contact.charSettings.avatar; senderName = isUser ? contact.userSettings.name : contact.charSettings.name; avatarFrameUrl = isUser ? appState.chat.userProfile.avatarFrame : contact.charSettings.avatarFrame; } const avatarHTML = `<div class="avatar" style="background-image: url(${avatarUrl})"><div class="avatar-frame" style="background-image: ${avatarFrameUrl ? `url(${avatarFrameUrl})` : 'none'}"></div></div>`; let contentHTML = ''; if (contact.isGroup) { const memberSettings = contact.groupSettings.members[msg.sender]; if (memberSettings) { const role = msg.sender === contact.groupSettings.owner ? 'owner' : (contact.groupSettings.admins.includes(msg.sender) ? 'admin' : 'member'); contentHTML += `<div class="group-message-header"><span class="group-title title-${role}" data-member-id="${msg.sender}">${memberSettings.title || '成员'}</span><span class="group-nickname" data-member-id="${msg.sender}">${memberSettings.nickname || '未知成员'}</span></div>`; } else if (msg.sender) { contentHTML += `<div class="group-message-header"><span class="group-nickname" data-member-id="${msg.sender}">${senderName}</span></div>`; } } if (msg.quote) { contentHTML += `<div class="message-quote"><strong>${msg.quote.senderName}:</strong> ${msg.quote.content.substring(0, 30)}...</div>`; } if (msg.type === 'text') { contentHTML += `<div class="message-bubble">${msg.content}</div>`; } else if (msg.type === 'emoji') { contentHTML += `<div class="message-bubble image"><img src="${msg.content}" alt="${msg.description}" style="max-width: 100px; max-height: 100px;"></div>`; } else if (msg.type === 'notification') { const notificationEl = document.createElement('div'); notificationEl.className = 'message-timestamp'; notificationEl.dataset.id = msg.id; notificationEl.textContent = msg.content; if (msg.originalContent) { notificationEl.dataset.originalContent = JSON.stringify(msg.originalContent); } chatMessagesView.appendChild(notificationEl); return; } else if (msg.type === 'voice') { const bubbleWidth = Math.min(180, 80 + msg.duration * 5); const waveformSpans = Array(15).fill(0).map((_, i) => `<span style="height: ${100 - i * 5}%"></span>`).join(''); contentHTML += `<div class="message-bubble voice"><div class="voice-waveform-container" style="width: ${bubbleWidth}px; padding-left: 10px;">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`; } else if (msg.type === 'image' || msg.type === 'camera') { const isCamera = msg.type === 'camera'; const imgSrc = isCamera ? msg.placeholder : msg.content; const cameraOverlay = isCamera ? `<div class="camera-text-overlay">(${msg.content})</div>` : ''; contentHTML += `<div class="message-bubble ${msg.type}"><img src="${imgSrc}">${cameraOverlay}</div>`; } else if (msg.type === 'link') { contentHTML += `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="link-info"><div class="title">${msg.title}</div><div class="summary">${msg.summary}</div><div class="source">${msg.source || '链接'}</div></div></div>`; } else if (msg.type === 'redPacket') { let packetStatusText = ''; if (msg.status === 'claimed' || (msg.claimedBy && Object.keys(msg.claimedBy).length > 0 && Object.keys(msg.claimedBy).length >= (msg.count || 1))) { packetStatusText = '红包已被领完'; } else if (msg.status === 'returned') { packetStatusText = '红包已被退回'; } else if (msg.status === 'expired') { packetStatusText = '红包已过期'; } let packetTypeFooter = '红包'; if (msg.packetType === 'exclusive') { const targetName = findUserById(msg.exclusiveTo)?.name || '未知用户'; packetTypeFooter = `给${targetName}的专属红包`; } else if (msg.packetType === 'lucky') { packetTypeFooter = '拼手气红包'; } else if (msg.packetType === 'normal') { packetTypeFooter = '普通红包'; } contentHTML += `<div class="message-bubble red-packet ${msg.status || ''}" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body">${packetStatusText}</div><div class="red-packet-footer">${packetTypeFooter}</div></div>`; } msgItem.innerHTML = `${avatarHTML}<div class="message-content-wrapper">${contentHTML}</div>`; chatMessagesView.appendChild(msgItem); }); chatMessagesView.scrollTop = chatMessagesView.scrollHeight; }
-    function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[quotedMessage.sender]?.nickname || findUserById(quotedMessage.sender).name; } else { senderName = quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.charSettings.name); } message.quote = { id: quotedMessage.id, content: quotedMessage.content, senderName: senderName }; quotedMessage = null; quotePreview.style.display = 'none'; } contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification({ content: message.content, senderName: findUserById(message.sender, contact.name).name, contactId: contact.id }); } if (singleChatScreen.classList.contains('active') && currentChatId === contact.id) { renderConversation(); } updateContactLastMessage(contact.id); renderMessageList(); saveState(); }
-    function addSystemNotification(contactId, content, triggerAi = false) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; const notification = { id: 'msg_' + Date.now(), type: 'notification', content, timestamp: Date.now(), contactId: contactId }; contact.conversation.push(notification); updateContactLastMessage(contactId); saveState(); if (currentChatId === contactId) { renderConversation(); } renderMessageList(); if (triggerAi) { const currentContactState = appState.chat.contacts.find(c => c.id === contactId); if (currentContactState.isGroup && currentContactState.members.length === 0) { return; } setTimeout(() => triggerAiResponse(contactId), 500); } }
+    function renderConversation() { chatMessagesView.innerHTML = ''; const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; let lastTimestamp = 0; contact.conversation.forEach(msg => { if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) { const timeEl = document.createElement('div'); timeEl.className = 'message-timestamp'; timeEl.textContent = new Date(msg.timestamp).toLocaleString(); chatMessagesView.appendChild(timeEl); lastTimestamp = msg.timestamp; } const msgItem = document.createElement('div'); msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`; msgItem.dataset.id = msg.id; msgItem.dataset.sender = msg.sender; const isUser = msg.sender === 'user'; let avatarUrl, avatarFrameUrl, senderName; if (contact.isGroup) { const memberSettings = contact.groupSettings.members[msg.sender]; const userProfile = findUserById(msg.sender, '未知成员'); avatarUrl = userProfile.avatar; senderName = memberSettings?.nickname || userProfile.name; avatarFrameUrl = memberSettings?.avatarFrame || ''; } else { avatarUrl = isUser ? contact.userSettings.avatar : contact.charSettings.avatar; senderName = isUser ? contact.userSettings.name : contact.charSettings.name; avatarFrameUrl = isUser ? contact.userSettings.avatarFrame : contact.charSettings.avatarFrame; } const avatarHTML = `<div class="avatar" style="background-image: url(${avatarUrl})"><div class="avatar-frame" style="background-image: ${avatarFrameUrl ? `url(${avatarFrameUrl})` : 'none'}"></div></div>`; let contentHTML = ''; if (contact.isGroup) { const memberSettings = contact.groupSettings.members[msg.sender]; if (memberSettings) { const role = msg.sender === contact.groupSettings.owner ? 'owner' : (contact.groupSettings.admins.includes(msg.sender) ? 'admin' : 'member'); contentHTML += `<div class="group-message-header"><span class="group-title title-${role}" data-member-id="${msg.sender}">${memberSettings.title || '成员'}</span><span class="group-nickname" data-member-id="${msg.sender}">${memberSettings.nickname || '未知成员'}</span></div>`; } else if (msg.sender) { contentHTML += `<div class="group-message-header"><span class="group-nickname" data-member-id="${msg.sender}">${senderName}</span></div>`; } } if (msg.quote) { contentHTML += `<div class="message-quote"><strong>${msg.quote.senderName}:</strong> ${msg.quote.content.substring(0, 30)}...</div>`; } if (msg.type === 'text') { contentHTML += `<div class="message-bubble">${msg.content}</div>`; } else if (msg.type === 'emoji') { contentHTML += `<div class="message-bubble emoji-bubble"><img src="${msg.content}" alt="${msg.description}"></div>`; } else if (msg.type === 'notification') { const notificationEl = document.createElement('div'); notificationEl.className = 'message-timestamp'; notificationEl.dataset.id = msg.id; notificationEl.textContent = msg.content; if (msg.originalContent) { notificationEl.dataset.originalContent = JSON.stringify(msg.originalContent); } chatMessagesView.appendChild(notificationEl); return; } else if (msg.type === 'voice') { const bubbleWidth = 60 + msg.duration * 8; const waveformSpans = Array(15).fill(0).map((_, i) => `<span style="height: ${100 - i * 5}%"></span>`).join(''); contentHTML += `<div class="message-bubble voice" style="width: ${Math.min(bubbleWidth, 220)}px;"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`; } else if (msg.type === 'image' || msg.type === 'camera') { const isCamera = msg.type === 'camera'; const imgSrc = isCamera ? msg.placeholder : msg.content; const cameraOverlay = isCamera ? `<div class="camera-text-overlay">(${msg.content})</div>` : ''; contentHTML += `<div class="message-bubble ${msg.type}"><img src="${imgSrc}">${cameraOverlay}</div>`; } else if (msg.type === 'link') { contentHTML += `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="link-info"><div class="title">${msg.title}</div><div class="summary">${msg.summary}</div><div class="source">${msg.source || '链接'}</div></div></div>`; } else if (msg.type === 'redPacket') { let packetStatusText = ''; if (msg.status === 'claimed' || (msg.claimedBy && Object.keys(msg.claimedBy).length > 0 && Object.keys(msg.claimedBy).length >= (msg.count || 1))) { packetStatusText = '红包已被领完'; } else if (msg.status === 'returned') { packetStatusText = '红包已被退回'; } else if (msg.status === 'expired') { packetStatusText = '红包已过期'; } let packetTypeFooter = '红包'; if (msg.packetType === 'exclusive') { const targetName = findUserById(msg.exclusiveTo)?.name || '未知用户'; packetTypeFooter = `给${targetName}的专属红包`; } else if (msg.packetType === 'lucky') { packetTypeFooter = '拼手气红包'; } else if (msg.packetType === 'normal') { packetTypeFooter = '普通红包'; } contentHTML += `<div class="message-bubble red-packet ${msg.status || ''}" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body">${packetStatusText}</div><div class="red-packet-footer">${packetTypeFooter}</div></div>`; } msgItem.innerHTML = `${avatarHTML}<div class="message-content-wrapper">${contentHTML}</div>`; chatMessagesView.appendChild(msgItem); }); chatMessagesView.scrollTop = chatMessagesView.scrollHeight; }
+    function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[quotedMessage.sender]?.nickname || findUserById(quotedMessage.sender).name; } else { senderName = quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.charSettings.name); } message.quote = { id: quotedMessage.id, content: quotedMessage.content, senderName: senderName }; quotedMessage = null; quotePreview.style.display = 'none'; } contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(`${findUserById(message.sender, contact.name).name}: ${message.content}`); } if (singleChatScreen.classList.contains('active') && currentChatId === contact.id) { renderConversation(); } updateContactLastMessage(contact.id); renderMessageList(); saveState(); }
+    function addSystemNotification(contactId, content, triggerAi = false) {
+        const contact = appState.chat.contacts.find(c => c.id === contactId);
+        if (!contact) return;
+        
+        const notification = { id: 'msg_' + Date.now(), type: 'notification', content, timestamp: Date.now(), contactId: contactId };
+        contact.conversation.push(notification);
+        updateContactLastMessage(contactId);
+        saveState();
+        
+        if (currentChatId === contactId) {
+            renderConversation();
+        }
+        renderMessageList();
+        
+        if (triggerAi) {
+            const updatedContact = appState.chat.contacts.find(c => c.id === contactId);
+            if (updatedContact.isGroup && updatedContact.members.length === 0) {
+                return;
+            }
+            setTimeout(() => triggerAiResponse(contactId), 500);
+        }
+    }
     chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; addMessageToConversation({ id: 'msg_' + Date.now(), type: 'text', content, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); chatInput.value = ''; updateChatInputButtons(); });
     async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false) {
         const contact = appState.chat.contacts.find(c => c.id === targetChatId);
-        if (!contact || (contact.isGroup && contact.members.length === 0)) { return; }
+        if (!contact) return;
+        if (contact.isGroup && contact.members.length === 0) { return; }
         if (activeRequests[targetChatId]) return;
         
         activeRequests[targetChatId] = true;
@@ -1629,17 +2039,16 @@ document.addEventListener('DOMContentLoaded', () => {
     chatEmojiBtn.addEventListener('click', (e) => { if (e.currentTarget.classList.contains('disabled')) return; renderEmojiPicker(); emojiPickerPanel.classList.add('visible'); });
     closeEmojiPickerBtn.addEventListener('click', () => emojiPickerPanel.classList.remove('visible'));
     function renderEmojiPicker() { emojiGrid.innerHTML = ''; appState.chat.emojis.forEach(emoji => { const item = document.createElement('div'); item.className = 'emoji-item'; item.style.backgroundImage = `url(${emoji.url})`; item.dataset.id = emoji.id; emojiGrid.appendChild(item); }); }
-    emojiGrid.addEventListener('click', (e) => { if (e.target.classList.contains('emoji-item')) { const emoji = appState.chat.emojis.find(em => em.id === e.target.dataset.id); if (emoji) { addMessageToConversation({ id: 'msg_' + Date.now(), type: 'emoji', content: emoji.url, description: emoji.description, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); emojiPickerPanel.classList.remove('visible'); } } });
     addEmojiBtn.addEventListener('click', () => { addEmojiModal.classList.add('visible'); });
     cancelAddEmojiBtn.addEventListener('click', () => addEmojiModal.classList.remove('visible'));
     uploadEmojiFileBtn.addEventListener('click', () => { if (!uploadEmojiDescInput.value.trim()) { showToast('请先输入表情包描述', 'error'); return; } emojiFileInput.click(); });
-    emojiFileInput.addEventListener('change', async (e) => { const files = e.target.files; const descs = uploadEmojiDescInput.value.trim().split('\n').filter(d => d); if (files.length === 0 || descs.length === 0) return; if (files.length !== descs.length) { showToast(`文件数量(${files.length})与描述数量(${descs.length})不匹配`, 'error'); return; } for (let i = 0; i < files.length; i++) { const url = await readFileAsBase64(files[i]); appState.chat.emojis.push({ id: 'emoji_' + Date.now() + i, description: descs[i], url }); } saveState(); renderEmojiPicker(); showToast(`成功添加 ${files.length} 个表情包`); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; });
-    confirmAddEmojiUrlBtn.addEventListener('click', () => { const lines = emojiUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const desc = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (desc && url.startsWith('http')) { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + Math.random(), description: desc, url }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderEmojiPicker(); showToast(`成功添加 ${addedCount} 个表情包`); } addEmojiModal.classList.remove('visible'); emojiUrlInput.value = ''; });
+    emojiFileInput.addEventListener('change', (e) => { const files = e.target.files; const descs = uploadEmojiDescInput.value.trim().split('\n').filter(d => d); if (files.length === 0 || descs.length === 0) return; if (files.length !== descs.length) { showToast(`文件数量(${files.length})与描述数量(${descs.length})不匹配`, 'error'); return; } Array.from(files).forEach((file, index) => { const reader = new FileReader(); reader.onload = (event) => { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + index, description: descs[index], url: event.target.result, isLocal: false }); if (appState.chat.emojis.length === files.length) { saveState(); renderEmojiPicker(); showToast(`成功添加 ${files.length} 个表情包`); } }; reader.readAsDataURL(file); }); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; });
+    confirmAddEmojiUrlBtn.addEventListener('click', () => { const lines = emojiUrlInput.value.trim().split('\n'); let addedCount = 0; lines.forEach(line => { const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const desc = line.substring(0, separatorIndex).trim(); const url = line.substring(separatorIndex + 1).trim(); if (desc && url.startsWith('http')) { appState.chat.emojis.push({ id: 'emoji_' + Date.now() + Math.random(), description: desc, url, isLocal: false }); addedCount++; } } }); if (addedCount > 0) { saveState(); renderEmojiPicker(); showToast(`成功添加 ${addedCount} 个表情包`); } addEmojiModal.classList.remove('visible'); emojiUrlInput.value = ''; });
     chatHeaderName.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (contact.isGroup) { const oldRemark = contact.remark || contact.groupSettings.name; const newRemark = prompt('修改群备注 (仅自己可见):', oldRemark); if (newRemark !== null && newRemark.trim() !== oldRemark) { contact.remark = newRemark.trim(); saveState(); updateSingleChatUI(); renderMessageList(); } } else { const oldRemark = contact.remark || contact.name; const newRemark = prompt('修改备注:', oldRemark); if (newRemark !== null && newRemark.trim() !== oldRemark) { contact.remark = newRemark.trim(); saveState(); updateSingleChatUI(); renderMessageList(); } } });
     chatHeaderStatus.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact || contact.isGroup) return; statusDescInput.value = contact.statusText || ''; const statuses = [ { value: 'online', text: '在线' }, { value: 'busy', text: '忙碌' }, { value: 'offline', text: '离线' } ]; statusSelectGroup.innerHTML = statuses.map(s => `<label class="radio-label"><input type="radio" name="status" value="${s.value}" ${contact.status === s.value ? 'checked' : ''}><div class="status-indicator ${s.value}"></div><span>${s.text}</span></label>`).join(''); editStatusModal.classList.add('visible'); });
     cancelEditStatusBtn.addEventListener('click', () => editStatusModal.classList.remove('visible'));
     confirmEditStatusBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const selectedStatus = query('input[name="status"]:checked'); if (!selectedStatus) return; contact.status = selectedStatus.value; contact.statusText = statusDescInput.value.trim(); saveState(); updateSingleChatUI(); renderMessageList(); editStatusModal.classList.remove('visible'); });
-    chatHeaderSignature.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact || contact.isGroup) return; const newSig = prompt('修改签名:', contact.userSettings.signature || appState.chat.userProfile.signature); if (newSig !== null) { contact.userSettings.signature = newSig; saveState(); updateSingleChatUI(); } });
+    chatHeaderSignature.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact || contact.isGroup) return; const newSig = prompt('修改签名:', contact.signature); if (newSig !== null) { contact.signature = newSig; saveState(); updateSingleChatUI(); } });
     closeViewContentBtn.addEventListener('click', () => viewContentModal.classList.remove('visible'));
     cancelPatBtn.addEventListener('click', () => patSuffixModal.classList.remove('visible'));
     confirmPatBtn.addEventListener('click', () => { const suffix = patSuffixInput.value.trim(); const contact = appState.chat.contacts.find(c => c.id === currentChatId); let patterName = findUserById('user').name; let targetName; if (contact.isGroup) { patterName = contact.groupSettings.members['user'].nickname; targetName = findUserById(patTarget.memberId, '一个神秘人').name; if (contact.groupSettings.members[patTarget.memberId]) { targetName = contact.groupSettings.members[patTarget.memberId].nickname; } } else { targetName = patTarget.type === 'user' ? '自己' : (contact.remark || contact.name); } const notificationText = `'${patterName}' 拍了拍 '${targetName}'${suffix ? ` ${suffix}` : ''}`; addSystemNotification(currentChatId, notificationText, true); patSuffixModal.classList.remove('visible'); patSuffixInput.value = ''; });
@@ -1660,7 +2069,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     async function handleRefreshClick() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; let lastUserMessageIndex = -1; for (let i = contact.conversation.length - 1; i >= 0; i--) { if (contact.conversation[i].sender === 'user') { lastUserMessageIndex = i; break; } } if (lastUserMessageIndex === -1) { showToast('没有可刷新的回复', 'error'); return; } const messagesToDelete = contact.conversation.filter((msg, index) => index > lastUserMessageIndex && msg.type !== 'notification'); if (messagesToDelete.length === 0) { showToast('没有可刷新的回复', 'error'); return; } contact.conversation = contact.conversation.filter((msg, index) => index <= lastUserMessageIndex || msg.type === 'notification'); updateContactLastMessage(currentChatId); saveState(); renderConversation(); renderMessageList(); await triggerAiResponse(currentChatId); }
     function handleMusicShareClick() { if (playerModal.classList.contains('show')) { stopPlayback(); } else { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); playerModal.classList.add('show'); playSongFromQueue(0, true); } }
-    chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); addMessageToConversation({ id: 'msg_' + Date.now(), type: 'image', content: url, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); chatImageInput.value = ''; } });
+    chatImageInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { const reader = new FileReader(); reader.onload = (event) => { addMessageToConversation({ id: 'msg_' + Date.now(), type: 'image', content: event.target.result, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); }; reader.readAsDataURL(file); chatImageInput.value = ''; } });
     cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
     confirmVoiceBtn.addEventListener('click', () => { const text = voiceTextInput.value.trim(); if (!text) return; const duration = Math.ceil(text.length / 2); addMessageToConversation({ id: 'msg_' + Date.now(), type: 'voice', content: text, duration: duration, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId }); voiceInputModal.classList.remove('visible'); voiceTextInput.value = ''; });
     cancelCameraBtn.addEventListener('click', () => cameraInputModal.classList.remove('visible'));
@@ -1720,8 +2129,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const target = e.target;
             const bubble = target.closest('.message-bubble');
             const avatar = target.closest('.avatar');
+            const groupHeader = target.closest('.group-message-header');
 
-            if (!bubble && !avatar) return;
+            if (!bubble && !avatar && !groupHeader) return;
 
             isDragging = false;
             startX = e.clientX;
@@ -1794,10 +2204,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const groupTitle = target.closest('.group-title');
-        if (groupTitle) { const memberId = groupTitle.dataset.memberId; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const memberSettings = contact.groupSettings.members[memberId]; const oldTitle = memberSettings.title; const newTitle = prompt(`修改 ${memberSettings.nickname} 的头衔:`, oldTitle); if (newTitle && newTitle.trim() !== oldTitle) { memberSettings.title = newTitle.trim(); addSystemNotification(currentChatId, `'${appState.chat.userProfile.name}' 将 '${memberSettings.nickname}' 的群聊头衔修改为 '${newTitle.trim()}'`, true); saveState(); renderConversation(); } return; }
+        if (groupTitle) {
+            const memberId = groupTitle.dataset.memberId;
+            const contact = appState.chat.contacts.find(c => c.id === currentChatId);
+            const memberSettings = contact.groupSettings.members[memberId];
+            const oldTitle = memberSettings.title;
+            const newTitle = prompt(`修改 ${memberSettings.nickname} 的头衔:`, oldTitle);
+            if (newTitle && newTitle.trim() !== oldTitle) {
+                const editorName = contact.groupSettings.members['user'].nickname;
+                memberSettings.title = newTitle.trim();
+                addSystemNotification(currentChatId, `'${editorName}' 将 '${memberSettings.nickname}' 的群聊头衔修改为 '${newTitle.trim()}'`, true);
+                saveState();
+                renderConversation();
+            }
+            return;
+        }
 
         const groupNickname = target.closest('.group-nickname');
-        if (groupNickname) { const memberId = groupNickname.dataset.memberId; const contact = appState.chat.contacts.find(c => c.id === currentChatId); const memberSettings = contact.groupSettings.members[memberId]; const oldNickname = memberSettings.nickname; const newNickname = prompt(`修改 ${oldNickname} 的群名片:`, oldNickname); if (newNickname && newNickname.trim() !== oldNickname) { const oldNameForNotif = memberSettings.nickname; memberSettings.nickname = newNickname.trim(); addSystemNotification(currentChatId, `'${appState.chat.userProfile.name}' 修改了 '${oldNameForNotif}' 的群名片为 '${newNickname.trim()}'`, true); saveState(); renderConversation(); } return; }
+        if (groupNickname) {
+            const memberId = groupNickname.dataset.memberId;
+            const contact = appState.chat.contacts.find(c => c.id === currentChatId);
+            const memberSettings = contact.groupSettings.members[memberId];
+            const oldNickname = memberSettings.nickname;
+            const newNickname = prompt(`修改 ${oldNickname} 的群名片:`, oldNickname);
+            if (newNickname && newNickname.trim() !== oldNickname) {
+                const editorName = contact.groupSettings.members['user'].nickname;
+                const oldNameForNotif = memberSettings.nickname;
+                memberSettings.nickname = newNickname.trim();
+                addSystemNotification(currentChatId, `'${editorName}' 修改了 '${oldNameForNotif}' 的群名片为 '${newNickname.trim()}'`, true);
+                saveState();
+                renderConversation();
+            }
+            return;
+        }
     }
 
     function handleAvatarLongPress(avatarElement) {
@@ -1840,7 +2279,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
     function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings })); tempChatSettings = JSON.parse(JSON.stringify(originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
-    function loadSingleChatSettingsUI() { const { charSettings, userSettings } = tempChatSettings; csCharName.value = charSettings.name; csWorldBookList.innerHTML = appState.data.worldBooks.map(wb => `<label class="checkbox-label"><input type="checkbox" value="${wb.id}" ${charSettings.linkedWorldBooks.includes(wb.id) ? 'checked' : ''}><span>${wb.name}</span></label>`).join(''); csCharAvatar.style.backgroundImage = `url(${charSettings.avatar})`; csCharAvatar.querySelector('.avatar-frame').style.backgroundImage = charSettings.avatarFrame ? `url(${charSettings.avatarFrame})` : 'none'; csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; usUserAvatar.style.backgroundImage = `url(${userSettings.avatar})`; usUserAvatar.querySelector('.avatar-frame').style.backgroundImage = appState.chat.userProfile.avatarFrame ? `url(${appState.chat.userProfile.avatarFrame})` : 'none'; usPersona.value = userSettings.persona; }
+    function loadSingleChatSettingsUI() { const { charSettings, userSettings } = tempChatSettings; csCharName.value = charSettings.name; csWorldBookList.innerHTML = appState.data.worldBooks.map(wb => `<label class="checkbox-label"><input type="checkbox" value="${wb.id}" ${charSettings.linkedWorldBooks.includes(wb.id) ? 'checked' : ''}><span>${wb.name}</span></label>`).join(''); csCharAvatar.style.backgroundImage = `url(${charSettings.avatar})`; csCharAvatar.querySelector('.avatar-frame').style.backgroundImage = charSettings.avatarFrame ? `url(${charSettings.avatarFrame})` : 'none'; csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; usUserAvatar.style.backgroundImage = `url(${userSettings.avatar})`; usUserAvatar.querySelector('.avatar-frame').style.backgroundImage = userSettings.avatarFrame ? `url(${userSettings.avatarFrame})` : 'none'; usPersona.value = userSettings.persona; }
     function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } saveState(); updateSingleChatUI(); renderMessageList(); }
     getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); });
     query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
@@ -1865,24 +2304,51 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPersonaList.addEventListener('click', (e) => { const itemEl = e.target.closest('.preset-data-item'); if (!itemEl) return; const { id } = itemEl.dataset; const { type, settingsGroup, memberId } = loadPersonaModal.dataset; const item = appState.data[type + 's'].find(i => i.id === id); if (!item) return; let targetSettings, uiUpdateFunc; if (memberId) { targetSettings = tempGcsMemberSettings; uiUpdateFunc = loadGcsMemberModalUI; } else if (settingsGroup === 'userSettings' && groupChatSettingsScreen.classList.contains('active')) { targetSettings = tempChatSettings.userSettings; uiUpdateFunc = loadGroupChatSettingsUI; } else { targetSettings = tempChatSettings[settingsGroup]; uiUpdateFunc = loadSingleChatSettingsUI; } targetSettings.name = item.name; targetSettings.avatar = item.avatar; targetSettings.persona = item.content; uiUpdateFunc(); loadPersonaModal.classList.remove('visible'); showToast('人设已读取'); });
     function openLibraryModal(context) { libraryContext = context; librarySelection = []; libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; libraryModalTitle.textContent = context.title; libraryModalPreviewArea.style.display = context.showPreview ? 'block' : 'none'; if (context.showPreview) { libraryModalPreviewArea.innerHTML = `<div id="avatar-frame-preview" style="background-image: url(${context.previewAvatar})"><div class="avatar-frame"></div></div>`; } renderLibraryGrid(); libraryModal.classList.add('visible'); }
     function renderLibraryGrid() { let items, activeItem; if (libraryContext.isGroup) { items = tempChatSettings.groupSettings[libraryContext.libraryKey]; activeItem = tempChatSettings.groupSettings[libraryContext.activeKey]; } else if (libraryContext.memberId) { items = tempGcsMemberSettings[libraryContext.libraryKey]; activeItem = tempGcsMemberSettings[libraryContext.activeKey]; } else if (libraryContext.isGlobal) { items = appState.chat.userProfile[libraryContext.libraryKey]; activeItem = appState.chat.userProfile[libraryContext.activeKey]; } else { items = tempChatSettings[libraryContext.settingsGroup][libraryContext.libraryKey]; activeItem = tempChatSettings[libraryContext.settingsGroup][libraryContext.activeKey]; } libraryGrid.innerHTML = ''; if (libraryContext.hasNoItemOption) { const noItem = document.createElement('div'); noItem.className = 'library-item no-frame'; noItem.dataset.url = ''; noItem.innerHTML = '🚫'; if (activeItem === '') { noItem.classList.add('selected'); } libraryGrid.appendChild(noItem); } items.forEach(url => { const item = document.createElement('div'); item.className = 'library-item'; if (libraryContext.isCircular) item.classList.add('circular'); item.innerHTML = `<img src="${url}" alt="library image">`; item.dataset.url = url; if (url === activeItem) { item.classList.add('selected'); } libraryGrid.appendChild(item); }); updateLibraryPreview(); }
-    function updateLibraryPreview() { if (!libraryContext.showPreview) return; const previewFrame = query('#avatar-frame-preview .avatar-frame'); if (previewFrame) { let activeFrame; if (libraryContext.isGlobal) { activeFrame = appState.chat.userProfile[libraryContext.activeKey]; } else if (libraryContext.memberId) { activeFrame = tempGcsMemberSettings[libraryContext.activeKey]; } else if (libraryContext.isGroupUser) { activeFrame = tempChatSettings.userSettings[libraryContext.activeKey]; } else { activeFrame = tempChatSettings[libraryContext.settingsGroup][libraryContext.activeKey]; } previewFrame.style.backgroundImage = activeFrame ? `url(${activeFrame})` : 'none'; } }
-    libraryGrid.addEventListener('click', (e) => { const item = e.target.closest('.library-item'); if (!item) return; if (libraryModal.classList.contains('selection-mode')) { item.classList.toggle('selected'); const url = item.dataset.url; if (url === '') return; if (item.classList.contains('selected')) { if (!librarySelection.includes(url)) librarySelection.push(url); } else { librarySelection = librarySelection.filter(u => u !== url); } } else { const url = item.dataset.url; if (libraryContext.isGroup) { tempChatSettings.groupSettings[libraryContext.activeKey] = url; loadGroupChatSettingsUI(); } else if (libraryContext.memberId) { tempGcsMemberSettings[libraryContext.activeKey] = url; loadGcsMemberModalUI(); } else if (libraryContext.isGlobal) { appState.chat.userProfile[libraryContext.activeKey] = url; if (currentChatId) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (contact) { if (contact.isGroup) loadGroupChatSettingsUI(); else loadSingleChatSettingsUI(); } } } else { tempChatSettings[libraryContext.settingsGroup][libraryContext.activeKey] = url; if (libraryContext.isGroupUser) { loadGroupChatSettingsUI(); } else { loadSingleChatSettingsUI(); } } renderLibraryGrid(); } });
+    function updateLibraryPreview() { if (!libraryContext.showPreview) return; const previewFrame = query('#avatar-frame-preview .avatar-frame'); if (previewFrame) { let activeFrame; if (libraryContext.memberId) { activeFrame = tempGcsMemberSettings[libraryContext.activeKey]; } else if (libraryContext.isGlobal) { activeFrame = appState.chat.userProfile[libraryContext.activeKey]; } else if (libraryContext.isGroupUser) { activeFrame = tempChatSettings.userSettings[libraryContext.activeKey]; } else { activeFrame = tempChatSettings[libraryContext.settingsGroup][libraryContext.activeKey]; } previewFrame.style.backgroundImage = activeFrame ? `url(${activeFrame})` : 'none'; } }
+    libraryGrid.addEventListener('click', (e) => { const item = e.target.closest('.library-item'); if (!item) return; if (libraryModal.classList.contains('selection-mode')) { item.classList.toggle('selected'); const url = item.dataset.url; if (url === '') return; if (item.classList.contains('selected')) { if (!librarySelection.includes(url)) librarySelection.push(url); } else { librarySelection = librarySelection.filter(u => u !== url); } } else { const url = item.dataset.url; if (libraryContext.isGroup) { tempChatSettings.groupSettings[libraryContext.activeKey] = url; loadGroupChatSettingsUI(); } else if (libraryContext.memberId) { tempGcsMemberSettings[libraryContext.activeKey] = url; loadGcsMemberModalUI(); } else if (libraryContext.isGlobal) { appState.chat.userProfile[libraryContext.activeKey] = url; if (libraryContext.isGroupUser) { tempChatSettings.userSettings[libraryContext.activeKey] = url; loadGroupChatSettingsUI(); } else { tempChatSettings.userSettings[libraryContext.activeKey] = url; loadSingleChatSettingsUI(); } } else { tempChatSettings[libraryContext.settingsGroup][libraryContext.activeKey] = url; if (libraryContext.isGroupUser) { loadGroupChatSettingsUI(); } else { loadSingleChatSettingsUI(); } } renderLibraryGrid(); } });
     let libraryLongPressTimer;
     libraryGrid.addEventListener('pointerdown', (e) => { const item = e.target.closest('.library-item'); if (item && item.dataset.url) { libraryLongPressTimer = setTimeout(() => { libraryModal.classList.add('selection-mode'); libraryDeleteBtn.style.display = 'block'; item.classList.add('selected'); librarySelection.push(item.dataset.url); }, 500); } });
     libraryGrid.addEventListener('pointerup', () => clearTimeout(libraryLongPressTimer));
     libraryGrid.addEventListener('pointerleave', () => clearTimeout(libraryLongPressTimer));
     libraryCloseBtn.addEventListener('click', () => { if (libraryModal.classList.contains('selection-mode')) { libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; librarySelection = []; queryAll('.library-item.selected').forEach(i => i.classList.remove('selected')); } else { libraryModal.classList.remove('visible'); } });
-    libraryDeleteBtn.addEventListener('click', () => { if (librarySelection.length > 0 && confirm(`确定要删除选中的 ${librarySelection.length} 个项目吗？`)) { let lib, activeItemKey, settingsObj; if (libraryContext.isGroup) { settingsObj = tempChatSettings.groupSettings; } else if (libraryContext.memberId) { settingsObj = tempGcsMemberSettings; } else if (libraryContext.isGlobal) { settingsObj = appState.chat.userProfile; } else { settingsObj = tempChatSettings[libraryContext.settingsGroup]; } lib = settingsObj[libraryContext.libraryKey]; activeItemKey = libraryContext.activeKey; const newLib = lib.filter(url => !librarySelection.includes(url)); settingsObj[libraryContext.libraryKey] = newLib; if (librarySelection.includes(settingsObj[activeItemKey])) { settingsObj[activeItemKey] = libraryContext.hasNoItemOption ? '' : (newLib[0] || ''); } if (libraryContext.memberId) { loadGcsMemberModalUI(); } else if (libraryContext.isGroupUser || libraryContext.isGroup || libraryContext.isGlobal) { if (currentChatId) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (contact.isGroup) loadGroupChatSettingsUI(); else loadSingleChatSettingsUI(); } } else { loadSingleChatSettingsUI(); } renderLibraryGrid(); libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; librarySelection = []; } });
+    libraryDeleteBtn.addEventListener('click', () => { if (librarySelection.length > 0 && confirm(`确定要删除选中的 ${librarySelection.length} 个项目吗？`)) { let lib, activeItemKey, settingsObj; if (libraryContext.isGroup) { settingsObj = tempChatSettings.groupSettings; } else if (libraryContext.memberId) { settingsObj = tempGcsMemberSettings; } else if (libraryContext.isGlobal) { settingsObj = appState.chat.userProfile; } else { settingsObj = tempChatSettings[libraryContext.settingsGroup]; } lib = settingsObj[libraryContext.libraryKey]; activeItemKey = libraryContext.activeKey; const newLib = lib.filter(url => !librarySelection.includes(url)); settingsObj[libraryContext.libraryKey] = newLib; if (librarySelection.includes(settingsObj[activeItemKey])) { settingsObj[activeItemKey] = libraryContext.hasNoItemOption ? '' : (newLib[0] || ''); } if (libraryContext.memberId) { loadGcsMemberModalUI(); } else if (libraryContext.isGroupUser || libraryContext.isGroup) { loadGroupChatSettingsUI(); } else { loadSingleChatSettingsUI(); } saveState(); renderLibraryGrid(); libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; librarySelection = []; } });
     libraryUploadBtn.addEventListener('click', () => libraryFileInput.click());
-    libraryAddUrlBtn.addEventListener('click', () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { let lib; if (libraryContext.isGroup) lib = tempChatSettings.groupSettings[libraryContext.libraryKey]; else if (libraryContext.memberId) lib = tempGcsMemberSettings[libraryContext.libraryKey]; else if (libraryContext.isGlobal) lib = appState.chat.userProfile[libraryContext.libraryKey]; else lib = tempChatSettings[libraryContext.settingsGroup][libraryContext.libraryKey]; lib.push(...urlArray); renderLibraryGrid(); } } });
-    libraryFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { let lib; if (libraryContext.isGroup) lib = tempChatSettings.groupSettings[libraryContext.libraryKey]; else if (libraryContext.memberId) lib = tempGcsMemberSettings[libraryContext.libraryKey]; else if (libraryContext.isGlobal) lib = appState.chat.userProfile[libraryContext.libraryKey]; else lib = tempChatSettings[libraryContext.settingsGroup][libraryContext.libraryKey]; for (const file of files) { const url = await readFileAsBase64(file); lib.push(url); } renderLibraryGrid(); } libraryFileInput.value = ''; });
-    csCharBackgroundBtn.addEventListener('click', async () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); tempChatSettings.charSettings.chatBackground = url; appState.beautify.wallpapers.push({ id: 'local_' + Date.now(), url: url }); saveState(); showToast('背景已设置并存入壁纸库'); } }; input.click(); });
+    libraryAddUrlBtn.addEventListener('click', () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { let lib; if (libraryContext.isGroup) lib = tempChatSettings.groupSettings[libraryContext.libraryKey]; else if (libraryContext.memberId) lib = tempGcsMemberSettings[libraryContext.libraryKey]; else if (libraryContext.isGlobal) lib = appState.chat.userProfile[libraryContext.libraryKey]; else lib = tempChatSettings[libraryContext.settingsGroup][libraryContext.libraryKey]; lib.push(...urlArray); saveState(); renderLibraryGrid(); } } });
+    libraryFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { const promises = Array.from(files).map(file => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); })); const urls = await Promise.all(promises); let lib; if (libraryContext.isGroup) lib = tempChatSettings.groupSettings[libraryContext.libraryKey]; else if (libraryContext.memberId) lib = tempGcsMemberSettings[libraryContext.libraryKey]; else if (libraryContext.isGlobal) lib = appState.chat.userProfile[libraryContext.libraryKey]; else lib = tempChatSettings[libraryContext.settingsGroup][libraryContext.libraryKey]; lib.push(...urls); saveState(); renderLibraryGrid(); } libraryFileInput.value = ''; });
+    
+    async function handleChatBackgroundUpload(file, settingsObject) {
+        if (!file) return;
+        const newId = 'wp_' + Date.now();
+        const blob = new Blob([file], { type: file.type });
+        await addImageToDB(newId, blob);
+        appState.beautify.wallpapers.push({ id: newId });
+        settingsObject.chatBackgroundId = newId;
+        saveState();
+        showToast('背景已设置并存入壁纸库');
+        await updateSingleChatUI();
+    }
+
+    csCharBackgroundBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => handleChatBackgroundUpload(e.target.files[0], tempChatSettings.charSettings);
+        input.click();
+    });
+
+    gcsGroupBackgroundBtn.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => handleChatBackgroundUpload(e.target.files[0], tempChatSettings.groupSettings);
+        input.click();
+    });
 
     // ===================================================================
     // --- 群聊设置界面逻辑 (新增) ---
     // ===================================================================
     function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings })); tempChatSettings = JSON.parse(JSON.stringify(originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
-    function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = tempChatSettings; gcsGroupName.value = groupSettings.name; gcsWorldBookList.innerHTML = appState.data.worldBooks.map(wb => `<label class="checkbox-label"><input type="checkbox" value="${wb.id}" ${groupSettings.linkedWorldBooks.includes(wb.id) ? 'checked' : ''}><span>${wb.name}</span></label>`).join(''); gcsGroupAvatar.style.backgroundImage = groupSettings.avatar ? `url(${groupSettings.avatar})` : 'none'; gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; gcsUsUserAvatar.style.backgroundImage = `url(${userSettings.avatar})`; gcsUsUserAvatar.querySelector('.avatar-frame').style.backgroundImage = appState.chat.userProfile.avatarFrame ? `url(${appState.chat.userProfile.avatarFrame})` : 'none'; gcsUsPersona.value = userSettings.persona; }
+    function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = tempChatSettings; gcsGroupName.value = groupSettings.name; gcsWorldBookList.innerHTML = appState.data.worldBooks.map(wb => `<label class="checkbox-label"><input type="checkbox" value="${wb.id}" ${groupSettings.linkedWorldBooks.includes(wb.id) ? 'checked' : ''}><span>${wb.name}</span></label>`).join(''); gcsGroupAvatar.style.backgroundImage = groupSettings.avatar ? `url(${groupSettings.avatar})` : 'none'; gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; gcsUsUserAvatar.style.backgroundImage = `url(${userSettings.avatar})`; gcsUsUserAvatar.querySelector('.avatar-frame').style.backgroundImage = userSettings.avatarFrame ? `url(${userSettings.avatarFrame})` : 'none'; gcsUsPersona.value = userSettings.persona; }
     function renderGroupMemberList() { const { owner, admins, members } = tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id, member.nickname); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } item.innerHTML = ` <div class="avatar" style="background-image: url(${user.avatar})">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
     function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(tempChatSettings.userSettings)); saveState(); updateSingleChatUI(); renderMessageList(); }
     function setupGroupChatSettingsListeners() {
@@ -1892,14 +2358,13 @@ document.addEventListener('DOMContentLoaded', () => {
         gcsWorldBookListContainer.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { if (!tempChatSettings.groupSettings.linkedWorldBooks.includes(id)) { tempChatSettings.groupSettings.linkedWorldBooks.push(id); } } else { tempChatSettings.groupSettings.linkedWorldBooks = tempChatSettings.groupSettings.linkedWorldBooks.filter(wbId => wbId !== id); } } });
         gcsContextMemory.addEventListener('input', () => tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20);
         gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
-        gcsGroupBackgroundBtn.addEventListener('click', async () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async (e) => { const file = e.target.files[0]; if (file) { const url = await readFileAsBase64(file); tempChatSettings.groupSettings.chatBackground = url; appState.beautify.wallpapers.push({ id: 'local_' + Date.now(), url: url }); saveState(); showToast('背景已设置并存入壁纸库'); } }; input.click(); });
         gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === currentChatId); if (contact) { contact.conversation = []; tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(currentChatId); saveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } });
         gcsMuteAllBtn.addEventListener('click', () => { tempChatSettings.groupSettings.isMuted = !tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(currentChatId, tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', true); });
         gcsDisbandBtn.addEventListener('click', () => { tempChatSettings.groupSettings.isDisbanded = !tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(currentChatId, tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', true); });
         gcsUsUserName.addEventListener('input', (e) => { const oldName = tempChatSettings.userSettings.name; const newName = e.target.value.trim(); if (newName && newName !== oldName) { tempChatSettings.userSettings.name = newName; tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(currentChatId, `'${oldName}' 在群里改名为 '${newName}'`, true); } });
         gcsUsPersona.addEventListener('input', () => tempChatSettings.userSettings.persona = gcsUsPersona.value);
-        gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobal: true, libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
-        gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isGlobal: true, libraryKey: 'avatarFrameLibrary', activeKey: 'avatarFrame', showPreview: true, hasNoItemOption: true, previewAvatar: tempChatSettings.userSettings.avatar }));
+        gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobal: true, isGroupUser: true, libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
+        gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isGlobal: true, isGroupUser: true, libraryKey: 'avatarFrameLibrary', activeKey: 'avatarFrame', showPreview: true, hasNoItemOption: true, previewAvatar: tempChatSettings.userSettings.avatar }));
         gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatar, persona } = tempChatSettings.userSettings; const newInfo = { id: 'data_' + Date.now(), name, avatar, content: persona }; appState.data.infos.push(newInfo); saveState(); showToast(`人设已保存到信息: ${name}`); renderInfos(); });
         gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
         gcsMemberList.addEventListener('click', (e) => { const item = e.target.closest('.gcs-member-item'); if (item) { openGcsMemberModal(item.dataset.id); } else if (e.target.id === 'gcs-add-member-btn') { openGcsManageMembersModal('add'); } else if (e.target.id === 'gcs-remove-member-btn') { openGcsManageMembersModal('remove'); } });
@@ -1976,27 +2441,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const contact = appState.chat.contacts.find(c => c.id === contactId);
         if (!contact) return;
 
-        let lastMessageText = '...';
+        let lastMessageText = '';
         let lastMessageTime = contact.lastMessageTime;
 
-        for (let i = contact.conversation.length - 1; i >= 0; i--) {
-            const msg = contact.conversation[i];
-            lastMessageTime = msg.timestamp;
-            if (msg.type === 'notification') {
-                lastMessageText = msg.content;
-            } else {
-                switch (msg.type) {
-                    case 'text': lastMessageText = msg.content; break;
-                    case 'emoji': lastMessageText = `[${msg.description || '表情'}]`; break;
-                    case 'image': lastMessageText = '[图片]'; break;
-                    case 'camera': lastMessageText = '[图片]'; break;
-                    case 'voice': lastMessageText = '[语音]'; break;
-                    case 'link': lastMessageText = `[链接] ${msg.title}`; break;
-                    case 'redPacket': lastMessageText = `[红包] ${msg.message}`; break;
-                    default: lastMessageText = '[未知消息]';
+        if (contact.conversation.length > 0) {
+            for (let i = contact.conversation.length - 1; i >= 0; i--) {
+                const msg = contact.conversation[i];
+                lastMessageTime = msg.timestamp;
+                if (msg.type === 'notification') {
+                    lastMessageText = `[系统消息] ${msg.content}`;
+                } else {
+                    switch (msg.type) {
+                        case 'text': lastMessageText = msg.content; break;
+                        case 'emoji': lastMessageText = `[${msg.description || '表情'}]`; break;
+                        case 'image': lastMessageText = '[图片]'; break;
+                        case 'camera': lastMessageText = '[图片]'; break;
+                        case 'voice': lastMessageText = '[语音]'; break;
+                        case 'link': lastMessageText = `[链接] ${msg.title}`; break;
+                        case 'redPacket': lastMessageText = `[红包] ${msg.message}`; break;
+                        default: lastMessageText = '[未知消息]';
+                    }
                 }
+                break; 
             }
-            break; 
         }
         
         contact.lastMessage = lastMessageText;
@@ -2023,7 +2490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             prompt += `\n重要规则：\n1. 你的回复必须严格遵守以下格式，每条消息占一行，以发言人昵称开头，后跟冒号和内容。例如：[${contact.groupSettings.members[contact.members[0]].nickname}]: 你好啊\n`;
             prompt += `2. 使用特殊分隔符“<MSG_SPLIT>”来分割不同人的发言。例如：[${contact.groupSettings.members[contact.members[0]].nickname}]: 你好啊<MSG_SPLIT>[${contact.groupSettings.members[contact.members[1]].nickname}]: 今天天气真不错。\n`;
             prompt += `3. 你的总回复应该被拆分为5到10条简短的消息，以模拟真实聊天的感觉。\n`;
-            prompt += `4. 作为群主或管理员，你可以根据人设和情景决定禁言或解禁其他成员（除了用户），使用特殊指令格式：[ACTION: MUTE 成员昵称] 或 [ACTION: UNMUTE 成员昵称]。这条指令会单独占一行，不会显示为对话。`;
+            prompt += `4. 作为群主或管理员，你可以根据人设和情景决定禁言/解禁其他成员（除了用户），或修改他们的群名片和头衔。使用特殊指令格式：[ACTION: MUTE "成员昵称"] 或 [ACTION: UNMUTE "成员昵称"] 或 [ACTION: SET_NICKNAME "旧昵称" "新昵称"] 或 [ACTION: SET_TITLE "成员昵称" "新头衔"]。这条指令会单独占一行，不会显示为对话。`;
         } else {
             const { charSettings, userSettings } = contact;
             prompt += `你正在与“${charSettings.name}”进行单人对话。\n`;
@@ -2054,10 +2521,13 @@ document.addEventListener('DOMContentLoaded', () => {
             let senderId = contact.isGroup ? null : contact.id;
 
             if (msgText.startsWith('[ACTION:')) {
-                const actionMatch = msgText.match(/\[ACTION: (MUTE|UNMUTE) (.*?)\]/);
-                if (actionMatch) {
-                    const action = actionMatch[1];
-                    const targetNickname = actionMatch[2].trim();
+                const muteMatch = msgText.match(/\[ACTION: (MUTE|UNMUTE) "(.*?)"\]/);
+                const nicknameMatch = msgText.match(/\[ACTION: SET_NICKNAME "(.*?)" "(.*?)"\]/);
+                const titleMatch = msgText.match(/\[ACTION: SET_TITLE "(.*?)" "(.*?)"\]/);
+
+                if (muteMatch) {
+                    const action = muteMatch[1];
+                    const targetNickname = muteMatch[2].trim();
                     const targetEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === targetNickname);
                     if (targetEntry) {
                         const [targetId, targetMember] = targetEntry;
@@ -2065,8 +2535,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (targetMember.isMuted !== newMuteState) {
                             targetMember.isMuted = newMuteState;
                             const aiAdmin = findUserById(senderId);
-                            addSystemNotification(contact.id, `'${aiAdmin.name}' ${newMuteState ? '禁言了' : '解除了对'} '${targetNickname}' ${newMuteState ? '' : '的禁言'}`, false);
+                            addSystemNotification(contact.id, `'${aiAdmin.name}' ${newMuteState ? '禁言了' : '解除了对'} '${targetNickname}' ${newMuteState ? '' : '的禁言'}`, true);
                         }
+                    }
+                } else if (nicknameMatch) {
+                    const oldNickname = nicknameMatch[1].trim();
+                    const newNickname = nicknameMatch[2].trim();
+                    const targetEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === oldNickname);
+                    if (targetEntry) {
+                        const [targetId, targetMember] = targetEntry;
+                        targetMember.nickname = newNickname;
+                        const aiAdmin = findUserById(senderId);
+                        addSystemNotification(contact.id, `'${aiAdmin.name}' 将 '${oldNickname}' 的群名片修改为 '${newNickname}'`, true);
+                    }
+                } else if (titleMatch) {
+                    const targetNickname = titleMatch[1].trim();
+                    const newTitle = titleMatch[2].trim();
+                    const targetEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === targetNickname);
+                    if (targetEntry) {
+                        const [targetId, targetMember] = targetEntry;
+                        targetMember.title = newTitle;
+                        const aiAdmin = findUserById(senderId);
+                        addSystemNotification(contact.id, `'${aiAdmin.name}' 将 '${targetNickname}' 的群聊头衔修改为 '${newTitle}'`, true);
                     }
                 }
                 continue;
@@ -2126,7 +2616,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     typingIndicator.style.display = 'none';
                     return;
                 }
-                typingIndicator.textContent = `群成员们正在输入...`;
+                typingIndicator.textContent = '群成员们正在输入...';
             } else {
                 typingIndicator.textContent = `${contact.remark || contact.name}正在输入中...`;
             }
@@ -2148,16 +2638,44 @@ document.addEventListener('DOMContentLoaded', () => {
         createDataListHandler(infoListEl, 'info', renderInfos);
         new ListInteractionHandler(detailsCommentsList, { itemSelector: '.comment-item', contentSelector: '.comment-item-main', actionsSelector: '.comment-item-actions-swipe', onDelete: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const commentIndex = appState.music.comments[songId].findIndex(c => c.id === commentId); if (commentIndex > -1) { if (confirm('确定要删除这条评论吗？')) { appState.music.comments[songId].splice(commentIndex, 1); saveState(); renderSongComments(songId); } } }, onEdit: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const comment = appState.music.comments[songId].find(c => c.id === commentId); if (comment) { editingComment = { songId, commentId, replyId: null }; editCommentInput.value = comment.text; editCommentModal.classList.add('visible'); } } });
         new ListInteractionHandler(messageListEl, { itemSelector: '.contact-list-item', contentSelector: '.contact-item-content', actionsSelector: '.contact-item-actions', onTap: (item) => { if (chatAppScreen.classList.contains('selection-mode')) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } item.classList.toggle('selected'); const id = item.dataset.id; if (item.classList.contains('selected')) { if (!contactSelection.includes(id)) contactSelection.push(id); } else { contactSelection = contactSelection.filter(selId => selId !== id); } } else { openSingleChat(item.dataset.id); } }, onLongPress: (item) => { if (!chatAppScreen.classList.contains('selection-mode')) { enterContactSelectionMode(item); } }, onDelete: (item) => { const contactId = item.dataset.id; const contactIndex = appState.chat.contacts.findIndex(c => c.id === contactId); if (contactIndex > -1) { if (confirm(`确定要永久删除联系人 "${appState.chat.contacts[contactIndex].name}" 吗？此操作不可逆。`)) { appState.chat.contacts.splice(contactIndex, 1); saveState(); renderMessageList(); showToast('联系人已删除'); } } } });
+        
+        // 单独处理表情网格的交互，避免重复绑定
+        const emojiGridHandler = new ListInteractionHandler(emojiGrid, { 
+            itemSelector: '.emoji-item', 
+            disableSwipe: true, 
+            onTap: (item) => {
+                const emoji = appState.chat.emojis.find(em => em.id === item.dataset.id);
+                if (emoji) {
+                    addMessageToConversation({ id: 'msg_' + Date.now(), type: 'emoji', content: emoji.url, description: emoji.description, sender: 'user', timestamp: new Date().getTime(), status: 'pending', contactId: currentChatId });
+                    emojiPickerPanel.classList.remove('visible');
+                }
+            }, 
+            onLongPress: (item) => {
+                const emojiId = item.dataset.id;
+                const emoji = appState.chat.emojis.find(em => em.id === emojiId);
+                if (emoji && confirm(`确定要删除表情 "${emoji.description}" 吗？`)) {
+                    appState.chat.emojis = appState.chat.emojis.filter(em => em.id !== emojiId);
+                    saveState();
+                    renderEmojiPicker();
+                    showToast('表情已删除');
+                }
+            } 
+        });
     }
     function setupSingleChatSettingsListeners() {
         csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
         csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', settingsGroup: 'charSettings', libraryKey: 'avatarFrameLibrary', activeKey: 'avatarFrame', showPreview: true, hasNoItemOption: true, previewAvatar: tempChatSettings.charSettings.avatar }));
-        usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'User头像库', isGlobal: true, libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
-        usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'User头像框库', isGlobal: true, libraryKey: 'avatarFrameLibrary', activeKey: 'avatarFrame', showPreview: true, hasNoItemOption: true, previewAvatar: tempChatSettings.userSettings.avatar }));
+        usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobal: true, settingsGroup: 'userSettings', libraryKey: 'avatarLibrary', activeKey: 'avatar', showPreview: false, isCircular: true }));
+        usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isGlobal: true, settingsGroup: 'userSettings', libraryKey: 'avatarFrameLibrary', activeKey: 'avatarFrame', showPreview: true, hasNoItemOption: true, previewAvatar: tempChatSettings.userSettings.avatar }));
     }
-    function readFileAsBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = (error) => reject(error); reader.readAsDataURL(file); }); }
-    function readFileAsText(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = (error) => reject(error); reader.readAsText(file); }); }
-    function init() {
+    async function init() {
+        try {
+            await initDB();
+        } catch (error) {
+            console.error("数据库初始化失败:", error);
+            alert("关键存储功能初始化失败，应用可能无法正常工作。请尝试刷新或使用支持的浏览器。");
+            return;
+        }
         queryAll('[data-icon-id]').forEach(el => { originalIconContent[el.dataset.iconId] = el.innerHTML; });
         queryAll('[data-bubble-id]').forEach(el => { originalBubbleContent[el.dataset.bubbleId] = el.style.cssText; });
         loadState();
@@ -2174,7 +2692,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBattery();
         setInterval(updateTime, 30000);
         setInterval(checkExpiredPackets, 60 * 1000);
-        queueNotification({ content: "欢迎使用土皇帝小手机！", senderName: "系统", contactId: "system" });
+        queueNotification("欢迎使用土皇帝小手机！");
         renderFonts();
         [addMusicModal, addFontModal, replaceIconModal, addEmojiModal, groupRedPacketModal, editMessageModal, libraryModal, loadPersonaModal, gcsMemberModal, gcsManageMembersModal, gcsMemberActionModal].forEach(setupModalTabs);
     }
@@ -2184,12 +2702,6 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 });
 </script>
-<!-- SCRIPT_END -->
-
-</body>
-</html>
-</script>
-<!-- SCRIPT_END -->
 
 </body>
 </html>
