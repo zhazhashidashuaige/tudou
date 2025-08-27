@@ -2743,6 +2743,9 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
     // BUG 1 FIX: Strict Parentheses Rules
     prompt += `--- **关于括号使用的【强制】规则** ---\n`;
     prompt += `括号 () 只能用来包裹【非语言的描述】，例如动作、神态、语气等。例如：(开心)、(皱眉)、(喝了杯水)、(小声说)。\n`;
+    prompt += `描述必须是一段第三人称视角的、不少于10个汉字的长文本。\n`;
+    prompt += `在非特殊动作指令的纯文字消息中，描述文本必须独占一行，语音消息中描述文本可以与语音文字内容同一行。\n`;
+    prompt += `但这些描述文本并非对话时必备的，仅为增强表现力而【自然】使用，你应该结合你的人设，只在【有必要】的时候加上描述文本并使用括号包裹，例如情景为与用户面对面交谈，或你此时内心产生较大波动，或你认为用户有必要知道你当前状态等，无必要时正常发言即可。\n`;
     prompt += `【绝对禁止】用括号包裹本身就是语言的词汇。错误示例：(不行)、(好的)、(可以)。正确示例：不行、好的、可以。\n\n`;
 
     prompt += `--- AI行为指令 ---\n`;
@@ -2757,7 +2760,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
     }
     
     prompt += `1.  **发送表情**: \`[ACTION: SEND_EMOJI "表情描述"]\`\n`;
-    prompt += `2.  **发送语音**: \`[ACTION: SEND_VOICE "语音文字内容(可选的动作描述)"]\`\n`;
+    prompt += `2.  **发送语音**: \`[ACTION: SEND_VOICE "(可选的动作描述)语音文字内容"]\`\n`;
     prompt += `3.  **发送图片/文字图**: \`[ACTION: SEND_IMAGE "图片描述"]\`\n`;
     prompt += `4.  **分享音乐**: \`[ACTION: SHARE_MUSIC "歌手 - 歌曲名"]\` (例如: [ACTION: SHARE_MUSIC "周杰伦 - 晴天"])\n`;
     prompt += `5.  **发红包 (单聊)**: \`[ACTION: SEND_REDPACKET "留言" 金额]\`\n`;
