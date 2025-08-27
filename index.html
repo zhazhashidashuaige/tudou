@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>土皇帝小手机</title>
     <!-- Safari PWA/Fullscreen Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1397,7 +1397,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentFilter: 'all',
                 isFabMenuOpen: false,
                 currentProfileId: 'user', // 'user' or a contactId
-                isInitialized: false,
             }
         };
     }
@@ -1834,7 +1833,7 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
 // --- 聊天 APP (包含动态) ---
 // ===================================================================
 chatListBackBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { exitContactSelectionMode(); } else { closeCurrentApp(); } });
-query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; if (!runtimeState.moments.isInitialized) { renderMomentsPage('user'); runtimeState.moments.isInitialized = true; } } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
+query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; renderMomentsPage('user'); } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
 chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (runtimeState.contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', runtimeState.contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, runtimeState.contactSelection); } } else { addContactModal.classList.add('visible'); } });
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
 confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); if (!name) return showToast('名字不能为空', 'error'); const newContact = { id: newId('contact'), name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
@@ -1908,11 +1907,6 @@ function renderConversation() {
 
         if (msg.quote) {
             contentHTML += `<div class="message-quote"><strong>${msg.quote.senderName}:</strong> ${msg.quote.content}</div>`;
-        }
-
-        // BUG 4 & 5 FIX: Create separate bubbles for text and actions
-        if(msg.type !== 'text' && msg.content) {
-            contentHTML += `<div class="message-bubble">${msg.content}</div>`;
         }
         
         // This switch handles the primary content bubble (text, image, etc.)
@@ -2830,7 +2824,7 @@ async function processAiReply(replyContent, contact) {
                     addMessageToConversation({ id: messageId, type: 'musicShare', songId: song.id, title: song.title, artist: song.artist, sender: senderId, timestamp, status: 'sent', contactId: contact.id }, true);
                 } else {
                     remainingText = `哎呀，我想给你分享《${songQuery}》，但我的手机里没有这首歌呢。`;
-                    actionHandled = false;
+                    actionHandled = false; // Fallback to text message
                 }
             } else if (action.startsWith('SEND_REDPACKET')) {
                  let packetData;
@@ -3100,7 +3094,6 @@ function renderMomentsFeed(profileId) {
 
     const filter = runtimeState.moments.currentFilter;
     
-    // The rest of the rendering logic remains the same...
     const tabList = [ { key: 'all', text: '全部' }, { key: 'status', text: '说说' }, { key: 'photo', text: '相册' }, { key: 'log', text: '日志' }, { key: 'visitor', text: '访客' }, { key: 'message', text: '留言' } ];
     tabsEl.innerHTML = tabList.filter(tab => isUserPage || (tab.key !== 'visitor')).map(tab => `<span class="moments-filter-tab ${filter === tab.key ? 'active' : ''}" data-filter="${tab.key}">${tab.text}</span>`).join('');
     
@@ -3128,13 +3121,98 @@ function setupAllListInteractions() { new ListInteractionHandler(presetListEl, {
 function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', isFrame: true, settingsGroup: 'charSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.charSettings.avatarId })); usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); }
 function setupWorldBookSelector(selectorContainer, listContainer, linkedIdsArray) { const btn = selectorContainer.querySelector('.wb-group-selector-btn'); const dropdown = selectorContainer.querySelector('.wb-group-dropdown'); const updateButtonText = () => { const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; if (selectedGroups.length === 0) { btn.textContent = '选择分组'; } else if (selectedGroups.length === 1) { btn.textContent = selectedGroups[0]; } else { btn.textContent = `${selectedGroups.length}个分组已选`; } }; const populateDropdown = () => { const groups = [...new Set(appState.data.worldBooks.map(wb => wb.group || '未分组'))]; const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; dropdown.innerHTML = groups.map(group => ` <label class="checkbox-label"> <input type="checkbox" value="${group}" ${selectedGroups.includes(group) ? 'checked' : ''}> <span>${group}</span> </label> `).join(''); }; btn.addEventListener('click', (e) => { e.stopPropagation(); populateDropdown(); dropdown.classList.toggle('visible'); }); dropdown.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const groupName = e.target.value; const isChecked = e.target.checked; const idsInGroup = appState.data.worldBooks.filter(wb => (wb.group || '未分组') === groupName).map(wb => wb.id); if (isChecked) { idsInGroup.forEach(id => { if (!linkedIdsArray.includes(id)) linkedIdsArray.push(id); }); } else { idsInGroup.forEach(id => { const index = linkedIdsArray.indexOf(id); if (index > -1) linkedIdsArray.splice(index, 1); }); } renderWorldBookList(listContainer, linkedIdsArray); updateButtonText(); } }); renderWorldBookList(listContainer, linkedIdsArray); updateButtonText(); }
 function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTML = appState.data.worldBooks.map(wb => ` <label class="checkbox-label"> <input type="checkbox" value="${wb.id}" ${linkedIdsArray.includes(wb.id) ? 'checked' : ''}> <span>${wb.name}</span> </label> `).join(''); listElement.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { if (!linkedIdsArray.includes(id)) linkedIdsArray.push(id); } else { const index = linkedIdsArray.indexOf(id); if (index > -1) linkedIdsArray.splice(index, 1); } const selectorContainer = listElement.closest('.chat-settings-section').querySelector('.wb-group-selector'); if (selectorContainer) { const btn = selectorContainer.querySelector('.wb-group-selector-btn'); const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; if (selectedGroups.length === 0) { btn.textContent = '选择分组'; } else if (selectedGroups.length === 1) { btn.textContent = selectedGroups[0]; } else { btn.textContent = `${selectedGroups.length}个分组已选`; } } } }); }
-async function init() { try { runtimeState = getInitialRuntimeState(); await initDB(); const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob(); await addMediaToDB('default_user_avatar', defaultAvatarBlob); const defaultCameraBlob = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob(); await addMediaToDB('default_camera_image', defaultCameraBlob); const defaultMomentsCover = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob(); await addMediaToDB('default_moments_cover', defaultMomentsCover); const defaultMomentsAvatar = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob(); await addMediaToDB('default_moments_avatar', defaultMomentsAvatar); queryAll('[data-icon-id]').forEach(el => { runtimeState.originalIconContent[el.dataset.iconId] = el.innerHTML; }); queryAll('[data-bubble-id]').forEach(el => { runtimeState.originalBubbleContent[el.dataset.bubbleId] = el.style.cssText; }); loadState(); setupAppNavigation(); setupAllListInteractions(); setupChatMessageViewInteractions(); setupSingleChatSettingsListeners(); setupGroupChatSettingsListeners(); setupChatToolbarListeners(); initializeAllRealtimeActivity(); appState.music.currentQueueIndex = -1; updateMusicListPlayingStatus(); updateTime(); updateBattery(); setInterval(updateTime, 30000); setInterval(checkExpiredPackets, 60 * 1000); queueNotification("欢迎使用土皇帝小手机！", 'system', 'system'); [addMusicModal, addFontModal, replaceIconModal, addEmojiModal, groupRedPacketModal, editMessageModal, libraryModal, loadPersonaModal, gcsMemberModal, gcsManageMembersModal, gcsMemberActionModal].forEach(setupModalTabs); document.addEventListener('click', (e) => { document.querySelectorAll('.wb-group-dropdown.visible').forEach(dropdown => { if (!dropdown.parentElement.contains(e.target)) { dropdown.classList.remove('visible'); } }); }); } catch (error) { console.error("CRITICAL INITIALIZATION FAILURE:", error); alert("应用初始化失败，部分功能可能无法使用。请检查控制台并尝试刷新。"); } }
+
+// BUG 7 FIX: Event delegation listener for the entire chat app screen
+function setupChatAppScreenListeners() {
+    chatAppScreen.addEventListener('click', (e) => {
+        // This single listener handles clicks within the entire chat app.
+        // We check if the "moments" tab is active before processing moments-related clicks.
+        const momentsTab = query('#chat-app-screen .tab-link[data-tab="moments"]');
+        if (momentsTab && momentsTab.classList.contains('active')) {
+             const scrollContainer = e.target.closest('.moments-scroll-container');
+             if (scrollContainer) {
+                 handleMomentsPageInteraction(e);
+             }
+        }
+    });
+
+    // Also delegate for the sub-screen for character moments pages
+    charMomentsScreen.addEventListener('click', (e) => {
+        const backBtn = e.target.closest('#char-moments-back-btn');
+        if (backBtn) {
+            closeSubScreen(charMomentsScreen, chatAppScreen);
+            return;
+        }
+        const scrollContainer = e.target.closest('.moments-scroll-container');
+        if (scrollContainer) {
+            handleMomentsPageInteraction(e);
+        }
+    });
+}
+
+async function init() {
+    try {
+        runtimeState = getInitialRuntimeState();
+        await initDB();
+
+        // Setup default assets in IndexedDB
+        const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
+        await addMediaToDB('default_user_avatar', defaultAvatarBlob);
+        const defaultCameraBlob = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob();
+        await addMediaToDB('default_camera_image', defaultCameraBlob);
+        const defaultMomentsCover = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob();
+        await addMediaToDB('default_moments_cover', defaultMomentsCover);
+        const defaultMomentsAvatar = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
+        await addMediaToDB('default_moments_avatar', defaultMomentsAvatar);
+
+        // Store original content for restoration
+        queryAll('[data-icon-id]').forEach(el => { runtimeState.originalIconContent[el.dataset.iconId] = el.innerHTML; });
+        queryAll('[data-bubble-id]').forEach(el => { runtimeState.originalBubbleContent[el.dataset.bubbleId] = el.style.cssText; });
+        
+        loadState();
+        setupAppNavigation();
+        setupAllListInteractions();
+        setupChatMessageViewInteractions();
+        setupSingleChatSettingsListeners();
+        setupGroupChatSettingsListeners();
+        setupChatToolbarListeners();
+        setupChatAppScreenListeners(); // Initialize the top-level listener for dynamic content like Moments
+        initializeAllRealtimeActivity();
+
+        appState.music.currentQueueIndex = -1;
+        updateMusicListPlayingStatus();
+        
+        updateTime();
+        updateBattery();
+        setInterval(updateTime, 30000);
+        setInterval(checkExpiredPackets, 60 * 1000);
+        
+        queueNotification("欢迎使用土皇帝小手机！", 'system', 'system');
+        
+        // Setup tabs for all modals
+        [addMusicModal, addFontModal, replaceIconModal, addEmojiModal, groupRedPacketModal, editMessageModal, libraryModal, loadPersonaModal, gcsMemberModal, gcsManageMembersModal, gcsMemberActionModal].forEach(setupModalTabs);
+        
+        // Global listener to close dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            document.querySelectorAll('.wb-group-dropdown.visible').forEach(dropdown => {
+                if (!dropdown.parentElement.contains(e.target)) {
+                    dropdown.classList.remove('visible');
+                }
+            });
+        });
+    } catch (error) {
+        console.error("CRITICAL INITIALIZATION FAILURE:", error);
+        alert("应用初始化失败，部分功能可能无法使用。请检查控制台并尝试刷新。");
+    }
+}
+
 function setupModalTabs(modal) { if (!modal) return; const tabs = modal.querySelectorAll('.tab-btn'); const contents = modal.querySelectorAll('.modal-tab-content'); if (tabs.length === 0) return; tabs.forEach(tab => { tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); contents.forEach(c => c.classList.remove('active')); tab.classList.add('active'); const contentId = tab.dataset.tab; const targetContent = modal.querySelector(`.modal-tab-content[id*="${contentId}"]`); if (targetContent) { targetContent.classList.add('active'); } }); }); }
 function initializeAllRealtimeActivity() { appState.chat.contacts.forEach(contact => { if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { updateRealtimeActivityTimer(contact); } }); }
 function updateRealtimeActivityTimer(contact) { if (runtimeState.realtimeActivityTimers[contact.id]) { clearInterval(runtimeState.realtimeActivityTimers[contact.id]); } if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { const intervalMinutes = contact.charSettings.realtimeActivity.interval || 30; runtimeState.realtimeActivityTimers[contact.id] = setInterval(() => { const lastUserMessage = [...contact.conversation].reverse().find(m => m.sender === 'user'); if (lastUserMessage && (Date.now() - lastUserMessage.timestamp > intervalMinutes * 60 * 1000)) { const isChattingWithOthers = Object.keys(runtimeState.activeRequests).length > 0 || appState.chat.contacts.some(c => c.id !== contact.id && c.conversation.some(m => m.sender === 'user' && (Date.now() - m.timestamp < 5 * 60 * 1000))); if (isChattingWithOthers) { triggerAiResponse(contact.id, false, true); } else { triggerAiResponse(contact.id, true); } } else { triggerAiResponse(contact.id, true); } }, intervalMinutes * 60 * 1000); } }
 function enterEmojiSelectionMode(initialItem) { runtimeState.emojiSelectionMode = true; emojiPickerPanel.classList.add('selection-mode'); addEmojiBtn.textContent = '删除'; runtimeState.selectedEmojis = [initialItem.dataset.emojiId]; initialItem.classList.add('selected'); }
 function exitEmojiSelectionMode() { runtimeState.emojiSelectionMode = false; emojiPickerPanel.classList.remove('selection-mode'); addEmojiBtn.textContent = '添加'; runtimeState.selectedEmojis = []; queryAll('.emoji-item.selected').forEach(i => i.classList.remove('selected')); }
 function toggleEmojiSelection(item) { const emojiId = item.dataset.emojiId; item.classList.toggle('selected'); if (runtimeState.selectedEmojis.includes(emojiId)) { runtimeState.selectedEmojis = runtimeState.selectedEmojis.filter(id => id !== emojiId); } else { runtimeState.selectedEmojis.push(emojiId); } if (runtimeState.selectedEmojis.length === 0) { exitEmojiSelectionMode(); } }
+
 init();
 });
 
