@@ -398,7 +398,7 @@
         
         /* --- New/Modified Message Bubble Types --- */
         .message-bubble.voice { padding: 5px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; overflow: hidden; /* BUG FIX */ }
-        .voice-waveform-container { flex-grow: 1; height: 20px; display: flex; align-items: center; gap: 2px; padding: 0 5px; min-width: 0; /* BUG FIX */ }
+        .voice-waveform-container { flex-grow: 1; height: 20px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px; min-width: 0; /* BUG FIX */ }
         .voice-waveform-container span { width: 2px; background-color: #888; border-radius: 1px; transition: height 0.2s; }
         .voice-waveform-container.playing span { animation: waveform-play 1.2s infinite ease-in-out; }
         .voice-waveform-container.playing span:nth-child(2n) { animation-delay: -0.2s; }
@@ -419,6 +419,7 @@
         .message-bubble.camera { position: relative; cursor: pointer; }
         .camera-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; color: black; display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px; box-sizing: border-box; border-radius: 12px; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
         .message-bubble.camera.show-text .camera-text-overlay { opacity: 1; visibility: visible; }
+        .camera-text-overlay { word-break: break-all; } /* BUG FIX: 修复文字溢出 */
         .message-bubble.link { background-color: white; padding: 10px; cursor: pointer; border-radius: 12px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .link-info .title { font-weight: bold; font-size: 15px; }
         .link-info .summary { font-size: 13px; color: var(--secondary-text-color); }
@@ -507,6 +508,13 @@
         .gcs-member-item .name { font-size: 12px; text-align: center; }
         .gcs-action-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px dashed var(--border-color); background: none; font-size: 24px; color: var(--border-color); cursor: pointer; }
         #gcs-member-action-body { display: flex; flex-direction: column; gap: 10px; }
+        #gcs-manage-members-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; max-height: 250px; overflow-y: auto; }
+        .gcs-manage-member-item { position: relative; }
+        .gcs-manage-member-item input[type="checkbox"] { display: none; }
+        .gcs-manage-member-item label { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 5px; }
+        .gcs-manage-member-item input[type="checkbox"]:checked + label { border-color: var(--accent-color); background-color: rgba(0, 122, 255, 0.1); }
+        .gcs-manage-member-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
+        .gcs-manage-member-item .name { font-size: 12px; text-align: center; }
 
         /* --- World Book Group Selector --- */
         .wb-group-selector { position: relative; }
@@ -1394,6 +1402,90 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadPersonaTitle = getEl('load-persona-title');
     const loadPersonaList = getEl('load-persona-list');
     const loadPersonaCancelBtn = getEl('load-persona-cancel-btn');
+    // Function to open the persona loading modal
+    function openLoadPersonaModal(dataType, settingsGroup, memberId = null) {
+        // Store context for when an item is selected
+        runtimeState.personaLoadContext = { dataType, settingsGroup, memberId };
+        
+        const dataArray = appState.data[dataType + 's'];
+        loadPersonaTitle.textContent = `读取${dataType === 'archive' ? '档案' : '信息'}`;
+
+        if (dataArray.length === 0) {
+            loadPersonaList.innerHTML = `<p style="text-align:center; color:#888;">暂无内容可读取</p>`;
+        } else {
+            loadPersonaList.innerHTML = ''; // Clear previous list
+            dataArray.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'preset-data-item'; // Use existing class for styling
+                li.dataset.id = item.id;
+                
+                // Use the same layout as the Data App lists for consistency
+                li.innerHTML = `
+                    <div class="preset-data-item-content" style="cursor: pointer;">
+                        <div class="preset-data-avatar"></div>
+                        <div class="preset-data-info">
+                            <div class="preset-data-name">${escapeHTML(item.name)}</div>
+                            <div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div>
+                        </div>
+                    </div>`;
+                
+                loadPersonaList.appendChild(li);
+                setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId);
+            });
+        }
+        loadPersonaModal.classList.add('visible');
+    }
+
+    // Event listener for selecting a persona from the modal list
+    loadPersonaList.addEventListener('click', (e) => {
+        const item = e.target.closest('.preset-data-item');
+        if (!item) return;
+
+        const dataId = item.dataset.id;
+        const { dataType, settingsGroup, memberId } = runtimeState.personaLoadContext;
+        const dataItem = appState.data[dataType + 's'].find(d => d.id === dataId);
+
+        if (!dataItem) {
+            showToast('无法找到所选资料', 'error');
+            return;
+        }
+
+        if (memberId) {
+            // Case: Editing a group member in the gcs-member-modal
+            runtimeState.tempGcsMemberSettings.nickname = dataItem.name;
+            runtimeState.tempGcsMemberSettings.avatarId = dataItem.avatarId;
+            runtimeState.tempGcsMemberSettings.persona = dataItem.content;
+            loadGcsMemberModalUI();
+        } else {
+            // Case: Editing in single chat settings OR group chat "my settings" tab
+            const targetSettings = runtimeState.tempChatSettings[settingsGroup];
+            targetSettings.name = dataItem.name;
+            targetSettings.avatarId = dataItem.avatarId;
+            targetSettings.persona = dataItem.content;
+            
+            // If editing user settings within a group chat, also update the nickname in the members list
+            if (groupChatSettingsScreen.classList.contains('active') && settingsGroup === 'userSettings') {
+                const userInGroup = runtimeState.tempChatSettings.groupSettings.members['user'];
+                userInGroup.nickname = dataItem.name;
+                userInGroup.avatarId = dataItem.avatarId;
+            }
+            
+            // Refresh the correct settings screen UI
+            if (chatSettingsScreen.classList.contains('active')) {
+                loadSingleChatSettingsUI();
+            } else if (groupChatSettingsScreen.classList.contains('active')) {
+                loadGroupChatSettingsUI();
+            }
+        }
+
+        loadPersonaModal.classList.remove('visible');
+        showToast('资料已成功读取！');
+    });
+
+    // Event listener for the cancel button in the persona modal
+    loadPersonaCancelBtn.addEventListener('click', () => {
+        loadPersonaModal.classList.remove('visible');
+    });
 
     // --- 全局状态管理 (可序列化) ---
     const DB_KEY = 'EmperorPhoneData_v2';
@@ -1403,7 +1495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 全局运行时状态 (不可序列化) ---
     let runtimeState = {};
     
-    const newId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
 
     // ===================================================================
     // --- 状态管理重构 ---
@@ -1475,6 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
             realtimeActivityTimers: {},
             activeRequests: {},
             notificationQueue: [],
+            musicSessionType: null,
             isNotificationVisible: false,
             currentlyPlayingVoiceTimer: null,
             mediaObjectURLs: new Map(),
@@ -1649,7 +1742,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(message, type = 'info') { toastEl.textContent = message; toastEl.className = `show ${type}`; clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2500); }
     function getDisplayLength(str) { let len = 0; for (let i = 0; i < str.length; i++) { len += str.charCodeAt(i) > 255 ? 2 : 1; } return len; }
     function queueNotification(content, contactId, senderId, type = 'chat') { if (type === 'chat' && singleChatScreen.classList.contains('active') && runtimeState.currentChatId === contactId) { return; } if (type === 'moments' && query('#chat-app-screen .tab-link[data-tab="moments"]')?.classList.contains('active')) { return; } runtimeState.notificationQueue.push({ content, contactId, senderId, type }); processNotificationQueue(); }
-    function processNotificationQueue() { if (runtimeState.isNotificationVisible || runtimeState.notificationQueue.length === 0) return; runtimeState.isNotificationVisible = true; const { content, contactId, senderId, type } = runtimeState.notificationQueue.shift(); const sender = findUserById(senderId); let message; if (type === 'chat') { const contact = appState.chat.contacts.find(c => c.id === contactId); const senderName = contact?.isGroup ? (contact.groupSettings.members[senderId]?.nickname || sender.name) : sender.name; message = `${senderName}: ${content}`; } else { message = content; } let displayMsg = message; if (getDisplayLength(message) > 30) { let truncated = ''; let currentLen = 0; for (let i = 0; i < message.length; i++) { const char = message[i]; currentLen += getDisplayLength(char); if (currentLen > 28) { truncated += '...'; break; } truncated += char; } displayMsg = truncated; } const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = displayMsg; banner.dataset.contactId = contactId; banner.dataset.type = type; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); const dismiss = () => { banner.classList.remove('show'); const timer = setTimeout(() => { banner.remove(); runtimeState.isNotificationVisible = false; processNotificationQueue(); }, 400); banner.addEventListener('transitionend', () => { clearTimeout(timer); banner.remove(); runtimeState.isNotificationVisible = false; processNotificationQueue(); }, { once: true }); }; const handleClick = () => { const id = banner.dataset.contactId; const notifType = banner.dataset.type; if (notifType === 'moments') { closeAllScreens(); openApp(chatAppScreen); query('#chat-app-screen .tab-link[data-tab="moments"]').click(); } else if (id && id !== 'null' && id !== 'system') { closeAllScreens(); openApp(chatAppScreen); openSingleChat(id); } else { closeAllScreens(); } dismiss(); }; banner.addEventListener('click', handleClick); setTimeout(dismiss, 5000); }
+    function processNotificationQueue() { if (runtimeState.isNotificationVisible || runtimeState.notificationQueue.length === 0) return; runtimeState.isNotificationVisible = true; const { content, contactId, senderId, type } = runtimeState.notificationQueue.shift(); const sender = findUserById(senderId); let message; if (type === 'chat') { const contact = appState.chat.contacts.find(c => c.id === contactId); const senderName = contact?.isGroup ? (contact.groupSettings.members[senderId]?.nickname || sender.name) : sender.name; message = `${senderName}: ${content}`; } else { message = content; } let displayMsg = message; if (getDisplayLength(message) > 30) { let truncated = ''; let currentLen = 0; for (let i = 0; i < message.length; i++) { const char = message[i]; currentLen += getDisplayLength(char); if (currentLen > 28) { truncated += '...'; break; } truncated += char; } displayMsg = truncated; } const banner = document.createElement('div'); banner.className = 'notification-banner'; banner.textContent = displayMsg; banner.dataset.contactId = contactId; banner.dataset.type = type; notificationContainer.appendChild(banner); setTimeout(() => banner.classList.add('show'), 50); const dismiss = () => { banner.classList.remove('show'); const timer = setTimeout(() => { banner.remove(); runtimeState.isNotificationVisible = false; processNotificationQueue(); }, 400); banner.addEventListener('transitionend', () => { clearTimeout(timer); banner.remove(); runtimeState.isNotificationVisible = false; processNotificationQueue(); }, { once: true }); }; const handleClick = (event) => {
+                    event.stopPropagation(); const id = banner.dataset.contactId; const notifType = banner.dataset.type; if (notifType === 'moments') { closeAllScreens(); openApp(chatAppScreen); query('#chat-app-screen .tab-link[data-tab="moments"]').click(); } else if (id && id !== 'null' && id !== 'system') { closeAllScreens(); openApp(chatAppScreen); openSingleChat(id); } else { closeAllScreens(); } dismiss(); }; banner.addEventListener('click', handleClick); setTimeout(dismiss, 5000); }
 
     // ===================================================================
     // --- APP导航与路由 ---
@@ -1665,7 +1759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // --- 设置 APP ---
     // ===================================================================
-    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) contact.userSettings = {}; contact.userSettings = { ...deepCopy(userProfileDefaults), ...contact.userSettings }; contact.userSettings.avatarLibrary = contact.userSettings.avatarLibrary || []; if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', linkedWorldBooks: [], contextMemory: 20, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = { nickname: userProfileDefaults.name, title: '皇帝' }; } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', contextMemory: 20, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '' }; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } contact.userSettings.name = contact.userSettings.name === userProfileDefaults.name ? '你' : contact.userSettings.name; contact.userSettings.persona = contact.userSettings.persona === userProfileDefaults.persona ? '这是一个默认的User人设。' : contact.userSettings.persona; } }
+    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) contact.userSettings = {}; contact.userSettings = { ...deepCopy(userProfileDefaults), ...contact.userSettings }; contact.userSettings.avatarLibrary = contact.userSettings.avatarLibrary || []; if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', linkedWorldBooks: [], contextMemory: 20, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = { nickname: userProfileDefaults.name, title: '皇帝' }; } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', contextMemory: 20, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' }; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } contact.userSettings.name = contact.userSettings.name === userProfileDefaults.name ? '你' : contact.userSettings.name; contact.userSettings.persona = contact.userSettings.persona === userProfileDefaults.persona ? '这是一个默认的User人设。' : contact.userSettings.persona; } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); }); }
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); saveState(); });
@@ -1688,6 +1782,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let listenTogetherTimer = null;
     function playSongFromQueue(queueIndex, initiatorId = null) {
         if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return;
+
+        if (initiatorId) {
+            runtimeState.musicSessionType = 'together';
+        } else {
+            runtimeState.musicSessionType = 'solo';
+        }
+
         appState.music.currentQueueIndex = queueIndex;
         const song = appState.music.queue[queueIndex];
         
@@ -1713,7 +1814,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllPlayerUI(song);
     
         clearInterval(listenTogetherTimer);
-        if (runtimeState.currentChatId) {
+        if (runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
             const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
             if (!contact) return;
             if (!contact.listenTogetherDuration) contact.listenTogetherDuration = 0;
@@ -1741,9 +1842,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateMusicListPlayingStatus();
         clearInterval(listenTogetherTimer);
         listenTogetherInfo.style.display = 'none';
-        if(runtimeState.currentChatId) {
+        if(runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
             addSystemNotification(runtimeState.currentChatId, '一起听歌已结束', false);
         }
+        runtimeState.musicSessionType = null;
     }
     
     function playNext() {
@@ -1792,8 +1894,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     function formatTime(seconds) { if (isNaN(seconds)) return '--:--'; const min = Math.floor(seconds / 60); const sec = Math.floor(seconds % 60); return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`; }
     function renderMusicList() { musicListEl.innerHTML = ''; if (appState.music.playlist.length === 0) { musicListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无音乐，点击右上角+添加</div>'; return; } appState.music.playlist.forEach((song, index) => { const li = document.createElement('li'); li.className = 'music-list-item'; li.dataset.id = song.id; li.innerHTML = `<div class="music-item-content"><div class="music-item-info"><span class="title">${song.title}</span><span class="artist">${song.artist}</span></div><div class="music-item-duration">${formatTime(song.duration)}</div></div><div class="music-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; musicListEl.appendChild(li); }); updateMusicListPlayingStatus(); }
-    function updateMusicListPlayingStatus() { const currentSong = appState.music.queue[appState.music.currentQueueIndex]; queryAll('.music-list-item').forEach(item => { item.classList.toggle('playing', currentSong && item.dataset.id === currentSong.id); }); }
-    addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
+    function updateMusicListPlayingStatus() {
+        const currentPlayingId = appState.music.queue[appState.music.currentQueueIndex]?.id;
+        queryAll('.music-list-item').forEach(item => {
+            if (currentPlayingId && item.dataset.id === currentPlayingId) {
+                item.classList.add('playing');
+            } else {
+                item.classList.remove('playing');
+            }
+        });
+    }    addMusicBtn.addEventListener('click', () => addMusicModal.classList.add('visible'));
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
@@ -1958,9 +2068,22 @@ async function updateSingleChatUI() { const contact = appState.chat.contacts.fin
 chatBackBtn.addEventListener('click', () => { closeSubScreen(singleChatScreen, chatAppScreen); runtimeState.currentChatId = null; if (runtimeState.chatSelectionMode) exitChatSelectionMode(); });
 chatSettingsBtn.addEventListener('click', () => { if (runtimeState.chatSelectionMode) { if (runtimeState.selectedMessages.length > 0 && confirm(`确定要删除选中的 ${runtimeState.selectedMessages.length} 条消息吗？`)) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); contact.conversation = contact.conversation.filter(msg => !runtimeState.selectedMessages.includes(msg.id)); updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); } exitChatSelectionMode(); } else { openChatSettings(); } });
 function renderConversation() {
-    chatMessagesView.innerHTML = '';
-    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-    if (!contact) return;
+        chatMessagesView.innerHTML = '';
+        let contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+        if (!contact) return;
+
+        // 如果在设置界面，优先使用临时数据进行渲染以实现实时预览
+        if ((groupChatSettingsScreen.classList.contains('active') || chatSettingsScreen.classList.contains('active')) && runtimeState.tempChatSettings && Object.keys(runtimeState.tempChatSettings).length > 0) {
+            const tempContact = JSON.parse(JSON.stringify(contact)); // 创建一个临时副本以避免修改原始状态
+            if (tempContact.isGroup) {
+                tempContact.groupSettings = runtimeState.tempChatSettings.groupSettings;
+                tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
+            } else {
+                tempContact.charSettings = runtimeState.tempChatSettings.charSettings;
+                tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
+            }
+            contact = tempContact; // 在本次渲染中，使用这个包含临时修改的副本
+        }
 
     let lastTimestamp = 0;
     contact.conversation.forEach(msg => {
@@ -1994,7 +2117,7 @@ function renderConversation() {
         if (contact.isGroup) {
             const memberSettings = contact.groupSettings.members[msg.sender];
             const userProfile = findUserById(msg.sender);
-            avatarId = userProfile.avatarId;
+            avatarId = memberSettings?.avatarId || userProfile.avatarId;
             senderName = memberSettings?.nickname || userProfile.name;
             avatarFrameId = memberSettings?.avatarFrameId || '';
         } else {
@@ -2006,7 +2129,7 @@ function renderConversation() {
         const avatarHTML = `<div class="avatar" data-avatar-id="${avatarId}"><div class="avatar-frame" data-avatar-frame-id="${avatarFrameId}"></div></div>`;
         let contentHTML = '';
 
-        if (contact.isGroup && msg.sender !== 'user' && msg.sender !== 'system') {
+        if (contact.isGroup && msg.sender !== 'system') {
             const memberSettings = contact.groupSettings.members[msg.sender];
             if (memberSettings) {
                 const role = msg.sender === contact.groupSettings.owner ? 'owner' : (contact.groupSettings.admins.includes(msg.sender) ? 'admin' : 'member');
@@ -2028,8 +2151,11 @@ function renderConversation() {
                 contentHTML += `<div class="message-bubble emoji-bubble"><img data-emoji-id="${msg.emojiId}" alt="${msg.description}"></div>`;
                 break;
             case 'voice':
-                const waveformSpans = Array(30).fill(0).map(() => `<span style="height: ${Math.random() * 90 + 10}%"></span>`).join('');
-                contentHTML += `<div class="message-bubble voice" style="width: ${Math.min(60 + msg.duration * 8, 220)}px;"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`;
+                const bubbleWidth = Math.min(60 + msg.duration * 8, 220);
+                // 每个span 2px 宽, 假定平均间隙也为 2px, 总共 4px.
+                const spanCount = Math.floor(bubbleWidth / 4);
+                const waveformSpans = Array(spanCount).fill(0).map(() => `<span style="height: ${Math.random() * 90 + 10}%"></span>`).join('');
+                contentHTML += `<div class="message-bubble voice" style="width: ${bubbleWidth}px;"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`;
                 break;
             case 'image':
             case 'camera':
@@ -2082,7 +2208,29 @@ function renderConversation() {
 function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; } contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(message.content, contact.id, message.sender); } if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === contact.id) { renderConversation(); } updateContactLastMessage(contact.id); renderMessageList(); saveState(); }
 function addSystemNotification(contactId, content, triggerAi = false) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; const notification = { id: newId('msg'), type: 'notification', content, timestamp: Date.now(), contactId: contactId, sender: 'system' }; if (triggerAi === false) { notification.status = 'pending'; } contact.conversation.push(notification); updateContactLastMessage(contactId); saveState(); if (runtimeState.currentChatId === contactId) { renderConversation(); } renderMessageList(); if (triggerAi) { const updatedContact = appState.chat.contacts.find(c => c.id === contactId); if (updatedContact.isGroup && updatedContact.members.length === 0) { return; } setTimeout(() => triggerAiResponse(contactId), 500); } }
 chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; addMessageToConversation({ id: newId('msg'), type: 'text', content, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatInput.value = ''; updateChatInputButtons(); });
-async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false) { const contact = appState.chat.contacts.find(c => c.id === targetChatId); if (!contact) return; if (contact.isGroup && contact.members.length === 0) { return; } if (runtimeState.activeRequests[targetChatId]) return; const messagesToMarkSent = contact.conversation.filter(m => m.status === 'pending'); runtimeState.activeRequests[targetChatId] = true; updateTypingIndicator(); try { const { apiUrl, apiKey, selectedModel } = appState.settings; if (!apiUrl || !apiKey || !selectedModel) { throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。"); } const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory; const systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger); const history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => { let role = msg.sender === 'user' ? 'user' : 'assistant'; let content = ''; if (msg.quote) { content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `; } switch(msg.type) { case 'text': content += msg.content; break; case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break; case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break; case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break; case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break; default: content += msg.content || ''; } return { role, content }; }); const sanitizedHistory = history.filter(msg => msg.content && msg.content.trim() !== ''); if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === 'assistant') { sanitizedHistory.push({ role: 'user', content: '' }); } const messages = [{ role: 'system', content: systemPrompt }, ...sanitizedHistory]; const response = await fetch(`${apiUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: selectedModel, messages: messages, stream: false }) }); if (!response.ok) { const errorData = await response.json(); const errorMessage = errorData.error?.message || response.statusText; throw new Error(`API Error: ${errorMessage}`); } const data = await response.json(); const replyContent = data.choices[0]?.message?.content; if (replyContent && replyContent.trim() !== "") { messagesToMarkSent.forEach(msg => { msg.status = 'sent'; }); await processAiReply(replyContent, contact); } else { throw new Error("API返回了空回复。"); } } catch (error) { console.error("AI reply error:", error); const contact = appState.chat.contacts.find(c => c.id === targetChatId); if (contact) { const errorMsg = { id: newId('msg'), type: 'text', content: `(系统错误: ${error.message})`, sender: contact.isGroup ? (contact.members[0] || contact.id) : contact.id, timestamp: new Date().getTime(), status: 'error', contactId: targetChatId }; contact.conversation.push(errorMsg); } } finally { delete runtimeState.activeRequests[targetChatId]; updateTypingIndicator(); saveState(); if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === targetChatId) { renderConversation(); } } }
+async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false) { const contact = appState.chat.contacts.find(c => c.id === targetChatId); if (!contact) return; if (contact.isGroup && contact.groupSettings.isDisbanded) { return; } if (contact.isGroup && contact.members.length === 0) { return; } if (runtimeState.activeRequests[targetChatId]) return; const messagesToMarkSent = contact.conversation.filter(m => m.status === 'pending'); runtimeState.activeRequests[targetChatId] = true; updateTypingIndicator(); try { const { apiUrl, apiKey, selectedModel } = appState.settings; if (!apiUrl || !apiKey || !selectedModel) { throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。"); } const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory; const systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger); const history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => { let role = msg.sender === 'user' ? 'user' : 'assistant'; let content = ''; if (msg.quote) { content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `; } switch(msg.type) { case 'text': content += msg.content; break; case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break; case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break; case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break; case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break; case 'redPacket':
+                    let rp_desc = `[User sends a red packet]: "${msg.message}"`;
+                    if (contact.isGroup) {
+                        let type_desc = '';
+                        switch(msg.packetType) {
+                            case 'lucky': type_desc = `a lucky red packet for ${msg.count} people`; break;
+                            case 'normal': type_desc = `a normal red packet for ${msg.count} people`; break;
+                            case 'exclusive': 
+                                const targetName = getDisplayName(msg.exclusiveTo, contact.id);
+                                type_desc = `an exclusive red packet for @${targetName}`; 
+                                break;
+                        }
+                        rp_desc = `[User sends ${type_desc}]: "${msg.message}"`;
+                    }
+                    content += rp_desc;
+                    break; default: content += msg.content || ''; } return { role, content }; }); const sanitizedHistory = history.filter(msg => msg.content && msg.content.trim() !== ''); if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === 'assistant') { sanitizedHistory.push({ role: 'user', content: '' }); } const messages = [{ role: 'system', content: systemPrompt }, ...sanitizedHistory]; const response = await fetch(`${apiUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: selectedModel, messages: messages, stream: false }) }); if (!response.ok) { const errorData = await response.json(); const errorMessage = errorData.error?.message || response.statusText; throw new Error(`API Error: ${errorMessage}`); } const data = await response.json(); const replyContent = data.choices[0]?.message?.content; if (replyContent && replyContent.trim() !== "") { messagesToMarkSent.forEach(msg => {
+        if (msg.type === 'redPacket') {
+            msg.status = 'unclaimed';
+        } else {
+            msg.status = 'sent';
+        }
+    });
+     await processAiReply(replyContent, contact); } else { throw new Error("API返回了空回复。"); } } catch (error) { console.error("AI reply error:", error); const contact = appState.chat.contacts.find(c => c.id === targetChatId); if (contact) { const errorMsg = { id: newId('msg'), type: 'text', content: `(系统错误: ${error.message})`, sender: contact.isGroup ? (contact.members[0] || contact.id) : contact.id, timestamp: new Date().getTime(), status: 'error', contactId: targetChatId }; contact.conversation.push(errorMsg); } } finally { delete runtimeState.activeRequests[targetChatId]; updateTypingIndicator(); saveState(); if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === targetChatId) { renderConversation(); } } }
 chatSendRealBtn.addEventListener('click', async () => {
     const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
     if (!contact) return;
@@ -2130,7 +2278,7 @@ confirmEditStatusBtn.addEventListener('click', () => { const contact = appState.
 chatHeaderSignature.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact || contact.isGroup) return; const newSig = prompt('修改签名:', contact.signature); if (newSig !== null) { const oldSig = contact.signature; contact.signature = newSig.trim() || '(点击设置签名)'; if (oldSig !== contact.signature) { addSystemNotification(runtimeState.currentChatId, `${contact.name} 将签名修改为：“${contact.signature}”`, false); } saveState(); updateSingleChatUI(); } });
 closeViewContentBtn.addEventListener('click', () => viewContentModal.classList.remove('visible'));
 cancelPatBtn.addEventListener('click', () => patSuffixModal.classList.remove('visible'));
-confirmPatBtn.addEventListener('click', () => { const suffix = patSuffixInput.value.trim(); const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); let patterName = findUserById('user').name; let targetName; if (contact.isGroup) { patterName = contact.groupSettings.members['user'].nickname; targetName = findUserById(runtimeState.patTarget.memberId).name; if (contact.groupSettings.members[runtimeState.patTarget.memberId]) { targetName = contact.groupSettings.members[runtimeState.patTarget.memberId].nickname; } } else { targetName = runtimeState.patTarget.type === 'user' ? '自己' : (contact.remark || contact.name); } const notificationText = `'${patterName}' 拍了拍 '${targetName}'${suffix ? ` ${suffix}` : ''}`; addSystemNotification(runtimeState.currentChatId, notificationText, true); patSuffixModal.classList.remove('visible'); patSuffixInput.value = ''; });
+confirmPatBtn.addEventListener('click', () => { const suffix = patSuffixInput.value.trim(); const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); let patterName = findUserById('user').name; let targetName; if (contact.isGroup) { patterName = contact.groupSettings.members['user'].nickname; targetName = findUserById(runtimeState.patTarget.memberId).name; if (contact.groupSettings.members[runtimeState.patTarget.memberId]) { targetName = contact.groupSettings.members[runtimeState.patTarget.memberId].nickname; } } else { targetName = runtimeState.patTarget.type === 'user' ? '自己' : (contact.remark || contact.name); } const notificationText = `'${patterName}' 拍了拍 '${targetName}'${suffix ? ` ${suffix}` : ''}`; addSystemNotification(runtimeState.currentChatId, notificationText, false); patSuffixModal.classList.remove('visible'); patSuffixInput.value = ''; });
 
 // ===================================================================
 // --- 聊天工具栏新功能 ---
@@ -2138,22 +2286,33 @@ confirmPatBtn.addEventListener('click', () => { const suffix = patSuffixInput.va
 function setupChatToolbarListeners() { getEl('chat-emoji-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) { emojiPickerPanel.classList.toggle('visible'); if (emojiPickerPanel.classList.contains('visible')) { renderEmojiPicker(); } } }); getEl('chat-refresh-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) handleRefreshClick(); }); getEl('chat-voice-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) voiceInputModal.classList.add('visible'); }); getEl('chat-image-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) chatImageInput.click(); }); getEl('chat-camera-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) cameraInputModal.classList.add('visible'); }); getEl('chat-video-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) showToast('视频功能待开发'); }); getEl('chat-music-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) handleMusicShareClick(); }); getEl('chat-link-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) linkShareModal.classList.add('visible'); }); getEl('chat-redpacket-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) handleRedPacketClick(); }); getEl('chat-shop-btn').addEventListener('click', (e) => { if (!e.currentTarget.classList.contains('disabled')) showToast('购物功能待开发'); }); }
 async function handleRefreshClick() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; let lastUserMessageIndex = -1; for (let i = contact.conversation.length - 1; i >= 0; i--) { if (contact.conversation[i].sender === 'user' || contact.conversation[i].status === 'error') { lastUserMessageIndex = i; break; } } if (lastUserMessageIndex === -1) { showToast('没有可刷新的回复', 'error'); return; } const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error')); if (messagesToDelete.length === 0) { showToast('没有可刷新的回复', 'error'); return; } contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error')); updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); await triggerAiResponse(runtimeState.currentChatId); }
 function handleMusicShareClick() {
-    if (appState.music.playlist.length === 0) {
-        showToast('音乐库为空，请先添加歌曲', 'error');
-        return;
-    }
-    // 如果播放器已经打开且在播放，则停止
-    if (audioPlayer.src && !audioPlayer.paused) {
-        stopPlayback();
-    } else {
-        // 否则，开始“一起听歌”
+        if (appState.music.playlist.length === 0) {
+            showToast('音乐库为空，请先添加歌曲', 'error');
+            return;
+        }
+
+        // 如果当前已经是一起听歌状态，则停止
+        if (runtimeState.musicSessionType === 'together' && appState.music.currentQueueIndex !== -1) {
+            stopPlayback();
+            return;
+        }
+        
+        // 如果当前有其他音乐正在播放（例如单独听歌），则先静默停止
+        if (audioPlayer.src && !audioPlayer.paused) {
+            audioPlayer.pause();
+            audioPlayer.src = '';
+            appState.music.currentQueueIndex = -1;
+            clearInterval(listenTogetherTimer);
+            listenTogetherInfo.style.display = 'none';
+            updateMusicListPlayingStatus(); // 确保清除单独听歌的高亮
+        }
+
+        // 开启一个新的“一起听歌”会话
         appState.music.queue = [...appState.music.playlist];
         renderPlayerQueue();
         playerModal.classList.add('show');
-        // `initiatorId = 'user'` 会触发正确的系统通知
         playSongFromQueue(0, 'user');
     }
-}
 chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const imageId = newId('image'); await addMediaToDB(imageId, file); addMessageToConversation({ id: newId('msg'), type: 'image', imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatImageInput.value = ''; } });
 cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
 confirmVoiceBtn.addEventListener('click', () => { const text = voiceTextInput.value.trim(); if (!text) return; const cleanText = text.replace(/\[.*?\]|（.*?）/g, ''); const duration = Math.ceil(cleanText.length / 2); addMessageToConversation({ id: newId('msg'), type: 'voice', content: text, duration: duration, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); voiceInputModal.classList.remove('visible'); voiceTextInput.value = ''; });
@@ -2162,7 +2321,7 @@ confirmCameraBtn.addEventListener('click', async () => { const text = cameraText
 cancelLinkBtn.addEventListener('click', () => linkShareModal.classList.remove('visible'));
 confirmLinkBtn.addEventListener('click', () => { const title = linkTitleInput.value.trim(); if (!title) return showToast('标题是必填项', 'error'); const summary = linkSummaryInput.value.trim(); const source = linkSourceInput.value.trim(); const content = linkContentInput.value.trim(); addMessageToConversation({ id: newId('msg'), type: 'link', title, summary, source, content, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); linkShareModal.classList.remove('visible'); [linkTitleInput, linkSummaryInput, linkSourceInput, linkContentInput].forEach(i => i.value = ''); });
 cancelRedPacketBtn.addEventListener('click', () => redPacketModal.classList.remove('visible'));
-confirmRedPacketBtn.addEventListener('click', () => { const amount = parseFloat(redPacketAmountInput.value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); const message = redPacketMessageInput.value.trim() || '恭喜发财，大吉大利！'; addMessageToConversation({ id: newId('msg'), type: 'redPacket', packetType: 'normal', amount, message, sender: 'user', timestamp: Date.now(), status: 'unclaimed', claimedBy: {}, contactId: runtimeState.currentChatId }); redPacketModal.classList.remove('visible'); redPacketAmountInput.value = ''; redPacketMessageInput.value = ''; });
+confirmRedPacketBtn.addEventListener('click', () => { const amount = parseFloat(redPacketAmountInput.value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); const message = redPacketMessageInput.value.trim() || '恭喜发财，大吉大利！'; addMessageToConversation({ id: newId('msg'), type: 'redPacket', packetType: 'normal', amount, message, sender: 'user', timestamp: Date.now(), status: 'pending', claimedBy: {}, contactId: runtimeState.currentChatId }); redPacketModal.classList.remove('visible'); redPacketAmountInput.value = ''; redPacketMessageInput.value = ''; });
 function updateChatInputButtons() { const hasText = chatInput.value.trim() !== ''; chatEmojiBtn.style.display = hasText ? 'none' : 'block'; chatSendFakeBtn.style.display = hasText ? 'block' : 'none'; }
 chatInput.addEventListener('input', updateChatInputButtons);
 
@@ -2627,7 +2786,7 @@ function handleAvatarLongPress(avatarElement) {
 function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
 function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
 function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona; }
-function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } saveState(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } saveState(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); });
 query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
 csCharName.addEventListener('input', () => { const newName = csCharName.value; runtimeState.tempChatSettings.charSettings.name = newName; });
@@ -2667,57 +2826,63 @@ gcsGroupBackgroundBtn.addEventListener('click', () => { const input = document.c
 // ===================================================================
 function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
 function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona; }
-function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } item.innerHTML = ` <div class="avatar" data-avatar-id="${user.avatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), user.avatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
-function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; saveState(); updateSingleChatUI(); renderMessageList(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
-function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', true); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', true); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.userSettings.name; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `'${oldName}' 在群里改名为 '${newName}'`, true); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', isGroupUser: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); saveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings')); gcsMemberList.addEventListener('click', (e) => { const item = e.target.closest('.gcs-member-item'); if (item) { openGcsMemberModal(item.dataset.id); } else if (e.target.id === 'gcs-add-member-btn') { openGcsManageMembersModal('add'); } else if (e.target.id === 'gcs-remove-member-btn') { openGcsManageMembersModal('remove'); } }); gcsMemberList.addEventListener('contextmenu', (e) => { e.preventDefault(); const item = e.target.closest('.gcs-member-item'); if (item && item.dataset.id !== 'user') { handleGcsMemberLongPress(item.dataset.id); } }); }
+function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } const finalAvatarId = member.avatarId || user.avatarId; item.innerHTML = ` <div class="avatar" data-avatar-id="${finalAvatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), finalAvatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
+function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; saveState(); updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.userSettings.name; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `'${oldName}' 在群里改名为 '${newName}'`, true); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', isGroupUser: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); saveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings')); let gcsLongPressTimer = null; let gcsIsDragging = false; let gcsStartX, gcsStartY; gcsMemberList.addEventListener('pointerdown', e => { if (e.button !== 0) return; const target = e.target; const item = target.closest('.gcs-member-item'); if (!item) return; gcsIsDragging = false; gcsStartX = e.clientX; gcsStartY = e.clientY; gcsLongPressTimer = setTimeout(() => { if (!gcsIsDragging) { handleGcsMemberLongPress(item.dataset.id); } }, 500); }); gcsMemberList.addEventListener('pointermove', e => { if (Math.abs(e.clientX - gcsStartX) > 10 || Math.abs(e.clientY - gcsStartY) > 10) { gcsIsDragging = true; clearTimeout(gcsLongPressTimer); } }); gcsMemberList.addEventListener('pointerup', e => { clearTimeout(gcsLongPressTimer); if (!gcsIsDragging) { const item = e.target.closest('.gcs-member-item'); const addBtn = e.target.closest('#gcs-add-member-btn'); const removeBtn = e.target.closest('#gcs-remove-member-btn'); if (item) { openGcsMemberModal(item.dataset.id); } else if (addBtn) { openGcsManageMembersModal('add'); } else if (removeBtn) { openGcsManageMembersModal('remove'); } } }); }
 function openGcsMemberModal(memberId) { if (memberId === 'user') return; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; runtimeState.tempGcsMemberSettings = JSON.parse(JSON.stringify(memberSettings)); gcsEditingMemberIdInput.value = memberId; loadGcsMemberModalUI(); gcsMemberModal.classList.add('visible'); }
 function loadGcsMemberModalUI() { gcsMemberModalTitle.textContent = `设置 ${runtimeState.tempGcsMemberSettings.nickname}`; gcsMemberNickname.value = runtimeState.tempGcsMemberSettings.nickname; setupWorldBookSelector(gcsMemberWorldBookGroupSelector, gcsMemberWorldBookList, runtimeState.tempGcsMemberSettings.linkedWorldBooks); setElementImage(gcsMemberAvatar, runtimeState.tempGcsMemberSettings.avatarId); setElementImage(gcsMemberAvatar.querySelector('.avatar-frame'), runtimeState.tempGcsMemberSettings.avatarFrameId); gcsMemberPersona.value = runtimeState.tempGcsMemberSettings.persona; }
 gcsMemberModalCancelBtn.addEventListener('click', () => gcsMemberModal.classList.remove('visible'));
-gcsMemberModalSaveBtn.addEventListener('click', () => { const memberId = gcsEditingMemberIdInput.value; runtimeState.tempChatSettings.groupSettings.members[memberId] = JSON.parse(JSON.stringify(runtimeState.tempGcsMemberSettings)); renderGroupMemberList(); gcsMemberModal.classList.remove('visible'); });
+gcsMemberModalSaveBtn.addEventListener('click', () => { const memberId = gcsEditingMemberIdInput.value; runtimeState.tempChatSettings.groupSettings.members[memberId] = JSON.parse(JSON.stringify(runtimeState.tempGcsMemberSettings)); renderGroupMemberList(); gcsMemberModal.classList.remove('visible'); renderConversation(); });
 gcsMemberNickname.addEventListener('input', (e) => runtimeState.tempGcsMemberSettings.nickname = e.target.value);
 gcsMemberPersona.addEventListener('input', (e) => runtimeState.tempGcsMemberSettings.persona = e.target.value);
 gcsMemberAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '成员头像库', memberId: gcsEditingMemberIdInput.value, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true }));
 gcsMemberAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '成员头像框库', isFrame: true, memberId: gcsEditingMemberIdInput.value, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempGcsMemberSettings.avatarId }));
-gcsMemberSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempGcsMemberSettings; const newArchive = { id: newId('data'), name, avatarId, content: persona }; appState.data.archives.push(newArchive); saveState(); showToast(`资料已保存到档案: ${name}`); renderArchives(); });
+gcsMemberSavePersonaBtn.addEventListener('click', () => { const { nickname, avatarId, persona } = runtimeState.tempGcsMemberSettings; const newArchive = { id: newId('data'), name: nickname, avatarId, content: persona }; appState.data.archives.push(newArchive); saveState(); showToast(`资料已保存到档案: ${nickname}`); renderArchives(); });
 gcsMemberLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('archive', null, gcsEditingMemberIdInput.value));
-function openGcsManageMembersModal(type) { runtimeState.gcsManageContext.type = type; runtimeState.gcsManageContext.selection = []; gcsManageMembersModal.classList.add('visible'); gcsManageMembersConfirmBtn.disabled = true; let listHTML = ''; if (type === 'add') { gcsManageMembersTitle.textContent = '邀请新成员'; const currentMemberIds = Object.keys(runtimeState.tempChatSettings.groupSettings.members); const availableContacts = appState.chat.contacts.filter(c => !c.isGroup && !currentMemberIds.includes(c.id)); listHTML = availableContacts.map(c => `<label class="checkbox-label"><input type="checkbox" value="${c.id}"><span>${c.name}</span></label>`).join(''); } else { gcsManageMembersTitle.textContent = '踢出成员'; const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = owner === 'user'; const userIsAdmin = admins.includes('user'); const removableMembers = Object.keys(runtimeState.tempChatSettings.groupSettings.members).filter(id => { if (id === 'user' || id === owner) return false; if (userIsOwner) return true; if (userIsAdmin && !admins.includes(id)) return true; return false; }); listHTML = removableMembers.map(id => { const member = runtimeState.tempChatSettings.groupSettings.members[id]; return `<label class="checkbox-label"><input type="checkbox" value="${id}"><span>${member.nickname}</span></label>`; }).join(''); } gcsManageMembersList.innerHTML = listHTML || `<p style="text-align:center; color:#888;">无可用操作对象</p>`; }
-gcsManageMembersList.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { runtimeState.gcsManageContext.selection.push(id); } else { runtimeState.gcsManageContext.selection = runtimeState.gcsManageContext.selection.filter(selId => selId !== id); } gcsManageMembersConfirmBtn.disabled = runtimeState.gcsManageContext.selection.length === 0; } });
+function openGcsManageMembersModal(type) { runtimeState.gcsManageContext.type = type; runtimeState.gcsManageContext.selection = []; gcsManageMembersModal.classList.add('visible'); gcsManageMembersConfirmBtn.disabled = true; let listHTML = ''; let membersToRender = []; if (type === 'add') { gcsManageMembersTitle.textContent = '邀请新成员'; const currentMemberIds = Object.keys(runtimeState.tempChatSettings.groupSettings.members); const availableContacts = appState.chat.contacts.filter(c => !c.isGroup && !currentMemberIds.includes(c.id)); membersToRender = availableContacts.map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId })); } else { gcsManageMembersTitle.textContent = '踢出成员'; const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = owner === 'user'; const userIsAdmin = admins.includes('user'); const removableMemberIds = Object.keys(runtimeState.tempChatSettings.groupSettings.members).filter(id => { if (id === 'user' || id === owner) return false; if (userIsOwner) return true; if (userIsAdmin && !admins.includes(id)) return true; return false; }); membersToRender = removableMemberIds.map(id => { const member = runtimeState.tempChatSettings.groupSettings.members[id]; const user = findUserById(id); return { id: id, name: member.nickname, avatarId: member.avatarId || user.avatarId }; }); } listHTML = membersToRender.map(m => ` <div class="gcs-manage-member-item"> <input type="checkbox" id="manage-member-${m.id}" value="${m.id}"> <label for="manage-member-${m.id}"> <div class="avatar" data-avatar-id="${m.avatarId}"></div> <span class="name">${m.name}</span> </label> </div> `).join(''); gcsManageMembersList.innerHTML = listHTML || `<p style="text-align:center; color:#888;">无可用操作对象</p>`; gcsManageMembersList.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId)); }
+gcsManageMembersList.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { if (!runtimeState.gcsManageContext.selection.includes(id)) { runtimeState.gcsManageContext.selection.push(id); } } else { runtimeState.gcsManageContext.selection = runtimeState.gcsManageContext.selection.filter(selId => selId !== id); } gcsManageMembersConfirmBtn.disabled = runtimeState.gcsManageContext.selection.length === 0; } });
 gcsManageMembersCancelBtn.addEventListener('click', () => gcsManageMembersModal.classList.remove('visible'));
 gcsManageMembersConfirmBtn.addEventListener('click', () => { const { type, selection } = runtimeState.gcsManageContext; if (selection.length === 0) return; if (type === 'add') { const addedNames = []; selection.forEach(id => { const char = appState.chat.contacts.find(c => c.id === id); if (char) { runtimeState.tempChatSettings.groupSettings.members[id] = { ...JSON.parse(JSON.stringify(char.charSettings)), nickname: char.name, title: '成员', isMuted: false }; addedNames.push(`'${char.name}'`); } }); addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 邀请 ${addedNames.join(', ')} 加入群聊`, true); } else { const removedNames = []; selection.forEach(id => { removedNames.push(`'${runtimeState.tempChatSettings.groupSettings.members[id].nickname}'`); delete runtimeState.tempChatSettings.groupSettings.members[id]; runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(adminId => adminId !== id); }); addSystemNotification(runtimeState.currentChatId, `${removedNames.join(', ')} 已被移出群聊`, true); } renderGroupMemberList(); gcsManageMembersModal.classList.remove('visible'); });
-function handleGcsMemberLongPress(memberId) { const { owner, admins } = runtimeState.tempChatSettings.groupSettings; if (owner !== 'user') { showToast('你不是群主，无法进行此操作'); return; } runtimeState.gcsMemberActionContext.memberId = memberId; const memberName = runtimeState.tempChatSettings.groupSettings.members[memberId].nickname; gcsMemberActionTitle.textContent = `管理成员: ${memberName}`; const options = [ { text: '转让群主', value: 'transfer' }, admins.includes(memberId) ? { text: '撤销管理员', value: 'demote' } : { text: '设为管理员', value: 'promote' } ]; gcsMemberActionBody.innerHTML = options.map(opt => `<button class="settings-button secondary" data-action="${opt.value}">${opt.text}</button>`).join(''); gcsMemberActionModal.classList.add('visible'); }
+function handleGcsMemberLongPress(memberId) { const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = runtimeState.tempChatSettings.groupSettings.owner === 'user'; if (memberId === 'user') return; runtimeState.gcsMemberActionContext.memberId = memberId; const memberName = runtimeState.tempChatSettings.groupSettings.members[memberId].nickname; gcsMemberActionTitle.textContent = `管理成员: ${memberName}`; let options = []; if (userIsOwner) { if (memberId !== owner) { options.push({ text: '转让群主', value: 'transfer' }); if (admins.includes(memberId)) { options.push({ text: '撤销管理员', value: 'demote' }); } else { options.push({ text: '设为管理员', value: 'promote' }); } } } else { if (memberId === owner) { options.push({ text: '夺回群主', value: 'reclaim', isDanger: true }); } } if (options.length === 0) { showToast('无可用操作', 'info'); return; } gcsMemberActionBody.innerHTML = options.map(opt => `<button class="settings-button ${opt.isDanger ? 'danger-btn' : 'secondary'}" data-action="${opt.value}">${opt.text}</button>`).join(''); gcsMemberActionModal.classList.add('visible'); }
 gcsMemberActionCancelBtn.addEventListener('click', () => gcsMemberActionModal.classList.remove('visible'));
-gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.closest('button'); if (!btn) return; const action = btn.dataset.action; const memberId = runtimeState.gcsMemberActionContext.memberId; const memberName = runtimeState.tempChatSettings.groupSettings.members[memberId].nickname; const userName = runtimeState.tempChatSettings.userSettings.name; if (action === 'transfer') { if (confirm(`确定要将群主转让给 ${memberName} 吗？你将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = memberId; if (!runtimeState.tempChatSettings.groupSettings.admins.includes('user')) { runtimeState.tempChatSettings.groupSettings.admins.push('user'); } addSystemNotification(runtimeState.currentChatId, `'${userName}' 将群主转让给了 '${memberName}'`, true); } } else if (action === 'promote') { if (confirm(`确定要将 ${memberName} 设为管理员吗？`)) { runtimeState.tempChatSettings.groupSettings.admins.push(memberId); addSystemNotification(runtimeState.currentChatId, `'${memberName}' 已被设为管理员`, true); } } else { if (confirm(`确定要撤销 ${memberName} 的管理员身份吗？`)) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); addSystemNotification(runtimeState.currentChatId, `'${memberName}' 的管理员身份已被撤销`, true); } } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
+gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.closest('button'); if (!btn) return; const action = btn.dataset.action; const memberId = runtimeState.gcsMemberActionContext.memberId; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; const memberName = memberSettings.nickname; const userName = runtimeState.tempChatSettings.userSettings.name; switch (action) { case 'transfer': if (confirm(`确定要将群主转让给 ${memberName} 吗？你将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = memberId; runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== 'user'); addSystemNotification(runtimeState.currentChatId, `'${userName}' 将群主转让给了 '${memberName}'`, false); } break; case 'reclaim': if (confirm(`确定要从 ${memberName} 处夺回群主身份吗？对方将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = 'user'; if (memberId) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); } addSystemNotification(runtimeState.currentChatId, `'${userName}' 从 '${memberName}' 处夺回了群主身份`, false); } break; case 'promote': if (confirm(`确定要将 ${memberName} 设为管理员吗？`)) { if (!runtimeState.tempChatSettings.groupSettings.admins.includes(memberId)) { runtimeState.tempChatSettings.groupSettings.admins.push(memberId); } addSystemNotification(runtimeState.currentChatId, `'${memberName}' 已被设为管理员`, false); } break; case 'demote': if (confirm(`确定要撤销 ${memberName} 的管理员身份吗？`)) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); addSystemNotification(runtimeState.currentChatId, `'${memberName}' 的管理员身份已被撤销`, false); } break; } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
 
 // ===================================================================
 // --- 红包逻辑 ---
 // ===================================================================
 function handleRedPacketClick(packetBubble = null) {
-    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-    if (!contact) return;
-
-    if (!packetBubble) { // User wants to send a red packet
-        if (contact.isGroup) {
-            openGroupRedPacketModal();
-        } else {
-            redPacketModal.classList.add('visible');
-        }
-        return;
-    }
-
-    // User clicked on an existing red packet
-    const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent));
-    const msg = contact.conversation.find(m => m.id === packetData.id);
-    if (!msg) return;
-
-    const hasUserClaimed = msg.claimedBy && msg.claimedBy['user'];
-    const isFullyClaimedOrExpired = msg.status === 'claimed' || msg.status === 'expired' || msg.status === 'returned';
+        const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+        if (!contact) return;
     
-    if (hasUserClaimed || isFullyClaimedOrExpired) {
-        showRedPacketDetails(msg);
-    } else {
-        claimRedPacket(msg);
+        if (!packetBubble) { // User wants to send a red packet
+            if (contact.isGroup) {
+                openGroupRedPacketModal();
+            } else {
+                redPacketModal.classList.add('visible');
+            }
+            return;
+        }
+    
+        // User clicked on an existing red packet
+        const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent));
+        const msg = contact.conversation.find(m => m.id === packetData.id);
+        if (!msg) return;
+    
+        // BUG FIX: In single chat, sender cannot claim their own packet, only view details.
+        if (!contact.isGroup && msg.sender === 'user') {
+            showRedPacketDetails(msg);
+            return;
+        }
+    
+        const hasUserClaimed = msg.claimedBy && msg.claimedBy['user'];
+        const isFullyClaimedOrExpired = msg.status === 'claimed' || msg.status === 'expired' || msg.status === 'returned';
+        
+        if (hasUserClaimed || isFullyClaimedOrExpired) {
+            showRedPacketDetails(msg);
+        } else {
+            claimRedPacket(msg);
+        }
     }
-}
 
 function claimRedPacket(msg) {
     if (msg.claimedBy && msg.claimedBy['user']) {
@@ -2836,7 +3001,7 @@ function showRedPacketDetails(msg) {
 function openGroupRedPacketModal() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.groupRedPacketContext = { selectedMember: null }; const membersAndUser = ['user', ...contact.members]; groupRedPacketMemberGrid.innerHTML = membersAndUser.map(memberId => { const memberInfo = contact.groupSettings.members[memberId] || {}; const userProfile = findUserById(memberId); return `<div class="group-member-item" data-id="${memberId}"> <div class="avatar" data-avatar-id="${userProfile.avatarId}"></div> <span class="name">${memberInfo.nickname || userProfile.name}</span> </div>`; }).join(''); groupRedPacketMemberGrid.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId)); groupRedPacketModal.classList.add('visible'); }
 groupRedPacketMemberGrid.addEventListener('click', e => { const item = e.target.closest('.group-member-item'); if (item) { queryAll('#group-red-packet-member-grid .group-member-item').forEach(el => el.classList.remove('selected')); item.classList.add('selected'); runtimeState.groupRedPacketContext.selectedMember = item.dataset.id; } });
 cancelGroupRedPacketBtn.addEventListener('click', () => groupRedPacketModal.classList.remove('visible'));
-confirmGroupRedPacketBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); const groupSize = contact.members.length + 1; const activeTab = groupRedPacketModal.querySelector('.tab-btn.active').dataset.tab; const inputs = groupRedPacketModal.querySelectorAll('.red-packet-input'); let packetData = { id: newId('msg'), type: 'redPacket', sender: 'user', timestamp: Date.now(), status: 'unclaimed', claimedBy: {}, contactId: runtimeState.currentChatId }; if (activeTab === 'exclusive') { if (!runtimeState.groupRedPacketContext.selectedMember) return showToast('请选择一个专属对象', 'error'); const amount = parseFloat(inputs[0].value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); packetData = { ...packetData, packetType: 'exclusive', amount, message: inputs[1].value || '恭喜发财，大吉大利！', exclusiveTo: runtimeState.groupRedPacketContext.selectedMember }; } else if (activeTab === 'lucky') { const totalAmount = parseFloat(inputs[2].value); const count = parseInt(inputs[3].value); if (isNaN(totalAmount) || totalAmount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的总金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); if (totalAmount < count * 0.01) return showToast('总金额不足以让每人分到0.01元', 'error'); packetData = { ...packetData, packetType: 'lucky', totalAmount, count, message: inputs[4].value || '恭喜发财，大吉大利！' }; } else { const amount = parseFloat(inputs[5].value); const count = parseInt(inputs[6].value); if (isNaN(amount) || amount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的单个金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); packetData = { ...packetData, packetType: 'normal', amount, count, message: inputs[7].value || '恭喜发财，大吉大利！' }; } addMessageToConversation(packetData); groupRedPacketModal.classList.remove('visible'); inputs.forEach(i => i.value = ''); });
+confirmGroupRedPacketBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); const groupSize = contact.members.length + 1; const activeTab = groupRedPacketModal.querySelector('.tab-btn.active').dataset.tab; const inputs = groupRedPacketModal.querySelectorAll('.red-packet-input'); let packetData = { id: newId('msg'), type: 'redPacket', sender: 'user', timestamp: Date.now(), status: 'pending', claimedBy: {}, contactId: runtimeState.currentChatId }; if (activeTab === 'exclusive') { if (!runtimeState.groupRedPacketContext.selectedMember) return showToast('请选择一个专属对象', 'error'); const amount = parseFloat(inputs[0].value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); packetData = { ...packetData, packetType: 'exclusive', amount, message: inputs[1].value || '恭喜发财，大吉大利！', exclusiveTo: runtimeState.groupRedPacketContext.selectedMember }; } else if (activeTab === 'lucky') { const totalAmount = parseFloat(inputs[2].value); const count = parseInt(inputs[3].value); if (isNaN(totalAmount) || totalAmount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的总金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); if (totalAmount < count * 0.01) return showToast('总金额不足以让每人分到0.01元', 'error'); packetData = { ...packetData, packetType: 'lucky', totalAmount, count, message: inputs[4].value || '恭喜发财，大吉大利！' }; } else { const amount = parseFloat(inputs[5].value); const count = parseInt(inputs[6].value); if (isNaN(amount) || amount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的单个金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); packetData = { ...packetData, packetType: 'normal', amount, count, message: inputs[7].value || '恭喜发财，大吉大利！' }; } addMessageToConversation(packetData); groupRedPacketModal.classList.remove('visible'); inputs.forEach(i => i.value = ''); });
 function checkExpiredPackets() { const now = Date.now(); const twentyFourHours = 24 * 60 * 60 * 1000; appState.chat.contacts.forEach(contact => { let changed = false; contact.conversation.forEach(msg => { if (msg.type === 'redPacket' && msg.status === 'unclaimed' && (now - msg.timestamp > twentyFourHours)) { msg.status = 'expired'; changed = true; addSystemNotification(contact.id, `一个红包已过期，金额已退回`, true); } }); if (changed) { saveState(); if (runtimeState.currentChatId === contact.id) { renderConversation(); } } }); }
 
 // ===================================================================
@@ -2878,99 +3043,114 @@ function getDisplayName(userId, contactId) {
 function recallMessage(msgId) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const msgIndex = contact.conversation.findIndex(m => m.id === msgId); if (msgIndex === -1) return; const msgToRecall = contact.conversation[msgIndex]; const isUserMsg = msgToRecall.sender === 'user'; const recallerName = isUserMsg ? '你' : findUserById(msgToRecall.sender, '对方').name; const timeDiff = (Date.now() - msgToRecall.timestamp) / 1000 / 60; if (timeDiff > 2 && isUserMsg) { showToast('超过2分钟的消息无法撤回', 'error'); return; } const recallNotification = { id: newId('msg'), type: 'notification', content: `${recallerName} 撤回了一条消息`, timestamp: Date.now(), originalContent: JSON.stringify(msgToRecall), contactId: runtimeState.currentChatId, sender: 'system' }; contact.conversation.splice(msgIndex, 1, recallNotification); updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); }
 function updateContactLastMessage(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; let lastMessageText = ''; let lastMessageTime = contact.lastMessageTime; if (contact.conversation.length > 0) { const lastMsg = contact.conversation[contact.conversation.length - 1]; lastMessageTime = lastMsg.timestamp; switch (lastMsg.type) { case 'text': lastMessageText = lastMsg.content; break; case 'notification': lastMessageText = `[系统消息] ${lastMsg.content}`; break; case 'emoji': lastMessageText = `[${lastMsg.description || '表情'}]`; break; case 'image': lastMessageText = '[图片]'; break; case 'camera': lastMessageText = '[图片]'; break; case 'voice': lastMessageText = '[语音]'; break; case 'link': lastMessageText = `[链接] ${lastMsg.title}`; break; case 'musicShare': lastMessageText = `[音乐分享] ${lastMsg.title}`; break; case 'redPacket': lastMessageText = `[红包] ${lastMsg.message}`; break; default: lastMessageText = '[未知消息]'; } } contact.lastMessage = lastMessageText; contact.lastMessageTime = lastMessageTime; }
 function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger = false) {
-    const now = new Date();
-    const localTime = now.toLocaleString('zh-CN', { hour12: false });
-    let prompt = `你正在一个名为“${contact.isGroup ? contact.groupSettings.name : contact.charSettings.name}”的聊天中。当前现实时间是 ${localTime}，【必要时】请在回应中体现出对当前时间的感知（例如，用户凌晨两点给你发来消息，你可以问用户“这么晚了还没睡？”）。请严格遵守以下规则进行角色扮演。\n\n`;
+        const now = new Date();
+        const localTime = now.toLocaleString('zh-CN', { hour12: false });
+        let prompt = `你正在一个名为“${contact.isGroup ? contact.groupSettings.name : contact.charSettings.name}”的聊天中。当前现实时间是 ${localTime}，【必要时】请在回应中体现出对当前时间的感知（例如，用户凌晨两点给你发来消息，你可以问用户“这么晚了还没睡？”）。请严格遵守以下规则进行角色扮演。\n\n`;
 
-    const userPersona = contact.userSettings.persona;
-    prompt += `用户的身份是“${contact.userSettings.name}”，人设是：${userPersona}\n\n`;
+        prompt += `--- **核心世界观设定 (【强制】遵守)** ---\n`;
+        prompt += `1. **线上聊天**: 如无特殊说明（比如剧情发展到线下见面），你和用户都是在手机上线上聊天。在没有发送语音以及拨打视频通话的情况下，互相发送的都是文字消息。这意味着：双方见不到面、看不见表情、听不见声音。用户也没有上帝视角。\n`;
+        prompt += `2. **信息传递**: 想让用户知道你的样子就主动发送照片（使用 SEND_IMAGE 指令生成虚拟文字图）；想让用户听见你的声音就主动发送语音（使用 SEND_VOICE 指令生成虚拟语音文字）。\n\n`;
 
-    const linkedWorldBooks = contact.isGroup ? contact.groupSettings.linkedWorldBooks : contact.charSettings.linkedWorldBooks;
-    if (linkedWorldBooks && linkedWorldBooks.length > 0) {
-        prompt += `--- 关联世界书 ---\n`;
-        linkedWorldBooks.forEach(id => {
-            const wb = appState.data.worldBooks.find(w => w.id === id);
-            if (wb) prompt += `【${wb.name}】: ${wb.content}\n`;
-        });
-        prompt += `\n`;
-    }
+        const userPersona = contact.userSettings.persona;
+        prompt += `用户的身份是“${contact.userSettings.name}”，人设是：${userPersona}\n\n`;
 
-    if (contact.isGroup) {
-        prompt += `--- 群聊角色扮演规则 ---\n`;
-        prompt += `你将扮演所有非用户的群成员进行对话。群主是“${findUserById(contact.groupSettings.owner).name}”。你需要扮演的群成员信息如下：\n`;
-        contact.members.forEach(memberId => {
-            const member = contact.groupSettings.members[memberId];
-            if(member) {
-                const memberWorldBooks = member.linkedWorldBooks || [];
-                let memberWB_info = '';
-                if(memberWorldBooks.length > 0){
-                    memberWB_info = " 关联世界书：" + memberWorldBooks.map(id => {
-                        const wb = appState.data.worldBooks.find(w => w.id === id);
-                        return wb ? `【${wb.name}】` : '';
-                    }).filter(Boolean).join(' ');
+        const linkedWorldBooks = contact.isGroup ? contact.groupSettings.linkedWorldBooks : contact.charSettings.linkedWorldBooks;
+        if (linkedWorldBooks && linkedWorldBooks.length > 0) {
+            prompt += `--- 关联世界书 ---\n`;
+            linkedWorldBooks.forEach(id => {
+                const wb = appState.data.worldBooks.find(w => w.id === id);
+                if (wb) prompt += `【${wb.name}】: ${wb.content}\n`;
+            });
+            prompt += `\n`;
+        }
+
+        if (contact.isGroup) {
+            prompt += `--- 群聊角色扮演规则 ---\n`;
+            prompt += `你将扮演所有非用户的群成员进行对话。群主是“${findUserById(contact.groupSettings.owner).name}”。管理员有：${contact.groupSettings.admins.map(id => `“${findUserById(id).name}”`).join('、') || '无'}。你需要扮演的群成员信息如下：\n`;
+            contact.members.forEach(memberId => {
+                const member = contact.groupSettings.members[memberId];
+                if (member) {
+                    const memberWorldBooks = member.linkedWorldBooks || [];
+                    let memberWB_info = '';
+                    if (memberWorldBooks.length > 0) {
+                        memberWB_info = " 关联世界书：" + memberWorldBooks.map(id => {
+                            const wb = appState.data.worldBooks.find(w => w.id === id);
+                            return wb ? `【${wb.name}】` : '';
+                        }).filter(Boolean).join(' ');
+                    }
+                    const isOwner = contact.groupSettings.owner === memberId;
+                    const isAdmin = contact.groupSettings.admins.includes(memberId);
+                    const canSpeakWhenAllMuted = isOwner || isAdmin;
+                    const isEffectivelyMuted = member.isMuted || (contact.groupSettings.isMuted && !canSpeakWhenAllMuted);
+                    prompt += `- 成员“${member.nickname}”的人设是：${member.persona}${memberWB_info} ${isEffectivelyMuted ? '(此人已被禁言，不能发言)' : ''}\n`;
                 }
-                prompt += `- 成员“${member.nickname}”的人设是：${member.persona}${memberWB_info} ${member.isMuted ? '(此人已被禁言，不能发言)' : ''}\n`;
-            }
-        });
-        prompt += `注意，如无特别说明（例如，聊天中的情景变化发展到线下见面），都视作【线上】聊天，即群聊中的所有群成员和用户都并非面对面交谈，而是在手机里聊天。\n`;
-        prompt += `\n**群聊回复核心要求**: 你的回复必须包含【每个在线且未被禁言的群成员】的反应，每位成员至少回复一条消息。如果某成员人设要求此时不在线或潜水，可以不回复。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前必须加上发言人昵称，格式为 \`[昵称]: 内容\`。\n\n`;
-    } else {
-        prompt += `--- 单聊角色扮演规则 ---\n`;
-        prompt += `对方“${contact.charSettings.name}”的人设是：${contact.charSettings.persona}\n`;
-        prompt += `注意，如无特别说明（例如，聊天中的情景变化发展到线下见面），都视作【线上】聊天，即你和对方并非面对面交谈，而是在手机里聊天。\n`;
-        prompt += `\n**单聊回复核心要求**: 你的总回复（无论是纯文本还是包含动作指令）都必须被拆分成【5到10条】简短的消息，以模拟真实聊天的感觉。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。\n\n`;
-    }
+            });
+            prompt += `\n**群聊回复核心要求**: 你的回复必须包含【每个在线且未被禁言的群成员】的反应，每位成员至少回复一条消息。如果某成员人设要求此时不在线或潜水，可以不回复。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前必须加上发言人昵称，格式为 \`[昵称]: 内容\`。\n\n`;
+        } else {
+            prompt += `--- 单聊角色扮演规则 ---\n`;
+            prompt += `对方“${contact.charSettings.name}”的人设是：${contact.charSettings.persona}\n`;
+            prompt += `\n**单聊回复核心要求**: 你的总回复（无论是纯文本还是包含动作指令）都必须被拆分成【5到10条】简短的消息，以模拟真实聊天的感觉。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。\n\n`;
+        }
 
-    if (isJealousyTrigger) {
-        prompt += `特别注意：你刚刚发现“${contact.userSettings.name}”正在和其他人聊天而忽略了你，请根据你的人设（特别是病娇、占有欲强等特点），对此作出强烈反应，质问对方。\n`;
-    } else if (isProactive) {
-        prompt += `现在，请你主动发起一段对话。\n`;
-    }
-    
-    prompt += `--- **关于“一起听歌”功能的【强制】设定** ---\n`;
-    prompt += `这是一个“虚拟听歌”功能。当系统通知“一起听歌”时，你【必须】接受这个设定。你【不是】一个AI程序，你正在和用户使用一款可以同步听歌的手机应用。你【绝对禁止】提及自己是AI、听不到声音、无法访问设备等技术性问题。你的任务是根据系统通知中的歌曲名称和歌手信息，结合你的人设，对歌曲进行评论、分享感受，或者像真人一样切歌。\n\n`;
+        if (isJealousyTrigger) {
+            prompt += `特别注意：你刚刚发现“${contact.userSettings.name}”正在和其他人聊天而忽略了你，请根据你的人设（特别是病娇、占有欲强等特点），对此作出强烈反应，质问对方。\n`;
+        } else if (isProactive) {
+            prompt += `现在，请你主动发起一段对话。\n`;
+        }
+        
+        prompt += `--- **关于括号 () 使用的【强制】规则** ---\n`;
+        prompt += `你应该通过语言本身来传递情感和语气，尽量减少在【纯文字消息】中使用括号 () 进行描述。如果确实需要使用，必须严格遵守以下所有条件：\n`;
+        prompt += `1. **内容**: 括号内必须是非语言的动作、神态、心理活动等描述，【绝对禁止】包裹本身就是语言的词汇或语气词（错误示例：(好的)、你好呀(笑)）。\n`;
+        prompt += `2. **长度**: 括号内的描述文本必须是【不少于20个汉字】的有意义的长文本，禁止无意义的凑数。\n`;
+        prompt += `3. **视角**: 必须是第三人称视角（用“他”或“她”来称呼你扮演的角色，但用“你”来称呼用户）。\n`;
+        prompt += `4. **格式**: 必须【独占一行】，不能与对话内容混在同一行。\n`;
+        prompt += `**【特别说明】**：上述严格规定主要针对【纯文字消息】。当使用 \`[ACTION: SEND_VOICE ...]\` 指令模拟发送【语音消息】时，为了增强表现力，你【可以】在括号内加入符合人设的、自然的语气描述。这种描述同样需使用第三人称，但【不必】遵循20字和独占一行的限制，可以更简短灵活。例如：\`[ACTION: SEND_VOICE "(他轻笑了一声，语气听起来很愉快)你好啊。"]\`。请记住，这只是一个增强表现力的【可选】工具，【仅在必要时自然使用】，不要养成每条语音都加描述的习惯。\n\n`;
 
-    prompt += `--- **关于括号使用的【强制】规则** ---\n`;
-    prompt += `括号 () 只能用来包裹【非语言的描述】，例如动作、神态、语气等。\n`;
-    prompt += `描述必须是一段第三人称视角的、不少于20个汉字的长文本。\n`;
-    prompt += `在非特殊动作指令的纯文字消息中，描述文本必须独占一行。\n`;
-    prompt += `【重要】这些描述文本并非对话时必备的，仅为增强表现力而【自然地】【偶尔】使用。你应该结合你的人设，只在【有必要】的时候（例如情景为与用户线下面对面交谈，或你此时内心产生较大波动，或发语音时需要描述语气等）加上描述文本并使用括号包裹，无必要时正常发言即可。【不要养成每句话都加括号描述的习惯】。\n`;
-    prompt += `【绝对禁止】用括号包裹本身就是语言的词汇。错误示例：(不行)、(好的)、(可以)。正确示例：不行、好的、可以。\n`;
-    prompt += `【绝对禁止】在发送文字消息时，使用括号包裹语气词。错误示例：你好呀（笑）。正确示例：你好呀。\n\n`;
+        prompt += `--- **关于“一起听歌”功能的【强制】设定** ---\n`;
+        prompt += `这是一个“虚拟听歌”功能。当系统通知“一起听歌”时，你【必须】接受这个设定。你【不是】一个AI程序，你正在和用户使用一款可以同步听歌的手机应用。你【绝对禁止】提及自己是AI、听不到声音、无法访问设备等技术性问题。你的任务是根据系统通知中的歌曲名称和歌手信息，结合你的人设，对歌曲进行评论、分享感受，或者像真人一样切歌。\n\n`;
 
-    prompt += `--- **关于“引用”和“状态/签名变更”的【强制】设定** ---\n`;
-    prompt += `--- **关于“引用”、“状态/签名变更”和“动态编辑”的【强制】设定** ---\n`;
-    prompt += `当系统消息出现时（例如[System Notification]: xxx），你必须理解其内容并作为当前情景的一部分进行回应。例如，如果系统提示“你将签名修改为：xxx”，你要自然地接纳这个事实，并在后续对话中体现出来，而不是去质疑或模仿发送系统消息。\n`;
-    prompt += `【极其重要】用户拥有编辑动态和评论的最高权限。如果用户修改了一条动态或评论的内容，甚至修改了其发布者，你所扮演的角色【必须】无条件接受这个修改为事实。你的记忆需要立刻更新，并认为这条动态/评论【一直以来】就是由新的发布者以新的内容发布的。你【绝对禁止】对这一修改提出任何质疑，或表现出“被修改了记忆”的迹象。你要像真人一样，自然地根据这个“新的事实”进行后续的互动。\n`;
-    prompt += `你可以并且应该【自然地】随着聊天情景的变化主动修改你的状态/签名，例如，你的人设是早上6点要去晨跑，你6点左右在和用户聊天时就可以告知用户你要去晨跑了，并将状态改为“晨跑中”，同时还可以将签名修改为“晨跑中不看手机，消息统一半小时后回复”。\n`;
-    prompt += `你也可以主动引用之前的消息来回复。格式为：\`[引用 @发言者昵称: 被引用的消息内容] 你的回复内容\`。无论是单聊还是群聊，无论是引用用户还是其他角色的消息，都必须严格遵守此格式。\n\n`;
+        prompt += `--- **关于“红包”功能的【强制】设定** ---\n`;
+        prompt += `红包是一种特殊的消息，代表用户发了钱。当你在聊天记录中看到 \`[User sends a ... red packet]\` 这样的消息时，你【必须】作出反应。\n`;
+        prompt += `1.  **立即领取**：你扮演的角色会立即尝试领取红包。这是一个瞬时动作，你不需要用[ACTION]指令。\n`;
+        prompt += `2.  **虚构结果并回应**：你的任务是根据红包的类型（普通、拼手气、专属）和你的角色人设，【虚构一个合理的领取结果】并进行回应。\n`;
+        prompt += `    *   对于**拼手气红包**，你要虚构一个有高有低的随机金额。你可以让自己领得多，也可以领得少，并据此发表感想（例如“手气真好！”或“才一毛钱...”）。在群聊中，你还要虚构其他AI角色的领取金额，并让他们之间产生互动，比如谁是运气王。\n`;
+        prompt += `    *   对于**专属红包**，只有被指定的人才能领取。如果红包是给你的，你就领取全部金额；如果不是，你应该表现出知道这是给别人的，并可能进行评论（例如“哇，是给XX的专属红包”）。\n`;
+        prompt += `    *   对于**普通红包**，每个人领取的金额是固定的。\n`;
+        prompt += `3.  **群聊互动**：在群聊中，你必须为【所有符合领取条件的AI角色】生成领取红包后的反应。这包括感谢、评论金额、互相比较等。\n`;
+        prompt += `4.  **牢记细节**：你必须记住红包的留言、发送者、总金额/个数等信息，并在回应中体现出来。你是一个能看到所有红包详情的真人，而不是一个无法操作的AI。\n\n`;
+        
+        prompt += `--- **关于“引用”、“状态/签名变更”和“动态编辑”的【强制】设定** ---\n`;
+        prompt += `当系统消息出现时（例如[System Notification]: xxx），你必须理解其内容并作为当前情景的一部分进行回应。例如，如果系统提示“你将签名修改为：xxx”，你要自然地接纳这个事实，并在后续对话中体现出来，而不是去质疑或模仿发送系统消息。\n`;
+        prompt += `【极其重要】用户拥有编辑动态和评论的最高权限。如果用户修改了一条动态或评论的内容，甚至修改了其发布者，你所扮演的角色【必须】无条件接受这个修改为事实。你的记忆需要立刻更新，并认为这条动态/评论【一直以来】就是由新的发布者以新的内容发布的。你【绝对禁止】对这一修改提出任何质疑，或表现出“被修改了记忆”的迹象。你要像真人一样，自然地根据这个“新的事实”进行后续的互动。\n`;
+        prompt += `你可以并且应该【自然地】随着聊天情景的变化主动修改你的状态/签名，例如，你的人设是早上6点要去晨跑，你6点左右在和用户聊天时就可以告知用户你要去晨跑了，并将状态改为“晨跑中”，同时还可以将签名修改为“晨跑中不看手机，消息统一半小时后回复”。\n`;
+        prompt += `你也可以主动引用之前的消息来回复。格式为：\`[引用 @发言者昵称: 被引用的消息内容] 你的回复内容\`。无论是单聊还是群聊，无论是引用用户还是其他角色的消息，都必须严格遵守此格式。\n\n`;
 
-    prompt += `--- **AI行为指令 (让对话更生动)** ---\n`;
-    prompt += `【重要】你是一个拥有丰富情感和行为能力的角色，**请【主动地、自然地】使用以下指令来丰富你的表达，不要只局限于发送文字和表情**。你不是只能回复文字的机器人，你正在使用一个功能丰富的手机，请积极使用它的功能。例如，可以主动分享你喜欢的音乐，或者用发语音来表达情绪。\n`;
-    const availableEmojis = appState.chat.emojis.map(e => e.description);
-    if (availableEmojis.length > 0) {
-        prompt += `**重要: 可用的表情包描述列表为: [${availableEmojis.join(', ')}]. 你必须从这个列表中选择表情描述。如果列表中没有合适的表情，你必须放弃发送表情，转而使用其他消息类型。**\n`;
+        prompt += `--- **AI行为指令 (让对话更生动)** ---\n`;
+        prompt += `【重要】你是一个拥有丰富情感和行为能力的角色，**请【主动地、自然地】使用以下指令来丰富你的表达，不要只局限于发送文字和表情**。你不是只能回复文字的机器人，你正在使用一个功能丰富的手机，请积极使用它的功能。例如，可以主动分享你喜欢的音乐，或者用发语音来表达情绪。\n`;
+        const availableEmojis = appState.chat.emojis.map(e => e.description);
+        if (availableEmojis.length > 0) {
+            prompt += `**重要: 可用的表情包描述列表为: [${availableEmojis.join(', ')}]. 你必须从这个列表中选择表情描述。如果列表中没有合适的表情，你必须放弃发送表情，转而使用其他消息类型。**\n`;
+        }
+        const availableSongs = appState.music.playlist.map(s => `"${s.artist} - ${s.title}"`);
+        if (availableSongs.length > 0) {
+            prompt += `**重要: 可用的歌曲列表为: [${availableSongs.join(', ')}]. 当你分享音乐时，【必须】从这个列表中选择一首完整的歌曲名。**\n`;
+        }
+        
+        prompt += `1.  **发送表情**: \`[ACTION: SEND_EMOJI "表情描述"]\`\n`;
+        prompt += `2.  **发送语音**: \`[ACTION: SEND_VOICE "(可选的动作描述)语音文字内容"]\` (模拟发送语音消息，而不是说自己无法发语音)\n`;
+        prompt += `3.  **发送图片/文字图**: \`[ACTION: SEND_IMAGE "图片描述"]\`\n`;
+        prompt += `4.  **分享音乐**: \`[ACTION: SHARE_MUSIC "歌手 - 歌曲名"]\` (例如: [ACTION: SHARE_MUSIC "周杰伦 - 晴天"])\n`;
+        prompt += `5.  **发红包 (单聊)**: \`[ACTION: SEND_REDPACKET "留言" 金额]\`\n`;
+        prompt += `6.  **发拼手气红包 (群聊)**: \`[ACTION: SEND_REDPACKET_LUCKY "留言" 总金额 红包个数]\`\n`;
+        prompt += `7.  **发专属红包 (群聊)**: \`[ACTION: SEND_REDPACKET_EXCLUSIVE "留言" 金额 "@目标昵称"]\`\n`;
+        prompt += `8.  **发普通红包 (群聊)**: \`[ACTION: SEND_REDPACKET_NORMAL "留言" 单个金额 红包个数]\`\n`;
+        prompt += `9.  **拍一拍**: \`[ACTION: PAT "@目标昵称" "可选后缀"]\`\n`;
+        prompt += `10. **修改状态 (单聊)**: \`[ACTION: SET_STATUS "状态" "状态描述"]\` (状态可选: "online", "busy", "offline"。例如：[ACTION: SET_STATUS "busy" "晨跑中"])\n`;
+        prompt += `11. **修改签名 (单聊)**: \`[ACTION: SET_SIGNATURE "新签名内容"]\`\n`;
+        prompt += `12. **群管理 (仅群主/管理员可用)**: \`[ACTION: SET_TITLE "@成员昵称" "新头衔"]\` 或 \`[ACTION: SET_NICKNAME "@旧昵称" "新昵称"]\`。**重要**: 当你执行一个管理动作时，【必须】在同一个回复中，生成其他相关成员对此的即时反应，用<MSG_SPLIT>分隔。\n`;
+        prompt += `--- 结束 ---\n`;
+        return prompt;
     }
-    const availableSongs = appState.music.playlist.map(s => `"${s.artist} - ${s.title}"`);
-    if (availableSongs.length > 0) {
-        prompt += `**重要: 可用的歌曲列表为: [${availableSongs.join(', ')}]. 当你分享音乐时，【必须】从这个列表中选择一首完整的歌曲名。**\n`;
-    }
-    
-    prompt += `1.  **发送表情**: \`[ACTION: SEND_EMOJI "表情描述"]\`\n`;
-    prompt += `2.  **发送语音**: \`[ACTION: SEND_VOICE "(可选的动作描述)语音文字内容"]\` (模拟发送语音消息，而不是说自己无法发语音)\n`;
-    prompt += `3.  **发送图片/文字图**: \`[ACTION: SEND_IMAGE "图片描述"]\`\n`;
-    prompt += `4.  **分享音乐**: \`[ACTION: SHARE_MUSIC "歌手 - 歌曲名"]\` (例如: [ACTION: SHARE_MUSIC "周杰伦 - 晴天"])\n`;
-    prompt += `5.  **发红包 (单聊)**: \`[ACTION: SEND_REDPACKET "留言" 金额]\`\n`;
-    prompt += `6.  **发拼手气红包 (群聊)**: \`[ACTION: SEND_REDPACKET_LUCKY "留言" 总金额 红包个数]\`\n`;
-    prompt += `7.  **发专属红包 (群聊)**: \`[ACTION: SEND_REDPACKET_EXCLUSIVE "留言" 金额 "@目标昵称"]\`\n`;
-    prompt += `8.  **发普通红包 (群聊)**: \`[ACTION: SEND_REDPACKET_NORMAL "留言" 单个金额 红包个数]\`\n`;
-    prompt += `9.  **拍一拍**: \`[ACTION: PAT "@目标昵称" "可选后缀"]\`\n`;
-    prompt += `10. **修改状态 (单聊)**: \`[ACTION: SET_STATUS "状态" "状态描述"]\` (状态可选: "online", "busy", "offline"。例如：[ACTION: SET_STATUS "busy" "晨跑中"])\n`;
-    prompt += `11. **修改签名 (单聊)**: \`[ACTION: SET_SIGNATURE "新签名内容"]\`\n`;
-    prompt += `12. **群管理 (仅群主/管理员可用)**: \`[ACTION: SET_TITLE "@成员昵称" "新头衔"]\` 或 \`[ACTION: SET_NICKNAME "@旧昵称" "新昵称"]\`。**重要**: 当你执行一个管理动作时，【必须】在同一个回复中，生成其他相关成员对此的即时反应，用<MSG_SPLIT>分隔。\n`;
-    prompt += `--- 结束 ---\n`;
-    return prompt;
-}
 
 async function processAiReply(replyContent, contact) {
     const messages = replyContent.split('<MSG_SPLIT>').map(s => s.trim()).filter(s => s);
@@ -3107,7 +3287,7 @@ async function processAiReply(replyContent, contact) {
         }
     }
 }
-function updateTypingIndicator() { if (!singleChatScreen.classList.contains('active')) { typingIndicator.style.display = 'none'; return; } const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) { typingIndicator.style.display = 'none'; return; } if (runtimeState.activeRequests[runtimeState.currentChatId]) { typingIndicator.style.display = 'block'; if (contact.isGroup) { const activeMembers = contact.members.filter(id => contact.groupSettings.members[id] && !contact.groupSettings.members[id].isMuted); if (activeMembers.length === 0) { typingIndicator.style.display = 'none'; return; } typingIndicator.textContent = '群成员们正在输入...'; } else { typingIndicator.textContent = `${contact.remark || contact.charSettings.name}正在输入中...`; } } else { typingIndicator.style.display = 'none'; } }
+function updateTypingIndicator() { if (!singleChatScreen.classList.contains('active')) { typingIndicator.style.display = 'none'; return; } const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) { typingIndicator.style.display = 'none'; return; } if (runtimeState.activeRequests[runtimeState.currentChatId]) { if (contact.isGroup) { if (contact.groupSettings.isDisbanded) { typingIndicator.style.display = 'none'; return; } const potentialSpeakers = contact.members.filter(id => { const member = contact.groupSettings.members[id]; if (!member) return false; const isOwner = contact.groupSettings.owner === id; const isAdmin = contact.groupSettings.admins.includes(id); const canSpeakWhenGlobalMute = isOwner || isAdmin; return !member.isMuted && (!contact.groupSettings.isMuted || canSpeakWhenGlobalMute); }); if (potentialSpeakers.length > 0) { typingIndicator.textContent = contact.groupSettings.isMuted ? '某些群成员正在输入...' : '群成员们正在输入...'; typingIndicator.style.display = 'block'; } else { typingIndicator.style.display = 'none'; } } else { typingIndicator.textContent = `${contact.remark || contact.charSettings.name}正在输入中...`; typingIndicator.style.display = 'block'; } } else { typingIndicator.style.display = 'none'; } }
 
 // ===================================================================
 // --- 动态 (Moments) 界面逻辑 ---
@@ -3126,19 +3306,6 @@ function updateTypingIndicator() { if (!singleChatScreen.classList.contains('act
                     <div class="title-wrapper"><h2 class="title">${profileData.name}的动态</h2></div>
                     <div class="app-header-right"></div>
                 </div>
-            `;
-        }
-
-        // 为用户和角色页面分别准备不同的文件输入框
-        let fileInputsHTML = '';
-        if (isUserPage) {
-            fileInputsHTML = `
-                <input type="file" id="moments-user-cover-input" accept="image/*" style="display:none;">
-                <input type="file" id="moments-user-avatar-input" accept="image/*" style="display:none;">
-            `;
-        } else {
-            fileInputsHTML = `
-                <input type="file" id="moments-char-cover-input" accept="image/*" style="display:none;">
             `;
         }
 
@@ -3161,7 +3328,6 @@ function updateTypingIndicator() { if (!singleChatScreen.classList.contains('act
                 </div>
                 <div class="moments-fab-container" id="moments-fab-container-${profileId}"></div>
             </div>
-            ${fileInputsHTML}
         `;
 
         const coverEl = getEl(`moments-cover-${profileId}`);
@@ -3170,42 +3336,102 @@ function updateTypingIndicator() { if (!singleChatScreen.classList.contains('act
         const avatarEl = getEl(`moments-profile-avatar-${profileId}`);
 
         const coverId = isUserPage ? appState.chat.moments.profile.coverId : (appState.chat.contacts.find(c => c.id === profileId)?.charSettings.momentsCoverId || 'default_moments_cover');
+        const contact = isUserPage ? null : appState.chat.contacts.find(c => c.id === profileId);
+        const avatarId = isUserPage 
+            ? appState.chat.moments.profile.avatarId 
+            : (contact?.charSettings.momentsAvatarId || contact?.charSettings.avatarId);
+
         setElementImage(coverEl, coverId);
         nameEl.textContent = profileData.name;
         signatureEl.textContent = profileData.signature;
-        setElementImage(avatarEl, profileData.avatarId);
+        setElementImage(avatarEl, avatarId);
 
         renderMomentsFeed(profileId);
     }
+    const newId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+async function handleMomentsImageUpload(file, profileId, type) {
+        if (!file) return;
 
+        const toastMessage = type === 'cover' ? '正在上传封面...' : '正在上传头像...';
+        showToast(toastMessage);
+
+        try {
+            const generatedId = newId(type === 'cover' ? 'moments_cover' : 'moments_avatar');
+            await addMediaToDB(generatedId, file);
+
+            if (profileId === 'user') {
+                if (type === 'cover') {
+                    appState.chat.moments.profile.coverId = generatedId;
+                } else { // avatar
+                    appState.chat.moments.profile.avatarId = generatedId;
+                    appState.chat.userProfile.avatarId = generatedId; // Sync global avatar
+                }
+            } else {
+                const contact = appState.chat.contacts.find(c => c.id === profileId);
+                if (contact) {
+                    if (type === 'cover') {
+                        contact.charSettings.momentsCoverId = generatedId;
+                    } else { // avatar
+                        if (typeof contact.charSettings.momentsAvatarId === 'undefined') {
+                            contact.charSettings.momentsAvatarId = '';
+                        }
+                        contact.charSettings.momentsAvatarId = generatedId;
+                    }
+                }
+            }
+            
+            saveState();
+            renderMomentsPage(profileId);
+            showToast(type === 'cover' ? '封面更换成功！' : '头像更换成功！');
+        } catch (error) {
+            console.error('图片上传或保存失败:', error);
+            showToast('上传失败，请检查浏览器控制台获取错误信息。', 'error');
+        }
+    }
     function handleMomentsPageInteraction(e) {
         const profileId = runtimeState.moments.currentProfileId;
         const isUserPage = profileId === 'user';
         const target = e.target;
 
         // --- 头像、封面、昵称、签名点击 ---
-        if (target.closest(`#moments-cover-${profileId}`)) {
-            if (isUserPage) {
-                getEl('moments-user-cover-input').click();
-            } else {
-                getEl('moments-char-cover-input').click();
+            if (target.closest(`#moments-cover-${profileId}`) || target.closest(`#moments-profile-avatar-${profileId}`)) {
+                const type = target.closest(`#moments-cover-${profileId}`) ? 'cover' : 'avatar';
+                
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.style.display = 'none';
+
+                const cleanup = () => {
+                    if (input.parentNode) {
+                        document.body.removeChild(input);
+                    }
+                    window.removeEventListener('focus', cleanup);
+                };
+
+                input.onchange = (e) => {
+                    handleMomentsImageUpload(e.target.files[0], profileId, type);
+                    cleanup();
+                };
+
+                // Add a fallback cleanup listener. If the user cancels the file dialog,
+                // the window regains focus, and we can remove the dangling input.
+                window.addEventListener('focus', cleanup, { once: true });
+
+                document.body.appendChild(input);
+                input.click();
+                return;
             }
-            return;
-        }
-        if (target.closest(`#moments-profile-avatar-${profileId}`)) {
-            if (isUserPage) getEl('moments-user-avatar-input').click();
-            return;
-        }
-        if (isUserPage && target.closest(`#moments-profile-name-${profileId}`)) {
-            const newName = prompt('修改你的动态昵称:', appState.chat.moments.profile.name);
-            if (newName && newName.trim()) { appState.chat.moments.profile.name = newName.trim(); appState.chat.userProfile.name = newName.trim(); saveState(); renderMomentsPage('user'); }
-            return;
-        }
-        if (isUserPage && target.closest(`#moments-profile-signature-${profileId}`)) {
-            const newSignature = prompt('修改你的个性签名:', appState.chat.moments.profile.signature);
-            if (newSignature !== null) { const oldSignature = appState.chat.moments.profile.signature; appState.chat.moments.profile.signature = newSignature.trim(); appState.chat.userProfile.signature = newSignature.trim(); if (newSignature.trim() !== oldSignature) { const newPost = { id: newId('post'), authorId: 'user', type: 'status', content: { text: `签名更换为：“${newSignature.trim()}”`, images: [] }, timestamp: Date.now(), likes: [], comments: [] }; appState.chat.moments.posts.unshift(newPost); } saveState(); renderMomentsPage('user'); }
-            return;
-        }
+            if (isUserPage && target.closest(`#moments-profile-name-${profileId}`)) {
+                const newName = prompt('修改你的动态昵称:', appState.chat.moments.profile.name);
+                if (newName && newName.trim()) { appState.chat.moments.profile.name = newName.trim(); appState.chat.userProfile.name = newName.trim(); saveState(); renderMomentsPage('user'); }
+                return;
+            }
+            if (isUserPage && target.closest(`#moments-profile-signature-${profileId}`)) {
+                const newSignature = prompt('修改你的个性签名:', appState.chat.moments.profile.signature);
+                if (newSignature !== null) { const oldSignature = appState.chat.moments.profile.signature; appState.chat.moments.profile.signature = newSignature.trim(); appState.chat.userProfile.signature = newSignature.trim(); if (newSignature.trim() !== oldSignature) { const newPost = { id: newId('post'), authorId: 'user', type: 'status', content: { text: `签名更换为：“${newSignature.trim()}”`, images: [] }, timestamp: Date.now(), likes: [], comments: [] }; appState.chat.moments.posts.unshift(newPost); } saveState(); renderMomentsPage('user'); }
+                return;
+            }
 
         // --- 筛选标签点击 ---
         const filterTab = target.closest('.moments-filter-tab');
@@ -3840,7 +4066,7 @@ function renderFriendSelector() {
 // ===================================================================
     function setupAllListInteractions() { 
         new ListInteractionHandler(presetListEl, { itemSelector: '.preset-list-item', contentSelector: '.preset-item-content', actionsSelector: '.preset-item-actions', onDelete: (item) => { const index = parseInt(item.dataset.index); if (confirm(`确定要删除预设 "${appState.settings.presets[index].name}" 吗？`)) { appState.settings.presets.splice(index, 1); saveState(); renderPresetList(); updatePresetSelect(); showToast("预设已删除"); } }, onEdit: (item) => { const index = parseInt(item.dataset.index); const preset = appState.settings.presets[index]; editPresetIndexInput.value = index; editPresetNameInput.value = preset.name; editPresetUrlInput.value = preset.url; editPresetKeyInput.value = preset.key; editPresetModal.classList.add('visible'); } }); 
-        new ListInteractionHandler(musicListEl, { itemSelector: '.music-list-item', contentSelector: '.music-item-content', actionsSelector: '.music-item-actions', onTap: (item) => { const songId = item.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { playerModal.classList.add('show'); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); playerModal.classList.add('show'); } } }, onLongPress: (item) => { openSongDetails(item.dataset.id); }, onDelete: async (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { if(song.isLocal) { await deleteMediaFromDB(songId); } appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } }, onEdit: (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } } }); 
+        new ListInteractionHandler(musicListEl, { itemSelector: '.music-list-item', contentSelector: '.music-item-content', actionsSelector: '.music-item-actions', onTap: (item) => { const songId = item.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { runtimeState.currentChatId = null; clearInterval(listenTogetherTimer); listenTogetherInfo.style.display = 'none'; appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); playerModal.classList.add('show'); } } }, onLongPress: (item) => { openSongDetails(item.dataset.id); }, onDelete: async (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { if(song.isLocal) { await deleteMediaFromDB(songId); } appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); saveState(); showToast("歌曲已删除"); } } }, onEdit: (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } } });  
         new ListInteractionHandler(fontListEl, { itemSelector: '.font-list-item', contentSelector: '.font-item-content', actionsSelector: '.font-item-actions', onTap: (item, target) => { if (target.classList.contains('font-color-btn')) { const newColor = prompt("请输入新的字体颜色 (HEX或RGB/A):", appState.beautify.fontColor); if (newColor && isValidColor(newColor)) { appState.beautify.fontColor = newColor; document.documentElement.style.setProperty('--system-font-color', newColor); saveState(); showToast('字体颜色已更新'); } else if (newColor) { showToast('无效的颜色格式', 'error'); } } else { const fontName = item.dataset.name; if (confirm(`确定要将系统字体更换为 "${fontName === 'default' ? '默认系统字体' : fontName}" 吗？`)) { applyFont(fontName); } } }, onDelete: async (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法删除', 'error'); return; } if (confirm(`确定要删除字体 "${fontName}" 吗？`)) { const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { await deleteMediaFromDB(appState.beautify.fonts[fontIndex].id); appState.beautify.fonts.splice(fontIndex, 1); } if (appState.beautify.currentFont === fontName) { applyFont('default'); } await loadAllCustomFonts(); saveState(); renderFonts(); showToast('字体已删除'); } }, onEdit: async (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法编辑', 'error'); return; } const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { const newName = prompt('请输入新的字体名称:', fontName); if (newName && newName.trim() !== '') { appState.beautify.fonts[fontIndex].name = newName.trim(); if (appState.beautify.currentFont === fontName) { appState.beautify.currentFont = newName.trim(); } await loadAllCustomFonts(); saveState(); renderFonts(); showToast('字体名称已更新'); } } } }); 
         const createDataListHandler = (listEl, type, renderFunction) => { new ListInteractionHandler(listEl, { itemSelector: '.preset-data-item', contentSelector: '.preset-data-item-content', actionsSelector: '.preset-data-item-actions', onTap: (item) => { const dataId = item.dataset.id; const dataItem = appState.data[type + 's'].find(d => d.id === dataId); if (dataItem) { viewContentTitle.textContent = escapeHTML(dataItem.name); viewContentBody.innerHTML = `<p>${escapeHTML(dataItem.content || '').replace(/\n/g, '<br>')}</p>`; viewContentModal.classList.add('visible'); } }, onDelete: (item) => { const id = item.dataset.id; const dataArray = appState.data[type + 's']; const itemIndex = dataArray.findIndex(i => i.id === id); if (itemIndex > -1) { if (confirm(`确定要删除 "${dataArray[itemIndex].name}" 吗？`)) { dataArray.splice(itemIndex, 1); saveState(); renderFunction(); } } }, onEdit: (item) => { openDataEditor(type, item.dataset.id); } }); }; createDataListHandler(worldBookListEl, 'worldBook', renderWorldBooks); createDataListHandler(archiveListEl, 'archive', renderArchives); createDataListHandler(infoListEl, 'info', renderInfos); 
         new ListInteractionHandler(detailsCommentsList, { itemSelector: '.comment-item', contentSelector: '.comment-item-main', actionsSelector: '.comment-item-actions-swipe', onDelete: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const commentIndex = appState.music.comments[songId].findIndex(c => c.id === commentId); if (commentIndex > -1) { if (confirm('确定要删除这条评论吗？')) { appState.music.comments[songId].splice(commentIndex, 1); saveState(); renderSongComments(songId); } } }, onEdit: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const comment = appState.music.comments[songId].find(c => c.id === commentId); if (comment) { runtimeState.editingComment = { source: 'music', songId, commentId, replyId: null }; editCommentInput.value = comment.text; editCommentModal.classList.add('visible'); } } }); 
@@ -3956,48 +4182,6 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
     }
         function setupGlobalEventListeners() {
         document.body.addEventListener('change', async (e) => {
-            // User Moments Cover Upload
-            if (e.target.id === 'moments-user-cover-input') {
-                const file = e.target.files[0];
-                if (file) {
-                    showToast('正在上传封面...');
-                    const newId = newId('moments_cover');
-                    await addMediaToDB(newId, file);
-                    appState.chat.moments.profile.coverId = newId;
-                    saveState();
-                    renderMomentsPage('user');
-                    e.target.value = '';
-                }
-            } 
-            // User Moments Avatar Upload
-            else if (e.target.id === 'moments-user-avatar-input') {
-                const file = e.target.files[0];
-                if (file) {
-                    showToast('正在上传头像...');
-                    const newId = newId('moments_avatar');
-                    await addMediaToDB(newId, file);
-                    appState.chat.moments.profile.avatarId = newId;
-                    appState.chat.userProfile.avatarId = newId; // Sync global avatar
-                    saveState();
-                    renderMomentsPage('user');
-                    e.target.value = '';
-                }
-            }
-            // Char Moments Cover Upload
-            else if (e.target.id === 'moments-char-cover-input') {
-                const file = e.target.files[0];
-                const profileId = runtimeState.moments.currentProfileId;
-                const contact = appState.chat.contacts.find(c => c.id === profileId);
-                if (file && contact) {
-                    showToast('正在上传封面...');
-                    const newId = newId('moments_cover');
-                    await addMediaToDB(newId, file);
-                    contact.charSettings.momentsCoverId = newId;
-                    saveState();
-                    renderMomentsPage(profileId);
-                    e.target.value = '';
-                }
-            }
         });
     }
     function setupChatAppScreenListeners() {
