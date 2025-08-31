@@ -239,6 +239,7 @@
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
         #gcs-member-modal { z-index: 110; }
         #library-modal, #load-persona-modal, #gcs-manage-members-modal, #gcs-member-action-modal, #bubble-io-modal, #post-moment-modal { z-index: 120; }
+        #edit-photo-modal { z-index: 140; }
         .modal-overlay.visible { opacity: 1; visibility: visible; }
         .modal-content { background-color: var(--app-screen-bg); padding: 20px; border-radius: 14px; width: 90%; max-width: 350px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transform: scale(0.9); transition: transform 0.2s; }
         .modal-overlay.visible .modal-content { transform: scale(1); }
@@ -271,10 +272,10 @@
         .hidden-by-logic { display: none !important; }
 
         /* --- 列表滑动通用样式 --- */
-        .preset-list-item, .preset-data-item, .music-list-item, .font-list-item, .contact-list-item, .comment-item, .moments-post-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; touch-action: pan-y; }
-        .preset-item-content, .preset-data-item-content, .music-item-content, .font-item-content, .contact-item-content, .comment-item-main, .post-item-content { background-color: var(--item-bg); transition: transform 0.3s ease; position: relative; z-index: 2; }
-        .preset-item-actions, .music-item-actions, .font-item-actions, .preset-data-item-actions, .contact-item-actions, .comment-item-actions-swipe, .post-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
-        .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div, .preset-data-item-actions > div, .contact-item-actions > div, .comment-item-actions-swipe > div, .post-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .preset-list-item, .preset-data-item, .music-list-item, .font-list-item, .contact-list-item, .comment-item, .moments-post-item, .message-board-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; touch-action: pan-y; }
+        .preset-item-content, .preset-data-item-content, .music-item-content, .font-item-content, .contact-item-content, .comment-item-main, .post-item-content, .message-board-item-main { background-color: var(--item-bg); transition: transform 0.3s ease; position: relative; z-index: 2; }
+        .preset-item-actions, .music-item-actions, .font-item-actions, .preset-data-item-actions, .contact-item-actions, .comment-item-actions-swipe, .post-item-actions, .message-board-item-actions { position: absolute; top: 0; right: 0; height: 100%; display: flex; z-index: 1; }
+        .preset-item-actions > div, .music-item-actions > div, .font-item-actions > div, .preset-data-item-actions > div, .contact-item-actions > div, .comment-item-actions-swipe > div, .post-item-actions > div, .message-board-item-actions > div { width: 70px; height: 100%; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .edit-action { background-color: var(--edit-color); }
         .delete-action { background-color: var(--danger-color); }
         #manage-presets-modal .modal-content { min-height: 300px; }
@@ -303,8 +304,6 @@
         .comment-text { margin-top: 5px; font-size: 15px; line-height: 1.5; }
         .comment-replies { margin-left: 50px; margin-top: 10px; border-left: 2px solid #eee; padding-left: 10px; }
         .reply-item { font-size: 14px; margin-bottom: 8px; position: relative; cursor: pointer; }
-        .reply-item .delete-reply-btn { position: absolute; right: 0; top: 0; cursor: pointer; display: none; color: var(--danger-color); font-weight: bold; }
-        .reply-item:hover .delete-reply-btn { display: block; }
         .reply-author { font-weight: bold; }
         .reply-target { color: var(--accent-color); }
         .reply-input-container { display: none; margin-top: 5px; }
@@ -529,7 +528,7 @@
         #moments-tab-content, #char-moments-screen .app-content { position: relative; } /* For FAB positioning */
         #moments-tab-content { padding: 0; background-color: #f0f2f5; }
         .moments-scroll-container { height: 100%; overflow-y: auto; padding-bottom: 20px; /* 增加底部内边距以避免FAB遮挡 */ box-sizing: border-box; position: relative; }
-        .moments-cover { height: 35vh; background-color: #ccc; background-size: cover; background-position: center; cursor: pointer; position: relative; }
+        .moments-cover { width: 100%; height: auto; aspect-ratio: 16 / 9; background-color: #ccc; background-size: cover; background-position: center; cursor: pointer; position: relative; }
         .moments-profile-header { display: flex; justify-content: flex-end; position: relative; padding: 0 15px; margin-top: -40px; }
         .moments-profile-info { display: flex; align-items: flex-end; }
         .moments-profile-text { margin-right: 15px; text-align: right; }
@@ -568,12 +567,12 @@
         #post-moment-modal .modal-content { max-width: 400px; }
         #post-moment-modal-body .form-group { margin-bottom: 15px; }
         #post-moment-modal-body label { font-weight: 500; }
-        #post-moment-friend-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
+        .friend-selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
         .friend-selector-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 5px; }
         .friend-selector-item.selected { border-color: var(--accent-color); }
         .friend-selector-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
     .friend-selector-item .name { font-size: 12px; text-align: center; }
-    #moment-comment-author-selector, #moment-post-author-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
+    #moment-comment-author-selector, #moment-post-author-selector, #leave-message-author-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
     .author-selector-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 5px; }
         .author-selector-item.selected { border-color: var(--accent-color); }
         .author-selector-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
@@ -582,6 +581,66 @@
         /* --- 提示消息 --- */
         #toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events: none; }
         #toast.show { opacity: 1; bottom: 100px; }
+        /* --- 相册与照片管理 --- */
+        #view-album-screen .app-content { padding: 10px; }
+        .album-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .album-item { width: 100%; aspect-ratio: 1 / 1; position: relative; cursor: pointer; border-radius: 8px; overflow: hidden; }
+        .album-item-cover { width: 100%; height: 100%; background-size: cover; background-position: center; background-color: #eee; }
+        .album-item-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 8px; color: white; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+        .album-item-name { font-weight: bold; font-size: 14px; }
+        .album-item-info { font-size: 11px; opacity: 0.9; }
+        .album-item-footer {display: flex;justify-content: space-between;align-items: center;}
+        .album-item-actions { text-align: right; }
+        .album-item-actions .icon-btn { background-color: rgba(0,0,0,0.5); border-radius: 50%; width: 24px; height: 24px; color: white; border: none; cursor: pointer; }
+        .album-item.selected-for-deletion { border: 3px solid var(--danger-color); }
+        .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .photo-grid-item { width: 100%; aspect-ratio: 1 / 1; background-size: cover; background-position: center; border-radius: 6px; position: relative; cursor: pointer; }
+        .photo-grid-item.selected-for-deletion { outline: 3px solid var(--danger-color); }
+        #manage-albums-modal .modal-actions.multi-button { flex-direction: row; }
+        #manage-albums-modal .modal-actions.multi-button button { flex: 1; }
+
+        /* --- 留言板 --- */
+        .message-board-avatar { width: 32px; height: 32px; border-radius: 50%; background-color: #eee; background-size: cover; background-position: center; flex-shrink: 0; }
+        .message-board-signature { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .message-board-feed { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+        .message-board-item { background-color: transparent; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border-bottom: none; }
+        .message-board-item-main { padding: 15px; border-radius: 8px; }
+        .message-board-header { display: flex; align-items: center; gap: 10px; }
+        .message-board-recipient { font-weight: bold; font-size: 16px; margin: 0; }
+        .message-board-content { font-size: 15px; line-height: 1.6; margin: 15px 0; text-align: center; }
+        .message-board-footer { text-align: right; }
+        .message-board-sender { font-style: italic; }
+        .message-board-timestamp { font-size: 12px; color: var(--secondary-text-color); margin-top: 5px; }
+        .message-board-replies { margin-left: 42px; margin-top: 10px; border-left: 2px solid #eee; padding-left: 10px; }
+
+        /* --- 照片上传弹窗 --- */
+        #upload-photo-image-preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 5px; max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .upload-preview-item { width: 60px; height: 60px; background-size: cover; background-position: center; border-radius: 4px; }
+        .post-photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+        .post-photo-item { width: 100%; aspect-ratio: 1 / 1; background-size: cover; background-position: center; border-radius: 6px; }
+        /* --- Photo Viewer Modal (New Style) --- */
+        .viewer-nav-btn { position: absolute; top: 50%; transform: translateY(-50%); background-color: rgba(0,0,0,0.3); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 24px; cursor: pointer; z-index: 15; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .viewer-nav-btn.prev-btn { left: 15px; }
+        .viewer-nav-btn.next-btn { right: 15px; }
+        #photo-viewer-container { width: 100%; height: 100%; position: relative; display: flex; }
+        #viewer-image-view, #viewer-text-view { display: none; width: 100%; height: 100%; }
+        #view-photo-modal.image-mode #viewer-image-view, #view-photo-modal.text-mode #viewer-text-view { display: flex; }
+        
+        #viewer-text-view { display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: white; padding: 20px; box-sizing: border-box; width: 75vw; height: 75vh; max-width: 400px; max-height: 400px; margin: auto; border-radius: 12px; position: relative; }
+        #view-photo-text-display { width: 100%; overflow-y: auto; font-size: 16px; line-height: 1.8; color: black; text-align: center; }
+        #view-photo-modal { background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+        .photo-viewer-content { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; box-sizing: border-box; cursor: pointer; }
+        .photo-viewer-close-btn { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 15px); right: 15px; font-size: 30px; color: white; background: none; border: none; cursor: pointer; z-index: 10; width: 40px; height: 40px; text-shadow: 0 0 5px black; }
+        .photo-viewer-name { position: absolute; top: 0; left: 0; right: 0; z-index: 5; font-size: 18px; font-weight: bold; color: white; text-align: center; text-shadow: 1px 1px 3px black; transition: opacity 0.3s; padding: 10px 15px; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); cursor: text; }
+        #view-photo-image { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .photo-viewer-desc { position: absolute; bottom: 0; left: 0; right: 0; font-size: 14px; color: white; text-align: center; max-height: 25%; overflow-y: auto; text-shadow: 1px 1px 3px black; transition: opacity 0.3s; padding: 10px 15px; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); cursor: text; }
+        .photo-viewer-image-container { position: relative; max-width: 100%; max-height: 100%; display: flex; align-items: center; justify-content: center; }
+        #view-photo-modal.text-hidden .photo-viewer-name, #view-photo-modal.text-hidden .photo-viewer-desc, #view-photo-modal.text-hidden .photo-viewer-close-btn, #view-photo-modal.text-hidden .viewer-nav-btn { opacity: 0; pointer-events: none; }
+        /* --- Simple Image Viewer --- */
+        #simple-viewer-modal { background-color: rgba(0,0,0,0.8); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 130; cursor: pointer; }
+        .simple-viewer-content { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
+        #simple-viewer-image { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
+        #simple-viewer-text { background-color: white; color: black; padding: 30px; border-radius: 8px; overflow-y: auto; font-size: 16px; line-height: 1.8; text-align: center; display: none; justify-content: center; align-items: center; cursor: default; width: 75vw; height: 75vh; max-width: 400px; max-height: 400px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -909,7 +968,19 @@
                 <div class="tab-link active" data-tab="gcs-group-settings">群设置</div><div class="tab-link" data-tab="gcs-user-settings">我的设置</div>
             </div>
         </div>
-
+        <!-- 查看相册界面 -->
+        <div id="view-album-screen" class="app-screen sub-screen">
+            <div class="app-header">
+                <div class="app-header-left"><button class="back-btn" id="view-album-back-btn">&lt; 返回</button></div>
+                <div class="title-wrapper"><h2 class="title" id="view-album-title">相册</h2></div>
+                <div class="app-header-right">
+                    <button class="action-btn small" id="delete-photos-btn" style="display: none;">删除</button>
+                </div>
+            </div>
+            <div class="app-content">
+                <div id="album-photo-grid" class="photo-grid"></div>
+            </div>
+        </div>
         <!-- Char动态主页 -->
         <div id="char-moments-screen" class="app-screen sub-screen">
             <!-- 内容将由JS动态生成 -->
@@ -950,7 +1021,182 @@
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
     <div id="gcs-member-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-action-title">管理成员</h3><div class="modal-body" id="gcs-member-action-body"></div><div class="modal-actions"><button id="gcs-member-action-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-action-cancel">取消</button></div></div></div>
+    <!-- 留言弹窗 -->
+    <div id="leave-message-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">写留言</h3>
+            <div class="modal-body">
+                <div class="form-group hidden-by-logic" id="leave-message-author-selector-container">
+                        <label>发布人</label>
+                        <div id="leave-message-author-selector"></div>
+                    </div>
+                <div class="form-group">
+                    <label for="message-recipient">称呼</label>
+                    <input type="text" id="message-recipient" placeholder="To:">
+                </div>
+                <div class="form-group">
+                    <label for="message-content">内容</label>
+                    <textarea id="message-content" class="wide-textarea" rows="5" placeholder="说点什么吧..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="message-sender">落款</label>
+                    <input type="text" id="message-sender" placeholder="From:">
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label>谁可以看</label>
+                    <div class="radio-group" id="leave-message-visibility">
+                        <label class="radio-label"><input type="radio" name="message-visibility" value="public" checked><span>公开</span></label>
+                        <label class="radio-label"><input type="radio" name="message-visibility" value="specific"><span>指定好友</span></label>
+                    </div>
+                </div>
+                <div class="form-group hidden-by-logic" id="leave-message-friend-selector-container">
+                    <div id="leave-message-friend-selector" class="friend-selector-grid"></div>
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-leave-message-btn" class="cancel-btn">取消</button>
+                <button id="confirm-leave-message-btn" class="confirm-btn">发表</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 相册管理弹窗 -->
+    <div id="manage-albums-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">管理相册</h3>
+            <div class="app-header-right" style="position: absolute; top: 15px; right: 15px;">
+                <button class="action-btn small" id="create-album-btn">新建</button>
+            </div>
+            <div class="modal-body">
+                <div id="manage-albums-grid" class="album-grid"></div>
+            </div>
+            <div class="modal-actions multi-button">
+                 <button id="delete-selected-albums-btn" class="danger-btn" style="display: none;">删除选中</button>
+                <button id="close-manage-albums-btn" class="cancel-btn">关闭</button>
+            </div>
+        </div>
+    </div>
 
+    <!-- 新建/编辑相册弹窗 -->
+    <div id="edit-album-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title" id="edit-album-title">新建相册</h3>
+            <div class="modal-body">
+                <input type="hidden" id="editing-album-id">
+                <div class="form-group">
+                    <label for="album-name-input">相册名称</label>
+                    <input type="text" id="album-name-input" placeholder="必填">
+                </div>
+                <div class="form-group">
+                    <label for="album-desc-input">相册描述</label>
+                    <textarea id="album-desc-input" class="wide-textarea" rows="3" placeholder="选填"></textarea>
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-edit-album-btn" class="cancel-btn">取消</button>
+                <button id="save-album-btn" class="confirm-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    <!-- 简易图片/文字查看器 -->
+    <div id="simple-viewer-modal" class="modal-overlay">
+        <div class="simple-viewer-content">
+            <img id="simple-viewer-image" src="">
+            <div id="simple-viewer-text"></div>
+            <button id="simple-viewer-prev-btn" class="viewer-nav-btn prev-btn" style="display: none;">&lt;</button>
+            <button id="simple-viewer-next-btn" class="viewer-nav-btn next-btn" style="display: none;">&gt;</button>
+        </div>
+    </div>
+    <!-- 编辑照片信息弹窗 -->
+    <div id="edit-photo-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">编辑照片信息</h3>
+            <div class="modal-body">
+                <input type="hidden" id="editing-photo-id">
+                <div class="form-group">
+                    <label for="photo-name-input">照片名称</label>
+                    <input type="text" id="photo-name-input">
+                </div>
+                <div class="form-group">
+                    <label for="photo-desc-input">照片描述</label>
+                    <textarea id="photo-desc-input" class="wide-textarea" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-edit-photo-btn" class="cancel-btn">取消</button>
+                <button id="save-photo-btn" class="confirm-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    <!-- 照片查看弹窗 -->
+    <div id="view-photo-modal" class="modal-overlay">
+        <div id="photo-viewer-container">
+            <!-- 真实图片视图 -->
+            <div id="viewer-image-view" class="photo-viewer-content">
+                    <button id="view-photo-close-btn" class="photo-viewer-close-btn">&times;</button>
+                    <div class="photo-viewer-image-container">
+                        <div id="view-photo-name" class="photo-viewer-name"></div>
+                        <img id="view-photo-image" src="">
+                        <div id="view-photo-desc" class="photo-viewer-desc"></div>
+                    </div>
+                </div>
+            <!-- 虚拟文字图视图 -->
+            <div id="viewer-text-view">
+                 <button id="view-photo-text-close-btn" class="photo-viewer-close-btn">&times;</button>
+                 <div id="view-photo-text-display"></div>
+            </div>
+        </div>
+        <button id="photo-viewer-prev-btn" class="viewer-nav-btn prev-btn" style="display: none;">&lt;</button>
+        <button id="photo-viewer-next-btn" class="viewer-nav-btn next-btn" style="display: none;">&gt;</button>
+    </div>
+    <!-- 上传照片弹窗 -->
+    <div id="upload-photo-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">上传照片</h3>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="upload-photo-name">照片名称</label>
+                    <input type="text" id="upload-photo-name" placeholder="必填，例如：海边的日落">
+                </div>
+                <div class="form-group">
+                    <div class="button-group">
+                        <button id="upload-photo-local-btn" class="settings-button secondary">图片</button>
+                        <button id="upload-photo-text-btn" class="settings-button secondary">文字图</button>
+                    </div>
+                     <input type="file" id="upload-photo-file-input" accept="image/*" style="display:none;" multiple>
+                </div>
+                <div id="upload-photo-image-preview-grid"></div>
+                 <div class="form-group hidden-by-logic" id="upload-photo-text-image-input-group">
+                    <label>文字图描述 (每行一张)</label>
+                    <textarea id="upload-photo-text-image-desc" class="wide-textarea" rows="2" placeholder="AI将根据你的描述生成图片..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="upload-photo-desc">照片描述 (可选)</label>
+                    <textarea id="upload-photo-desc" class="wide-textarea" rows="2" placeholder="记录这一刻的想法..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="upload-photo-album-select">上传到相册</label>
+                    <select id="upload-photo-album-select"></select>
+                </div>
+                <hr>
+                <div class="form-group">
+                    <label>谁可以看</label>
+                    <div class="radio-group" id="upload-photo-visibility">
+                        <label class="radio-label"><input type="radio" name="photo-visibility" value="public" checked><span>公开</span></label>
+                        <label class="radio-label"><input type="radio" name="photo-visibility" value="specific"><span>指定好友</span></label>
+                    </div>
+                </div>
+                <div class="form-group hidden-by-logic" id="upload-photo-friend-selector-container">
+                    <div id="upload-photo-friend-selector" class="friend-selector-grid"></div>
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-upload-photo-btn" class="cancel-btn">取消</button>
+                <button id="confirm-upload-photo-btn" class="confirm-btn">发布</button>
+            </div>
+        </div>
+    </div>
     <!-- 动态发布弹窗 -->
     <div id="post-moment-modal" class="modal-overlay">
         <div class="modal-content">
@@ -1003,7 +1249,7 @@
                     </div>
                 </div>
                 <div class="form-group hidden-by-logic" id="post-moment-friend-selector-container">
-                    <div id="post-moment-friend-selector"></div>
+                    <div id="post-moment-friend-selector" class="friend-selector-grid"></div>
                 </div>
             </div>
             <div class="modal-actions row">
@@ -1082,6 +1328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const singleChatScreen = getEl('single-chat-screen');
     const chatSettingsScreen = getEl('chat-settings-screen');
     const groupChatSettingsScreen = getEl('group-chat-settings-screen');
+    const viewAlbumScreen = getEl('view-album-screen');
     const charMomentsScreen = getEl('char-moments-screen');
 
     // --- 设置 APP ---
@@ -1387,6 +1634,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const gcsMemberActionTitle = getEl('gcs-member-action-title');
     const gcsMemberActionBody = getEl('gcs-member-action-body');
     const gcsMemberActionCancelBtn = getEl('gcs-member-action-cancel-btn');
+    // --- 新增弹窗 ---
+    const uploadPhotoModal = getEl('upload-photo-modal');
+    const manageAlbumsModal = getEl('manage-albums-modal');
+    const editAlbumModal = getEl('edit-album-modal');
+    const editPhotoModal = getEl('edit-photo-modal');
+    const leaveMessageModal = getEl('leave-message-modal');
+    const viewPhotoModal = getEl('view-photo-modal');
+    const simpleViewerModal = getEl('simple-viewer-modal');
 
     // --- 通用/共享弹窗 ---
     const libraryModal = getEl('library-modal');
@@ -1528,16 +1783,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     signature: '全网唯一土皇帝'
                 },
                 moments: {
-                    profile: {
-                        name: '土皇帝',
-                        signature: '全网唯一土皇帝',
-                        avatarId: 'default_moments_avatar',
-                        coverId: 'default_moments_cover',
-                    },
-                    posts: [],
-                    notifications: [],
-                    visitors: []
-                }
+                        profile: {
+                            name: '土皇帝',
+                            signature: '全网唯一土皇帝',
+                            avatarId: 'default_moments_avatar',
+                            coverId: 'default_moments_cover',
+                        },
+                        posts: [], // 动态
+                        photos: [], // 照片库
+                        albums: [], // 相册
+                        messages: [], // 留言
+                        notifications: [],
+                        visitors: []
+                    }
             }
         };
     }
@@ -1577,7 +1835,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentFilter: 'all',
                 isFabMenuOpen: false,
                 currentProfileId: 'user', 
-                postContext: {}
+                postContext: {},
+                viewerContext: { items: [], currentIndex: 0 }
             }
         };
     }
@@ -3445,30 +3704,67 @@ async function handleMomentsImageUpload(file, profileId, type) {
 
         // --- FAB按钮点击 ---
         const fabContainer = target.closest(`#moments-fab-container-${profileId}`);
-        if(fabContainer) {
-            const fab = target.closest('#moments-fab');
-            const fabOption = target.closest('.fab-option');
-            if (fab) {
-                const fabOptions = fabContainer.querySelector('#moments-fab-options');
-                runtimeState.moments.isFabMenuOpen = !runtimeState.moments.isFabMenuOpen;
-                fabOptions.style.display = runtimeState.moments.isFabMenuOpen ? 'flex' : 'none';
-            } else if (fabOption) {
-                const action = fabOption.dataset.action;
-                if (action === 'status') {
-                    openPostMomentModal('status');
-                } else if (action === 'log') {
-                    openPostMomentModal('log');
-                } else {
-                    showToast(`此功能待开发`);
+            if(fabContainer) {
+                const fab = target.closest('#moments-fab');
+                const fabOption = target.closest('.fab-option');
+                if (fab) {
+                    const fabOptions = fabContainer.querySelector('#moments-fab-options');
+                    runtimeState.moments.isFabMenuOpen = !runtimeState.moments.isFabMenuOpen;
+                    fabOptions.style.display = runtimeState.moments.isFabMenuOpen ? 'flex' : 'none';
+                } else if (fabOption) {
+                    const action = fabOption.dataset.action;
+                    switch(action) {
+                        case 'status':
+                            openPostMomentModal('status');
+                            break;
+                        case 'log':
+                            openPostMomentModal('log');
+                            break;
+                        case 'photo':
+                            openUploadPhotoModal();
+                            break;
+                        case 'album':
+                            openManageAlbumsModal();
+                            break;
+                        case 'message':
+                            openLeaveMessageModal();
+                            break;
+                        default:
+                            showToast(`此功能待开发`);
+                            break;
+                    }
+                    runtimeState.moments.isFabMenuOpen = false;
+                    fabContainer.querySelector('#moments-fab-options').style.display = 'none';
                 }
-                runtimeState.moments.isFabMenuOpen = false;
-                fabContainer.querySelector('#moments-fab-options').style.display = 'none';
+                return; // FAB交互后直接返回
             }
-            return; // FAB交互后直接返回
-        }
         
         // --- 动态列表项交互 ---
         const postItem = target.closest('.moments-post-item');
+        if(postItem) {
+            handleMomentsFeedPostInteraction(e, postItem, profileId);
+            return;
+        }
+        const messageItem = target.closest('.message-board-item');
+            if(messageItem) {
+                handleMessageBoardInteraction(e, messageItem, profileId);
+                return;
+            }
+
+        // --- Album grid item interaction (for main album tab) ---
+        const photoGridItem = target.closest('.photo-grid-item');
+        if (photoGridItem && target.closest('.moments-feed')) {
+            const grid = target.closest('.photo-grid');
+            const allPhotoItems = Array.from(grid.querySelectorAll('.photo-grid-item'));
+            const allPhotoIds = allPhotoItems.map(item => item.dataset.id);
+            const allPhotos = allPhotoIds.map(id => appState.chat.moments.photos.find(p => p.id === id)).filter(Boolean);
+            const startIndex = allPhotoItems.indexOf(photoGridItem);
+
+            if (startIndex > -1) {
+                openPhotoViewer(allPhotos, startIndex);
+            }
+            return;
+        }
         if(postItem) {
             handleMomentsFeedPostInteraction(e, postItem, profileId);
         }
@@ -3540,12 +3836,33 @@ async function handleMomentsImageUpload(file, profileId, type) {
             viewContentModal.classList.add('visible');
             return;
         }
-        
+        const photoItem = target.closest('.post-photo-item');
+        if (photoItem) {
+            const clickedPhotoId = photoItem.dataset.photoId;
+            const allPhotoIdsInPost = post.content.photoIds;
+            const allPhotos = allPhotoIdsInPost.map(id => appState.chat.moments.photos.find(p => p.id === id)).filter(Boolean);
+            const startIndex = allPhotos.findIndex(p => p.id === clickedPhotoId);
+
+            if (startIndex > -1) {
+                openPhotoViewer(allPhotos, startIndex);
+            }
+            return;
+        }
         const imageItem = target.closest('.post-image-item');
         if (imageItem) {
-            const isTextImage = post.content.images.some(imgData => (typeof imgData === 'object' && imgData.imageId === imageItem.dataset.imageId && imgData.isTextImage));
-            if (isTextImage || imageItem.classList.contains('text-image-post')) {
-                imageItem.classList.toggle('show-text');
+            const clickedImageId = imageItem.dataset.imageId;
+            const allImages = post.content.images.map(imgData => {
+                const isTextImage = typeof imgData === 'object' && imgData.isTextImage;
+                return {
+                    imageId: isTextImage ? imgData.imageId : imgData,
+                    isTextImage: isTextImage,
+                    description: isTextImage ? imgData.description : null
+                };
+            });
+            const startIndex = allImages.findIndex(img => img.imageId === clickedImageId);
+            
+            if (startIndex > -1) {
+                openSimpleViewer(allImages, startIndex);
             }
             return;
         }
@@ -3563,7 +3880,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
             if (actionBtn) { // Click on Edit or Delete button
                 const action = actionBtn.dataset.action;
                 if (action === 'edit-comment') {
-                    openMomentCommentEditor(postId, parentCommentId, isReply ? commentOrReplyItem.dataset.replyId : null);
+                    openMomentCommentEditor(postId, parentCommentId, isReply ? commentOrReplyItem.dataset.replyId : null, null);
                 } else if (action === 'delete-comment') {
                     if (confirm(`确定要删除这条${isReply ? '回复' : '评论'}吗？`)) {
                         if (isReply) {
@@ -3616,6 +3933,83 @@ async function handleMomentsImageUpload(file, profileId, type) {
             }
         }
     }
+    function handleMessageBoardInteraction(e, messageItem, profileId) {
+            const messageId = messageItem.dataset.messageId;
+            const message = appState.chat.moments.messages.find(m => m.id === messageId);
+            if (!message) return;
+            const target = e.target;
+
+            // --- Reply item actions ---
+            const replyItem = target.closest('.reply-item');
+            if (replyItem) {
+                const replyId = replyItem.dataset.replyId;
+                const reply = (message.replies || []).find(r => r.id === replyId);
+                if (!reply) return;
+
+                const editBtn = target.closest('.edit-reply-btn');
+                const deleteBtn = target.closest('.delete-reply-btn');
+                const sendBtn = target.closest('.reply-input-container button');
+                
+                if (editBtn) {
+                    openMomentCommentEditor(null, null, replyId, messageId);
+                } else if (deleteBtn) {
+                    if (confirm('确定要删除这条回复吗？')) {
+                        message.replies = message.replies.filter(r => r.id !== replyId);
+                        saveState();
+                        renderMomentsFeed(profileId);
+                    }
+                } else if (sendBtn) {
+                    const input = sendBtn.previousElementSibling;
+                    const text = input.value.trim();
+                    if (!text) return;
+                    const newReply = { id: newId('reply'), authorId: 'user', text, timestamp: Date.now(), replyTo: replyId };
+                    message.replies.push(newReply);
+                    saveState();
+                    renderMomentsFeed(profileId);
+                } else {
+                    // Click on reply body to toggle actions
+                    const actionIcons = replyItem.querySelector('.comment-actions-inline');
+                    const replyInputArea = replyItem.querySelector('.reply-input-container');
+                    
+                    if (actionIcons) actionIcons.style.display = actionIcons.style.display === 'flex' ? 'none' : 'flex';
+                    if (replyInputArea) replyInputArea.classList.toggle('active');
+                     if (replyInputArea && replyInputArea.classList.contains('active')) {
+                        replyInputArea.querySelector('input').focus();
+                    }
+                }
+                return;
+            }
+
+            // --- Main item actions ---
+            const mainReplyInputArea = messageItem.querySelector('.message-board-item-main > .reply-input-container');
+            const mainSendBtn = target.closest('.message-board-item-main > .reply-input-container button');
+            const replyBtn = target.closest('.reply-btn');
+            
+            if (mainSendBtn) {
+                const input = mainSendBtn.previousElementSibling;
+                const text = input.value.trim();
+                if (!text) return;
+                if (!message.replies) message.replies = [];
+                const newReply = { id: newId('reply'), authorId: 'user', text, timestamp: Date.now(), replyTo: null };
+                message.replies.push(newReply);
+                saveState();
+                renderMomentsFeed(profileId);
+                return;
+            }
+
+            // Click to reply logic (Bug ①)
+            const mainContentArea = target.closest('.message-board-item-main');
+            if (mainContentArea) {
+                // Check if the click was on the main content area itself, not on an interactive child
+                const isInteractiveChild = target.closest('button, input, .reply-btn, .message-board-replies');
+                if (!isInteractiveChild || replyBtn) {
+                    mainReplyInputArea.classList.toggle('active');
+                    if (mainReplyInputArea.classList.contains('active')) {
+                        mainReplyInputArea.querySelector('input').focus();
+                    }
+                }
+            }
+        }
     function renderMomentsFeed(profileId) {
         const isUserPage = profileId === 'user';
         const container = isUserPage ? momentsTabContent : charMomentsScreen;
@@ -3629,7 +4023,6 @@ async function handleMomentsImageUpload(file, profileId, type) {
         const tabList = [ { key: 'all', text: '全部' }, { key: 'status', text: '说说' }, { key: 'photo', text: '相册' }, { key: 'log', text: '日志' }, { key: 'visitor', text: '访客' }, { key: 'message', text: '留言' } ];
         tabsEl.innerHTML = tabList.filter(tab => isUserPage || (tab.key !== 'visitor')).map(tab => `<span class="moments-filter-tab ${filter === tab.key ? 'active' : ''}" data-filter="${tab.key}">${tab.text}</span>`).join('');
         
-        // --- Restore Complex FAB Logic ---
         let shouldShowFab = true;
         if (!isUserPage && !['all', 'message'].includes(filter)) {
             shouldShowFab = false;
@@ -3637,7 +4030,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
         if (filter === 'visitor') {
             shouldShowFab = false;
         }
-
+        
         if (shouldShowFab) {
             let fabOptionsHTML = '';
             const userOptions = { 
@@ -3645,13 +4038,17 @@ async function handleMomentsImageUpload(file, profileId, type) {
                 status: [{ action: 'status', text: '发表说说' }], 
                 photo: [{ action: 'photo', text: '上传照片' }, { action: 'album', text: '管理相册'}], 
                 log: [{ action: 'log', text: '写日志' }], 
-                message: [{ action: 'message', text: '发布留言' }] 
+                message: [{ action: 'message', text: '写留言' }] 
             };
-            if (isUserPage) {
-                fabOptionsHTML = (userOptions[filter] || []).map(opt => `<div class="fab-option" data-action="${opt.action}">${opt.text}</div>`).join('');
-            } else { // Char page
-                 fabOptionsHTML = `<div class="fab-option" data-action="message">发布留言</div>`;
-            }
+            
+            const charOptions = {
+                all: [{ action: 'message', text: '给他留言' }],
+                message: [{ action: 'message', text: '给他留言' }]
+            };
+
+            const optionsMap = isUserPage ? userOptions : charOptions;
+            fabOptionsHTML = (optionsMap[filter] || []).map(opt => `<div class="fab-option" data-action="${opt.action}">${opt.text}</div>`).join('');
+            
             fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtimeState.moments.isFabMenuOpen ? 'flex' : 'none'};">${fabOptionsHTML}</div><div id="moments-fab">+</div>`;
         } else {
             fabContainer.innerHTML = '';
@@ -3660,24 +4057,36 @@ async function handleMomentsImageUpload(file, profileId, type) {
         let postsToRender = [...appState.chat.moments.posts].sort((a,b) => b.timestamp - a.timestamp);
         if (!isUserPage) {
             postsToRender = postsToRender.filter(p => p.authorId === profileId && (p.visibility === 'public' || (p.visibleTo && p.visibleTo.includes('user'))));
-        } else {
-            postsToRender = postsToRender.filter(p => p.authorId === 'user' || (p.authorId !== 'user' && (p.visibility === 'public' || (p.visibleTo && p.visibleTo.includes('user')))));
         }
-
-        if (['visitor', 'message', 'photo'].includes(filter)) {
-            feedEl.innerHTML = `<p style="text-align:center; color:#888; margin-top: 50px;">此功能待开发~</p>`;
-        } else if (filter === 'log' || filter === 'status') {
-            const filteredPosts = postsToRender.filter(p => p.type === filter);
-            feedEl.innerHTML = filteredPosts.length > 0 ? filteredPosts.map(post => renderSingleMomentPost(post)).join('') : `<p style="text-align:center; color:#888; margin-top: 50px;">这里空空如也~</p>`;
-        } else { // 'all' filter
-            const allPosts = postsToRender.filter(p => p.type === 'status' || p.type === 'log');
-            feedEl.innerHTML = allPosts.length > 0 ? allPosts.map(post => renderSingleMomentPost(post)).join('') : `<p style="text-align:center; color:#888; margin-top: 50px;">这里空空如也~</p>`;
+        
+        feedEl.innerHTML = ''; // Clear feed before rendering
+        
+        switch(filter) {
+            case 'visitor':
+                feedEl.innerHTML = `<p style="text-align:center; color:#888; margin-top: 50px;">访客功能待开发~</p>`;
+                break;
+            case 'message':
+                renderMessages(feedEl, profileId);
+                break;
+            case 'photo':
+                openAlbumView(feedEl, profileId, 'default');
+                break;
+            case 'log':
+            case 'status':
+                const filteredPosts = postsToRender.filter(p => p.type === filter);
+                feedEl.innerHTML = filteredPosts.length > 0 ? filteredPosts.map(post => renderSingleMomentPost(post)).join('') : `<p style="text-align:center; color:#888; margin-top: 50px;">这里空空如也~</p>`;
+                break;
+            case 'all':
+            default:
+                const allPosts = postsToRender.filter(p => ['status', 'log', 'photo'].includes(p.type));
+                feedEl.innerHTML = allPosts.length > 0 ? allPosts.map(post => renderSingleMomentPost(post)).join('') : `<p style="text-align:center; color:#888; margin-top: 50px;">这里空空如也~</p>`;
+                break;
         }
         
         feedEl.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
-        feedEl.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId));
+        feedEl.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
+        feedEl.querySelectorAll('.post-photo-item').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
 
-        // Re-initialize list interaction handler for the newly rendered feed
         setupMomentsListInteraction(feedEl);
     }
 
@@ -3690,10 +4099,6 @@ async function handleMomentsImageUpload(file, profileId, type) {
         let visibilityHTML = '';
 
         if (post.type === 'status') {
-            let authorActionText = '';
-            if (post.content.images && post.content.images.length > 0 && !post.content.text) {
-                 authorActionText = `<div class="post-content-text">${author.name} 分享了图片</div>`;
-            }
             const postText = post.content.text ? `<div class="post-content-text">${escapeHTML(post.content.text)}</div>` : '';
             const imageGridHTML = post.content.images && post.content.images.length > 0 
                 ? `<div class="post-image-grid">${post.content.images.map(imgData => {
@@ -3701,13 +4106,20 @@ async function handleMomentsImageUpload(file, profileId, type) {
                     const imageId = isTextImage ? imgData.imageId : imgData;
                     const textOverlay = isTextImage ? `<div class="camera-text-overlay">(${escapeHTML(imgData.description)})</div>` : '';
                     const itemClass = isTextImage ? 'post-image-item text-image-post' : 'post-image-item';
-                    return `<div class="${itemClass}" data-image-id="${imageId}">${textOverlay}</div>`;
+                    return `<div class="${itemClass}" data-image-id="${imageId}" data-is-text-image="${isTextImage}">${textOverlay}</div>`;
                   }).join('')}</div>`
                 : '';
-            contentHTML = `${authorActionText}${postText}${imageGridHTML}`;
+            contentHTML = `${postText}${imageGridHTML}`;
         } else if (post.type === 'log') {
             const summary = post.content.text.length > 30 ? post.content.text.substring(0, 30).replace(/[，。！？]$/, '') + '...' : post.content.text;
             contentHTML = `<div class="post-log-summary"><h3>${escapeHTML(post.content.title)}</h3><p>${escapeHTML(summary)}</p></div>`;
+        } else if (post.type === 'photo') {
+            const photoData = appState.chat.moments.photos.filter(p => post.content.photoIds.includes(p.id));
+            const album = appState.chat.moments.albums.find(a => a.id === post.content.albumId);
+            const albumText = album ? `到《${escapeHTML(album.name)}》` : '';
+            const authorActionText = `<div class="post-content-text">${author.name} 上传了${photoData.length}张照片：${escapeHTML(post.content.name)}${albumText}</div>`;
+            const photoGridHTML = `<div class="post-photo-grid">${photoData.map(photo => `<div class="post-photo-item" data-photo-id="${photo.id}" data-image-id="${photo.imageId}"></div>`).join('')}</div>`;
+            contentHTML = `${authorActionText}${photoGridHTML}`;
         }
 
         if (post.visibility === 'specific' && post.visibleTo && post.visibleTo.length > 0) {
@@ -3724,7 +4136,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
 
         return `
             <div class="moments-post-item" data-post-id="${post.id}">
-                <div class="post-item-content">
+                <div class="post-item-content swipe-content">
                     <div class="post-header">
                         <div class="post-avatar" data-avatar-id="${author.avatarId}"></div>
                         <div class="post-author-info">
@@ -3747,7 +4159,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
                         </div>
                     </div>
                 </div>
-                <div class="post-item-actions">
+                <div class="post-item-actions swipe-actions">
                     <div class="edit-action">编辑</div>
                     <div class="delete-action">删除</div>
                 </div>
@@ -3880,7 +4292,501 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
 
         postMomentModal.classList.add('visible');
     }
+    function setupNewMomentsFeaturesListeners() {
+        // --- Photo Viewer Modal ---
+        getEl('viewer-image-view').addEventListener('click', (e) => {
+            const context = runtimeState.moments.viewerContext;
+            if (!context || context.items.length === 0) return;
+            const currentPhoto = context.items[context.currentIndex];
+            if (!currentPhoto) return;
 
+            if (e.target.closest('#view-photo-name') || e.target.closest('#view-photo-desc')) {
+                e.stopPropagation(); // Prevent the main viewer click from hiding the text
+                getEl('editing-photo-id').value = currentPhoto.id;
+                getEl('photo-name-input').value = currentPhoto.name;
+                getEl('photo-desc-input').value = currentPhoto.description || '';
+                editPhotoModal.classList.add('visible');
+            }
+        });
+        viewPhotoModal.addEventListener('click', (e) => {
+            const imageView = e.target.closest('#viewer-image-view');
+            const closeBtn = e.target.closest('.photo-viewer-close-btn');
+
+            if (closeBtn) {
+                viewPhotoModal.classList.remove('visible');
+            } else if (imageView) {
+                // Only toggle text visibility for image view
+                viewPhotoModal.classList.toggle('text-hidden');
+            }
+        });
+
+        // --- Simple Viewer Modal ---
+        simpleViewerModal.addEventListener('click', (e) => {
+             if (!e.target.closest('.viewer-nav-btn')) {
+                simpleViewerModal.classList.remove('visible');
+             }
+        });
+        getEl('simple-viewer-prev-btn').addEventListener('click', () => {
+            let { currentIndex } = runtimeState.moments.viewerContext;
+            if (currentIndex > 0) {
+                currentIndex--;
+                runtimeState.moments.viewerContext.currentIndex = currentIndex;
+                renderSimpleViewerContent(currentIndex);
+            }
+        });
+        getEl('simple-viewer-next-btn').addEventListener('click', () => {
+            let { items, currentIndex } = runtimeState.moments.viewerContext;
+            if (currentIndex < items.length - 1) {
+                currentIndex++;
+                runtimeState.moments.viewerContext.currentIndex = currentIndex;
+                renderSimpleViewerContent(currentIndex);
+            }
+        });
+        // --- Upload Photo Modal Listeners ---
+        getEl('upload-photo-local-btn').addEventListener('click', () => {
+            getEl('upload-photo-file-input').click();
+        });
+
+        getEl('upload-photo-file-input').addEventListener('change', async (e) => {
+            const files = e.target.files;
+            if (files.length === 0) return;
+            showToast(`正在处理 ${files.length} 张图片...`);
+            for (const file of files) {
+                const imageId = newId('moment_photo');
+                await addMediaToDB(imageId, file);
+                runtimeState.moments.postContext.images.push(imageId);
+            }
+            // Render previews
+            const previewGrid = getEl('upload-photo-image-preview-grid');
+            previewGrid.innerHTML = '';
+             runtimeState.moments.postContext.images.forEach(id => {
+                const item = document.createElement('div');
+                item.className = 'upload-preview-item';
+                previewGrid.appendChild(item);
+                setElementImage(item, id, 'backgroundImage');
+            });
+            showToast('图片已准备好');
+        });
+
+        getEl('upload-photo-text-btn').addEventListener('click', () => {
+             getEl('upload-photo-text-image-input-group').classList.toggle('hidden-by-logic');
+        });
+
+        getEl('upload-photo-visibility').addEventListener('change', e => {
+            runtimeState.moments.postContext.visibility = e.target.value;
+            const selectorContainer = getEl('upload-photo-friend-selector-container');
+            if (e.target.value === 'specific') {
+                renderFriendSelector('upload-photo-friend-selector', 'upload');
+                selectorContainer.classList.remove('hidden-by-logic');
+            } else {
+                selectorContainer.classList.add('hidden-by-logic');
+            }
+        });
+
+        getEl('upload-photo-friend-selector').addEventListener('click', e => {
+            const item = e.target.closest('.friend-selector-item');
+            if (item) {
+                const id = item.dataset.id;
+                item.classList.toggle('selected');
+                const context = runtimeState.moments.postContext;
+                if (item.classList.contains('selected')) {
+                    if (!context.visibleTo.includes(id)) context.visibleTo.push(id);
+                } else {
+                    context.visibleTo = context.visibleTo.filter(fid => fid !== id);
+                }
+            }
+        });
+
+        getEl('cancel-upload-photo-btn').addEventListener('click', () => uploadPhotoModal.classList.remove('visible'));
+        
+        getEl('confirm-upload-photo-btn').addEventListener('click', () => {
+            const name = getEl('upload-photo-name').value.trim();
+            if (!name) return showToast('照片名称不能为空', 'error');
+            
+            const description = getEl('upload-photo-desc').value.trim(); // 获取照片描述
+
+            const localImages = runtimeState.moments.postContext.images;
+            const textImageDescs = getEl('upload-photo-text-image-desc').value.trim().split('\n').filter(d => d);
+
+            if (localImages.length === 0 && textImageDescs.length === 0) {
+                return showToast('请至少上传一张图片或输入文字图描述', 'error');
+            }
+
+            const photoIds = [];
+            // Process local images
+            localImages.forEach(imageId => {
+                const photo = { id: newId('photo'), ownerId: 'user', imageId: imageId, isTextImage: false, name: name, description: description };
+                appState.chat.moments.photos.push(photo);
+                photoIds.push(photo.id);
+            });
+            // Process text images
+            textImageDescs.forEach(desc => {
+                const photo = { id: newId('photo'), ownerId: 'user', imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: name, description: description };
+                appState.chat.moments.photos.push(photo);
+                photoIds.push(photo.id);
+            });
+            
+            const selectedAlbumId = getEl('upload-photo-album-select').value;
+            const album = appState.chat.moments.albums.find(a => a.id === selectedAlbumId);
+            if(album) {
+                if(!album.photoIds) album.photoIds = [];
+                album.photoIds.unshift(...photoIds);
+            }
+
+            const newPost = {
+                id: newId('post'),
+                authorId: 'user',
+                type: 'photo',
+                content: {
+                    name: name,
+                    description: description, // 动态的描述也使用照片描述
+                    photoIds: photoIds,
+                    albumId: selectedAlbumId
+                },
+                timestamp: Date.now(),
+                visibility: runtimeState.moments.postContext.visibility,
+                visibleTo: runtimeState.moments.postContext.visibleTo,
+                likes: [],
+                comments: []
+            };
+            appState.chat.moments.posts.unshift(newPost);
+            saveState();
+            renderMomentsFeed('user');
+            uploadPhotoModal.classList.remove('visible');
+        });
+
+
+        // --- Manage Albums Modal Listeners ---
+        getEl('close-manage-albums-btn').addEventListener('click', () => {
+            manageAlbumsModal.classList.remove('visible');
+            getEl('delete-selected-albums-btn').style.display = 'none';
+            manageAlbumsModal.querySelectorAll('.album-item.selected-for-deletion').forEach(el => el.classList.remove('selected-for-deletion'));
+        });
+
+        getEl('create-album-btn').addEventListener('click', () => {
+            getEl('edit-album-title').textContent = '新建相册';
+            getEl('editing-album-id').value = '';
+            getEl('album-name-input').value = '';
+            getEl('album-desc-input').value = '';
+            editAlbumModal.classList.add('visible');
+        });
+
+        getEl('manage-albums-grid').addEventListener('click', e => {
+            const item = e.target.closest('.album-item');
+            if (!item) return;
+
+            if (getEl('delete-selected-albums-btn').style.display === 'block') {
+                 if(item.dataset.id !== 'default') {
+                    item.classList.toggle('selected-for-deletion');
+                 }
+                return;
+            }
+
+            if (e.target.closest('.edit-album-btn')) {
+                const albumId = item.dataset.id;
+                const album = appState.chat.moments.albums.find(a => a.id === albumId);
+                getEl('edit-album-title').textContent = '编辑相册';
+                getEl('editing-album-id').value = albumId;
+                getEl('album-name-input').value = album.name;
+                getEl('album-desc-input').value = album.description || '';
+                editAlbumModal.classList.add('visible');
+            } else {
+                openSubScreen(viewAlbumScreen, chatAppScreen);
+                renderAlbumView(item.dataset.id);
+                manageAlbumsModal.classList.remove('visible');
+            }
+        });
+        
+        let albumLongPressTimer = null;
+        getEl('manage-albums-grid').addEventListener('pointerdown', e => {
+             const item = e.target.closest('.album-item');
+             if(!item || item.dataset.id === 'default') return;
+             albumLongPressTimer = setTimeout(() => {
+                getEl('delete-selected-albums-btn').style.display = 'block';
+                item.classList.add('selected-for-deletion');
+             }, 800);
+        });
+         getEl('manage-albums-grid').addEventListener('pointerup', () => clearTimeout(albumLongPressTimer));
+         getEl('manage-albums-grid').addEventListener('pointerleave', () => clearTimeout(albumLongPressTimer));
+
+        getEl('delete-selected-albums-btn').addEventListener('click', () => {
+            const selectedItems = manageAlbumsModal.querySelectorAll('.album-item.selected-for-deletion');
+            if (selectedItems.length === 0) return;
+            if (confirm(`确定要删除选中的 ${selectedItems.length} 个相册吗？其中的照片将移至默认相册。`)) {
+                const defaultAlbum = appState.chat.moments.albums.find(a => a.id === 'default');
+                if(!defaultAlbum.photoIds) defaultAlbum.photoIds = [];
+
+                selectedItems.forEach(item => {
+                    const albumId = item.dataset.id;
+                    const album = appState.chat.moments.albums.find(a => a.id === albumId);
+                    if (album && album.photoIds) {
+                        defaultAlbum.photoIds.unshift(...album.photoIds);
+                    }
+                    appState.chat.moments.albums = appState.chat.moments.albums.filter(a => a.id !== albumId);
+                });
+                saveState();
+                renderManageAlbums();
+                getEl('delete-selected-albums-btn').style.display = 'none';
+            }
+        });
+
+        // --- Edit Album Modal Listeners ---
+        getEl('cancel-edit-album-btn').addEventListener('click', () => editAlbumModal.classList.remove('visible'));
+        getEl('save-album-btn').addEventListener('click', () => {
+            const albumId = getEl('editing-album-id').value;
+            const name = getEl('album-name-input').value.trim();
+            if (!name) return showToast('相册名称不能为空', 'error');
+            const desc = getEl('album-desc-input').value.trim();
+
+            if (albumId) { // Editing
+                const album = appState.chat.moments.albums.find(a => a.id === albumId);
+                album.name = name;
+                album.description = desc;
+            } else { // Creating
+                const newAlbum = { id: newId('album'), name, description: desc, createTime: Date.now(), photoIds: [] };
+                appState.chat.moments.albums.push(newAlbum);
+            }
+            saveState();
+            renderManageAlbums();
+            editAlbumModal.classList.remove('visible');
+        });
+        
+        // --- Album View Screen Listeners ---
+        getEl('view-album-back-btn').addEventListener('click', () => {
+            closeSubScreen(viewAlbumScreen, chatAppScreen);
+            const deleteBtn = getEl('delete-photos-btn');
+            deleteBtn.style.display = 'none';
+            viewAlbumScreen.querySelectorAll('.photo-grid-item.selected-for-deletion').forEach(el => el.classList.remove('selected-for-deletion'));
+            renderMomentsFeed(runtimeState.moments.currentProfileId);
+        });
+        
+        let photoLongPressTimer = null;
+        getEl('album-photo-grid').addEventListener('pointerdown', e => {
+             const item = e.target.closest('.photo-grid-item');
+             if(!item) return;
+             photoLongPressTimer = setTimeout(() => {
+                getEl('delete-photos-btn').style.display = 'block';
+                item.classList.add('selected-for-deletion');
+             }, 800);
+        });
+        getEl('album-photo-grid').addEventListener('pointerup', () => clearTimeout(photoLongPressTimer));
+        getEl('album-photo-grid').addEventListener('pointerleave', () => clearTimeout(photoLongPressTimer));
+        
+        getEl('album-photo-grid').addEventListener('click', e => {
+            const item = e.target.closest('.photo-grid-item');
+            if (!item) return;
+            
+            if (getEl('delete-photos-btn').style.display === 'block') {
+                item.classList.toggle('selected-for-deletion');
+            } else {
+                const grid = item.closest('.photo-grid');
+                const allPhotoItems = Array.from(grid.querySelectorAll('.photo-grid-item'));
+                const allPhotoIds = allPhotoItems.map(photoItem => photoItem.dataset.id);
+                const allPhotos = allPhotoIds.map(id => appState.chat.moments.photos.find(p => p.id === id)).filter(Boolean);
+                const startIndex = allPhotoItems.indexOf(item);
+
+                if (startIndex > -1) {
+                    openPhotoViewer(allPhotos, startIndex);
+                }
+            }
+        });
+
+        getEl('delete-photos-btn').addEventListener('click', () => {
+            const selectedItems = viewAlbumScreen.querySelectorAll('.photo-grid-item.selected-for-deletion');
+            if (selectedItems.length === 0) return;
+            if (confirm(`确定要删除选中的 ${selectedItems.length} 张照片吗？此操作不可恢复。`)) {
+                const idsToDelete = Array.from(selectedItems).map(item => item.dataset.id);
+                // Remove from global photo list
+                appState.chat.moments.photos = appState.chat.moments.photos.filter(p => !idsToDelete.includes(p.id));
+                // Remove from all albums
+                appState.chat.moments.albums.forEach(album => {
+                    if (album.photoIds) {
+                        album.photoIds = album.photoIds.filter(pid => !idsToDelete.includes(pid));
+                    }
+                });
+                // Remove from posts
+                 appState.chat.moments.posts.forEach(post => {
+                    if (post.type === 'photo' && post.content.photoIds) {
+                        post.content.photoIds = post.content.photoIds.filter(pid => !idsToDelete.includes(pid));
+                    }
+                });
+                saveState();
+                renderAlbumView(viewAlbumScreen.dataset.albumId);
+                getEl('delete-photos-btn').style.display = 'none';
+            }
+        });
+
+        getEl('cancel-edit-photo-btn').addEventListener('click', () => editPhotoModal.classList.remove('visible'));
+        getEl('save-photo-btn').addEventListener('click', () => {
+            const photoId = getEl('editing-photo-id').value;
+            const photo = appState.chat.moments.photos.find(p => p.id === photoId);
+            if (photo) {
+                photo.name = getEl('photo-name-input').value.trim();
+                photo.description = getEl('photo-desc-input').value.trim();
+                saveState();
+                editPhotoModal.classList.remove('visible');
+                showToast('照片信息已更新');
+                // Re-render the viewer to show updated info
+                if (viewPhotoModal.classList.contains('visible')) {
+                    renderPhotoViewerContent(runtimeState.moments.viewerContext.currentIndex);
+                }
+                // Refresh moments feed if it's visible
+                syncAndUpdateMoments(runtimeState.moments.currentProfileId);
+            }
+        });
+
+
+        // --- Leave Message Modal Listeners ---
+        getEl('cancel-leave-message-btn').addEventListener('click', () => leaveMessageModal.classList.remove('visible'));
+        getEl('confirm-leave-message-btn').addEventListener('click', () => {
+                const modal = getEl('leave-message-modal');
+                const editingId = modal.dataset.editingId;
+                
+                const recipientName = getEl('message-recipient').value.trim();
+                const content = getEl('message-content').value.trim();
+                const senderNameFromInput = getEl('message-sender').value.trim();
+
+                if (!recipientName || !content) {
+                    return showToast('称呼和内容均为必填项', 'error');
+                }
+                
+                if (editingId) {
+                    const message = appState.chat.moments.messages.find(m => m.id === editingId);
+                    if (message) {
+                        const selectedAuthorEl = getEl('leave-message-author-selector').querySelector('.selected');
+                        const newSenderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : message.senderId;
+                        const newSender = findUserById(newSenderId);
+
+                        message.recipientName = recipientName;
+                        message.content = content;
+                        message.senderId = newSenderId;
+                        message.senderName = getEl('message-sender').value.trim() || newSender.name; // Use input value first
+                        message.visibility = runtimeState.moments.postContext.visibility;
+                        message.visibleTo = runtimeState.moments.postContext.visibleTo;
+                        showToast('留言已更新！');
+                    }
+                } else {
+                     if (!senderNameFromInput) return showToast('落款为必填项', 'error');
+                    const newMessage = {
+                        id: newId('message'),
+                        recipientId: runtimeState.moments.currentProfileId,
+                        recipientName,
+                        content,
+                        senderId: 'user',
+                        senderName: senderNameFromInput,
+                        timestamp: Date.now(),
+                        visibility: runtimeState.moments.postContext.visibility,
+                        visibleTo: runtimeState.moments.postContext.visibleTo,
+                        replies: []
+                    };
+                    appState.chat.moments.messages.push(newMessage);
+                    showToast('留言成功！');
+                }
+
+                saveState();
+                renderMomentsFeed(runtimeState.moments.currentProfileId);
+                leaveMessageModal.classList.remove('visible');
+            });
+        
+         getEl('leave-message-visibility').addEventListener('change', e => {
+            runtimeState.moments.postContext.visibility = e.target.value;
+            const selectorContainer = getEl('leave-message-friend-selector-container');
+            if (e.target.value === 'specific') {
+                renderFriendSelector('leave-message-friend-selector', 'message');
+                selectorContainer.classList.remove('hidden-by-logic');
+            } else {
+                selectorContainer.classList.add('hidden-by-logic');
+            }
+        });
+
+        getEl('leave-message-friend-selector').addEventListener('click', e => {
+            const item = e.target.closest('.friend-selector-item');
+            if (item) {
+                const id = item.dataset.id;
+                item.classList.toggle('selected');
+                const context = runtimeState.moments.postContext;
+                if (item.classList.contains('selected')) {
+                    if (!context.visibleTo.includes(id)) context.visibleTo.push(id);
+                } else {
+                    context.visibleTo = context.visibleTo.filter(fid => fid !== id);
+                }
+            }
+            
+        });
+        getEl('photo-viewer-prev-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            let { currentIndex } = runtimeState.moments.viewerContext;
+            if (currentIndex > 0) {
+                currentIndex--;
+                runtimeState.moments.viewerContext.currentIndex = currentIndex;
+                renderPhotoViewerContent(currentIndex);
+            }
+        });
+        getEl('photo-viewer-next-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            let { items, currentIndex } = runtimeState.moments.viewerContext;
+            if (currentIndex < items.length - 1) {
+                currentIndex++;
+                runtimeState.moments.viewerContext.currentIndex = currentIndex;
+                renderPhotoViewerContent(currentIndex);
+            }
+        });
+    }
+
+    function renderAlbumView(albumId) {
+        const album = appState.chat.moments.albums.find(a => a.id === albumId);
+        if (!album) {
+            closeSubScreen(viewAlbumScreen, chatAppScreen);
+            return;
+        }
+
+        viewAlbumScreen.dataset.albumId = albumId;
+        getEl('view-album-title').textContent = album.name;
+        
+        const grid = getEl('album-photo-grid');
+        const photoIds = album.photoIds || [];
+        const photosInAlbum = appState.chat.moments.photos.filter(p => photoIds.includes(p.id));
+        
+        if (photosInAlbum.length === 0) {
+            grid.innerHTML = `<p style="text-align:center; color:#888; grid-column: 1 / -1;">相册里还没有照片</p>`;
+        } else {
+             grid.innerHTML = photosInAlbum.map(p => `<div class="photo-grid-item" data-id="${p.id}" data-image-id="${p.imageId}"></div>`).join('');
+             grid.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
+        }
+    }
+    function openSimpleViewer(items, startIndex = 0) {
+        if (!items || items.length === 0) return;
+        runtimeState.moments.viewerContext = {
+            items: items,
+            currentIndex: startIndex
+        };
+        renderSimpleViewerContent(startIndex);
+        simpleViewerModal.classList.add('visible');
+    }
+    function renderSimpleViewerContent(index) {
+        const { items } = runtimeState.moments.viewerContext;
+        const item = items[index];
+        if (!item) return;
+
+        const imgEl = getEl('simple-viewer-image');
+        const textEl = getEl('simple-viewer-text');
+
+        if (item.isTextImage) {
+                imgEl.style.display = 'none';
+                textEl.style.display = 'flex';
+                textEl.textContent = item.description;
+            } else {
+                imgEl.style.display = 'block';
+                textEl.style.display = 'none';
+                imgEl.src = '';
+                setElementImage(imgEl, item.imageId, 'src');
+            }
+
+        const prevBtn = getEl('simple-viewer-prev-btn');
+        const nextBtn = getEl('simple-viewer-next-btn');
+        prevBtn.style.display = (items.length > 1 && index > 0) ? 'block' : 'none';
+        nextBtn.style.display = (items.length > 1 && index < items.length - 1) ? 'block' : 'none';
+    }
     function setupMomentsModalListeners() {
         // Listener for dynamic author selector in post edit modal
         postMomentModal.addEventListener('click', e => {
@@ -3954,7 +4860,7 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
             runtimeState.moments.postContext.visibility = e.target.value;
             const friendSelector = getEl('post-moment-friend-selector-container');
             if (e.target.value === 'specific') {
-                renderFriendSelector();
+                renderFriendSelector('post-moment-friend-selector', 'post');
                 friendSelector.classList.remove('hidden-by-logic');
             } else {
                 friendSelector.classList.add('hidden-by-logic');
@@ -4022,44 +4928,62 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         });
 
         saveEditMomentCommentBtn.addEventListener('click', () => {
-            const { postId, commentId, replyId } = runtimeState.editingComment;
-            const post = appState.chat.moments.posts.find(p => p.id === postId);
-            if (!post) return;
-
-            const comment = replyId 
-                ? post.comments.find(c => c.replies && c.replies.some(r => r.id === replyId))?.replies.find(r => r.id === replyId)
-                : post.comments.find(c => c.id === commentId);
-                
-            if (!comment) return;
+            const { source, postId, commentId, replyId, messageId } = runtimeState.editingComment;
+            
+            let commentToEdit = null;
+            if (source === 'message') {
+                const message = appState.chat.moments.messages.find(m => m.id === messageId);
+                if (message && message.replies) {
+                    commentToEdit = message.replies.find(r => r.id === replyId);
+                }
+            } else { // source === 'moments'
+                const post = appState.chat.moments.posts.find(p => p.id === postId);
+                if (post) {
+                    commentToEdit = replyId 
+                        ? post.comments.find(c => c.replies && c.replies.some(r => r.id === replyId))?.replies.find(r => r.id === replyId)
+                        : post.comments.find(c => c.id === commentId);
+                }
+            }
+            
+            if (!commentToEdit) return showToast('找不到要编辑的内容', 'error');
 
             const newContent = getEl('edit-moment-comment-content').value;
             const selectedAuthorEl = getEl('moment-comment-author-selector').querySelector('.selected');
-            const newAuthorId = selectedAuthorEl ? selectedAuthorEl.dataset.id : comment.authorId;
+            const newAuthorId = selectedAuthorEl ? selectedAuthorEl.dataset.id : commentToEdit.authorId;
 
-            comment.text = newContent;
-            comment.authorId = newAuthorId;
+            commentToEdit.text = newContent;
+            commentToEdit.authorId = newAuthorId;
             
             saveState();
             renderMomentsFeed(runtimeState.moments.currentProfileId);
             editMomentCommentModal.classList.remove('visible');
         });
+        leaveMessageModal.addEventListener('click', e => {
+            const item = e.target.closest('#leave-message-author-selector .author-selector-item');
+            if (item) {
+                item.parentElement.querySelectorAll('.author-selector-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+            }
+        });
     }
 
 
-function renderFriendSelector() {
-    const selector = getEl('post-moment-friend-selector');
-    const availableFriends = appState.chat.contacts.filter(c => !c.isGroup);
-    selector.innerHTML = availableFriends.map(friend => {
-        const isSelected = runtimeState.moments.postContext.visibleTo.includes(friend.id);
-        return `
-            <div class="friend-selector-item ${isSelected ? 'selected' : ''}" data-id="${friend.id}">
-                <div class="avatar" data-avatar-id="${friend.charSettings.avatarId}"></div>
-                <span class="name">${friend.charSettings.name}</span>
-            </div>
-        `;
-    }).join('');
-    selector.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
-}
+    function renderFriendSelector(containerId, contextType) {
+        const selector = getEl(containerId);
+        const visibleToList = runtimeState.moments.postContext.visibleTo;
+
+        const availableFriends = appState.chat.contacts.filter(c => !c.isGroup);
+        selector.innerHTML = availableFriends.map(friend => {
+            const isSelected = visibleToList.includes(friend.id);
+            return `
+                <div class="friend-selector-item ${isSelected ? 'selected' : ''}" data-id="${friend.id}">
+                    <div class="avatar" data-avatar-id="${friend.charSettings.avatarId}"></div>
+                    <span class="name">${friend.charSettings.name}</span>
+                </div>
+            `;
+        }).join('');
+        selector.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+    }
 
 // ===================================================================
 // --- 初始化 ---
@@ -4081,24 +5005,39 @@ function renderFriendSelector() {
         }
 
         const handler = new ListInteractionHandler(feedElement, {
-            itemSelector: '.moments-post-item',
-            contentSelector: '.post-item-content',
-            actionsSelector: '.post-item-actions',
+            itemSelector: '.moments-post-item, .message-board-item',
+            contentSelector: '.swipe-content',
+            actionsSelector: '.swipe-actions',
             onDelete: (item) => {
-                const postId = item.dataset.postId;
-                if (confirm('确定要删除这条动态吗？')) {
-                    appState.chat.moments.posts = appState.chat.moments.posts.filter(p => p.id !== postId);
-                    saveState();
-                    renderMomentsFeed(runtimeState.moments.currentProfileId);
-                    showToast('动态已删除');
-                }
-            },
+                    if (item.classList.contains('moments-post-item')) {
+                        const postId = item.dataset.postId;
+                        if (confirm('确定要删除这条动态吗？')) {
+                            appState.chat.moments.posts = appState.chat.moments.posts.filter(p => p.id !== postId);
+                            saveState();
+                            renderMomentsFeed(runtimeState.moments.currentProfileId);
+                            showToast('动态已删除');
+                        }
+                    } else if (item.classList.contains('message-board-item')) {
+                        const messageId = item.dataset.messageId;
+                         if (confirm('确定要删除这条留言吗？')) {
+                            appState.chat.moments.messages = appState.chat.moments.messages.filter(m => m.id !== messageId);
+                            saveState();
+                            renderMomentsFeed(runtimeState.moments.currentProfileId);
+                            showToast('留言已删除');
+                        }
+                    }
+                },
             onEdit: (item) => {
-                const post = appState.chat.moments.posts.find(p => p.id === item.dataset.postId);
-                if (post) {
-                    openPostMomentModal(post.type, post.id);
+                     if (item.classList.contains('moments-post-item')) {
+                        const post = appState.chat.moments.posts.find(p => p.id === item.dataset.postId);
+                        if (post) {
+                            openPostMomentModal(post.type, post.id);
+                        }
+                    } else if (item.classList.contains('message-board-item')) {
+                        const messageId = item.dataset.messageId;
+                        openLeaveMessageModal(messageId);
+                    }
                 }
-            }
         });
         // Store the new handler instance in runtimeState
         runtimeState.moments.listHandler = handler;
@@ -4107,17 +5046,24 @@ function renderFriendSelector() {
 function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', isFrame: true, settingsGroup: 'charSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.charSettings.avatarId })); usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); }
 function setupWorldBookSelector(selectorContainer, listContainer, linkedIdsArray) { const btn = selectorContainer.querySelector('.wb-group-selector-btn'); const dropdown = selectorContainer.querySelector('.wb-group-dropdown'); const updateButtonText = () => { const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; if (selectedGroups.length === 0) { btn.textContent = '选择分组'; } else if (selectedGroups.length === 1) { btn.textContent = selectedGroups[0]; } else { btn.textContent = `${selectedGroups.length}个分组已选`; } }; const populateDropdown = () => { const groups = [...new Set(appState.data.worldBooks.map(wb => wb.group || '未分组'))]; const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; dropdown.innerHTML = groups.map(group => ` <label class="checkbox-label"> <input type="checkbox" value="${group}" ${selectedGroups.includes(group) ? 'checked' : ''}> <span>${group}</span> </label> `).join(''); }; btn.addEventListener('click', (e) => { e.stopPropagation(); populateDropdown(); dropdown.classList.toggle('visible'); }); dropdown.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const groupName = e.target.value; const isChecked = e.target.checked; const idsInGroup = appState.data.worldBooks.filter(wb => (wb.group || '未分组') === groupName).map(wb => wb.id); if (isChecked) { idsInGroup.forEach(id => { if (!linkedIdsArray.includes(id)) linkedIdsArray.push(id); }); } else { idsInGroup.forEach(id => { const index = linkedIdsArray.indexOf(id); if (index > -1) linkedIdsArray.splice(index, 1); }); } renderWorldBookList(listContainer, linkedIdsArray); updateButtonText(); } }); renderWorldBookList(listContainer, linkedIdsArray); updateButtonText(); }
 function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTML = appState.data.worldBooks.map(wb => ` <label class="checkbox-label"> <input type="checkbox" value="${wb.id}" ${linkedIdsArray.includes(wb.id) ? 'checked' : ''}> <span>${wb.name}</span> </label> `).join(''); listElement.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { if (!linkedIdsArray.includes(id)) linkedIdsArray.push(id); } else { const index = linkedIdsArray.indexOf(id); if (index > -1) linkedIdsArray.splice(index, 1); } const selectorContainer = listElement.closest('.chat-settings-section').querySelector('.wb-group-selector'); if (selectorContainer) { const btn = selectorContainer.querySelector('.wb-group-selector-btn'); const selectedGroups = [...new Set(appState.data.worldBooks.filter(wb => linkedIdsArray.includes(wb.id)).map(wb => wb.group || '未分组'))]; if (selectedGroups.length === 0) { btn.textContent = '选择分组'; } else if (selectedGroups.length === 1) { btn.textContent = selectedGroups[0]; } else { btn.textContent = `${selectedGroups.length}个分组已选`; } } } }); }
-    function openMomentCommentEditor(postId, commentId, replyId = null) {
-        const post = appState.chat.moments.posts.find(p => p.id === postId);
-        if (!post) return;
-
-        const commentToEdit = replyId 
-            ? post.comments.find(c => c.replies && c.replies.some(r => r.id === replyId))?.replies.find(r => r.id === replyId)
-            : post.comments.find(c => c.id === commentId);
+    function openMomentCommentEditor(postId, commentId, replyId = null, messageId = null) {
+        let commentToEdit = null;
+        
+        if (messageId) { // Editing a message reply
+            const message = appState.chat.moments.messages.find(m => m.id === messageId);
+            if (!message || !message.replies) return;
+            commentToEdit = message.replies.find(r => r.id === replyId);
+            runtimeState.editingComment = { source: 'message', messageId, replyId };
+        } else { // Editing a post comment/reply
+            const post = appState.chat.moments.posts.find(p => p.id === postId);
+            if (!post) return;
+            commentToEdit = replyId 
+                ? post.comments.find(c => c.replies && c.replies.some(r => r.id === replyId))?.replies.find(r => r.id === replyId)
+                : post.comments.find(c => c.id === commentId);
+            runtimeState.editingComment = { source: 'moments', postId, commentId, replyId };
+        }
 
         if (!commentToEdit) return;
-
-        runtimeState.editingComment = { source: 'moments', postId, commentId, replyId };
         
         getEl('edit-moment-comment-content').value = commentToEdit.text;
         renderMomentAuthorSelector('moment-comment-author-selector', commentToEdit.authorId);
@@ -4140,7 +5086,281 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         `).join('');
         container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
     }
+// ===================================================================
+    // --- 新增：动态 - 照片、相册、留言板功能 ---
+    // ===================================================================
+    
+    function openUploadPhotoModal() {
+        runtimeState.moments.postContext = {
+            images: [], // for local file uploads
+            textImageDescs: [], // for text-to-image
+            albumId: null,
+            visibility: 'public',
+            visibleTo: []
+        };
+    
+        getEl('upload-photo-name').value = '';
+        getEl('upload-photo-desc').value = '';
+        getEl('upload-photo-text-image-desc').value = '';
+        getEl('upload-photo-text-image-input-group').classList.add('hidden-by-logic');
+        getEl('upload-photo-image-preview-grid').innerHTML = '';
+        
+        const albumSelect = getEl('upload-photo-album-select');
+        albumSelect.innerHTML = '';
+        if (appState.chat.moments.albums.length === 0) {
+            const defaultAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] };
+            appState.chat.moments.albums.push(defaultAlbum);
+            saveState();
+        }
+        appState.chat.moments.albums.forEach(album => {
+            const option = document.createElement('option');
+            option.value = album.id;
+            option.textContent = album.name;
+            albumSelect.appendChild(option);
+        });
+    
+        queryAll('input[name="photo-visibility"]').forEach(r => r.checked = r.value === 'public');
+        getEl('upload-photo-friend-selector-container').classList.add('hidden-by-logic');
+    
+        uploadPhotoModal.classList.add('visible');
+    }
+    
+    function openManageAlbumsModal() {
+        renderManageAlbums();
+        manageAlbumsModal.classList.add('visible');
+    }
+    
+    function renderManageAlbums() {
+        const grid = getEl('manage-albums-grid');
+        grid.innerHTML = '';
+        if (appState.chat.moments.albums.length === 0) {
+             const defaultAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] };
+             appState.chat.moments.albums.push(defaultAlbum);
+             saveState();
+        }
 
+        appState.chat.moments.albums.forEach(album => {
+            const photoCount = (album.photoIds || []).length;
+            const coverPhotoId = (album.photoIds && album.photoIds.length > 0) 
+                ? appState.chat.moments.photos.find(p => p.id === album.photoIds[0])?.imageId
+                : null;
+            
+            const dateStr = album.createTime ? new Date(album.createTime).toLocaleDateString() : '---';
+
+            const item = document.createElement('div');
+            item.className = 'album-item';
+            item.dataset.id = album.id;
+            item.innerHTML = `
+                <div class="album-item-cover" data-image-id="${coverPhotoId || ''}"></div>
+                <div class="album-item-overlay">
+                    <div class="album-item-name">${escapeHTML(album.name)} (${photoCount})</div>
+                    <div class="album-item-footer">
+                        <span class="album-item-info">${dateStr}</span>
+                        ${album.id !== 'default' ? `
+                        <button class="icon-btn edit-album-btn">✏️</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            grid.appendChild(item);
+            if(coverPhotoId) {
+                setElementImage(item.querySelector('.album-item-cover'), coverPhotoId, 'backgroundImage');
+            }
+        });
+    }
+
+    function openAlbumView(container, profileId, albumId) {
+        // This is a placeholder for now, as full album view is complex.
+        // It will just show the photos for now.
+        if (albumId === 'default') {
+            const allPhotos = appState.chat.moments.photos.filter(p => p.ownerId === profileId);
+             container.innerHTML = `<div class="photo-grid">${allPhotos.map(p => `<div class="photo-grid-item" data-id="${p.id}" data-image-id="${p.imageId}"></div>`).join('')}</div>`;
+             container.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
+        } else {
+             container.innerHTML = `<p style="text-align:center; color:#888; margin-top: 50px;">查看指定相册功能待开发</p>`;
+        }
+    }
+    
+    function renderMessages(container, profileId) {
+            const messages = appState.chat.moments.messages
+                .filter(msg => {
+                    if (msg.recipientId !== profileId) return false;
+                    const isUserPage = profileId === 'user';
+                    // 在用户自己的留言板，可以看到所有给自己的留言
+                    if (isUserPage) return true;
+                    // 在别人的留言板，只能看到公开的或者自己可见的
+                    return msg.visibility === 'public' || (msg.visibleTo && msg.visibleTo.includes('user'));
+                })
+                .sort((a, b) => b.timestamp - a.timestamp);
+
+            if (messages.length === 0) {
+                container.innerHTML = `<div class="message-board-feed"><p style="text-align:center; color:#888; margin-top: 50px;">还没有人留言哦</p></div>`;
+                return;
+            }
+
+            container.innerHTML = `<div class="message-board-feed">
+                ${messages.map(msg => renderSingleMessage(msg)).join('')}
+            </div>`;
+            
+            container.querySelectorAll('.message-board-avatar[data-avatar-id], .comment-avatar[data-avatar-id]').forEach(el => {
+                setElementImage(el, el.dataset.avatarId);
+            });
+        }
+        function renderSingleMessage(msg) {
+            const recipient = findUserById(msg.recipientId);
+            const sender = findUserById(msg.senderId);
+            const repliesHTML = (msg.replies || []).map(reply => renderSingleMessageReply(reply, msg.replies || [], msg.id)).join('');
+
+            return `
+            <div class="message-board-item" data-message-id="${msg.id}">
+                <div class="message-board-item-main swipe-content">
+                    <div class="message-board-header">
+                        <div class="message-board-avatar" data-avatar-id="${recipient.avatarId}"></div>
+                        <p class="message-board-recipient">To: ${escapeHTML(msg.recipientName)}</p>
+                    </div>
+                    <p class="message-board-content">${escapeHTML(msg.content).replace(/\n/g, '<br>')}</p>
+                    <div class="message-board-footer">
+                        <div class="message-board-signature">
+                            <span class="message-board-sender">From: ${escapeHTML(msg.senderName)}</span>
+                            <div class="message-board-avatar" data-avatar-id="${sender.avatarId}"></div>
+                        </div>
+                        <div class="message-board-timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+                    </div>
+                    <div class="message-board-replies">${repliesHTML}</div>
+                    <div class="reply-input-container" style="margin-top:10px;">
+                        <input type="text" placeholder="回复 ${escapeHTML(msg.senderName)}...">
+                        <button class="settings-button secondary" style="padding: 5px 10px;">发送</button>
+                    </div>
+                </div>
+                <div class="message-board-item-actions swipe-actions">
+                    <div class="edit-action">编辑</div>
+                    <div class="delete-action">删除</div>
+                </div>
+            </div>`;
+        }
+
+        function renderSingleMessageReply(reply, allReplies, messageId) {
+            const author = findUserById(reply.authorId);
+            let targetHTML = '';
+            if (reply.replyTo) {
+                const targetReply = allReplies.find(r => r.id === reply.replyTo);
+                if (targetReply) {
+                    const targetAuthor = findUserById(targetReply.authorId);
+                    targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>`;
+                }
+            }
+            const canModify = true; // 假设用户总是可以修改
+
+            return `
+            <div class="reply-item" data-reply-id="${reply.id}">
+                <div class="comment-header" style="justify-content: space-between;">
+                    <div>
+                        <span class="reply-author">${author.name}</span> ${targetHTML}:
+                    </div>
+                    <div class="comment-actions-inline" style="display: none;">
+                        ${canModify ? `
+                        <button class="icon-btn edit-reply-btn" title="编辑">✏️</button>
+                        <button class="icon-btn delete-reply-btn" title="删除">❌</button>
+                        ` : ''}
+                    </div>
+                </div>
+                <p class="comment-text" style="margin-top: 2px;">${escapeHTML(reply.text)}</p>
+                <div class="reply-input-container">
+                    <input type="text" placeholder="回复 ${author.name}...">
+                    <button class="settings-button secondary" style="padding: 5px 10px;">发送</button>
+                </div>
+            </div>`;
+        }
+    
+    function openLeaveMessageModal(messageId = null) {
+            const isEditing = messageId !== null;
+            const modal = getEl('leave-message-modal');
+            const authorSelectorContainer = getEl('leave-message-author-selector-container');
+            
+            modal.dataset.editingId = isEditing ? messageId : '';
+
+            if (isEditing) {
+                const message = appState.chat.moments.messages.find(m => m.id === messageId);
+                if (!message) return showToast('找不到要编辑的留言', 'error');
+
+                modal.querySelector('.modal-title').textContent = '编辑留言';
+                getEl('message-recipient').value = message.recipientName;
+                getEl('message-content').value = message.content;
+                getEl('message-sender').value = message.senderName;
+                
+                queryAll('input[name="message-visibility"]').forEach(r => r.checked = r.value === (message.visibility || 'public'));
+                const friendSelector = getEl('leave-message-friend-selector-container');
+                runtimeState.moments.postContext.visibleTo = message.visibleTo || [];
+                if (message.visibility === 'specific') {
+                    renderFriendSelector('leave-message-friend-selector', 'message');
+                    friendSelector.classList.remove('hidden-by-logic');
+                } else {
+                    friendSelector.classList.add('hidden-by-logic');
+                }
+
+                authorSelectorContainer.classList.remove('hidden-by-logic');
+                renderMomentAuthorSelector('leave-message-author-selector', message.senderId);
+
+            } else {
+                modal.querySelector('.modal-title').textContent = '写留言';
+                const profileId = runtimeState.moments.currentProfileId;
+                const profile = findUserById(profileId);
+                getEl('message-recipient').value = profile.name;
+                getEl('message-content').value = '';
+                getEl('message-sender').value = findUserById('user').name;
+
+                queryAll('input[name="message-visibility"]').forEach(r => r.checked = r.value === 'public');
+                getEl('leave-message-friend-selector-container').classList.add('hidden-by-logic');
+                runtimeState.moments.postContext.visibleTo = [];
+                authorSelectorContainer.classList.add('hidden-by-logic');
+            }
+            
+            leaveMessageModal.classList.add('visible');
+        }
+    function openPhotoViewer(photos, startIndex = 0) {
+        if (!photos || photos.length === 0) return;
+        runtimeState.moments.viewerContext = {
+            items: photos,
+            currentIndex: startIndex
+        };
+        renderPhotoViewerContent(startIndex);
+        viewPhotoModal.classList.add('visible');
+    }
+    function renderPhotoViewerContent(index) {
+                const { items } = runtimeState.moments.viewerContext;
+                const photo = items[index];
+                if (!photo) return;
+
+                const isTextImage = photo.isTextImage || (photo.textDescription && !photo.imageId);
+                
+                const imageView = getEl('viewer-image-view');
+                const textView = getEl('viewer-text-view');
+
+                if (isTextImage) {
+                    viewPhotoModal.className = 'modal-overlay visible text-mode';
+                    imageView.style.display = 'none';
+                    textView.style.display = '';
+                    getEl('view-photo-text-display').textContent = photo.textDescription || photo.description;
+                } else {
+                    viewPhotoModal.className = 'modal-overlay visible image-mode';
+                    textView.style.display = 'none';
+                    imageView.style.display = '';
+                    const imgEl = getEl('view-photo-image');
+                    imgEl.src = '';
+                    setElementImage(imgEl, photo.imageId, 'src');
+                    getEl('view-photo-name').textContent = photo.name;
+                    const descText = photo.description || '';
+                    const descEl = getEl('view-photo-desc');
+                    descEl.textContent = descText;
+                    descEl.style.display = descText ? 'block' : 'none';
+                    viewPhotoModal.classList.remove('text-hidden');
+                }
+
+                const prevBtn = getEl('photo-viewer-prev-btn');
+                const nextBtn = getEl('photo-viewer-next-btn');
+                prevBtn.style.display = (items.length > 1 && index > 0) ? 'block' : 'none';
+                nextBtn.style.display = (items.length > 1 && index < items.length - 1) ? 'block' : 'none';
+            }
     function setupMomentsPageListeners() {
         // This function is now only for the comment editor modal, 
         // as the file inputs are handled by the new global listener.
@@ -4240,6 +5460,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
             setupGroupChatSettingsListeners();
             setupChatToolbarListeners();
             setupChatAppScreenListeners(); 
+            setupNewMomentsFeaturesListeners();
             setupMomentsModalListeners();
             setupMomentsPageListeners();
             setupGlobalEventListeners(); // CRITICAL FIX for image uploads
