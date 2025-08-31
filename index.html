@@ -527,9 +527,10 @@
         /* --- 动态 (Moments) 界面 --- */
         #moments-tab-content, #char-moments-screen .app-content { position: relative; } /* For FAB positioning */
         #moments-tab-content { padding: 0; background-color: #f0f2f5; }
+        #moments-tab-content > .app-content { height: 100%; box-sizing: border-box; }
         .moments-scroll-container { height: 100%; overflow-y: auto; padding-bottom: 20px; /* 增加底部内边距以避免FAB遮挡 */ box-sizing: border-box; position: relative; }
-        .moments-cover { width: 100%; height: auto; aspect-ratio: 16 / 9; background-color: #ccc; background-size: cover; background-position: center; cursor: pointer; position: relative; }
-        .moments-profile-header { display: flex; justify-content: flex-end; position: relative; padding: 0 15px; margin-top: -40px; }
+        .moments-cover { width: 100%; height: auto; aspect-ratio: 16 / 9; min-height: 200px; background-color: #ccc; background-size: cover; background-position: center; cursor: pointer; position: relative; }
+        .moments-profile-header { display: flex; justify-content: flex-end; position: relative; padding: 0 15px; bottom: 40px; margin-bottom: -40px; }
         .moments-profile-info { display: flex; align-items: flex-end; }
         .moments-profile-text { margin-right: 15px; text-align: right; }
         .moments-profile-name { font-size: 20px; font-weight: bold; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.7); cursor: pointer; }
@@ -557,6 +558,7 @@
         .post-likes-summary { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
         .post-likes-summary .icon { color: var(--like-color); }
         .moments-fab-container { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); /* 调整高度以悬浮在标签栏上方 */ z-index: 15; }        #moments-fab { width: 56px; height: 56px; border-radius: 50%; background-color: var(--accent-color); color: white; font-size: 36px; line-height: 56px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
+        #moments-tab-content .moments-fab-container { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
         #moments-fab:active { transform: scale(0.95); }
         #moments-fab-options { position: absolute; bottom: 65px; right: 0; display: none; flex-direction: column; gap: 10px; align-items: flex-end; }
         .fab-option { background-color: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; font-size: 14px; white-space: nowrap; }
