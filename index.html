@@ -365,7 +365,7 @@
         .message-item.user { justify-content: flex-end; }
         .message-item.contact { justify-content: flex-start; }
         .message-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; cursor: pointer; background-size: cover; background-position: center; position: relative; }
-        .message-item .avatar .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .message-item .avatar .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, calc(-50% - 5px)); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
         .message-item.user .avatar { order: 2; }
         .message-item.user .message-content-wrapper { align-items: flex-end; }
         .message-item.user .message-bubble { background-color: var(--accent-color); color: white; border-bottom-right-radius: 4px; }
@@ -418,7 +418,7 @@
         .message-bubble.camera { position: relative; cursor: pointer; }
         .camera-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; color: black; display: flex; justify-content: center; align-items: center; text-align: center; padding: 10px; box-sizing: border-box; border-radius: 12px; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
         .message-bubble.camera.show-text .camera-text-overlay { opacity: 1; visibility: visible; }
-        .camera-text-overlay { word-break: break-all; } /* BUG FIX: 修复文字溢出 */
+        .camera-text-overlay { word-break: break-all; overflow-y: auto; } /* BUG FIX: 修复文字溢出 */
         .message-bubble.link { background-color: white; padding: 10px; cursor: pointer; border-radius: 12px; display: flex; flex-direction: column; gap: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .link-info .title { font-weight: bold; font-size: 15px; }
         .link-info .summary { font-size: 13px; color: var(--secondary-text-color); }
@@ -462,7 +462,7 @@
         .chat-settings-main { flex-grow: 1; display: flex; flex-direction: column; }
         .chat-settings-side { flex-shrink: 0; width: 80px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .chat-settings-avatar { width: 60px; height: 60px; border-radius: 50%; background-color: #eee; background-size: cover; background-position: center; position: relative; flex-shrink: 0; }
-        .chat-settings-avatar .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        .chat-settings-avatar .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, calc(-50% - 5px)); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
         .chat-settings-side-btn { font-size: 12px; padding: 5px 0; width: 100%; text-align: center; background-color: #eee; border-radius: 5px; cursor: pointer; }
         .chat-settings-section { margin-bottom: 20px; }
         .chat-settings-section .group-title { font-size: 14px; color: var(--secondary-text-color); margin-bottom: 8px; }
@@ -490,7 +490,7 @@
         .library-modal.selection-mode .library-item.selected::after { transform: scale(1); }
         #avatar-frame-preview-area { width: 100%; height: 120px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
         #avatar-frame-preview { width: 80px; height: 80px; background-color: #eee; background-size: cover; background-position: center; border-radius: 50%; position: relative; flex-shrink: 0; }
-        #avatar-frame-preview .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
+        #avatar-frame-preview .avatar-frame { position: absolute; top: 50%; left: 50%; transform: translate(-50%, calc(-50% - 6px)); width: calc(100% * 250 / 268 + 10px); height: calc(100% + 10px); background-size: contain; background-repeat: no-repeat; background-position: center; }
         /* Group Red Packet Modal */
         #group-red-packet-member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 10px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; }
         .group-member-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; border: 2px solid transparent; border-radius: 8px; padding: 5px; }
@@ -564,7 +564,8 @@
         .fab-option { background-color: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; font-size: 14px; white-space: nowrap; }
         #moments-notification-btn { position: relative; }
         #moments-notification-badge { position: absolute; top: -2px; left: -2px; width: 18px; height: 18px; background-color: var(--danger-color); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; display: none; justify-content: center; align-items: center; border: 2px solid var(--item-bg); }
-        #moments-notification-badge.visible { display: flex; }
+        #moments-notification-badge.visible, .moments-notification-badge-clone.visible { display: flex; }
+        .moments-notification-badge-clone { position: absolute; top: -2px; left: -2px; width: 18px; height: 18px; background-color: var(--danger-color); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; display: none; justify-content: center; align-items: center; border: 2px solid var(--item-bg); }
         /* --- 动态发布弹窗 --- */
         #post-moment-modal .modal-content { max-width: 400px; }
         #post-moment-modal-body .form-group { margin-bottom: 15px; }
@@ -579,7 +580,17 @@
         .author-selector-item.selected { border-color: var(--accent-color); }
         .author-selector-item .avatar { width: 40px; height: 40px; border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
         .author-selector-item .name { font-size: 12px; text-align: center; }
-
+        /* --- 动态通知弹窗 --- */
+        #moments-notification-modal .modal-body { max-height: 70vh; }
+        #moments-notification-list { list-style: none; padding: 0; margin: 0; }
+        .notification-item-content { display: flex; align-items: center; gap: 15px; padding: 12px 15px; cursor: pointer; }
+        .notification-item-content:hover { background-color: var(--item-active-bg); }
+        .notification-avatar { width: 44px; height: 44px; border-radius: 50%; background-color: #e0e0e0; background-size: cover; background-position: center; flex-shrink: 0; }
+        .notification-info { overflow: hidden; font-size: 15px; line-height: 1.5; }
+        .notification-actor-name { font-weight: 500; color: var(--accent-color); }
+        .notification-content-summary { color: var(--secondary-text-color); margin-left: 5px; }
+        .notification-timestamp { font-size: 12px; color: var(--secondary-text-color); margin-top: 4px; padding-left: 59px; padding-bottom: 8px; }
+        .notification-item.unread .notification-item-content { background-color: #f0f8ff; }
         /* --- 提示消息 --- */
         #toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; z-index: 200; opacity: 0; transition: opacity 0.3s, bottom 0.3s; pointer-events: none; }
         #toast.show { opacity: 1; bottom: 100px; }
@@ -985,7 +996,19 @@
         </div>
         <!-- Char动态主页 -->
         <div id="char-moments-screen" class="app-screen sub-screen">
-            <!-- 内容将由JS动态生成 -->
+            <div class="app-header">
+                <div class="app-header-left"><button class="back-btn" id="char-moments-back-btn">&lt; 动态</button></div>
+                <div class="title-wrapper"><h2 class="title">动态</h2></div>
+                <div class="app-header-right">
+                     <button class="action-btn" id="char-moments-notification-btn" data-icon-id="header-notification">
+                        <img src="https://i.postimg.cc/k4xR269j/QQ-20250829161725.png" style="height: 28px; width: auto;">
+                        <div id="char-moments-notification-badge" class="moments-notification-badge-clone">0</div>
+                    </button>
+                </div>
+            </div>
+            <div class="app-content" style="padding:0;">
+                <!-- Content will be injected here -->
+            </div>
         </div>
 
     <!-- 浮动歌词 & 音乐播放器 -->
@@ -1277,6 +1300,20 @@
                 <div class="modal-actions row">
                     <button id="cancel-edit-moment-comment-btn" class="cancel-btn">取消</button>
                     <button id="save-edit-moment-comment-btn" class="confirm-btn">保存</button>
+                </div>
+            </div>
+        </div>
+        <!-- 动态通知弹窗 -->
+        <div id="moments-notification-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 class="modal-title">通知</h3>
+                <div class="modal-body" style="padding: 0;">
+                    <ul id="moments-notification-list" class="preset-data-list">
+                        <!-- Notifications will be rendered here by JS -->
+                    </ul>
+                </div>
+                <div class="modal-actions">
+                    <button id="close-moments-notification-modal-btn" class="cancel-btn">关闭</button>
                 </div>
             </div>
         </div>
@@ -1644,6 +1681,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaveMessageModal = getEl('leave-message-modal');
     const viewPhotoModal = getEl('view-photo-modal');
     const simpleViewerModal = getEl('simple-viewer-modal');
+    // --- 动态通知 ---
+    const momentsNotificationModal = getEl('moments-notification-modal');
+    const closeMomentsNotificationModalBtn = getEl('close-moments-notification-modal-btn');
+    const momentsNotificationList = getEl('moments-notification-list');
 
     // --- 通用/共享弹窗 ---
     const libraryModal = getEl('library-modal');
@@ -1872,7 +1913,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ...defaultState.chat, 
                         ...savedState.chat, 
                         userProfile: { ...defaultState.chat.userProfile, ...(savedState.chat?.userProfile || {}) },
-                        moments: { ...defaultState.chat.moments, ...(savedState.chat?.moments || {}), profile: { ...defaultState.chat.moments.profile, ...(savedState.chat?.moments?.profile || {}) } }
+                        moments: { ...defaultState.chat.moments, ...(savedState.chat?.moments || {}), profile: { ...defaultState.chat.moments.profile, ...(savedState.chat?.moments?.profile || {}) }, notifications: (savedState.chat?.moments?.notifications || []) }
                     } 
                 };
                 if (!appState.beautify.bubbleSettings) appState.beautify.bubbleSettings = defaultState.beautify.bubbleSettings;
@@ -1884,7 +1925,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!appState.chat.userProfile.avatarFrameLibrary) appState.chat.userProfile.avatarFrameLibrary = [];
                 if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfile.signature;
                 if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
-                
+                if (!Array.isArray(appState.chat.moments.notifications)) { appState.chat.moments.notifications = []; }
                 appState.chat.contacts.forEach(initializeContactSettings);
             } catch (e) {
                 console.error("Failed to parse saved state, resetting to default.", e);
@@ -2020,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // --- 设置 APP ---
     // ===================================================================
-    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) contact.userSettings = {}; contact.userSettings = { ...deepCopy(userProfileDefaults), ...contact.userSettings }; contact.userSettings.avatarLibrary = contact.userSettings.avatarLibrary || []; if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = { nickname: userProfileDefaults.name, title: '皇帝' }; } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: []}; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } contact.userSettings.name = contact.userSettings.name === userProfileDefaults.name ? '你' : contact.userSettings.name; contact.userSettings.persona = contact.userSettings.persona === userProfileDefaults.persona ? '这是一个默认的User人设。' : contact.userSettings.persona; } }
+    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) { contact.userSettings = deepCopy(userProfileDefaults); } else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = { nickname: userProfileDefaults.name, title: '皇帝' }; } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: []}; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); }); }
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); saveState(); });
@@ -2266,7 +2307,7 @@ cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('
 uploadFontBtn.addEventListener('click', () => fontFileInput.click());
 fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { for (const file of files) { const newFontId = newId('font'); const name = file.name.replace(/\.[^/.]+$/, ""); await addMediaToDB(newFontId, file); appState.beautify.fonts.push({ id: newFontId, name }); } await loadAllCustomFonts(); saveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
 confirmAddFontUrlBtn.addEventListener('click', async () => { const btn = confirmAddFontUrlBtn; if (btn.disabled) return; btn.disabled = true; btn.textContent = '处理中...'; try { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; let name, url; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { name = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } else { url = line.trim(); name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, ""); } if (name && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newFontId = newId('font'); await addMediaToDB(newFontId, blob); appState.beautify.fonts.push({ id: newFontId, name }); addedCount++; } } if (addedCount > 0) { await loadAllCustomFonts(); saveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; } catch (error) { console.error("Error adding font from URL:", error); showToast("添加字体失败", "error"); } finally { btn.disabled = false; btn.textContent = '添加URL'; } });
-const iconNameMap = { 'status-battery-default': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'data-add': '资料 添加', 'chat-add': '聊天 添加', 'chat-add-friend': '聊天 添加好友', 'header-settings': '通用 设置', 'chat-quote-close': '聊天 引用关闭', 'chat-send-real': '聊天 真发送', 'chat-send-fake': '聊天 假发送', 'chat-emoji': '聊天 表情', 'chat-refresh': '工具栏 刷新', 'chat-voice': '工具栏 语音', 'chat-image': '工具栏 图片', 'chat-camera': '工具栏 拍照', 'chat-video': '工具栏 视频', 'chat-music': '工具栏 音乐', 'chat-link': '工具栏 链接', 'chat-redpacket': '工具栏 红包', 'chat-shop': '工具栏 购物', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '模式 循环', 'player-mode-repeat-one': '模式 单曲', 'player-mode-shuffle': '模式 随机', 'comment-like': '评论 点赞', 'comment-reply': '评论 回复', 'comment-reply-delete': '评论 删除回复' };
+const iconNameMap = { 'status-battery-default': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料', 'music-add': '音乐 添加', 'beautify-add': '美化 添加', 'data-add': '资料 添加', 'chat-add': '聊天 添加', 'chat-add-friend': '聊天 添加好友', 'header-notification': '通用 通知', 'header-settings': '通用 设置', 'chat-quote-close': '聊天 引用关闭', 'chat-send-real': '聊天 真发送', 'chat-send-fake': '聊天 假发送', 'chat-emoji': '聊天 表情', 'chat-refresh': '工具栏 刷新', 'chat-voice': '工具栏 语音', 'chat-image': '工具栏 图片', 'chat-camera': '工具栏 拍照', 'chat-video': '工具栏 视频', 'chat-music': '工具栏 音乐', 'chat-link': '工具栏 链接', 'chat-redpacket': '工具栏 红包', 'chat-shop': '工具栏 购物', 'player-close': '播放器 关闭', 'player-playlist': '播放器 列表', 'player-delete': '播放器 删除', 'player-prev': '播放器 上一首', 'player-play': '播放器 播放', 'player-pause': '播放器 暂停', 'player-next': '播放器 下一首', 'player-mode-repeat': '模式 循环', 'player-mode-repeat-one': '模式 单曲', 'player-mode-shuffle': '模式 随机', 'comment-like': '评论 点赞', 'comment-reply': '评论 回复', 'comment-reply-delete': '评论 删除回复' };
 function renderIcons() { iconGrid.innerHTML = ''; const iconElements = queryAll('[data-icon-id]'); const renderedIds = new Set(); iconElements.forEach(el => { const id = el.dataset.iconId; if (renderedIds.has(id)) return; const customIconId = appState.beautify.icons[id]; const item = document.createElement('div'); item.className = 'icon-item'; item.dataset.id = id; const preview = document.createElement('div'); preview.className = 'icon-preview'; if (customIconId) { const img = document.createElement('img'); setElementImage(img, customIconId, 'src'); preview.appendChild(img); } else { preview.innerHTML = runtimeState.originalIconContent[id] || '❔'; } item.appendChild(preview); const nameSpan = document.createElement('span'); nameSpan.className = 'icon-name'; nameSpan.textContent = iconNameMap[id] || id; item.appendChild(nameSpan); iconGrid.appendChild(item); renderedIds.add(id); }); }
 iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
 cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
@@ -3684,6 +3725,178 @@ function updateTypingIndicator() { if (!singleChatScreen.classList.contains('act
 // ===================================================================
 // --- 动态 (Moments) 界面逻辑 ---
 // ===================================================================
+// ===================================================================
+    // --- 动态 (Moments) 通知核心逻辑 ---
+    // ===================================================================
+
+    function addMomentsNotification(type, actorId, context) {
+        // Don't notify for user's own actions
+        if (actorId === 'user') return;
+
+        let notificationExists = false;
+        // Prevent duplicate 'like' notifications
+        if (type === 'like') {
+            notificationExists = appState.chat.moments.notifications.some(
+                n => n.type === 'like' && n.actorId === actorId && n.postId === context.postId
+            );
+        }
+        if (notificationExists) return;
+        
+        const newNotification = {
+            id: newId('notification'),
+            type: type, // 'like', 'comment', 'reply', 'message'
+            actorId: actorId,
+            ...context, // postId, originalCommentId, messageId, content, etc.
+            timestamp: Date.now(),
+            isRead: false
+        };
+        appState.chat.moments.notifications.unshift(newNotification); // Add to the top
+        saveState();
+        updateMomentsNotificationUI(true); // Trigger shake
+    }
+
+    function updateMomentsNotificationUI(shouldShake = false) {
+        const unreadCount = appState.chat.moments.notifications.filter(n => !n.isRead).length;
+        const badgeElements = queryAll('#moments-notification-badge, .moments-notification-badge-clone');
+        const buttonElements = queryAll('#moments-notification-btn, #char-moments-notification-btn');
+
+        badgeElements.forEach(badge => {
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.classList.add('visible');
+            } else {
+                badge.classList.remove('visible');
+            }
+        });
+
+        if (shouldShake && unreadCount > 0) {
+            buttonElements.forEach(button => {
+                button.classList.remove('shake'); // Reset animation
+                void button.offsetWidth; // Trigger reflow
+                button.classList.add('shake');
+                setTimeout(() => button.classList.remove('shake'), 500);
+            });
+        }
+    }
+
+    function truncateText(text, maxLength = 10) {
+        if (!text) return '';
+        if (text.length <= maxLength) return text;
+        
+        let truncated = text.substring(0, maxLength);
+        const lastChar = truncated.slice(-1);
+        
+        if (/[，。！？、；：]/.test(lastChar)) {
+            // If the last character is punctuation, replace it
+            return truncated.slice(0, -1) + '…';
+        } else {
+            // Otherwise, append
+            return truncated + '…';
+        }
+    }
+    
+    function renderMomentsNotifications() {
+        if (appState.chat.moments.notifications.length === 0) {
+            momentsNotificationList.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无通知</div>';
+            return;
+        }
+
+        let listHTML = '';
+        appState.chat.moments.notifications.forEach(n => {
+            const actor = findUserById(n.actorId);
+            let actionText = '';
+            let summary = '';
+            let targetPost = null;
+
+            switch(n.type) {
+                case 'like':
+                    targetPost = appState.chat.moments.posts.find(p => p.id === n.postId);
+                    actionText = '赞了你的动态';
+                    summary = targetPost ? truncateText(targetPost.content.text || '图片动态') : '原动态已被删除';
+                    break;
+                case 'comment':
+                    targetPost = appState.chat.moments.posts.find(p => p.id === n.postId);
+                    actionText = '评论了你的动态';
+                    summary = n.content ? truncateText(n.content) : '原评论已被删除';
+                    break;
+                case 'reply':
+                     targetPost = appState.chat.moments.posts.find(p => p.id === n.postId);
+                    actionText = '回复了你的评论';
+                    summary = n.content ? truncateText(n.content) : '原回复已被删除';
+                    break;
+                case 'message':
+                    actionText = '给你留言了';
+                    summary = n.content ? truncateText(n.content) : '原留言已被删除';
+                    break;
+            }
+
+            listHTML += `
+                <li class="preset-data-item notification-item ${n.isRead ? '' : 'unread'}" 
+                    data-notification-id="${n.id}" 
+                    data-type="${n.type}" 
+                    data-post-id="${n.postId || ''}" 
+                    data-message-id="${n.messageId || ''}">
+                    <div class="notification-item-content">
+                        <div class="notification-avatar" data-avatar-id="${actor.avatarId}"></div>
+                        <div class="notification-info">
+                            <span class="notification-actor-name">${actor.name}</span>
+                            <span>${actionText}：</span>
+                            <span class="notification-content-summary">“${summary}”</span>
+                        </div>
+                    </div>
+                    <div class="notification-timestamp">${new Date(n.timestamp).toLocaleString()}</div>
+                </li>
+            `;
+        });
+        
+        momentsNotificationList.innerHTML = listHTML;
+        momentsNotificationList.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+    }
+
+    function openMomentsNotificationModal() {
+        renderMomentsNotifications();
+        momentsNotificationModal.classList.add('visible');
+
+        // Mark all as read
+        let changed = false;
+        appState.chat.moments.notifications.forEach(n => {
+            if (!n.isRead) {
+                n.isRead = true;
+                changed = true;
+            }
+        });
+        
+        if(changed) {
+            saveState();
+            updateMomentsNotificationUI(false);
+        }
+    }
+    function navigateToMomentsContent(notification) {
+        if (!notification) return;
+
+        closeAllScreens();
+        openApp(chatAppScreen);
+        const momentsTabLink = query('#chat-app-screen .app-bottom-tabs .tab-link[data-tab="moments"]');
+        if (momentsTabLink) {
+            momentsTabLink.click();
+        }
+
+        if (notification.type === 'message') {
+            runtimeState.moments.currentFilter = 'message';
+            runtimeState.moments.scrollToMessageId = notification.messageId;
+        } else if (notification.postId) {
+            const post = appState.chat.moments.posts.find(p => p.id === notification.postId);
+            if (post) {
+                runtimeState.moments.currentFilter = post.type === 'log' ? 'log' : (post.type === 'photo' ? 'photo' : 'all');
+                runtimeState.moments.scrollToPostId = notification.postId;
+            } else {
+                showToast('该动态已被删除');
+                runtimeState.moments.currentFilter = 'all';
+            }
+        }
+        
+        renderMomentsFeed('user');
+    }
     function renderMomentsPage(profileId = 'user') {
         if (profileId !== 'user') {
             logVisitor(profileId, 'user');
@@ -4015,12 +4228,9 @@ async function handleMomentsImageUpload(file, profileId, type) {
                 post.likes.splice(userIndex, 1);
             } else {
                 post.likes.push('user');
-                logVisitor(post.authorId, 'user'); // Log visitor
-                if(post.authorId !== 'user') {
-                    const author = findUserById('user');
-                    const postAuthor = findUserById(post.authorId);
-                    queueNotification(`${author.name} 赞了你的动态`, post.authorId, 'user', 'moments');
-                }
+                logVisitor(post.authorId, 'user');
+                // Send notification TO the post author, FROM the user
+                addMomentsNotification('like', 'user', { postId: post.id, recipientId: post.authorId });
             }
             saveState();
             renderMomentsFeed(profileId);
@@ -4045,6 +4255,12 @@ async function handleMomentsImageUpload(file, profileId, type) {
             if(!post.comments) post.comments = [];
             post.comments.push({ id: newId('comment'), authorId: 'user', text, likes: [], replies: [], timestamp: Date.now() });
             logVisitor(post.authorId, 'user'); // Log visitor
+            // Send notification
+            addMomentsNotification('comment', 'user', {
+                postId: post.id,
+                recipientId: post.authorId,
+                content: text
+            });
             input.value = '';
             saveState();
             renderMomentsFeed(profileId);
@@ -4225,6 +4441,12 @@ async function handleMomentsImageUpload(file, profileId, type) {
                 const newReply = { id: newId('reply'), authorId: 'user', text, timestamp: Date.now(), replyTo: null };
                 message.replies.push(newReply);
                 logVisitor(message.recipientId, 'user'); // Log visitor for replying
+                // Send notification for the reply
+                addMomentsNotification('reply', 'user', {
+                    messageId: message.id,
+                    recipientId: message.senderId, // Notify the original message sender
+                    content: text
+                });
                 saveState();
                 renderMomentsFeed(profileId);
                 return;
@@ -4321,6 +4543,27 @@ async function handleMomentsImageUpload(file, profileId, type) {
         feedEl.querySelectorAll('.post-photo-item').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
 
         setupMomentsListInteraction(feedEl);
+
+        // --- Scroll to target item after navigation ---
+        setTimeout(() => {
+            let targetElement = null;
+            if (runtimeState.moments.scrollToPostId) {
+                targetElement = feedEl.querySelector(`.moments-post-item[data-post-id="${runtimeState.moments.scrollToPostId}"]`);
+                runtimeState.moments.scrollToPostId = null;
+            } else if (runtimeState.moments.scrollToMessageId) {
+                targetElement = feedEl.querySelector(`.message-board-item[data-message-id="${runtimeState.moments.scrollToMessageId}"]`);
+                runtimeState.moments.scrollToMessageId = null;
+            }
+
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                targetElement.style.transition = 'background-color 0.5s ease-in-out';
+                targetElement.style.backgroundColor = 'rgba(0, 122, 255, 0.1)';
+                setTimeout(() => {
+                    targetElement.style.backgroundColor = '';
+                }, 2000);
+            }
+        }, 100); // Delay to ensure DOM is fully painted
     }
 
     function renderSingleMomentPost(post) {
@@ -4914,6 +5157,12 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
                     };
                     appState.chat.moments.messages.push(newMessage);
                     logVisitor(newMessage.recipientId, 'user'); // Log visitor for leaving a message
+                    // Send notification
+                    addMomentsNotification('message', 'user', {
+                        messageId: newMessage.id,
+                        recipientId: newMessage.recipientId,
+                        content: newMessage.content
+                    });
                     showToast('留言成功！');
                 }
 
@@ -5721,10 +5970,16 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
 
         charMomentsScreen.addEventListener('click', (e) => {
             const backBtn = e.target.closest('#char-moments-back-btn');
+            const notificationBtn = e.target.closest('#char-moments-notification-btn');
+
             if (backBtn) {
                 closeSubScreen(charMomentsScreen, chatAppScreen);
-                runtimeState.moments.currentProfileId = 'user'; // CRITICAL FIX: Reset the state
-                renderMomentsPage('user'); // Re-render user page to ensure consistency
+                runtimeState.moments.currentProfileId = 'user';
+                renderMomentsPage('user');
+                return;
+            }
+            if (notificationBtn) {
+                openMomentsNotificationModal();
                 return;
             }
             const interactionArea = e.target.closest('.moments-scroll-container, .moments-fab-container');
@@ -5795,6 +6050,34 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 setupMomentsPageListeners();
                 setupGlobalEventListeners(); // CRITICAL FIX for image uploads
                 initializeAllRealtimeActivity();
+                // --- 动态通知初始化 ---
+                momentsNotificationBtn.addEventListener('click', openMomentsNotificationModal);
+                closeMomentsNotificationModalBtn.addEventListener('click', () => momentsNotificationModal.classList.remove('visible'));
+                momentsNotificationList.addEventListener('click', (e) => {
+                    const item = e.target.closest('.notification-item');
+                    if(item) {
+                        const notificationId = item.dataset.notificationId;
+                        const notification = appState.chat.moments.notifications.find(n => n.id === notificationId);
+                        if (notification) {
+                             navigateToMomentsContent(notification);
+                        } else {
+                            showToast('找不到该通知的详情');
+                        }
+                        momentsNotificationModal.classList.remove('visible');
+                    }
+                });
+
+                // 为实时刷新做准备: 如果弹窗开着，就刷新
+                const originalSaveState = saveState;
+                saveState = function() {
+                    originalSaveState();
+                    if (momentsNotificationModal.classList.contains('visible')) {
+                        renderMomentsNotifications();
+                    }
+                };
+
+                // 初始化角标
+                updateMomentsNotificationUI(false);
 
                 appState.music.currentQueueIndex = -1;
                 updateMusicListPlayingStatus();
