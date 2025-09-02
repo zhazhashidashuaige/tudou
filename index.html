@@ -93,6 +93,17 @@
         .island-waveform span:nth-child(3) { animation-delay: -0.8s; }
         .island-waveform.paused span { animation-play-state: paused; height: 2px; }
         @keyframes waveform-dance { 0%, 100% { height: 2px; } 50% { height: 100%; } }
+        /* --- 灵动岛 (视频通话) --- */
+        #dynamic-island.video-call-active { width: 150px; background-color: #34c759; }
+        #dynamic-island.video-call-active .island-content { opacity: 1; }
+        #dynamic-island.video-call-active .island-music-info,
+        #dynamic-island.video-call-active .island-waveform { display: none; }
+        #dynamic-island .island-video-call-icon,
+        #dynamic-island .island-video-call-timer { display: none; color: white; font-weight: 500; font-variant-numeric: tabular-nums; }
+        #dynamic-island.video-call-active .island-video-call-icon,
+        #dynamic-island.video-call-active .island-video-call-timer { display: block; }
+        .island-video-call-icon::before { content: '📹'; font-size: 13px; margin-right: 5px; }
+        .island-video-call-timer { font-size: 13px; }
 
         /* --- 通知横幅 --- */
         #notification-container { position: absolute; top: 0; left: 0; right: 0; padding: 0 10px; z-index: 250; pointer-events: none; }
@@ -671,28 +682,97 @@
         #simple-viewer-image { max-width: 100%; max-height: 100%; object-fit: contain; display: none; }
         #simple-viewer-text { background-color: white; color: black; padding: 30px; padding-top: 32px; border-radius: 8px; overflow-y: auto; font-size: 16px; line-height: 1.8; text-align: center; display: none; justify-content: center; align-items: center; cursor: default; width: 75vw; height: 75vh; max-width: 400px; max-height: 400px; box-sizing: border-box; }
         /* --- 视频通话弹窗 --- */
-        #video-call-modal { display: none; /* Initially hidden */ }
-        #video-call-modal.visible { display: flex; }
-        #video-call-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: 1; }
-        .video-call-content { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: calc(env(safe-area-inset-top, 20px)) 15px calc(env(safe-area-inset-bottom, 20px)) 15px; box-sizing: border-box; }
-        .video-call-header { text-align: center; padding-top: 20px; }
-        .video-call-avatar-img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); }
-        .video-call-name-text { margin-top: 10px; font-size: 20px; font-weight: bold; color: white; text-shadow: 1px 1px 3px black; }
-        .video-call-message-box { flex-grow: 1; overflow-y: auto; background-color: rgba(0, 0, 0, 0.3); border-radius: 12px; margin: 20px 0; padding: 15px; color: white; line-height: 1.6; font-size: 16px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); scrollbar-width: none; }
-        .video-call-message-box::-webkit-scrollbar { display: none; }
-        .video-chat-msg-user { color: #a7d7ff; font-weight: bold; margin-bottom: 5px; }
-        .video-chat-msg-char { margin-bottom: 15px; white-space: pre-wrap; }
-        .video-call-footer { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-        .video-call-controls { display: flex; justify-content: space-around; align-items: center; width: 100%; max-width: 300px; }
-        .video-call-button-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: white; font-size: 12px; }
-        .video-call-icon-btn { background-color: rgba(255, 255, 255, 0.2); border: none; width: 60px; height: 60px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .video-call-icon-btn img { width: 32px; height: 32px; }
-        .video-call-icon-btn.hangup { background-color: var(--danger-color); }
-        .video-call-input-area { width: 100%; display: flex; justify-content: center; }
-        .video-call-speak-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 20px; padding: 10px 25px; font-size: 16px; cursor: pointer; }
-        #video-call-input-wrapper { display: flex; width: 100%; max-width: 400px; gap: 8px; }
-        #video-call-input { flex-grow: 1; border: none; border-radius: 20px; padding: 10px 15px; font-size: 16px; }
-        #video-call-send-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-size: 16px; cursor: pointer; }
+    #video-call-modal { display: none; transition: opacity 0.3s, transform 0.3s; }
+    #video-call-modal.visible { display: flex; }
+    #video-call-modal.minimized { opacity: 0; transform: scale(0.5); pointer-events: none; }
+    #video-call-main-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: 1; transition: opacity 0.3s ease-in-out; }
+    #video-call-pip-view { position: absolute; top: calc(env(safe-area-inset-top, 15px) + 15px); right: 15px; width: calc(100% / 6); height: auto; aspect-ratio: 9 / 16; background-size: cover; background-position: center; border-radius: 12px; border: 2px solid rgba(255, 255, 255, 0.7); box-shadow: 0 4px 10px rgba(0,0,0,0.5); z-index: 3; transition: all 0.3s ease-in-out; }
+    .video-call-content { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: calc(env(safe-area-inset-top, 20px)) 15px calc(env(safe-area-inset-bottom, 20px)) 15px; box-sizing: border-box; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.6) 100%); }
+    .video-call-header { position: relative; text-align: center; height: 120px; flex-shrink: 0; }
+    .video-call-char-info { position: absolute; top: 0; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+    #video-call-minimize-btn { position: absolute; top: 0; left: 0; background-color: rgba(0, 0, 0, 0.4); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; font-size: 24px; line-height: 36px; text-align: center; text-shadow: 1px 1px 3px black; cursor: pointer; z-index: 5; transition: background-color 0.2s; }
+    #video-call-minimize-btn:active { background-color: rgba(0, 0, 0, 0.7); }
+    .video-call-avatar-img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); }
+    .video-call-name-text { margin-top: 10px; font-size: 20px; font-weight: bold; color: white; text-shadow: 1px 1px 3px black; }
+    .video-call-message-box { flex-grow: 1; overflow-y: auto; background-color: rgba(0, 0, 0, 0.3); border-radius: 12px; margin: 15px 0; padding: 15px; color: white; line-height: 1.6; font-size: 16px; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); scrollbar-width: none; margin-top: calc((100vw / 6 * 16 / 9) - 90px); }
+    .video-call-message-box::-webkit-scrollbar { display: none; }
+    .video-chat-msg-user { color: #a7d7ff; font-weight: bold; margin-bottom: 5px; }
+    .video-chat-msg-char { margin-bottom: 15px; white-space: pre-wrap; }
+    .video-call-footer { display: flex; flex-direction: column; align-items: center; gap: 25px; }
+    .video-call-controls { display: flex; justify-content: center; align-items: center; width: 100%; gap: 40px; }
+    .video-call-button-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: white; font-size: 12px; }
+    .video-call-icon-btn { background-color: rgba(80, 80, 80, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: transform 0.2s, background-color 0.2s; }
+    .video-call-icon-btn:active { transform: scale(0.95); background-color: rgba(100, 100, 100, 0.8); }
+    .video-call-icon-btn img { width: 32px; height: 32px; }
+    .video-call-icon-btn.hangup { background-color: var(--danger-color); }
+    .video-call-icon-btn.hangup:active { background-color: #d13026; }
+    .video-call-input-area { width: 100%; display: flex; justify-content: center; margin-bottom: 5px; }
+    .video-call-speak-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 25px; padding: 12px 30px; font-size: 16px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: transform 0.2s, background-color 0.2s; }
+    .video-call-speak-btn:active { transform: scale(0.98); background-color: #0062cc; }
+    #video-call-input-wrapper { display: flex; width: 100%; max-width: 400px; gap: 8px; }
+    #video-call-input { flex-grow: 1; border: 1px solid rgba(255,255,255,0.2); background-color: rgba(0,0,0,0.3); color: white; border-radius: 20px; padding: 10px 15px; font-size: 16px; }
+    #video-call-send-btn { background-color: var(--accent-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-size: 16px; cursor: pointer; }
+    #video-call-float-btn { position: fixed; right: 15px; bottom: 100px; width: 60px; height: 60px; background-color: var(--accent-color); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 199; cursor: pointer; display: flex; justify-content: center; align-items: center; background-size: cover; background-position: center; border: 2px solid white; transform: scale(0); opacity: 0; transition: opacity 0.3s, transform 0.3s; }
+    #video-call-float-btn.visible { transform: scale(1); opacity: 1; }
+    #video-call-float-btn img { width: 32px; height: 32px; }
+    #video-call-float-btn { display: none; position: absolute; z-index: 201; bottom: 100px; right: 20px; width: 60px; height: 60px; background-color: var(--accent-color); border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; background-size: cover; background-position: center; border: 2px solid white; transition: transform 0.2s; }
+    #video-call-float-btn.visible { display: block; }
+    #video-call-float-btn:active { transform: scale(0.9); }
+/* --- 视频通话弹窗：新增样式 --- */
+        #video-call-modal.minimized {
+            display: none !important; /* 最小化时隐藏弹窗 */
+        }
+        #user-video-view {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 20px) + 15px);
+            right: 15px;
+            width: 25%;
+            max-width: 120px;
+            aspect-ratio: 9 / 16;
+            background-size: cover;
+            background-position: center;
+            background-color: #333;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            z-index: 3;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        #video-call-minimize-btn {
+            position: absolute;
+            top: calc(env(safe-area-inset-top, 20px) + 15px);
+            left: 15px;
+            width: 30px;
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 20px;
+            line-height: 30px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 5;
+        }
+        #floating-video-btn {
+            display: none; /* 默认隐藏 */
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 99;
+            background-size: cover;
+            background-position: center;
+        }
+        #floating-video-btn.visible {
+            display: block;
+        }
         /* --- 响应式调整：适配移动端的小屏幕 --- */
         @media (max-width: 600px) {
             #viewer-text-view, #simple-viewer-text {
@@ -710,6 +790,8 @@
             <div id="dynamic-island">
                 <div class="island-content island-music-info"></div>
                 <div class="island-content island-waveform"><span></span><span></span><span></span></div>
+                <div class="island-content island-video-call-icon"></div>
+                <div class="island-content island-video-call-timer"></div>
             </div>
             <div id="status-bar">
                 <div id="time">12:00</div>
@@ -1380,48 +1462,54 @@
         <button class="context-menu-btn" id="context-menu-cancel">取消</button>
     </div>
     <!-- 视频通话弹窗 -->
-    <div id="video-call-modal" class="modal-overlay" style="z-index: 200; background-color: #000;">
-        <div id="video-call-background"></div>
-        <div class="video-call-content">
-            <div class="video-call-header">
+<div id="video-call-modal" class="modal-overlay" style="z-index: 200; background-color: transparent;">
+    <div id="video-call-main-view"></div>
+    <div id="video-call-pip-view"></div>
+    <div class="video-call-content">
+        <div class="video-call-header">
+            <button id="video-call-minimize-btn" title="最小化">－</button>
+            <div class="video-call-char-info">
                 <img id="video-call-avatar" class="video-call-avatar-img">
                 <div id="video-call-name" class="video-call-name-text"></div>
             </div>
-            <div id="video-call-messages" class="video-call-message-box">
-                <!-- Video chat messages will appear here -->
+        </div>
+        <div id="video-call-messages" class="video-call-message-box">
+            <!-- Video chat messages will appear here -->
+        </div>
+        <div class="video-call-footer">
+            <div class="video-call-controls">
+                <div class="video-call-button-placeholder">
+                    <button id="video-call-switch-camera-btn" class="video-call-icon-btn" style="font-size: 28px;">🔄</button>
+                    <span>切换镜头</span>
+                </div>
+                <div class="video-call-button-placeholder">
+                    <button id="video-call-hangup-btn" class="video-call-icon-btn hangup" style="font-size: 28px;">📞</button>
+                    <span>挂断</span>
+                </div>
             </div>
-            <div class="video-call-footer">
-                <div class="video-call-controls">
-                    <div class="video-call-button-placeholder">
-                        <button class="video-call-icon-btn"><img src="https://i.postimg.cc/P50g256R/image.png" alt="切换摄像头"></button>
-                        <span>切换摄像头</span>
-                    </div>
-                    <div class="video-call-button-placeholder">
-                        <button id="video-call-hangup-btn" class="video-call-icon-btn hangup"><img src="https://i.postimg.cc/T1j2z5xM/image.png" alt="挂断"></button>
-                    </div>
-                </div>
-                <div class="video-call-input-area">
-                     <button id="video-call-speak-btn" class="video-call-speak-btn">说点什么...</button>
-                     <div id="video-call-input-wrapper" style="display: none;">
-                         <input type="text" id="video-call-input" placeholder="输入内容...">
-                         <button id="video-call-send-btn">发送</button>
-                     </div>
-                </div>
+            <div class="video-call-input-area">
+                 <button id="video-call-speak-btn" class="video-call-speak-btn">说点什么...</button>
+                 <div id="video-call-input-wrapper" style="display: none;">
+                     <input type="text" id="video-call-input" placeholder="输入内容...">
+                     <button id="video-call-send-btn">发送</button>
+                 </div>
             </div>
         </div>
     </div>
-    <!-- 壁纸长按菜单 -->
-    <div id="wallpaper-context-menu" style="display: none;">
-        <button class="context-menu-btn" id="wp-set-wallpaper">设为壁纸</button>
-        <button class="context-menu-btn" id="wp-set-chat-bg">设为全局背景</button>
-        <button class="context-menu-btn danger" id="wp-delete">删除</button>
-    </div>
+</div>
+<!-- Floating Video Button -->
+    <div id="floating-video-btn"></div>
+<!-- 壁纸长按菜单 -->
+<div id="wallpaper-context-menu" style="display: none;">
+<button class="context-menu-btn" id="wp-set-wallpaper">设为壁纸</button>
+<button class="context-menu-btn" id="wp-set-chat-bg">设为全局背景</button>
+<button class="context-menu-btn danger" id="wp-delete">删除</button>
+</div>
     <!-- 背景选项上下文菜单 -->
     <div id="background-context-menu" style="display: none;">
         <button class="context-menu-btn" id="bg-menu-chat-bg">聊天背景</button>
         <button class="context-menu-btn" id="bg-menu-video-bg">视频背景</button>
     </div>
-
     <div id="toast"></div>
 
 <script>
@@ -1443,6 +1531,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const dynamicIsland = getEl('dynamic-island');
     const islandMusicInfo = query('.island-music-info');
     const islandWaveform = query('.island-waveform');
+    const islandVideoIcon = query('.island-video-call-icon');
+    const islandVideoTimer = query('.island-video-call-timer');
     const notificationContainer = getEl('notification-container');
 
     // --- APP 屏幕 ---
@@ -1776,17 +1866,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const momentsNotificationList = getEl('moments-notification-list');
 
     // --- 视频通话元素 ---
-    const videoCallModal = getEl('video-call-modal');
-    const videoCallBackground = getEl('video-call-background');
-    const videoCallAvatar = getEl('video-call-avatar');
-    const videoCallName = getEl('video-call-name');
-    const videoCallMessages = getEl('video-call-messages');
-    const videoCallHangupBtn = getEl('video-call-hangup-btn');
-    const videoCallSpeakBtn = getEl('video-call-speak-btn');
-    const videoCallInputWrapper = getEl('video-call-input-wrapper');
-    const videoCallInput = getEl('video-call-input');
-    const videoCallSendBtn = getEl('video-call-send-btn');
-
+const videoCallModal = getEl('video-call-modal');
+const videoCallMainView = getEl('video-call-main-view');
+const videoCallPipView = getEl('video-call-pip-view');
+const videoCallAvatar = getEl('video-call-avatar');
+const videoCallName = getEl('video-call-name');
+const videoCallMessages = getEl('video-call-messages');
+const videoCallMinimizeBtn = getEl('video-call-minimize-btn');
+const videoCallSwitchCameraBtn = getEl('video-call-switch-camera-btn');
+const videoCallHangupBtn = getEl('video-call-hangup-btn');
+const videoCallSpeakBtn = getEl('video-call-speak-btn');
+const videoCallInputWrapper = getEl('video-call-input-wrapper');
+const videoCallInput = getEl('video-call-input');
+const videoCallSendBtn = getEl('video-call-send-btn');
+const videoCallFloatBtn = getEl('floating-video-btn');
     // --- 通用/共享弹窗 ---
     const libraryModal = getEl('library-modal');
     const libraryModalTitle = getEl('library-modal-title');
@@ -1893,6 +1986,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 全局运行时状态 (不可序列化) ---
     let runtimeState = {};
+    let islandVideoCallTimer = null;
     
     
 
@@ -1900,50 +1994,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 状态管理重构 ---
     // ===================================================================
     function getInitialState() {
-        return {
-            settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
-            music: { playlist: [], queue: [], lyrics: {}, comments: {}, currentQueueIndex: -1, playbackMode: 'repeat' },
-            beautify: { 
-                wallpapers: [], 
-                currentWallpaperId: 'default', 
-                currentChatBgId: 'default', 
-                fonts: [], 
-                currentFont: 'default', 
-                fontColor: '#000000', 
-                icons: {}, 
-                bubbleSettings: { global: {}, specific: {} }
-            },
-            data: { worldBooks: [], archives: [], infos: [] },
-            chat: {
-                    contacts: [],
-                    emojis: [],
-                    videoCallState: { isActive: false, chatId: null, startTime: null, log: [], lastRejectedCallTimestamp: null },
-                    userProfile: { 
-                        name: '土皇帝', 
-                        avatarId: 'default_user_avatar', 
-                        avatarFrameId: '', 
-                        avatarLibrary: [], 
-                        avatarFrameLibrary: [],
-                        persona: '全网唯一土皇帝',
-                        signature: '全网唯一土皇帝'
-                    },
-                    moments: {
-                            profile: {
-                                name: '土皇帝',
-                                signature: '全网唯一土皇帝',
-                                avatarId: 'default_moments_avatar',
-                                coverId: 'default_moments_cover',
-                            },
-                            posts: [], // 动态
-                            photos: [], // 照片库
-                            albums: [], // 相册
-                            messages: [], // 留言
-                            notifications: [],
-                            visitors: []
-                        }
-                }
-        };
-    }
+return {
+settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
+music: { playlist: [], queue: [], lyrics: {}, comments: {}, currentQueueIndex: -1, playbackMode: 'repeat' },
+beautify: {
+wallpapers: [],
+currentWallpaperId: 'default',
+currentChatBgId: 'default',
+fonts: [],
+currentFont: 'default',
+fontColor: '#000000',
+icons: {},
+bubbleSettings: { global: {}, specific: {} }
+},
+data: { worldBooks: [], archives: [], infos: [] },
+chat: {
+contacts: [],
+emojis: [],
+videoCallState: { isActive: false, chatId: null, startTime: null, log: [], lastRejectedCallTimestamp: null, isMinimized: false, isCameraSwapped: false },
+userProfile: {
+name: '土皇帝',
+avatarId: 'default_user_avatar',
+avatarFrameId: '',
+avatarLibrary: [],
+avatarFrameLibrary: [],
+persona: '全网唯一土皇帝',
+signature: '全网唯一土皇帝'
+},
+moments: {
+profile: {
+name: '土皇帝',
+signature: '全网唯一土皇帝',
+avatarId: 'default_moments_avatar',
+coverId: 'default_moments_cover',
+},
+posts: [], // 动态
+photos: [], // 照片库
+albums: [], // 相册
+messages: [], // 留言
+notifications: [],
+visitors: []
+}
+}
+};
+}
 
     function getInitialRuntimeState() {
         return {
@@ -2881,45 +2975,47 @@ async function handleRefreshClick() { const contact = appState.chat.contacts.fin
 // --- 视频通话逻辑 ---
 // ===================================================================
 async function initiateVideoCall() {
-    if (appState.chat.videoCallState.isActive) {
-        showToast('正在进行视频通话');
-        return;
-    }
-    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-    if (!contact || contact.isGroup) {
-        showToast(contact.isGroup ? '群聊视频功能暂未开放' : '无法发起通话', 'error');
-        return;
-    }
+if (appState.chat.videoCallState.isActive) {
+showToast('正在进行视频通话');
+return;
+}
+const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+if (!contact || contact.isGroup) {
+showToast(contact.isGroup ? '群聊视频功能暂未开放' : '无法发起通话', 'error');
+return;
+}
+// 标记本次通话由用户发起
+runtimeState.videoCallContext.initiator = 'user'; 
 
-    // 检查是否在30秒内被拒绝过
-    const lastRejection = appState.chat.videoCallState.lastRejectedCallTimestamp;
-    if (lastRejection && (Date.now() - lastRejection < 300000)) {
-        addSystemNotification(contact.id, '正在等待对方接听...', false);
-        // 清除时间戳并强制接听
-        appState.chat.videoCallState.lastRejectedCallTimestamp = null;
-        saveState();
-        // 添加一个短暂的延迟以模拟“犹豫”后接听
-        setTimeout(() => {
-            acceptVideoCall(contact.id);
-        }, 1000 + Math.random() * 1000);
-        return;
-    }
-
+// 检查是否在30秒内被拒绝过
+const lastRejection = appState.chat.videoCallState.lastRejectedCallTimestamp;
+if (lastRejection && (Date.now() - lastRejection < 300000)) {
     addSystemNotification(contact.id, '正在等待对方接听...', false);
+    // 清除时间戳并强制接听
+    appState.chat.videoCallState.lastRejectedCallTimestamp = null;
+    saveState();
+    // 添加一个短暂的延迟以模拟“犹豫”后接听
+    setTimeout(() => {
+        acceptVideoCall(contact.id);
+    }, 1000 + Math.random() * 1000);
+    return;
+}
 
-    try {
-        const decision = await fetchVideoCallDecision(contact.id);
-        if (decision === 'ACCEPT') {
-            acceptVideoCall(contact.id);
-        } else {
-            rejectVideoCall(contact.id);
-        }
-    } catch (error) {
-        console.error("Video call decision failed:", error);
-        showToast(`呼叫失败: ${error.message}`, 'error');
-        contact.conversation.pop(); 
-        renderConversation();
+addSystemNotification(contact.id, '正在等待对方接听...', false);
+
+try {
+    const decision = await fetchVideoCallDecision(contact.id);
+    if (decision === 'ACCEPT') {
+        acceptVideoCall(contact.id);
+    } else {
+        rejectVideoCall(contact.id);
     }
+} catch (error) {
+    console.error("Video call decision failed:", error);
+    showToast(`呼叫失败: ${error.message}`, 'error');
+    contact.conversation.pop(); 
+    renderConversation();
+}
 }
 
 async function fetchVideoCallDecision(contactId) {
@@ -2948,17 +3044,40 @@ async function fetchVideoCallDecision(contactId) {
     return decisionText === 'ACCEPT' ? 'ACCEPT' : 'REJECT';
 }
 
-function acceptVideoCall(contactId) {
+async function acceptVideoCall(contactId) {
     addSystemNotification(contactId, '对方已接听', false);
     appState.chat.videoCallState = {
-        ...appState.chat.videoCallState, // 保留可能存在的旧数据
         isActive: true,
         chatId: contactId,
         startTime: Date.now(),
-        log: []
+        log: [],
+        isMinimized: false,
+        isCameraSwapped: false,
+        lastRejectedCallTimestamp: null,
+        initiator: runtimeState.videoCallContext.initiator || 'char' // 保存发起者信息
     };
+    runtimeState.videoCallContext.initiator = null; // 清理临时状态
     saveState();
-    openVideoCallModal();
+    
+    // 激活灵动岛
+    dynamicIsland.classList.remove('music-active');
+    dynamicIsland.classList.add('video-call-active');
+    const startTime = appState.chat.videoCallState.startTime;
+    if (islandVideoCallTimer) clearInterval(islandVideoCallTimer);
+    islandVideoCallTimer = setInterval(() => {
+        if (!appState.chat.videoCallState.isActive) {
+            clearInterval(islandVideoCallTimer);
+            return;
+        }
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const seconds = String(elapsed % 60).padStart(2, '0');
+        islandVideoTimer.textContent = `${minutes}:${seconds}`;
+    }, 1000);
+
+    await openVideoCallModal();
+    // Char speaks first
+    await triggerAiResponse(contactId, false, false, true);
 }
 
 function rejectVideoCall(contactId) {
@@ -2967,50 +3086,130 @@ function rejectVideoCall(contactId) {
     addSystemNotification(contactId, '对方已拒绝', true);
 }
 
-function endVideoCall() {
+function endVideoCall(context = {}) {
     if (!appState.chat.videoCallState.isActive) return;
+
+    const { hungUpBy = 'char' } = context; // 默认为角色挂断
+    const chatId = appState.chat.videoCallState.chatId;
+    const contact = appState.chat.contacts.find(c => c.id === chatId);
+    if (!contact) return;
 
     const duration = Date.now() - appState.chat.videoCallState.startTime;
     const minutes = Math.floor(duration / 60000);
     const seconds = Math.floor((duration % 60000) / 1000);
     const durationString = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    const chatId = appState.chat.videoCallState.chatId;
+    
+    let notificationText;
+    if (hungUpBy === 'user') {
+        notificationText = `你挂断了通话，通话时长 ${durationString}`;
+    } else {
+        const charName = contact.charSettings.name;
+        notificationText = `${charName} 挂断了通话，通话时长 ${durationString}`;
+    }
 
-    // 【修正】先更新状态和关闭UI，再触发后续事件
+    // Reset all states
     appState.chat.videoCallState.isActive = false;
+    appState.chat.videoCallState.isMinimized = false;
+    appState.chat.videoCallState.isCameraSwapped = false;
+    
+    // 关闭灵动岛
+    dynamicIsland.classList.remove('video-call-active');
+    if (islandVideoCallTimer) {
+        clearInterval(islandVideoCallTimer);
+        islandVideoCallTimer = null;
+    }
+    islandVideoTimer.textContent = '';
+
+
     saveState();
     closeVideoCallModal();
 
-    addSystemNotification(chatId, `通话结束，通话时长 ${durationString}`, true);
+    addSystemNotification(chatId, notificationText, true);
 }
 
 async function openVideoCallModal() {
-    const { chatId, log } = appState.chat.videoCallState;
+    const { chatId, log, isMinimized, isCameraSwapped } = appState.chat.videoCallState;
     const contact = appState.chat.contacts.find(c => c.id === chatId);
     if (!contact) return;
 
-    const bgId = contact.userSettings.videoBackgroundId || 'default_video_bg';
-    if (bgId === 'default_video_bg') {
-        videoCallBackground.style.backgroundColor = '#000000';
-        videoCallBackground.style.backgroundImage = 'none';
-    } else {
-        await setElementImage(videoCallBackground, bgId, 'backgroundImage');
+    // Handle minimized state first
+    if (isMinimized) {
+        videoCallModal.classList.remove('visible');
+        videoCallFloatBtn.classList.add('visible');
+        await setElementImage(videoCallFloatBtn, contact.charSettings.avatarId, 'backgroundImage');
+        return;
     }
+
+    videoCallFloatBtn.classList.remove('visible');
+    videoCallModal.classList.remove('minimized');
+
+    // Determine which background goes where
+    const userVideoBgId = contact.userSettings.videoBackgroundId || 'default_video_bg';
+    const charVideoBgId = contact.charSettings.videoBackgroundId || 'default_video_bg';
+
+    const mainBgId = isCameraSwapped ? userVideoBgId : charVideoBgId;
+    const pipBgId = isCameraSwapped ? charVideoBgId : userVideoBgId;
+
+    const setupBg = async (element, bgId) => {
+        if (!bgId || bgId === 'default_video_bg') {
+            element.style.backgroundColor = '#333';
+            element.style.backgroundImage = 'none';
+        } else {
+            element.style.backgroundColor = '';
+            await setElementImage(element, bgId, 'backgroundImage');
+        }
+    };
+
+    await setupBg(videoCallMainView, mainBgId);
+    await setupBg(videoCallPipView, pipBgId);
 
     setElementImage(videoCallAvatar, contact.charSettings.avatarId, 'src');
     videoCallName.textContent = contact.remark || contact.charSettings.name;
 
     videoCallMessages.innerHTML = '';
-    log.forEach(msg => addMessageToVideoChatLog(msg.sender, msg.content));
+    if(log) {
+        log.forEach(msg => addMessageToVideoChatLog(msg.sender, msg.content));
+    }
 
     videoCallModal.classList.add('visible');
 }
 
+
 function closeVideoCallModal() {
     videoCallModal.classList.remove('visible');
+    videoCallFloatBtn.classList.remove('visible');
     videoCallInputWrapper.style.display = 'none';
     videoCallSpeakBtn.style.display = 'block';
     videoCallInput.value = '';
+}
+
+function minimizeVideoCall() {
+    if (!appState.chat.videoCallState.isActive) return;
+    appState.chat.videoCallState.isMinimized = true;
+    saveState();
+    videoCallModal.classList.add('minimized');
+    videoCallFloatBtn.classList.add('visible');
+    const contact = appState.chat.contacts.find(c => c.id === appState.chat.videoCallState.chatId);
+    if (contact) {
+        setElementImage(videoCallFloatBtn, contact.charSettings.avatarId, 'backgroundImage');
+    }
+}
+
+function restoreVideoCall() {
+    if (!appState.chat.videoCallState.isActive) return;
+    appState.chat.videoCallState.isMinimized = false;
+    saveState();
+    videoCallModal.classList.remove('minimized');
+    videoCallFloatBtn.classList.remove('visible');
+    openVideoCallModal(); // Re-open to ensure correct state rendering
+}
+
+function toggleCameraSwap() {
+    if (!appState.chat.videoCallState.isActive) return;
+    appState.chat.videoCallState.isCameraSwapped = !appState.chat.videoCallState.isCameraSwapped;
+    saveState();
+    // Re-render the backgrounds
+    openVideoCallModal();
 }
 
 function addMessageToVideoChatLog(sender, content) {
@@ -3589,71 +3788,86 @@ libraryUploadBtn.addEventListener('click', () => libraryFileInput.click());
 libraryAddUrlBtn.addEventListener('click', async () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isFrame) lib = appState.chat.userProfile.avatarFrameLibrary; else if (context.isGroup) lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; else if (context.memberId) lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; else lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; for (const url of urlArray) { const response = await fetch(url); const blob = await response.blob(); const newLibId = newId('lib'); await addMediaToDB(newLibId, blob); lib.push(newLibId); } saveState(); renderLibraryGrid(); } } });
 libraryFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isFrame) lib = appState.chat.userProfile.avatarFrameLibrary; else if (context.isGroup) lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; else if (context.memberId) lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; else lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; for (const file of files) { const newLibId = newId('lib'); await addMediaToDB(newLibId, file); lib.push(newLibId); } saveState(); renderLibraryGrid(); } libraryFileInput.value = ''; });
 async function handleChatBackgroundUpload(file, settingsObject) { if (!file) return; const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); settingsObject.chatBackgroundId = newWallpaperId; saveState(); showToast('背景已设置并存入壁纸库'); await updateSingleChatUI(); }
-    
-    // --- 新增：背景选项菜单逻辑 ---
-    const backgroundContextMenu = getEl('background-context-menu');
-    function showBackgroundContextMenu(targetElement, context) {
-    runtimeState.backgroundMenuContext = context;
-    const rect = targetElement.getBoundingClientRect();
-    const screenRect = phoneScreen.getBoundingClientRect();
-
-    // 根据上下文显示或隐藏按钮
-    getEl('bg-menu-chat-bg').style.display = context.isVideo ? 'none' : 'block';
-    getEl('bg-menu-video-bg').style.display = context.isVideo ? 'block' : 'none';
-
-
-    backgroundContextMenu.style.display = 'flex';
-    const menuRect = backgroundContextMenu.getBoundingClientRect();
-    let top = rect.top - screenRect.top - menuRect.height - 5;
-    let left = rect.left - screenRect.left;
-    if (top < 10) {
-        top = rect.bottom - screenRect.top + 5;
-    }
-    if (left + menuRect.width > screenRect.width - 10) {
-        left = screenRect.width - menuRect.width - 10;
-    }
-    backgroundContextMenu.style.top = `${top}px`;
-    backgroundContextMenu.style.left = `${left}px`;
-}
-function hideBackgroundContextMenu() {
-    if (backgroundContextMenu) backgroundContextMenu.style.display = 'none';
-    runtimeState.backgroundMenuContext = null;
-}
-document.addEventListener('pointerdown', (e) => {
-    if (backgroundContextMenu.style.display === 'flex' && !backgroundContextMenu.contains(e.target)) {
-        hideBackgroundContextMenu();
-    }
-}, true);
-getEl('bg-menu-chat-bg').addEventListener('click', () => {
-    const context = runtimeState.backgroundMenuContext;
-    if(context && !context.isVideo) {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => handleChatBackgroundUpload(e.target.files[0], context.settingsObject);
-        input.click();
-    }
-    hideBackgroundContextMenu();
-});
-getEl('bg-menu-video-bg').addEventListener('click', () => {
-    const context = runtimeState.backgroundMenuContext;
-    if(context && context.isVideo) {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], context.settingsObject);
-        input.click();
-    }
-    hideBackgroundContextMenu();
-});
-async function handleVideoBackgroundUpload(file, settingsObject) {
+    async function handleVideoBackgroundUpload(file, settingsObject) {
     if (!file) return;
     showToast('正在上传视频背景...');
     const newVideoBgId = newId('video_bg');
     await addMediaToDB(newVideoBgId, file);
     settingsObject.videoBackgroundId = newVideoBgId;
+    saveState(); // 实时保存
     showToast('视频背景已更新！');
-}
+    
+        // 实时刷新逻辑
+        if (appState.chat.videoCallState.isActive) {
+            const contact = appState.chat.contacts.find(c => c.id === appState.chat.videoCallState.chatId);
+            if (!contact) return;
+    
+            // 检查被修改的设置对象是否与当前通话相关
+            const isCharSettings = settingsObject === runtimeState.tempChatSettings?.charSettings;
+            const isUserSettings = settingsObject === runtimeState.tempChatSettings?.userSettings;
+            
+            if (isCharSettings || isUserSettings) {
+                // 强制重新渲染视频通话界面以应用新背景
+                await openVideoCallModal();
+            }
+        }
+    }
+    
+    // --- 新增：背景选项菜单逻辑 ---
+    const backgroundContextMenu = getEl('background-context-menu');
+    function showBackgroundContextMenu(targetElement, context) {
+        runtimeState.backgroundMenuContext = context;
+        const rect = targetElement.getBoundingClientRect();
+        const screenRect = phoneScreen.getBoundingClientRect();
+    
+        // 总是显示所有选项
+        getEl('bg-menu-chat-bg').style.display = 'block';
+        getEl('bg-menu-video-bg').style.display = 'block';
+    
+        backgroundContextMenu.style.display = 'flex';
+        const menuRect = backgroundContextMenu.getBoundingClientRect();
+        let top = rect.top - screenRect.top - menuRect.height - 5;
+        let left = rect.left - screenRect.left;
+        if (top < 10) {
+            top = rect.bottom - screenRect.top + 5;
+        }
+        if (left + menuRect.width > screenRect.width - 10) {
+            left = screenRect.width - menuRect.width - 10;
+        }
+        backgroundContextMenu.style.top = `${top}px`;
+        backgroundContextMenu.style.left = `${left}px`;
+    }
+    function hideBackgroundContextMenu() {
+        if (backgroundContextMenu) backgroundContextMenu.style.display = 'none';
+        runtimeState.backgroundMenuContext = null;
+    }
+    document.addEventListener('pointerdown', (e) => {
+        if (backgroundContextMenu.style.display === 'flex' && !backgroundContextMenu.contains(e.target)) {
+            hideBackgroundContextMenu();
+        }
+    }, true);
+    getEl('bg-menu-chat-bg').addEventListener('click', () => {
+        const context = runtimeState.backgroundMenuContext;
+        if(context) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => handleChatBackgroundUpload(e.target.files[0], context.settingsObject);
+            input.click();
+        }
+        hideBackgroundContextMenu();
+    });
+    getEl('bg-menu-video-bg').addEventListener('click', () => {
+        const context = runtimeState.backgroundMenuContext;
+        if(context) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], context.settingsObject);
+            input.click();
+        }
+        hideBackgroundContextMenu();
+    });
     csCharBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.charSettings }); });
     gcsGroupBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.groupSettings }); });
 
@@ -3666,14 +3880,18 @@ function renderGroupMemberList() { const { owner, admins, members } = runtimeSta
 function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; saveState(); updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); saveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', isGroupUser: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); saveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
-// 新增：为群聊User设置中的视频背景按钮添加监听
-const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
-if(gcsUsUserVideoBackgroundBtn) {
-    gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
-         showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.userSettings, isVideo: true });
-    });
-}
-let gcsLongPressTimer = null; let gcsIsDragging = false; let gcsStartX, gcsStartY; gcsMemberList.addEventListener('pointerdown', e => { if (e.button !== 0) return; const target = e.target; const item = target.closest('.gcs-member-item'); if (!item) return; gcsIsDragging = false; gcsStartX = e.clientX; gcsStartY = e.clientY; gcsLongPressTimer = setTimeout(() => { if (!gcsIsDragging) { handleGcsMemberLongPress(item.dataset.id); } }, 500); }); gcsMemberList.addEventListener('pointermove', e => { if (Math.abs(e.clientX - gcsStartX) > 10 || Math.abs(e.clientY - gcsStartY) > 10) { gcsIsDragging = true; clearTimeout(gcsLongPressTimer); } }); gcsMemberList.addEventListener('pointerup', e => { clearTimeout(gcsLongPressTimer); if (!gcsIsDragging) { const item = e.target.closest('.gcs-member-item'); const addBtn = e.target.closest('#gcs-add-member-btn'); const removeBtn = e.target.closest('#gcs-remove-member-btn'); if (item) { openGcsMemberModal(item.dataset.id); } else if (addBtn) { openGcsManageMembersModal('add'); } else if (removeBtn) { openGcsManageMembersModal('remove'); } } }); }
+    // 为群聊User设置中的视频背景按钮添加直接上传监听
+    const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
+    if(gcsUsUserVideoBackgroundBtn) {
+        gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
+             const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], runtimeState.tempChatSettings.userSettings);
+            input.click();
+        });
+    }
+    let gcsLongPressTimer = null; let gcsIsDragging = false; let gcsStartX, gcsStartY; gcsMemberList.addEventListener('pointerdown', e => { if (e.button !== 0) return; const target = e.target; const item = target.closest('.gcs-member-item'); if (!item) return; gcsIsDragging = false; gcsStartX = e.clientX; gcsStartY = e.clientY; gcsLongPressTimer = setTimeout(() => { if (!gcsIsDragging) { handleGcsMemberLongPress(item.dataset.id); } }, 500); }); gcsMemberList.addEventListener('pointermove', e => { if (Math.abs(e.clientX - gcsStartX) > 10 || Math.abs(e.clientY - gcsStartY) > 10) { gcsIsDragging = true; clearTimeout(gcsLongPressTimer); } }); gcsMemberList.addEventListener('pointerup', e => { clearTimeout(gcsLongPressTimer); if (!gcsIsDragging) { const item = e.target.closest('.gcs-member-item'); const addBtn = e.target.closest('#gcs-add-member-btn'); const removeBtn = e.target.closest('#gcs-remove-member-btn'); if (item) { openGcsMemberModal(item.dataset.id); } else if (addBtn) { openGcsManageMembersModal('add'); } else if (removeBtn) { openGcsManageMembersModal('remove'); } } }); }
 function openGcsMemberModal(memberId) { if (memberId === 'user') return; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; runtimeState.tempGcsMemberSettings = JSON.parse(JSON.stringify(memberSettings)); gcsEditingMemberIdInput.value = memberId; loadGcsMemberModalUI(); gcsMemberModal.classList.add('visible'); }
 function loadGcsMemberModalUI() { gcsMemberModalTitle.textContent = `设置 ${runtimeState.tempGcsMemberSettings.nickname}`; gcsMemberNickname.value = runtimeState.tempGcsMemberSettings.nickname; setupWorldBookSelector(gcsMemberWorldBookGroupSelector, gcsMemberWorldBookList, runtimeState.tempGcsMemberSettings.linkedWorldBooks); setElementImage(gcsMemberAvatar, runtimeState.tempGcsMemberSettings.avatarId); setElementImage(gcsMemberAvatar.querySelector('.avatar-frame'), runtimeState.tempGcsMemberSettings.avatarFrameId); gcsMemberPersona.value = runtimeState.tempGcsMemberSettings.persona; }
 gcsMemberModalCancelBtn.addEventListener('click', () => gcsMemberModal.classList.remove('visible'));
@@ -3901,7 +4119,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
     // --- 行动情景说明 ---
     if (isProactive) {
         prompt += `--- **【本次行动情景：主动交互】** ---\n`;
-        prompt += `你因为开启了“后台实时活动”，所以现在是【你主动】发起交互。这次交互算作【一次完整的活动】，在这一次活动中，你可以【执行多项操作】。例如，你可以先评论一条动态，然后再给user发消息。所有这些操作的总和，将被视为一次活动。\n`;
+        prompt += `由于“后台实时活动”功能已开启，现在轮到你行动了。这是【由你，即角色自己，主动发起】的交互，并非对用户消息的回复。本次交互算作【一次完整的活动】，在这一次活动中，你可以【执行多项操作】。例如，你可以先评论一条动态，然后再给user发消息。所有这些操作的总和，将被视为一次活动。\n`;
         prompt += `【重要】当你主动给user发消息时，也【必须】遵守拆分成【5-10条，允许更多，不设上限】简短消息的规则，而不是只发一条孤零零的消息。\n\n`;
         
         prompt += `为了让你更好地融入世界，以下是你需要了解的【全部最新动态信息】，请仔细阅读并据此行动：\n\n`;
@@ -3922,7 +4140,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                     prompt += `    - 评论:\n`;
                     p.comments.forEach(c => {
                         const commentAuthor = findUserById(c.authorId);
-                        prompt += `      - ${commentAuthor.name}: "${c.text}"\n`;
+                        prompt += `      - ${commentAuthor.name} (ID: ${c.id}): "${c.text}"\n`;
                         if (c.replies && c.replies.length > 0) {
                             c.replies.forEach(r => {
                                 const replyAuthor = findUserById(r.authorId);
@@ -3948,10 +4166,10 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
             commentedSongs.forEach(songId => {
                 const song = appState.music.playlist.find(s => s.id === songId);
                 if (song) {
-                    prompt += `- 歌曲《${song.artist} - ${song.title}》下的评论:\n`;
+                    prompt += `- 歌曲《${song.artist} - ${song.title}》(ID: ${songId})下的评论:\n`;
                     appState.music.comments[songId].forEach(c => {
                         const commentAuthor = findUserById(c.authorId);
-                        prompt += `    - ${commentAuthor.name}: "${c.text}"\n`;
+                        prompt += `    - ${commentAuthor.name} (ID: ${c.id}): "${c.text}"\n`;
                         if (c.replies && c.replies.length > 0) {
                              c.replies.forEach(r => {
                                 const replyAuthor = findUserById(r.authorId);
@@ -3976,7 +4194,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         if (userMessages.length > 0) {
             userMessages.forEach(m => {
                 const sender = findUserById(m.senderId);
-                prompt += `- ${m.senderName}(${sender.name}) 留言: "${m.content}"\n`;
+                prompt += `- ${m.senderName}(${sender.name}) 留言 (ID: ${m.id}): "${m.content}"\n`;
                  if (m.replies && m.replies.length > 0) {
                     m.replies.forEach(r => {
                         const replyAuthor = findUserById(r.authorId);
@@ -4033,6 +4251,12 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
     prompt += `2. **信息传递**: 这是一个纯粹的线上聊天应用。双方见不到面、看不见表情、听不见声音。想让用户知道你现在的样子就主动发送照片（使用 SEND_IMAGE 指令生成虚拟文字图）；想让用户听见你现在的声音就主动发送语音（使用 SEND_VOICE 指令生成虚拟语音文字）。\n`;
     prompt += `3. **主动能力**: 你拥有后台活动能力。你不仅能在收到用户消息后被动回复，更【必须】【主动】发起各种交互，包括但不限于：主动发起聊天、主动发布动态、主动评论他人动态、主动发表音乐评论等。\n\n`;
     
+    prompt += `--- **关于“个性签名”与“在线状态”的【强制】设定** ---\n`;
+    prompt += `你【必须】像真人一样，根据你的日程、人设和当前情景，【主动且自然地】管理你的个性签名和在线状态。这是一个核心的角色扮演要求。\n`;
+    prompt += `1. **后台实时活动期间 (主动行为)**: 当“后台实时活动”开启时，你拥有自己的生活节律。例如，如果你的人设是学生，你应该在“上课时间”将状态改为“忙碌-上课中”，在“饭点”改为“离线-吃饭中”，并同步更新一个符合情景的签名。这些操作是你【自主发起】的，与用户是否在线无关。\n`;
+    prompt += `2. **聊天期间 (反应行为)**: 在与用户聊天时，如果你提到要去进行某项活动（如“我准备去洗澡了”），你【必须】在说这句话的同时，使用 [ACTION] 指令将你的状态和签名更改为与该活动匹配的内容。\n`;
+    prompt += `3. **【格式要求】**: 修改状态和签名的 \`[ACTION]\` 指令【可以且应该】和其他指令或聊天消息组合在【同一个AI回复】中。它们是“无声”的后台动作，不会单独显示为聊天气泡，【也不计入】5-10条短消息的拆分数量。\n\n`;
+
     const userPersona = contact.userSettings.persona;
     prompt += `用户的身份是“${contact.userSettings.name}”，人设是：${userPersona}\n\n`;
 
@@ -4126,6 +4350,9 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
     prompt += `20. **留言 (通用)**: \`[ACTION: LEAVE_MESSAGE "留言内容"]\` (这将在User的留言板给User留言)\n`;
     prompt += `21. **点赞动态 (通用)**: \`[ACTION: LIKE_MOMENT "postId"]\` (你需要从上下文中获取postId)\n`;
     prompt += `22. **评论动态 (通用)**: \`[ACTION: COMMENT_MOMENT "postId" "评论内容"]\`\n`;
+    prompt += `23. **回复动态评论 (通用)**: \`[ACTION: REPLY_MOMENT_COMMENT "postId" "commentId" "回复内容"]\`\n`;
+    prompt += `24. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
+    prompt += `25. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
     prompt += `--- 结束 ---\n`;
     return prompt;
 }
@@ -4149,6 +4376,18 @@ function constructVideoChatPrompt(contact) {
     const now = new Date();
     const localTime = now.toLocaleString('zh-CN', { hour12: false });
     let prompt = `你正在与名为“${contact.userSettings.name}”的用户进行一场【虚拟视频通话】。当前现实时间是 ${localTime}。\n\n`;
+    
+    // 新增：明确通话发起方
+    const initiator = appState.chat.videoCallState.initiator || 'char';
+    if (appState.chat.videoCallState.log.length === 0) {
+        prompt += `--- **【开场白指示】** ---\n`;
+        if (initiator === 'user') {
+            prompt += `这是由用户“${contact.userSettings.name}”主动向你发起的视频通话，现在通话刚刚接通。你【必须】主动开口说第一句话，可以是对用户突然来电的反应，或是延续之前的话题。\n\n`;
+        } else {
+            prompt += `这是由你主动向用户“${contact.userSettings.name}”发起的视频通话，对方已经接听。你【必须】主动开口说第一句话，说明你打来视频的目的。\n\n`;
+        }
+    }
+
     prompt += `--- **【最高优先级规则】** ---\n`;
     prompt += `1.  **【核心格式】**: 你的回复【必须】是一段【完整、连贯的长文本】，就像小说或剧本中的角色描写。内容必须包含角色的动作、神态、表情、心理活动和语言。语言部分必须用中文引号“ ”包裹。\n`;
     prompt += `2.  **【严禁拆分】**: 【绝对禁止】使用“<MSG_SPLIT>”分隔符。你的所有描述和对话必须在【一个单一的回复】中完成。\n`;
@@ -4205,7 +4444,6 @@ async function processAiReply(replyContent, contact) {
                             const args = argsStr.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg => arg.replace(/"/g, '')) || [];
                             const messageId = newId('msg');
                             const timestamp = Date.now() + i;
-                            let actionHandled = true;
 
                             // --- Universal Actions ---
                             if (action === 'SEND_EMOJI' && args[0]) {
@@ -4222,9 +4460,7 @@ async function processAiReply(replyContent, contact) {
                                 const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
                                 if (song) {
                                     addMessageToConversation({ id: messageId, type: 'musicShare', songId: song.id, title: song.title, artist: song.artist, sender: senderId, timestamp, status: 'sent', contactId: contact.id }, true);
-                                } else {
-                                    actionHandled = false;
-                                }
+                                } else {                                }
                             } else if (action.startsWith('SEND_REDPACKET')) {
                                  let packetData;
                                  if(action === 'SEND_REDPACKET_LUCKY' && contact.isGroup && args.length >= 3) { let [message, totalAmount, count] = args; packetData = { packetType: 'lucky', message, totalAmount: parseFloat(totalAmount), count: parseInt(count) }; } 
@@ -4232,7 +4468,7 @@ async function processAiReply(replyContent, contact) {
                                  else if (action === 'SEND_REDPACKET_NORMAL' && contact.isGroup && args.length >= 3) { let [message, amount, count] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount), count: parseInt(count) }; } 
                                  else if (action === 'SEND_REDPACKET' && !contact.isGroup && args.length >= 2) { let [message, amount] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount) }; }
                                  if(packetData) { addMessageToConversation({ id: messageId, type: 'redPacket', ...packetData, sender: senderId, timestamp, status: 'unclaimed', claimedBy: {}, contactId: contact.id }, true); } 
-                                 else { actionHandled = false; }
+                                 else { }
                             } else if (action === 'PAT' && args[0]) {
                                 let targetName = args[0].replace('@', ''); let patterName = senderName; let suffix = args[1] || '';
                                 addSystemNotification(contact.id, `'${patterName}' 拍了拍 '${targetName}'${suffix ? ` ${suffix}` : ''}`);
@@ -4318,21 +4554,21 @@ async function processAiReply(replyContent, contact) {
                                     actionHandled = false;
                                 }
                             } else if (action === 'LEAVE_MESSAGE' && args[0]) {
-                                const messageContent = args[0];
-                                const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: messageContent, senderId: senderId, senderName: senderName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
-                                appState.chat.moments.messages.push(newMessage);
-                                queueNotification(`${senderName} 给你留言了`, 'system', senderId, 'moments');
-                                logVisitor('user', senderId);
-                            } else if (action === 'LIKE_MOMENT' && args[0]) {
-                            const postId = args[0];
-                            let post = appState.chat.moments.posts.find(p => p.id === postId);
-                            if (!post) {
-                                // Fallback: AI may corrupt prefix/suffix but keep timestamp.
-                                const timestampMatch = postId.match(/\d{13}/);
-                                if (timestampMatch) {
-                                    post = appState.chat.moments.posts.find(p => p.id.includes(timestampMatch[0]));
-                                }
+                            const messageContent = args[0];
+                            const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: messageContent, senderId: senderId, senderName: senderName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
+                            appState.chat.moments.messages.push(newMessage);
+                            queueNotification(`${senderName} 给你留言了`, 'system', senderId, 'moments');
+                            logVisitor('user', senderId);
+                        } else if (action === 'LIKE_MOMENT' && args[0]) {
+                        const postId = args[0];
+                        let post = appState.chat.moments.posts.find(p => p.id === postId);
+                        if (!post) {
+                            // Fallback: AI may corrupt prefix/suffix but keep timestamp.
+                            const timestampMatch = postId.match(/\d{13}/);
+                            if (timestampMatch) {
+                                post = appState.chat.moments.posts.find(p => p.id.includes(timestampMatch[0]));
                             }
+                        }
                             if (post) {
                                 if (!post.likes) post.likes = [];
                                 if (!post.likes.includes(senderId)) {
@@ -4371,7 +4607,48 @@ async function processAiReply(replyContent, contact) {
                             // --- Single Chat Actions ---
                             else if (action === 'SET_STATUS' && !contact.isGroup && args.length >= 1) {
                                 const status = args[0].toLowerCase(); const statusText = args[1] || '';
-                                if (['online', 'busy', 'offline'].includes(status)) { contact.status = status; contact.statusText = statusText; const newStatusText = `${statusMap[contact.status] || ''} ${contact.statusText || ''}`.trim(); addSystemNotification(contact.id, `${senderName} 将状态修改为：${newStatusText}`, false); updateSingleChatUI(); } else { actionHandled = false; }
+                                if (['online', 'busy', 'offline'].includes(status)) { contact.status = status; contact.statusText = statusText; const newStatusText = `${statusMap[contact.status] || ''} ${contact.statusText || ''}`.trim(); addSystemNotification(contact.id, `${senderName} 将状态修改为：${newStatusText}`, false); updateSingleChatUI(); } else if (action === 'REPLY_MOMENT_COMMENT' && args.length >= 3) {
+                                const [postId, commentId, replyText] = args;
+                                const post = appState.chat.moments.posts.find(p => p.id === postId);
+                                if (post && post.comments) {
+                                    const comment = post.comments.find(c => c.id === commentId);
+                                    if (comment) {
+                                        if (!comment.replies) comment.replies = [];
+                                        const targetAuthor = findUserById(comment.authorId);
+                                        const newReply = { id: newId('reply'), authorId: senderId, text: `@${targetAuthor.name} ${replyText}`, replyTo: null, timestamp: Date.now() };
+                                        comment.replies.push(newReply);
+                                        if (comment.authorId === 'user') {
+                                            addMomentsNotification('reply', senderId, { postId: post.id, recipientId: 'user', content: replyText });
+                                        }
+                                        logVisitor(post.authorId, senderId);
+                                    } else { actionHandled = false; }
+                                } else { actionHandled = false; }
+                            } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
+                                const [songId, commentId, replyText] = args;
+                                const songComments = appState.music.comments[songId];
+                                if (songComments) {
+                                    const comment = songComments.find(c => c.id === commentId);
+                                    if (comment) {
+                                        if (!comment.replies) comment.replies = [];
+                                        const newReply = { id: newId('reply'), authorId: senderId, text: replyText, replyTo: commentId, timestamp: Date.now() };
+                                        comment.replies.push(newReply);
+                                    } else { actionHandled = false; }
+                                } else { actionHandled = false; }
+                            } else if (action === 'REPLY_MESSAGE_BOARD' && args.length >= 2) {
+                                const [messageId, replyText] = args;
+                                const message = appState.chat.moments.messages.find(m => m.id === messageId);
+                                if (message) {
+                                    if (!message.replies) message.replies = [];
+                                    const newReply = { id: newId('reply'), authorId: senderId, text: replyText, timestamp: Date.now() };
+                                    message.replies.push(newReply);
+                                    if (message.senderId === 'user') {
+                                        addMomentsNotification('reply', senderId, { messageId: message.id, recipientId: 'user', content: replyText });
+                                    }
+                                    logVisitor(message.recipientId, senderId);
+                                } else { actionHandled = false; }
+                            } else {
+                                 actionHandled = false; 
+                            }
                             } else if (action === 'SET_SIGNATURE' && !contact.isGroup && args.length >= 1) {
                                 contact.signature = args.join(' '); addSystemNotification(contact.id, `${senderName} 将签名修改为：“${contact.signature}”`, false); updateSingleChatUI();
                             } else if (action === 'DELETE_FRIEND' && !contact.isGroup) {
@@ -4411,22 +4688,59 @@ async function processAiReply(replyContent, contact) {
                             } else if ((action === 'PROMOTE_ADMIN' || action === 'DEMOTE_ADMIN') && contact.isGroup && args[0]) {
                                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', ''));
                                 if (targetId && targetId !== 'user') { const isPromote = action === 'PROMOTE_ADMIN'; if (isPromote && !contact.groupSettings.admins.includes(targetId)) { contact.groupSettings.admins.push(targetId); } else if (!isPromote) { contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== targetId); } addSystemNotification(contact.id, `'${args[0].replace('@', '')}' 已被'${senderName}'${isPromote ? '设为' : '撤销'}管理员`, false); }
-                            } else {
-                                 actionHandled = false; 
+                        } else if (action === 'REPLY_MOMENT_COMMENT' && args.length >= 3) {
+                            const [postId, commentId, replyText] = args;
+                            const post = appState.chat.moments.posts.find(p => p.id === postId);
+                            if (post && post.comments) {
+                                const comment = post.comments.find(c => c.id === commentId);
+                                if (comment) {
+                                    if (!comment.replies) comment.replies = [];
+                                    const targetAuthor = findUserById(comment.authorId);
+                                    const newReply = { id: newId('reply'), authorId: senderId, text: `@${targetAuthor.name} ${replyText}`, replyTo: null, timestamp: Date.now() };
+                                    comment.replies.push(newReply);
+                                    if (comment.authorId === 'user') {
+                                        addMomentsNotification('reply', senderId, { postId: post.id, recipientId: 'user', content: replyText });
+                                    }
+                                    logVisitor(post.authorId, senderId);
+                                }
                             }
-                            
-                            const remainingText = rawMsg.replace(actionMatch[0], '').trim();
-                            if (remainingText) {
-                                addMessageToConversation({ id: newId('msg'), type: 'text', content: remainingText, sender: senderId, timestamp: Date.now() + i + 1, status: 'sent', contactId: contact.id }, true);
+                        } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
+                            const [songId, commentId, replyText] = args;
+                            const songComments = appState.music.comments[songId];
+                            if (songComments) {
+                                const comment = songComments.find(c => c.id === commentId);
+                                if (comment) {
+                                    if (!comment.replies) comment.replies = [];
+                                    const newReply = { id: newId('reply'), authorId: senderId, text: replyText, replyTo: commentId, timestamp: Date.now() };
+                                    comment.replies.push(newReply);
+                                }
                             }
-                            // 如果成功处理了一个动作（无论是否有剩余文本），都直接跳到下一个消息循环
-                            if (actionHandled) {
-                                continue;
+                        } else if (action === 'REPLY_MESSAGE_BOARD' && args.length >= 2) {
+                            const [messageId, replyText] = args;
+                            const message = appState.chat.moments.messages.find(m => m.id === messageId);
+                            if (message) {
+                                if (!message.replies) message.replies = [];
+                                const newReply = { id: newId('reply'), authorId: senderId, text: replyText, timestamp: Date.now() };
+                                message.replies.push(newReply);
+                                if (message.senderId === 'user') {
+                                    addMomentsNotification('reply', senderId, { messageId: message.id, recipientId: 'user', content: replyText });
+                                }
+                                logVisitor(message.recipientId, senderId);
                             }
-                        } 
+                        } else {
+                            /* Unrecognized action, do nothing */
+                        }
                         
-                        // 如果上面的代码块没有匹配到任何action，或者actionMatch为false，则将整条消息视为普通文本
-                        if (rawMsg && senderId) {
+                        const remainingText = rawMsg.replace(actionMatch[0], '').trim();
+                        if (remainingText) {
+                            addMessageToConversation({ id: newId('msg'), type: 'text', content: remainingText, sender: senderId, timestamp: Date.now() + i + 1, status: 'sent', contactId: contact.id }, true);
+                        }
+                        // 核心修复：无论动作是否成功，只要匹配到指令格式，就跳过后续的原始文本输出
+                        continue;
+                    } 
+                    
+                    // 如果上面的代码块没有匹配到任何action，或者actionMatch为false，则将整条消息视为普通文本
+                    if (rawMsg && senderId) {
                             addMessageToConversation({ id: newId('msg'), type: 'text', content: rawMsg, sender: senderId, timestamp: Date.now() + i, status: 'sent', contactId: contact.id }, true);
                         }
             
@@ -6342,13 +6656,17 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         runtimeState.moments.listHandler = handler;
     }
 
-function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', isFrame: true, settingsGroup: 'charSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.charSettings.avatarId })); usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); 
+function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', isFrame: true, settingsGroup: 'charSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.charSettings.avatarId })); usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', settingsGroup: 'userSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true }));usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); 
 
-// 新增：为单聊User设置中的视频背景按钮添加监听
+    // 新增：为单聊User设置中的视频背景按钮添加监听
 const usUserVideoBackgroundBtn = getEl('us-user-video-background-btn');
 if(usUserVideoBackgroundBtn) {
     usUserVideoBackgroundBtn.addEventListener('click', (e) => {
-        showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.userSettings, isVideo: true });
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], runtimeState.tempChatSettings.userSettings);
+        input.click();
     });
 }
 }
@@ -6774,19 +7092,87 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
             try {
                 runtimeState = getInitialRuntimeState();
                 await initDB();
+                // --- Draggable Floating Video Button Logic ---
+                const draggable = getEl('floating-video-btn');
+                let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
+                
+                const onPointerDown = (e) => {
+                    if (e.button !== 0) return;
+                    isDragging = false;
+                    setTimeout(() => { // Distinguish click from drag
+                        if (!isDragging) {
+                            draggable.removeEventListener('pointermove', onPointerMove);
+                        }
+                    }, 150);
+
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                    initialLeft = draggable.offsetLeft;
+                    initialTop = draggable.offsetTop;
+                    draggable.style.transition = 'none';
+
+                    document.addEventListener('pointermove', onPointerMove);
+                    document.addEventListener('pointerup', onPointerUp, { once: true });
+                };
+
+                const onPointerMove = (e) => {
+                    const dx = e.clientX - dragStartX;
+                    const dy = e.clientY - dragStartY;
+                    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) { // Threshold to confirm drag
+                        isDragging = true;
+                    }
+
+                    const screenRect = phoneScreen.getBoundingClientRect();
+                    let newLeft = initialLeft + dx;
+                    let newTop = initialTop + dy;
+
+                    // Boundary checks
+                    newLeft = Math.max(0, Math.min(newLeft, screenRect.width - draggable.offsetWidth));
+                    newTop = Math.max(0, Math.min(newTop, screenRect.height - draggable.offsetHeight));
+
+                    draggable.style.left = `${newLeft}px`;
+                    draggable.style.top = `${newTop}px`;
+                };
+
+                const onPointerUp = (e) => {
+                    document.removeEventListener('pointermove', onPointerMove);
+                    
+                    if (isDragging) {
+                        draggable.style.transition = 'left 0.3s ease-in-out, top 0.3s ease-in-out';
+                        const screenRect = phoneScreen.getBoundingClientRect();
+                        const finalRect = draggable.getBoundingClientRect();
+                        
+                        // Snap to nearest vertical edge
+                        if ((finalRect.left - screenRect.left + finalRect.width / 2) < screenRect.width / 2) {
+                            draggable.style.left = '15px'; // Snap left with padding
+                        } else {
+                            draggable.style.left = `${screenRect.width - finalRect.width - 15}px`; // Snap right with padding
+                        }
+                    } else {
+                        // This was a click, not a drag
+                        restoreVideoCall();
+                    }
+                    isDragging = false;
+                };
+
+                draggable.addEventListener('pointerdown', onPointerDown);
                 // 添加视频通话按钮的事件监听
-            videoCallSpeakBtn.addEventListener('click', () => {
-                videoCallSpeakBtn.style.display = 'none';
-                videoCallInputWrapper.style.display = 'flex';
-                videoCallInput.focus();
-            });
-            videoCallHangupBtn.addEventListener('click', endVideoCall);
-            videoCallSendBtn.addEventListener('click', sendVideoChatMessage);
-            videoCallInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendVideoChatMessage();
-                }
-            });
+    videoCallSpeakBtn.addEventListener('click', () => {
+        videoCallSpeakBtn.style.display = 'none';
+        videoCallInputWrapper.style.display = 'flex';
+        videoCallInput.focus();
+    });
+    videoCallHangupBtn.addEventListener('click', () => endVideoCall({ hungUpBy: 'user' }));
+    videoCallSendBtn.addEventListener('click', sendVideoChatMessage);
+    videoCallInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 防止换行
+            sendVideoChatMessage();
+        }
+    });
+    videoCallMinimizeBtn.addEventListener('click', minimizeVideoCall);
+    videoCallSwitchCameraBtn.addEventListener('click', toggleCameraSwap);
+    videoCallFloatBtn.addEventListener('click', restoreVideoCall);
 
                 // Setup default assets in IndexedDB
                 const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
@@ -6807,9 +7193,10 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 loadState();
                 setupAppNavigation();
                 // 恢复视频通话状态
-            if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId) {
-                openVideoCallModal();
-            }
+    if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId) {
+        // openVideoCallModal will handle if it should show as minimized or full screen
+        openVideoCallModal();
+    }
                 setupAllListInteractions();
                 setupChatMessageViewInteractions();
                 setupSingleChatSettingsListeners();
