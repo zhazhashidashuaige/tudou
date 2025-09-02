@@ -3094,7 +3094,68 @@ addEmojiBtn.addEventListener('click', async () => { if (runtimeState.emojiSelect
 cancelAddEmojiBtn.addEventListener('click', () => addEmojiModal.classList.remove('visible'));
 uploadEmojiFileBtn.addEventListener('click', () => { if (!uploadEmojiDescInput.value.trim()) { showToast('请先输入表情包描述', 'error'); return; } emojiFileInput.click(); });
 emojiFileInput.addEventListener('change', async (e) => { const files = e.target.files; const descs = uploadEmojiDescInput.value.trim().split('\n').filter(d => d); if (files.length === 0 || descs.length === 0) return; if (files.length !== descs.length) { showToast(`文件数量(${files.length})与描述数量(${descs.length})不匹配`, 'error'); return; } for (let i = 0; i < files.length; i++) { const newEmojiId = newId('emoji'); await addMediaToDB(newEmojiId, files[i]); appState.chat.emojis.push({ id: newEmojiId, description: descs[i] }); } debouncedSaveState(); renderEmojiPicker(); showToast(`成功添加 ${files.length} 个表情包`); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; });
-confirmAddEmojiUrlBtn.addEventListener('click', async () => { const btn = confirmAddEmojiUrlBtn; if (btn.disabled) return; btn.disabled = true; btn.textContent = '处理中...'; try { const lines = emojiUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { const desc = line.substring(0, separatorIndex).trim(); let url = line.substring(separatorIndex + 1).trim(); if (desc && url) { if (!url.startsWith('http')) { url = 'https://i.postimg.cc/' + url; } const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error for ${url}! status: ${response.status}`); const blob = await response.blob(); const newEmojiId = newId('emoji'); await addMediaToDB(newEmojiId, blob); appState.chat.emojis.push({ id: newEmojiId, description: desc }); addedCount++; } } } if (addedCount > 0) { debouncedSaveState(); renderEmojiPicker(); showToast(`成功添加 ${addedCount} 个表情包`); } else { showToast('未添加任何表情，请检查格式 (描述:URL)', 'error'); } addEmojiModal.classList.remove('visible'); emojiUrlInput.value = ''; } catch (error) { console.error("Error adding emoji from URL:", error); showToast(`添加表情失败: ${error.message}`, "error"); } finally { btn.disabled = false; btn.textContent = '添加URL'; } });
+confirmAddEmojiUrlBtn.addEventListener('click', async () => {
+        const btn = confirmAddEmojiUrlBtn;
+        if (btn.disabled) return;
+
+        const lines = emojiUrlInput.value.trim().split('\n').filter(line => line.trim().includes(':') || line.trim().includes('：'));
+        if (lines.length === 0) {
+            showToast('未找到有效格式的内容 (描述:URL)', 'error');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = `处理中 (0/${lines.length})`;
+        addEmojiModal.classList.remove('visible');
+        emojiUrlInput.value = '';
+
+        try {
+            let addedCount = 0;
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                showToast(`正在导入第 ${i + 1} / ${lines.length} 个表情...`, 'info');
+                btn.textContent = `处理中 (${i + 1}/${lines.length})`;
+
+                const separatorIndex = line.search(/:|：/);
+                const desc = line.substring(0, separatorIndex).trim();
+                let url = line.substring(separatorIndex + 1).trim();
+
+                if (desc && url) {
+                    try {
+                        // No need for i.postimg.cc fallback with catbox links
+                        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) {
+                            console.warn(`跳过失败的URL (${response.status}): ${url}`);
+                            continue; // Skip to the next line if this one fails
+                        }
+                        const blob = await response.blob();
+                        const newEmojiId = newId('emoji');
+                        await addMediaToDB(newEmojiId, blob);
+                        appState.chat.emojis.push({ id: newEmojiId, description: desc });
+                        addedCount++;
+                    } catch (fetchError) {
+                        console.warn(`跳过网络错误的URL: ${url}`, fetchError);
+                        continue; // Skip on network errors too
+                    }
+                }
+            }
+
+            if (addedCount > 0) {
+                debouncedSaveState();
+                renderEmojiPicker(); // Render only after all are processed
+                showToast(`批量导入完成！成功添加 ${addedCount} / ${lines.length} 个表情包`);
+            } else {
+                showToast('批量导入失败，没有成功添加任何表情', 'error');
+            }
+        } catch (error) {
+            console.error("批量添加表情时发生意外错误:", error);
+            showToast('批量导入过程中断，请检查控制台', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '添加URL';
+        }
+    });
 chatHeaderName.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; if (contact.isGroup) { const oldRemark = contact.remark || contact.groupSettings.name; const newRemark = prompt('修改群备注 (仅自己可见):', oldRemark); if (newRemark !== null && newRemark.trim() !== oldRemark) { contact.remark = newRemark.trim(); debouncedSaveState(); updateSingleChatUI(); renderMessageList(); } } else { const oldRemark = contact.remark || contact.charSettings.name; const newRemark = prompt('修改备注:', oldRemark); if (newRemark !== null && newRemark.trim() !== oldRemark) { contact.remark = newRemark.trim(); debouncedSaveState(); updateSingleChatUI(); renderMessageList(); } } });
 chatHeaderStatus.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact || contact.isGroup) return; statusDescInput.value = contact.statusText || ''; const statuses = [ { value: 'online', text: '在线' }, { value: 'busy', text: '忙碌' }, { value: 'offline', text: '离线' } ]; statusSelectGroup.innerHTML = statuses.map(s => `<label class="radio-label"><input type="radio" name="status" value="${s.value}" ${contact.status === s.value ? 'checked' : ''}><div class="status-indicator ${s.value}"></div><span>${s.text}</span></label>`).join(''); editStatusModal.classList.add('visible'); });
 cancelEditStatusBtn.addEventListener('click', () => editStatusModal.classList.remove('visible'));
@@ -4087,9 +4148,70 @@ libraryGrid.addEventListener('pointerup', () => clearTimeout(libraryLongPressTim
 libraryGrid.addEventListener('pointerleave', () => clearTimeout(libraryLongPressTimer));
 libraryCloseBtn.addEventListener('click', () => { if (libraryModal.classList.contains('selection-mode')) { libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; runtimeState.librarySelection = []; queryAll('.library-item.selected').forEach(i => i.classList.remove('selected')); } else { libraryModal.classList.remove('visible'); } });
 libraryDeleteBtn.addEventListener('click', async () => { const context = runtimeState.libraryContext; if (runtimeState.librarySelection.length > 0 && confirm(`确定要删除选中的 ${runtimeState.librarySelection.length} 个项目吗？`)) { let lib, activeItemKey, settingsObj, uiUpdateFunc; if (context.isFrame) { settingsObj = appState.chat.userProfile; lib = settingsObj.avatarFrameLibrary; } else if (context.isGroup) { settingsObj = runtimeState.tempChatSettings.groupSettings; lib = settingsObj[context.libraryKey]; } else if (context.memberId) { settingsObj = runtimeState.tempGcsMemberSettings; lib = settingsObj[context.libraryKey]; } else { settingsObj = runtimeState.tempChatSettings[context.settingsGroup]; lib = settingsObj[context.libraryKey]; } activeItemKey = context.activeKey; for (const id of runtimeState.librarySelection) { await deleteMediaFromDB(id); } const newLib = lib.filter(id => !runtimeState.librarySelection.includes(id)); if (context.isFrame) { settingsObj.avatarFrameLibrary = newLib; } else { settingsObj[context.libraryKey] = newLib; } if (runtimeState.librarySelection.includes(settingsObj[activeItemKey])) { settingsObj[activeItemKey] = context.hasNoItemOption ? '' : (newLib[0] || ''); } if (context.memberId) { uiUpdateFunc = loadGcsMemberModalUI; } else if (context.isGroupUser || context.isGroup) { uiUpdateFunc = loadGroupChatSettingsUI; } else { uiUpdateFunc = loadSingleChatSettingsUI; } if (uiUpdateFunc) uiUpdateFunc(); debouncedSaveState(); renderLibraryGrid(); libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; runtimeState.librarySelection = []; } });
-libraryUploadBtn.addEventListener('click', () => libraryFileInput.click());
+libraryUploadBtn.addEventListener('click', () => {
+        libraryFileInput.accept = 'image/*,.zip';
+        libraryFileInput.click();
+    });
 libraryAddUrlBtn.addEventListener('click', async () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isFrame) lib = appState.chat.userProfile.avatarFrameLibrary; else if (context.isGroup) lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; else if (context.memberId) lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; else lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; for (const url of urlArray) { const response = await fetch(url); const blob = await response.blob(); const newLibId = newId('lib'); await addMediaToDB(newLibId, blob); lib.push(newLibId); } debouncedSaveState(); renderLibraryGrid(); } } });
-libraryFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isFrame) lib = appState.chat.userProfile.avatarFrameLibrary; else if (context.isGroup) lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; else if (context.memberId) lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; else lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; for (const file of files) { const newLibId = newId('lib'); await addMediaToDB(newLibId, file); lib.push(newLibId); } debouncedSaveState(); renderLibraryGrid(); } libraryFileInput.value = ''; });
+libraryFileInput.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files.length === 0) return;
+
+        const context = runtimeState.libraryContext;
+        let lib;
+        if (context.isFrame) lib = appState.chat.userProfile.avatarFrameLibrary;
+        else if (context.isGroup) lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey];
+        else if (context.memberId) lib = runtimeState.tempGcsMemberSettings[context.libraryKey];
+        else lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey];
+
+        showToast(`正在处理 ${files.length} 个文件...`, 'info');
+        let addedCount = 0;
+        const processingPromises = [];
+
+        for (const file of files) {
+            if (file.type.startsWith('image/')) {
+                const promise = (async () => {
+                    const newLibId = newId('lib');
+                    await addMediaToDB(newLibId, file);
+                    lib.push(newLibId);
+                    addedCount++;
+                })();
+                processingPromises.push(promise);
+            } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
+                const promise = JSZip.loadAsync(file).then(zip => {
+                    const zipFilePromises = [];
+                    zip.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir && /\.(gif|png|jpg|jpeg|webp)$/i.test(zipEntry.name)) {
+                            const zipPromise = zipEntry.async("blob").then(blobData => {
+                                const newLibId = newId('lib');
+                                lib.push(newLibId);
+                                addedCount++;
+                                return addMediaToDB(newLibId, blobData);
+                            });
+                            zipFilePromises.push(zipPromise);
+                        }
+                    });
+                    return Promise.all(zipFilePromises);
+                }).catch(err => {
+                    console.error("解压ZIP失败:", err);
+                    showToast(`处理 ${file.name} 失败`, 'error');
+                });
+                processingPromises.push(promise);
+            }
+        }
+
+        await Promise.all(processingPromises);
+
+        if (addedCount > 0) {
+            debouncedSaveState();
+            renderLibraryGrid();
+            showToast(`成功添加 ${addedCount} 个项目！`);
+        } else {
+            showToast('没有找到可添加的图片文件', 'error');
+        }
+
+        libraryFileInput.value = ''; // Reset for next use
+    });
 async function handleChatBackgroundUpload(file, settingsObject) { if (!file) return; const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); settingsObject.chatBackgroundId = newWallpaperId; debouncedSaveState(); showToast('背景已设置并存入壁纸库'); await updateSingleChatUI(); }
     async function handleVideoBackgroundUpload(file, settingsObject) {
     if (!file) return;
