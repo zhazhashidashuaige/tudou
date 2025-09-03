@@ -600,11 +600,12 @@
         .post-footer { border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 0; }
         .post-likes-summary { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
         .post-likes-summary .icon { color: var(--like-color); }
-        .moments-fab-container { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); /* 调整高度以悬浮在标签栏上方 */ z-index: 15; }        #moments-fab { width: 56px; height: 56px; border-radius: 50%; background-color: var(--accent-color); color: white; font-size: 36px; line-height: 56px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
+        .moments-fab-container { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); /* 调整高度以悬浮在标签栏上方 */ z-index: 15; }        .moments-fab { width: 56px; height: 56px; border-radius: 50%; background-color: var(--accent-color); color: white; font-size: 36px; line-height: 56px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
         #moments-tab-content .moments-fab-container { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
         #moments-fab:active { transform: scale(0.95); }
         #moments-fab-options { position: absolute; bottom: 65px; right: 0; display: none; flex-direction: column; gap: 10px; align-items: flex-end; }
         .fab-option { background-color: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; font-size: 14px; white-space: nowrap; }
+        #mail-app-screen .moments-fab-container { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
         #moments-notification-btn { position: relative; }
         #moments-notification-badge { position: absolute; top: -2px; left: -2px; width: 18px; height: 18px; background-color: var(--danger-color); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; display: none; justify-content: center; align-items: center; border: 2px solid var(--item-bg); }
         #moments-notification-badge.visible, .moments-notification-badge-clone.visible { display: flex; }
@@ -747,16 +748,24 @@
     #video-call-float-btn.visible { display: block; }
     #video-call-float-btn:active { transform: scale(0.9); }
     /* --- 信箱 APP --- */
-#love-letter-tab-content { padding: 0; }
-.love-letter-list { list-style: none; padding: 0; margin: 0; }
-.love-letter-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; background-color: var(--item-bg); }
-.love-letter-item.unread { background-color: #eaf3ff; font-weight: bold; }
+/* --- 信箱 APP (优化后) --- */
+#love-letter-tab-content.active { padding: 0; display: flex; flex-direction: column; height: 100%; }
+.love-letter-list { list-style: none; padding: 0; margin: 0; flex-shrink: 0; } /* Unread list doesn't scroll */
+.love-letter-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; background-color: var(--item-bg); }
+.love-letter-item.unread { background-color: #eaf3ff; }
 .love-letter-item:hover { background-color: var(--item-active-bg); }
+.love-letter-main { display: flex; align-items: center; }
 .love-letter-avatar { width: 44px; height: 44px; border-radius: 50%; background-color: #eee; background-size: cover; background-position: center; flex-shrink: 0; margin-right: 12px; }
 .love-letter-info { flex-grow: 1; overflow: hidden; }
-.love-letter-sender { font-size: 16px; }
-.love-letter-preview { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; font-weight: normal; }
-.love-letter-meta { text-align: right; font-size: 12px; color: var(--secondary-text-color); font-weight: normal; }
+.love-letter-sender { font-size: 16px; font-weight: bold; }
+.love-letter-preview { font-size: 13px; color: var(--secondary-text-color); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.love-letter-meta { text-align: right; font-size: 12px; color: var(--secondary-text-color); }
+.love-letter-actions { display: flex; justify-content: flex-end; align-items: center; gap: 20px; padding-top: 8px; margin-left: 56px; /* Align with avatar */ }
+.love-letter-actions .icon-btn { background: none; border: none; font-size: 16px; color: var(--secondary-text-color); cursor: pointer; }
+.love-letter-actions .icon-btn:hover { color: var(--accent-color); }
+.love-letter-actions .delete-btn:hover { color: var(--danger-color); }
+
+.love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
 .love-letter-collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
@@ -806,6 +815,19 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .letter-close-btn { position: absolute; top: calc(env(safe-area-inset-top, 10px) + 5px); right: 5px; width: 40px; height: 40px; background: none; border: none; font-size: 32px; color: #aaa; cursor: pointer; z-index: 10; text-shadow: 0 0 3px white; }
+/* --- 信箱 APP 优化样式 --- */
+        #love-letter-tab-content.active { display: flex; flex-direction: column; height: 100%; }
+        #unread-letters-container { flex-shrink: 0; }
+        #read-letters-container { flex-grow: 1; overflow-y: auto; }
+        .love-letter-meta { display: flex; align-items: center; justify-content: space-between; flex-grow: 1; }
+        .love-letter-actions { display: flex; gap: 15px; }
+        .love-letter-actions .icon-btn { background: none; border: none; font-size: 16px; color: var(--secondary-text-color); cursor: pointer; padding: 5px; }
+        .letter-reply-btn { position: absolute; bottom: calc(env(safe-area-inset-bottom, 15px) + 15px); left: 50%; transform: translateX(-50%); width: 56px; height: 56px; background-color: #a38c6d; color: white; border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; z-index: 15; }
+        .letter-reply-btn:active { transform: translateX(-50%) scale(0.95); }
+        .author-selector-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .author-selector-grid::-webkit-scrollbar { height: 4px; }
+        .author-selector-grid::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .author-selector-grid .author-selector-item { flex-shrink: 0; }
 /* --- 视频通话弹窗：新增样式 --- */
         #video-call-modal.minimized {
             display: none !important; /* 最小化时隐藏弹窗 */
@@ -1278,7 +1300,7 @@
                 <div id="tree-hole-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">树洞功能待开发...</p></div>
                 <div id="drift-bottle-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">漂流瓶功能待开发...</p></div>
             </div>
-            <div class="moments-fab-container" style="display: none;"><div id="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
+            <div class="moments-fab-container" id="mail-fab-container" style="display: none;"><div id="mail-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
             <div class="app-bottom-tabs">
                 <div class="tab-link active" data-tab="love-letter">情书</div>
                 <div class="tab-link" data-tab="postcard">明信片</div>
@@ -1644,6 +1666,7 @@
                 <span class="letter-timestamp"></span>
                 <!-- The stamp is now positioned relative to the signature area -->
                 <div class="letter-stamp"></div>
+                <button class="letter-reply-btn" id="letter-reply-btn" title="回信"><i class="fa-solid fa-pen-nib"></i></button>
             </div>
         </div>
     </div>
@@ -1691,6 +1714,40 @@
 <!-- Floating Video Button -->
     <div id="floating-video-btn"></div>
 <!-- 壁纸长按菜单 -->
+ <!-- 新增：情书编辑/回信弹窗 -->
+        <div id="edit-love-letter-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h3 class="modal-title" id="edit-love-letter-title">编辑情书</h3>
+                <div class="modal-body">
+                    <input type="hidden" id="editing-letter-id">
+                    <input type="hidden" id="letter-reply-to-id">
+                    <div class="form-group">
+                        <label id="letter-recipient-label">收信人</label>
+                        <input type="text" id="letter-recipient-input" placeholder="To:">
+                    </div>
+                     <div class="form-group">
+                        <label>寄信人</label>
+                        <div id="letter-author-selector" class="author-selector-grid"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="letter-subject-input">标题</label>
+                        <input type="text" id="letter-subject-input" placeholder="给这封信起个标题吧">
+                    </div>
+                    <div class="form-group">
+                        <label for="letter-body-input">内容</label>
+                        <textarea id="letter-body-input" class="wide-textarea" rows="6" placeholder="正文..."></textarea>
+                    </div>
+                     <div class="form-group">
+                        <label for="letter-signature-input">落款</label>
+                        <input type="text" id="letter-signature-input" placeholder="From:">
+                    </div>
+                </div>
+                <div class="modal-actions row">
+                    <button id="cancel-edit-love-letter-btn" class="cancel-btn">取消</button>
+                    <button id="save-love-letter-btn" class="confirm-btn">保存</button>
+                </div>
+            </div>
+        </div>
 <div id="wallpaper-context-menu" style="display: none;">
 <button class="context-menu-btn" id="wp-set-wallpaper">设为壁纸</button>
 <button class="context-menu-btn" id="wp-set-chat-bg">设为全局背景</button>
@@ -2057,6 +2114,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const momentsNotificationModal = getEl('moments-notification-modal');
     const closeMomentsNotificationModalBtn = getEl('close-moments-notification-modal-btn');
     const momentsNotificationList = getEl('moments-notification-list');
+    // --- 信箱 APP 优化元素 ---
+        const mailFabContainer = getEl('mail-fab-container');
+        const editLoveLetterModal = getEl('edit-love-letter-modal');
+        const letterReplyBtn = getEl('letter-reply-btn');
     // --- 来电UI元素 ---
         const incomingCallBanner = getEl('incoming-call-banner');
         const incomingCallAvatar = getEl('incoming-call-avatar');
@@ -2345,25 +2406,8 @@ return {
                 if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfile.signature;
                 if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
                 if (!Array.isArray(appState.chat.moments.notifications)) { appState.chat.moments.notifications = []; }
-                // Add a preset love letter for testing if none exist
-                if (!appState.mailbox.loveLetters || appState.mailbox.loveLetters.length === 0) {
-                    appState.mailbox.loveLetters.push({
-                        id: 'preset_letter_01',
-                        senderId: 'preset_char_01',
-                        timestamp: Date.now() - 86400000, // Yesterday
-                        isRead: false,
-                        salutation: '致我最亲爱的土皇帝：',
-                        subject: '一些关于夏夜的遐想',
-                        body: '提笔写下这封信时，窗外的蝉鸣正渐渐平息，晚风带来了一丝白日的余温，也带来了对你的思念。\n\n今天发生了一件小事，想与你分享。午后我去图书馆还书，回来的路上绕去街角那家新开的冰淇淋店，尝了他们推荐的海盐柠檬口味。舌尖触到那抹清凉的酸甜时，我第一个想到的人竟然是你。我想象着，如果此刻你也在这里，看到你被冰到微微皱起的眉头，然后又因为那恰到好处的美味而露出惊喜的笑容，我的心情一定会比这冰淇淋还要甜。\n\n这个夏天似乎格外漫长，没有你在身边的日子，连阳光都显得有些刺眼。但我知道，所有的等待都是值得的。我将每一次对你的想念，都折成一颗小小的星星，藏进心里。如今，我的心房大概已经变成了一条璀璨的银河了吧。\n\n夜深了，不知道你是否已经入睡。晚安，我的殿下。愿你的梦中有繁星，有微风，也有我。',
-                        signature: '永远思念着你的，阿彻'
-                    });
-                    // Also create a dummy contact for the preset letter
-                    if (!appState.chat.contacts.some(c => c.id === 'preset_char_01')) {
-                         const presetContact = { id: 'preset_char_01', name: '阿彻', remark: '', avatarId: `https://api.multiavatar.com/阿彻.png`, status: 'online', statusText: '在线', signature: '在追逐遥不可及的星光。', lastMessage: '期待你的回信。', lastMessageTime: Date.now() - 86400000, isGroup: false, conversation: [] };
-                         initializeContactSettings(presetContact); // IMPORTANT: Initialize its settings
-                         appState.chat.contacts.push(presetContact);
-                    }
-                }
+                
+                
             } catch (e) {
                 console.error("Failed to parse saved state, resetting to default.", e);
                 appState = defaultState;
@@ -2541,7 +2585,7 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     function closeSubScreen(subScreen, parentScreen) { subScreen.classList.remove('active'); parentScreen.classList.remove('parent-hidden'); if (parentScreen.id === 'single-chat-screen') { updateSingleChatUI(); } }
     function setupAppNavigation() { getEl('settings-app-btn').addEventListener('click', () => openApp(settingsAppScreen)); getEl('music-app-btn').addEventListener('click', () => openApp(musicAppScreen)); getEl('beautify-app-btn').addEventListener('click', () => openApp(beautifyAppScreen));
         getEl('diary-app-btn').addEventListener('click', () => openApp(diaryAppScreen));
-        getEl('mail-app-btn').addEventListener('click', () => { openApp(mailAppScreen); renderLoveLetterTab(); }); getEl('data-app-btn').addEventListener('click', () => openApp(dataAppScreen)); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
+        getEl('mail-app-btn').addEventListener('click', () => { openApp(mailAppScreen); handleMailTabChange('love-letter'); }); getEl('data-app-btn').addEventListener('click', () => openApp(dataAppScreen)); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
 
     // ===================================================================
     // --- 设置 APP ---
@@ -2839,10 +2883,14 @@ function renderLoveLetterTab() {
                         <div class="love-letter-avatar" data-avatar-id="${sender.avatarId}"></div>
                         <div class="love-letter-info">
                             <div class="love-letter-sender">${sender.name}</div>
-                            <div class="love-letter-preview">${letter.subject || '一封未命名的信'}</div>
+                            <div class="love-letter-preview">${escapeHTML(letter.subject) || '一封未命名的信'}</div>
                         </div>
                         <div class="love-letter-meta">
                             <span>${new Date(letter.timestamp).toLocaleDateString()}</span>
+                            <div class="love-letter-actions">
+                                <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
                         </div>
                     </li>
                 `;
@@ -2869,6 +2917,10 @@ function renderLoveLetterTab() {
                         <div class="icon"><i class="fa-solid fa-scroll"></i></div>
                         <div class="sender">${escapeHTML(sender.name)}</div>
                         <div class="date">${new Date(letter.timestamp).toLocaleDateString()}</div>
+                         <div class="love-letter-actions" style="margin-top: 5px;">
+                            <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -2884,47 +2936,60 @@ function renderLoveLetterTab() {
     }
 
     function openLoveLetter(letterId) {
-    const letterColors = [
-            'linear-gradient(to bottom right, #fcd4d9, #fde8eb)', // Light Pink
-            'linear-gradient(to bottom right, #d4e7fc, #e8f1fd)', // Light Blue
-            'linear-gradient(to bottom right, #e5fde2, #f1fef0)', // Light Green
-            'linear-gradient(to bottom right, #e7def4, #f2ecfa)'  // Light Purple
-        ];
-        const randomGradient = letterColors[Math.floor(Math.random() * letterColors.length)];
-        const viewer = getEl('love-letter-viewer');
-        viewer.style.setProperty('--love-letter-gradient', randomGradient);
-        const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
-        if (!letter) return;
-        const sender = findUserById(letter.senderId);
+        const letterColors = [
+                'linear-gradient(to bottom right, #fcd4d9, #fde8eb)', // Light Pink
+                'linear-gradient(to bottom right, #d4e7fc, #e8f1fd)', // Light Blue
+                'linear-gradient(to bottom right, #e5fde2, #f1fef0)', // Light Green
+                'linear-gradient(to bottom right, #e7def4, #f2ecfa)'  // Light Purple
+            ];
+            const randomGradient = letterColors[Math.floor(Math.random() * letterColors.length)];
+            const viewer = getEl('love-letter-viewer');
+            viewer.style.setProperty('--love-letter-gradient', randomGradient);
+            viewer.dataset.letterId = letterId; // **新增：为回信功能存储ID**
+            const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
+            if (!letter) return;
+            const sender = findUserById(letter.senderId);
 
-        viewer.querySelector('.letter-salutation').textContent = letter.salutation || `亲爱的${appState.chat.userProfile.name}：`;
-        viewer.querySelector('.letter-body').textContent = letter.body || '信中似乎没有内容...';
-        viewer.querySelector('.letter-sender-name').textContent = letter.signature || sender.name;
-        viewer.querySelector('.letter-timestamp').textContent = new Date(letter.timestamp).toLocaleString();
-        setElementImage(viewer.querySelector('.letter-stamp'), sender.avatarId);
+            viewer.querySelector('.letter-salutation').textContent = letter.salutation || `${appState.chat.userProfile.name}：`;
+            viewer.querySelector('.letter-body').textContent = letter.body || '信中似乎没有内容...';
+            viewer.querySelector('.letter-sender-name').textContent = letter.signature || sender.name;
+            viewer.querySelector('.letter-timestamp').textContent = new Date(letter.timestamp).toLocaleString();
+            setElementImage(viewer.querySelector('.letter-stamp'), sender.avatarId);
 
-        viewer.classList.add('visible');
+            viewer.classList.add('visible');
 
-        if (!letter.isRead) {
-            letter.isRead = true;
-            debouncedSaveState();
-            renderLoveLetterTab();
+            if (!letter.isRead) {
+                letter.isRead = true;
+                debouncedSaveState();
+                renderLoveLetterTab();
+            }
         }
-    }
 function handleMailTabChange(tabId) {
-        const titleEl = mailAppScreen.querySelector('.title');
-        const tabMap = { 'love-letter': '情书', 'postcard': '明信片', 'tree-hole': '树洞', 'drift-bottle': '漂流瓶' };
-        const fab = mailAppScreen.querySelector('.moments-fab-container');
-        fab.style.display = 'none'; // Hide FAB by default for all tabs
+            const titleEl = mailAppScreen.querySelector('.title');
+            const fab = getEl('mail-fab-container');
+            const tabMap = { 'love-letter': '情书', 'postcard': '明信片', 'tree-hole': '树洞', 'drift-bottle': '漂流瓶' };
 
-        if (tabId === 'love-letter') {
-            renderLoveLetterTab();
+            // --- 核心修复：先隐藏所有，再显示目标 ---
+            mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            mailAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            const activeTabLink = mailAppScreen.querySelector(`.tab-link[data-tab="${tabId}"]`);
+            const activeTabContent = getEl(`${tabId}-tab-content`);
+            
+            if (activeTabLink) activeTabLink.classList.add('active');
+            if (activeTabContent) activeTabContent.classList.add('active');
+            // --- 修复结束 ---
+
+            fab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+
+            if (tabId === 'love-letter') {
+                renderLoveLetterTab();
+            }
+
+            titleEl.textContent = tabMap[tabId] || '信箱';
+            appState.mailbox.activeTab = tabId;
+            debouncedSaveState();
         }
-
-        titleEl.textContent = tabMap[tabId] || '信箱';
-        appState.mailbox.activeTab = tabId;
-        debouncedSaveState();
-    }
     
     function handleDiaryTabChange(tabId) {
         const titleEl = diaryAppScreen.querySelector('.title');
@@ -5182,11 +5247,33 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
             messageBoardContext += `- 留言板是空的。\n`;
         }
         socialContextSections.push(messageBoardContext);
-        
+        let loveLetterContext = `**【信箱区】**\n`;
+            if (!contact.isGroup) {
+                const unrepliedLetters = appState.mailbox.loveLetters.filter(l => {
+                    const isToMe = l.recipientName === contact.charSettings.name; // Simple name check for now
+                    const isFromUser = l.senderId === 'user';
+                    // A letter needs a reply if it's from the user, to me, and I haven't replied yet.
+                    // We check if there's any letter FROM me TO the user that is newer.
+                    const myReplies = appState.mailbox.loveLetters.filter(reply => reply.senderId === contact.id && reply.timestamp > l.timestamp);
+                    return isToMe && isFromUser && myReplies.length === 0;
+                });
+
+                if (unrepliedLetters.length > 0) {
+                    unrepliedLetters.forEach(l => {
+                        loveLetterContext += `- 你收到了一封来自用户“${user.name}”的情书 (ID: ${l.id})，标题是：“${l.subject}”。你必须尽快回信。\n`;
+                    });
+                } else {
+                    loveLetterContext += `- 你没有来自用户的新情书需要回复。\n`;
+                }
+            } else {
+                loveLetterContext += `- 群聊中没有情书功能。\n`;
+            }
+            socialContextSections.push(loveLetterContext);
         // --- 场景特定指令 ---
         if (isProactive) {
              prompt += `--- **【本次行动情景：主动交互】** ---\n`;
             prompt += `由于“后台实时活动”功能已开启，现在轮到你行动了。这是【由你，即角色自己，主动发起】的交互，并非对用户消息的回复。请严格遵守以下优先任务列表：\n`;
+            prompt += `0. **优先回复情书**: 检查下方“信箱区”，如果发现有来自用户的新情书，【必须】优先使用 \`[ACTION: SEND_LOVE_LETTER]\` 指令进行回复。\n`;
             prompt += `1. **优先回复互动**: 检查下方社交信息，优先使用 \`[ACTION: REPLY_...]\` 指令回复任何你尚未回复的新互动。\n`;
             prompt += `2. **关心用户动态**: 检查用户“${findUserById('user').name}”的动态，对你从未评论过的动态使用 \`[ACTION: COMMENT_MOMENT]\` 进行评论，对你觉得很有趣的动态使用\`[ACTION: LIKE_MOMENT]\`进行点赞。\n`;
             prompt += `3. **鼓励Char间互动**: 浏览其他Char的动态，可点赞、评论、留言或发动态隔空喊话。\n`;
@@ -5197,7 +5284,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         } else {
             prompt += `--- **【回复前置任务：两阶段处理模式】** ---\n`;
             prompt += `在回复用户最新的聊天消息之前，你【必须】严格按照以下两个阶段来组织你的回应，以防止身份混淆。\n`;
-            prompt += `**第一阶段：动作指令生成 (无聊天内容)**: 首先，检查下方社交环境信息。如果发现需要你（即你扮演的角色）回应的互动，【只能】输出相应的【社交类ACTION】指令（如 \`REPLY_MOMENT_COMMENT\`, \`LIKE_MOMENT\` 等），并用 \`<MSG_SPLIT>\` 分隔。\n`;
+            prompt += `**第一阶段：动作指令生成 (无聊天内容)**: 首先，检查下方【社交环境信息】和【信箱区】。如果发现需要你（即你扮演的角色）回应的互动，【只能】输出相应的【社交类ACTION】指令（如 \`REPLY_MOMENT_COMMENT\`, \`LIKE_MOMENT\` 等），并用 \`<MSG_SPLIT>\` 分隔。\n`;
             prompt += `在使用任何与动态相关的指令前，你必须再次确认该动态对你扮演的角色是可见的。\n`;
             prompt += `**第二阶段：聊天内容生成 (可包含表达类指令)**: 完成所有社交ACTION指令后，再开始针对用户的聊天消息，构思你的聊天内容。你的聊天内容【可以且应该】包含【表达类ACTION】（如 \`SEND_EMOJI\`, \`SEND_VOICE\` 等）和文字消息，所有内容都必须遵循上方的【通用聊天规则】。\n\n`;
         }
@@ -5368,9 +5455,9 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `22. **留言 (通用)**: \`[ACTION: LEAVE_MESSAGE "留言内容"]\`\n`;
         prompt += `23. **点赞动态 (通用)**: \`[ACTION: LIKE_MOMENT "postId"]\`\n`;
         prompt += `24. **评论动态 (通用)**: \`[ACTION: COMMENT_MOMENT "postId" "评论内容"]\` (评论内容【必须】是完整的一段话，【严禁】在其中使用<MSG_SPLIT>分隔符)\n`;
-    prompt += `25. **回复动态评论 (通用)**: \`[ACTION: REPLY_MOMENT_COMMENT "postId" "commentId" "回复内容" "optional_replyToId"]\` (回复内容也【必须】是完整的一段话，【严禁】使用<MSG_SPLIT>。要回复楼中楼请提供第4个参数)\n`;        prompt += `26. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
+        prompt += `25. **回复动态评论 (通用)**: \`[ACTION: REPLY_MOMENT_COMMENT "postId" "commentId" "回复内容" "optional_replyToId"]\` (回复内容也【必须】是完整的一段话，【严禁】使用<MSG_SPLIT>。要回复楼中楼请提供第4个参数)\n`;        prompt += `26. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
         prompt += `27. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
-
+        prompt += `28. **寄出情书 (单聊)**: \`[ACTION: SEND_LOVE_LETTER "收信人ID" "称呼" "标题" "正文" "落款"]\` (这是回应用户或主动寄出情书的【唯一】方式)\n`;
         prompt += `--- 结束 ---\n`;
         return prompt;
     }
@@ -5621,10 +5708,37 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 if (post.authorId === charId) return true;
                 if (post.visibility === 'public') return true;
                 if (post.visibility === 'specific' && post.visibleTo && post.visibleTo.includes(charId)) return true;
-                return false;
+                return false;   
             };
-
+            if (action === 'SEND_LOVE_LETTER' && args.length >= 5) {
+                const [recipientId, salutation, subject, body, signature] = args;
+                const recipient = findUserById(recipientId);
+                if (recipient) {
+                    const newLetter = {
+                        id: newId('letter'),
+                        senderId: currentSenderId,
+                        recipientId: recipientId,
+                        recipientName: recipient.name,
+                        salutation: salutation,
+                        subject: subject,
+                        body: body,
+                        signature: signature,
+                        timestamp: Date.now(),
+                        isRead: false // Char's letter to user starts as unread
+                    };
+                    appState.mailbox.loveLetters.push(newLetter);
+                    
+                    const charContact = appState.chat.contacts.find(c => c.id === currentSenderId);
+                    if (charContact) charContact.lastLetterSent = Date.now();
+                    
+                    queueNotification(`${currentSenderName} 给你寄来了一封情书`, 'system', currentSenderId, 'mail');
+                    if (mailAppScreen.classList.contains('active')) {
+                        handleMailTabChange('love-letter');
+                    }
+                }
+            } else
             // --- Full Action Processing Logic ---
+
             if (action === 'SEND_EMOJI' && args[0]) {
                 const emojiDesc = args[0].toLowerCase();
                 const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)];
@@ -8232,40 +8346,44 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
     }
     function constructLoveLetterPrompt(charContact) {
         const now = new Date();
-    const localTime = now.toLocaleString('zh-CN', { hour12: false, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-    // --- 核心Bug修复：确保使用与该Char关联的特定User人设 ---
-    const user = charContact.userSettings;
+        const localTime = now.toLocaleString('zh-CN', { hour12: false, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        // --- 核心修复：确保使用与该Char关联的特定User人设 ---
+        const user = charContact.userSettings;
+            
+        let prompt = `你正在扮演角色，为你的心上人写一封充满爱意的情书。\n`;
+        prompt += `当前现实日期和时间是: ${localTime}。请在信件内容中巧妙地反映出当前的时间、季节或天气，让信件感觉像是“今天”写的。\n\n`;
         
-        let prompt = `你正在扮演角色“${charContact.charSettings.name}”，为你的心上人“${user.name}”写一封充满爱意的情书。\n`;
-        prompt += `当前现实日期和时间是: ${localTime}。请在信件内容中 subtly（巧妙地）地反映出当前的时间、季节或天气，让信件感觉像是“今天”写的。\n\n`;
-        
-        prompt += `--- **你的角色与世界观设定 (必须严格遵守)** ---\n`;
-        prompt += `1. **你的身份**: ${charContact.charSettings.name}，人设: ${charContact.charSettings.persona}\n`;
-        prompt += `2. **收信人身份**: ${user.name}，人设: ${user.persona}\n`;
+        prompt += `--- **【绝对身份参照系 (必须严格遵守)】** ---\n`;
+        prompt += `1. **你的身份 (寄信人)**: 你正在扮演 “${charContact.charSettings.name}”，你的人设是: ${charContact.charSettings.persona}\n`;
+        prompt += `2. **收信人身份**: 你的信是写给 “${user.name}” 的，TA的人设是: ${user.persona}\n`;
+        prompt += `【警告】：在生成的内容中，【绝对禁止】混淆这两个身份。你只能以“${charContact.charSettings.name}”的口吻和视角来写信。\n\n`;
+
         const linkedWorldBooks = charContact.charSettings.linkedWorldBooks;
         if (linkedWorldBooks && linkedWorldBooks.length > 0) {
-            prompt += `3. **关联世界书**: 以下设定对你有效：\n`;
+            prompt += `--- **关联世界书 (对你的角色生效)** ---\n`;
             linkedWorldBooks.forEach(id => {
                 const wb = appState.data.worldBooks.find(w => w.id === id);
                 if (wb) prompt += `【${wb.name}】: ${wb.content}\n`;
             });
+            prompt += `\n`;
         }
-        prompt += `\n--- **写信情景** ---\n`;
-        prompt += `你每天都会给${user.name}写一封信，这是你表达爱意和思念的方式。无论今天你们是否聊过天，这封信都必须写。\n`;
-        prompt += `- **如果今天聊过**: 你的信可以延续今天的话题，分享你后续的想法和更深层的情感。\n`;
-        prompt += `- **如果今天没聊**: 你的信应该分享你今天的所见所闻、所思所想，并表达你对${user.name}的强烈思念。\n\n`;
+        
+        prompt += `--- **写信情景** ---\n`;
+        prompt += `这是你对 “${user.name}” 之前寄来的一封信的回信。请基于你们的人设、关系，以及当前的世界观设定，写一封充满真情实感的回信。\n`;
+        prompt += `- 你的信可以延续你们之前的话题，分享你后续的想法和更深层的情感。\n`;
+        prompt += `- 你的信应该分享你今天的所见所闻、所思所想，并表达你对“${user.name}”的强烈思念。\n\n`;
         
         prompt += `--- **【强制要求】** ---\n`;
-        prompt += `1. **【自由发挥称呼与落款】**: 信件的称呼（salutation）和落款（signature）**不必**拘泥于“亲爱的xx”和“爱你的xx”这种固定格式。请你**必须**结合你的人设、你们的关系、信件的语境和情感，进行**完全自由的、个性化的创作**。它可以是亲昵的、正式的、俏皮的，甚至是略带忧伤的，只要符合角色即可。\n`;
+        prompt += `1. **【自由发挥称呼与落款】**: 信件的称呼（salutation）和落款（signature）**不必**拘泥于固定格式。请你**必须**结合你的人设、你们的关系、信件的语境和情感，进行**完全自由的、个性化的创作**。\n`;
         prompt += `2. **【感情真挚】**: 情感必须细腻、真挚、细节生动真实。严禁使用任何敷衍、模板化或重复的语句。\n`;
-        prompt += `3. **【严禁OOC】**: 你的每一句话都必须严格符合你的人设和世界观，不能出现与设定相悖的内容（例如，学生不能写工作的事）。\n`;
+        prompt += `3. **【严禁OOC】**: 你的每一句话都必须严格符合你的人设和世界观。\n`;
         prompt += `4. **【内容长度】**: 信件正文内容必须丰富，至少需要300字以上。\n`;
         prompt += `5. **【JSON输出格式】**: 你的回复【必须】是一个格式正确的JSON对象，且【只能】是这个JSON对象，前后不能有任何多余的文字或解释。格式如下：\n`;
         prompt += "```json\n";
         prompt += "{\n";
         prompt += '  "salutation": "（这里是你根据人设自由发挥的称呼）",\n';
-        prompt += '  "subject": "一个简短的、概括信件主题的标题（例如：关于今天看到的落日）",\n';
-        prompt += '  "body": "这里是信件的正文，至少300字以上，需要换行请使用 \\n。",\n';
+        prompt += '  "subject": "一个简短的、概括信件主题的标题",\n';
+        prompt += '  "body": "这里是信件的正文，至少300字以上，需要换行请使用 \\\\n。",\n';
         prompt += '  "signature": "（这里是你根据人设自由发挥的落款）"\n';
         prompt += "}\n";
         prompt += "```\n";
@@ -8521,13 +8639,160 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 setupNewMomentsFeaturesListeners();
                 setupMomentsModalListeners();
                 setupMomentsPageListeners();
+                // --- Mail App New Listeners & Functions ---
+        function openEditLoveLetterModal(mode, letterId) {
+            const modal = getEl('edit-love-letter-modal');
+    const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
+    
+    // Clear replyToId field initially
+    getEl('letter-reply-to-id').value = '';
+            // Allow creating a new letter if letterId is null
+            if (!letter && mode !== 'new') return showToast('找不到该情书', 'error');
+
+            modal.dataset.mode = mode; 
+            getEl('editing-letter-id').value = letterId || '';
+
+            const titleEl = getEl('edit-love-letter-title');
+            const recipientLabel = getEl('letter-recipient-label');
+            const recipientInput = getEl('letter-recipient-input');
+            const authorSelector = getEl('letter-author-selector');
+            const subjectInput = getEl('letter-subject-input');
+            const bodyInput = getEl('letter-body-input');
+            const signatureInput = getEl('letter-signature-input');
+
+            if (mode === 'edit') {
+                titleEl.textContent = '编辑情书';
+                const recipient = findUserById(letter.recipientId || 'user');
+                recipientInput.value = letter.recipientName || recipient.name;
+                subjectInput.value = letter.subject || '';
+                bodyInput.value = letter.body || '';
+                signatureInput.value = letter.signature || '';
+                renderLetterAuthorSelector(authorSelector, letter.senderId);
+            } else if (mode === 'reply') {
+                titleEl.textContent = '回信';
+                const originalSender = findUserById(letter.senderId);
+                recipientInput.value = originalSender.name;
+                getEl('letter-reply-to-id').value = letter.id; // Store the ID of the letter being replied to
+                subjectInput.value = `Re: ${letter.subject || '无题'}`;
+                bodyInput.value = `\n\n--- 原信 ---\n${letter.body}`;
+                signatureInput.value = findUserById('user').name;
+                renderLetterAuthorSelector(authorSelector, 'user');
+            } else { // 'new' mode
+                titleEl.textContent = '写新情书';
+                recipientInput.value = '';
+                subjectInput.value = '';
+                bodyInput.value = '';
+                signatureInput.value = findUserById('user').name;
+                renderLetterAuthorSelector(authorSelector, 'user');
+            }
+            
+            modal.classList.add('visible');
+        }
+        
+        function renderLetterAuthorSelector(container, selectedId) {
+            const availableAuthors = [
+                { id: 'user', name: appState.chat.userProfile.name, avatarId: appState.chat.userProfile.avatarId },
+                ...appState.chat.contacts.filter(c => !c.isGroup).map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
+            ];
+
+            container.innerHTML = availableAuthors.map(author => `
+                <div class="author-selector-item ${author.id === selectedId ? 'selected' : ''}" data-id="${author.id}">
+                    <div class="avatar" data-avatar-id="${author.avatarId}"></div>
+                    <span class="name">${author.name}</span>
+                </div>
+            `).join('');
+            container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+        }
+
+        // --- Mail App New Listeners & Functions ---
+        mailAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+            if (e.target.classList.contains('tab-link')) {
+                const tabId = e.target.dataset.tab;
+                handleMailTabChange(tabId);
+            }
+        });
+
+        mailFabContainer.addEventListener('click', () => {
+             openEditLoveLetterModal('new', null);
+        });
+
+        getEl('save-love-letter-btn').addEventListener('click', () => {
+                    const modal = getEl('edit-love-letter-modal');
+                    const mode = modal.dataset.mode;
+                    const editingId = getEl('editing-letter-id').value;
+                    const replyToId = getEl('letter-reply-to-id').value;
+                    const recipientName = getEl('letter-recipient-input').value.trim();
+                    const subject = getEl('letter-subject-input').value.trim();
+                    const body = getEl('letter-body-input').value.trim();
+                    const signature = getEl('letter-signature-input').value.trim();
+                    const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
+                    const senderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : null;
+                    
+                    if (!recipientName || !subject || !body || !signature || !senderId) {
+                        return showToast('收信人、标题、正文、落款和寄信人均不能为空', 'error');
+                    }
+        
+                    if (mode === 'edit') {
+                        const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
+                        if (letter) {
+                            letter.recipientName = recipientName;
+                            letter.senderId = senderId;
+                            letter.subject = subject;
+                            letter.body = body;
+                            letter.signature = signature;
+                            showToast('情书已更新');
+                        }
+                    } else { // reply or new
+                        const newLetter = {
+                            id: newId('letter'),
+                            senderId: senderId,
+                            id: newId('letter'),
+                            recipientName: recipientName,
+                            subject: subject,
+                            body: body,
+                            signature: signature,
+                            timestamp: Date.now(),
+                            isRead: senderId === 'user', // A letter written by the user is considered read by default
+                        };
+                        appState.mailbox.loveLetters.push(newLetter);
+                        showToast(mode === 'reply' ? '回信已保存' : '情书已保存');
+                    }
+                    // If this was a reply, mark the original letter as read
+    if (replyToId) {
+        const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
+        if (originalLetter) {
+            originalLetter.isRead = true;
+        }
+    }
+                    debouncedSaveState();
+                    renderLoveLetterTab();
+                    modal.classList.remove('visible');
+                });
+                getEl('cancel-edit-love-letter-btn').addEventListener('click', () => {
+                    getEl('edit-love-letter-modal').classList.remove('visible');
+                });
                 // --- Love Letter Listeners ---
                 getEl('love-letter-tab-content').addEventListener('click', e => {
-                    const item = e.target.closest('.love-letter-item, .collected-letter-item');
-                    if (item) {
-                        openLoveLetter(item.dataset.letterId);
-                    }
-                });
+            const item = e.target.closest('.love-letter-item, .collected-letter-item');
+            if (!item) return;
+            
+            const letterId = item.dataset.letterId;
+
+            if (e.target.closest('.edit-letter-btn')) {
+                e.stopPropagation(); // --- 核心修复：阻止事件冒泡 ---
+                openEditLoveLetterModal('edit', letterId);
+            } else if (e.target.closest('.delete-letter-btn')) {
+                e.stopPropagation(); // --- 核心修复：阻止事件冒泡 ---
+                if(confirm('确定要永久删除这封情书吗？')) {
+                    appState.mailbox.loveLetters = appState.mailbox.loveLetters.filter(l => l.id !== letterId);
+                    saveState(); // Immediate save for deletion
+                    renderLoveLetterTab();
+                    showToast('情书已删除');
+                }
+            } else {
+                 openLoveLetter(letterId);
+            }
+        });
                 getEl('unread-letter-prompt').addEventListener('click', function() {
                     const letterId = this.dataset.letterId;
                     if (!letterId) return;
@@ -8549,6 +8814,14 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 });
                 getEl('letter-close-btn').addEventListener('click', () => {
                     getEl('love-letter-viewer').classList.remove('visible');
+                });
+                letterReplyBtn.addEventListener('click', () => {
+                    const viewer = getEl('love-letter-viewer');
+                    const letterId = viewer.dataset.letterId;
+                    if (letterId) {
+                        viewer.classList.remove('visible'); // Close the reader first
+                        openEditLoveLetterModal('reply', letterId);
+                    }
                 });
                 setupGlobalEventListeners(); // CRITICAL FIX for image uploads
                 scheduleDailyLoveLetters();
