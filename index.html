@@ -5147,7 +5147,6 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         const allPosts = appState.chat.moments.posts;
         if (allPosts.length > 0) {
             allPosts.forEach(p => {
-            if (!canCharViewMoment(contact.id, p)) return; // 核心修复：如果Char看不见，直接跳过这条动态
                 const author = findUserById(p.authorId);
                 let authorMarker = '';
                 if (contact.isGroup) {
@@ -6620,21 +6619,21 @@ async function handleMomentsImageUpload(file, profileId, type) {
             openMomentCommentEditor(postId, parentCommentId, isReply ? commentOrReplyItem.dataset.replyId : null, null);
         } else if (action === 'delete-comment') {
             if (confirm(`确定要删除这条${isReply ? '回复' : '评论'}吗？`)) {
-                                if (isReply) {
-                                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
-                                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
-                                    // --- 新增：删除关联通知 ---
-                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
-                                } else {
-                                    const commentIdToDelete = parentCommentId;
-                                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
-                                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
-                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
-                                }
-                                debouncedSaveState();
-                                updateMomentsNotificationUI(); // 更新角标
-                                renderMomentsFeed(profileId);
-                            }
+                if (isReply) {
+                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
+                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
+                    // --- 新增：删除关联通知 ---
+                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
+                } else {
+                    const commentIdToDelete = parentCommentId;
+                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
+                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
+                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
+                }
+                debouncedSaveState();
+                updateMomentsNotificationUI(); // 更新角标
+                renderMomentsFeed(profileId);
+            }
         }
             } else if (target.closest('.reply-input-container button')) { // Send reply
                 const replyInput = target.previousElementSibling;
