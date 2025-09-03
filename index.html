@@ -335,6 +335,10 @@
         .reply-input-container { display: none; margin-top: 5px; }
         .reply-input-container.active { display: flex; gap: 5px; }
         .reply-input-container input { flex-grow: 1; border: 1px solid var(--border-color); border-radius: 15px; padding: 5px 10px; }
+        .comment-timestamp, .reply-timestamp { font-size: 12px; color: var(--secondary-text-color); margin-left: 8px; }
+        .reply-item { display: flex; gap: 8px; align-items: flex-start; }
+        .reply-avatar { width: 24px; height: 24px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; background-size: cover; background-position: center; margin-top: 2px; }
+        .reply-content { flex-grow: 1; }
         .comment-input-area { padding: 10px; border-top: 1px solid var(--border-color); background-color: #f9f9f9; flex-shrink: 0; display: flex; gap: 10px; align-items: center; }
         .comment-input-area input { flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 20px; box-sizing: border-box; }
         .comment-input-area button { flex-shrink: 0; width: 70px; padding: 8px 15px; border-radius: 20px; }
@@ -600,7 +604,7 @@
         .post-footer { border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 0; }
         .post-likes-summary { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
         .post-likes-summary .icon { color: var(--like-color); }
-        .moments-fab-container { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); /* 调整高度以悬浮在标签栏上方 */ z-index: 15; }        .moments-fab { width: 56px; height: 56px; border-radius: 50%; background-color: var(--accent-color); color: white; font-size: 36px; line-height: 56px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; }
+        .moments-fab-container { position: absolute; right: 20px; bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); /* 调整高度以悬浮在标签栏上方 */ z-index: 15; }        .moments-fab { width: 56px; height: 56px; border-radius: 50%; background-color: var(--accent-color); color: white; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; display: flex; justify-content: center; align-items: center; }
         #moments-tab-content .moments-fab-container { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
         #moments-fab:active { transform: scale(0.95); }
         #moments-fab-options { position: absolute; bottom: 65px; right: 0; display: none; flex-direction: column; gap: 10px; align-items: flex-end; }
@@ -2878,6 +2882,7 @@ function renderLoveLetterTab() {
             unreadContainer.style.display = 'block';
             unreadListEl.innerHTML = unreadLetters.map(letter => {
                 const sender = findUserById(letter.senderId);
+                if (letter.senderId === 'user') { sender.avatarId = appState.chat.moments.profile.avatarId; }
                 return `
                     <li class="love-letter-item unread" data-letter-id="${letter.id}">
                         <div class="love-letter-avatar" data-avatar-id="${sender.avatarId}"></div>
@@ -2911,6 +2916,7 @@ function renderLoveLetterTab() {
             readContainer.style.display = 'block';
             readGridEl.innerHTML = readLetters.map(letter => {
                 const sender = findUserById(letter.senderId);
+                if (letter.senderId === 'user') { sender.avatarId = appState.chat.moments.profile.avatarId; }
                 return `
                     <div class="collected-letter-item" data-letter-id="${letter.id}">
                         <div class="title">${escapeHTML(letter.subject || '无题')}</div>
@@ -5141,6 +5147,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         const allPosts = appState.chat.moments.posts;
         if (allPosts.length > 0) {
             allPosts.forEach(p => {
+            if (!canCharViewMoment(contact.id, p)) return; // 核心修复：如果Char看不见，直接跳过这条动态
                 const author = findUserById(p.authorId);
                 let authorMarker = '';
                 if (contact.isGroup) {
@@ -5793,15 +5800,17 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                     newPost.type = 'status';
                     let text = contentStr, images = [];
                     if (contentStr.includes('||')) {
-                        const parts = contentStr.split('||'); text = parts[0].trim();
-                        images = parts[1].trim().split('|').filter(d => d).map(desc => ({ isTextImage: true, imageId: 'default_camera_image', description: desc }));
+                        const parts = contentStr.split('||'); text = parts.trim();
+                        images = parts.trim().split('|').filter(d => d).map(desc => ({ isTextImage: true, imageId: 'default_camera_image', description: desc }));
                     }
                     newPost.content = { text: text, images: images };
                     appState.chat.moments.posts.unshift(newPost);
                     queueNotification(`${currentSenderName} 发表了新动态`, 'system', currentSenderId, 'moments');
+                    debouncedSaveState();
+                    syncAndUpdateMoments(currentSenderId);
                 } else if (type === 'log') {
                     const [title, text] = contentStr.split('|');
-                    if (title && text) { newPost.type = 'log'; newPost.content = { title, text }; appState.chat.moments.posts.unshift(newPost); queueNotification(`${currentSenderName} 发表了新动态`, 'system', currentSenderId, 'moments'); }
+                    if (title && text) { newPost.type = 'log'; newPost.content = { title, text }; appState.chat.moments.posts.unshift(newPost); queueNotification(`${currentSenderName} 发表了新动态`, 'system', currentSenderId, 'moments'); debouncedSaveState(); syncAndUpdateMoments(currentSenderId); }
                 }
             } else if (action === 'POST_PHOTO' && args.length >= 3) {
                 const [photoName, photoDesc, albumName, imageDescsStr] = args;
@@ -6611,21 +6620,21 @@ async function handleMomentsImageUpload(file, profileId, type) {
             openMomentCommentEditor(postId, parentCommentId, isReply ? commentOrReplyItem.dataset.replyId : null, null);
         } else if (action === 'delete-comment') {
             if (confirm(`确定要删除这条${isReply ? '回复' : '评论'}吗？`)) {
-                if (isReply) {
-                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
-                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
-                    // --- 新增：删除关联通知 ---
-                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
-                } else {
-                    const commentIdToDelete = parentCommentId;
-                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
-                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
-                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
-                }
-                debouncedSaveState();
-                updateMomentsNotificationUI(); // 更新角标
-                renderMomentsFeed(profileId);
-            }
+                                if (isReply) {
+                                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
+                                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
+                                    // --- 新增：删除关联通知 ---
+                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
+                                } else {
+                                    const commentIdToDelete = parentCommentId;
+                                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
+                                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
+                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
+                                }
+                                debouncedSaveState();
+                                updateMomentsNotificationUI(); // 更新角标
+                                renderMomentsFeed(profileId);
+                            }
         }
             } else if (target.closest('.reply-input-container button')) { // Send reply
                 const replyInput = target.previousElementSibling;
@@ -6791,8 +6800,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
         const optionsMap = isUserPage ? userOptions : charOptions;
         fabOptionsHTML = (optionsMap[filter] || []).map(opt => `<div class="fab-option" data-action="${opt.action}">${opt.text}</div>`).join('');
         
-        fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtimeState.moments.isFabMenuOpen ? 'flex' : 'none'};">${fabOptionsHTML}</div><div id="moments-fab"><i class="fa-solid fa-plus"></i></div>`;
-    } else {
+fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtimeState.moments.isFabMenuOpen ? 'flex' : 'none'};">${fabOptionsHTML}</div><div id="moments-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div>`;    } else {
         fabContainer.innerHTML = '';
     }
     
@@ -6954,6 +6962,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
                     <div class="comment-content">
                         <div class="comment-header">
                             <span class="comment-author">${author.name}</span>
+                            <span class="comment-timestamp">${new Date(comment.timestamp).toLocaleString()}</span>
                             <div class="comment-actions-inline" style="display: none;">
                                 ${canModify ? `
                                 <button class="icon-btn" data-action="edit-comment" data-icon-id="moment-edit" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -6972,41 +6981,41 @@ async function handleMomentsImageUpload(file, profileId, type) {
             </div>`;
     }
     function renderSingleMomentReply(reply, allReplies, postId) {
-        const author = findUserById(reply.authorId);
-        
-        let replyText = escapeHTML(reply.text);
-        const mentionMatch = replyText.match(/^@(\S+)\s(.*)/);
-        let targetHTML = '';
-        if(mentionMatch) {
-            targetHTML = `回复 <span class="reply-target">@${mentionMatch[1]}</span>: `;
-            replyText = mentionMatch[2];
-        } else if (reply.replyTo) { // Fallback for older replies without @ format
-            const targetReply = allReplies.find(r => r.id === reply.replyTo);
-            if (targetReply) {
-                const targetAuthor = findUserById(targetReply.authorId);
-                targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>: `;
+            const author = findUserById(reply.authorId);
+            
+            let replyText = escapeHTML(reply.text);
+            const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s); // Added 's' flag for multiline
+            let targetHTML = '';
+            if(mentionMatch) {
+                targetHTML = `回复 <span class="reply-target">@${mentionMatch[1]}</span>: `;
+                replyText = mentionMatch[2];
             }
-        }
 
-        const canModify = true; // User can always modify
-        return `
-            <div class="reply-item" data-reply-id="${reply.id}">
-                <div class="comment-header">
-                     <span class="reply-author">${author.name}</span>${targetHTML}
-                     <div class="comment-actions-inline" style="display: none;">
-                        ${canModify ? `
-                        <button class="icon-btn" data-action="edit-comment" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="icon-btn" data-action="delete-comment" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                        ` : ''}
-                     </div>
-                </div>
-                <p class="comment-text">${replyText}</p>
-                <div class="reply-input-container">
-                    <input type="text" placeholder="回复 ${author.name}...">
-                    <button class="settings-button secondary" style="padding: 5px 10px;" data-bubble-id="comment-reply-send">发送</button>
-                </div>
-            </div>`;
-    }
+            const canModify = true; 
+            return `
+                <div class="reply-item" data-reply-id="${reply.id}">
+                    <div class="reply-avatar" data-avatar-id="${author.avatarId}"></div>
+                    <div class="reply-content">
+                        <div class="comment-header">
+                             <div>
+                                <span class="reply-author">${author.name}</span>
+                                <span class="reply-timestamp">${new Date(reply.timestamp).toLocaleString()}</span>
+                             </div>
+                             <div class="comment-actions-inline" style="display: none;">
+                                ${canModify ? `
+                                <button class="icon-btn" data-action="edit-comment" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="icon-btn" data-action="delete-comment" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                                ` : ''}
+                             </div>
+                        </div>
+                        <p class="comment-text">${targetHTML}${replyText}</p>
+                        <div class="reply-input-container">
+                            <input type="text" placeholder="回复 ${author.name}...">
+                            <button class="settings-button secondary" style="padding: 5px 10px;" data-bubble-id="comment-reply-send">发送</button>
+                        </div>
+                    </div>
+                </div>`;
+        }
 function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('moments-tab-content').offsetParent !== null) { renderMomentsPage('user'); } else if (profileId !== 'user' && charMomentsScreen.classList.contains('active') && runtimeState.moments.currentProfileId === profileId) { renderMomentsPage(profileId); } }
     // --- 新增：彻底删除动态及其关联数据的函数 ---
     function deleteMomentAndAssociatedData(postId) {
