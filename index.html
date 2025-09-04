@@ -215,7 +215,33 @@
     }
         #confirm-api-btn { margin-top: 15px; }
         .button-group { display: flex; gap: 10px; margin-top: 10px; }
-
+        .filter-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(env(safe-area-inset-top, 10px) + 75px); /* Position below the header */
+        right: 15px;
+        width: 180px;
+        background-color: var(--item-bg);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border: 1px solid var(--border-color);
+        z-index: 20;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 10px;
+    }
+    .filter-dropdown.visible {
+        display: block;
+    }
+    .filter-dropdown .checkbox-label {
+        width: 100%;
+        padding: 8px 5px;
+        border: none;
+        border-radius: 4px;
+    }
+    .filter-dropdown .checkbox-label:hover {
+        background-color: var(--item-active-bg);
+    }
         /* --- 音乐 APP --- */
         #music-list { list-style: none; padding: 0; margin: 0; }
         .music-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
@@ -1100,8 +1126,12 @@
             <div class="app-header">
                 <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
                 <div class="title-wrapper"><h2 class="title">资料</h2></div>
-                <div class="app-header-right"><button class="action-btn" id="data-action-btn" data-icon-id="data-add"><i class="fa-solid fa-plus"></i></button></div>
+                <div class="app-header-right">
+                <button class="action-btn" id="data-filter-btn" style="display: none;"><i class="fa-solid fa-filter"></i></button>
+                <button class="action-btn" id="data-action-btn" data-icon-id="data-add"><i class="fa-solid fa-plus"></i></button>
             </div>
+        </div>
+        <div id="world-book-filter-dropdown" class="filter-dropdown"></div>
             <div class="app-content tab-content-wrapper">
                 <div id="world-book-tab-content" class="tab-content active"><ul id="world-book-list" class="preset-data-list"></ul></div>
                 <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
@@ -2013,7 +2043,8 @@ const globalRealtimeSelectAll = getEl('global-realtime-select-all');
     const dataGroupSelect = getEl('data-group-select');
     const saveDataBtn = getEl('save-data-btn');
     const cancelDataBtn = getEl('cancel-data-btn');
-
+    const dataFilterBtn = getEl('data-filter-btn');
+const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
     // --- 聊天 APP ---
     const chatListBackBtn = getEl('chat-list-back-btn');
     const chatListTitle = getEl('chat-list-title');
@@ -2390,6 +2421,7 @@ return {
             isDetailsAnimatingIn: false,
             currentChatId: null,
             contactSelection: [],
+            worldBookFilter: { selectedGroups: ['all'] },
             patTarget: { type: null, element: null, memberId: null },
             editingComment: { source: null, songId: null, postId: null, commentId: null, replyId: null },
             contextMenuTarget: null,
@@ -3322,7 +3354,18 @@ async function applyBubbleChange(bubbleId, isInitialLoad = false, isRestoring = 
 // ===================================================================
 // --- 资料 APP ---
 // ===================================================================
-function handleDataTabChange(tabId) { dataActionBtn.style.display = (tabId === 'memory') ? 'none' : 'block'; if (tabId === 'world-book') renderWorldBooks(); else if (tabId === 'archive') renderArchives(); else if (tabId === 'info') renderInfos(); }
+function handleDataTabChange(tabId) { 
+    dataActionBtn.style.display = (tabId === 'memory') ? 'none' : 'block'; 
+    dataFilterBtn.style.display = (tabId === 'world-book') ? 'block' : 'none';
+    
+    if (tabId !== 'world-book') {
+        worldBookFilterDropdown.classList.remove('visible');
+    }
+
+    if (tabId === 'world-book') renderWorldBooks(); 
+    else if (tabId === 'archive') renderArchives(); 
+    else if (tabId === 'info') renderInfos(); 
+}
 dataAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#data-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#data-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleDataTabChange(tabId); } });
 dataActionBtn.addEventListener('click', () => { const activeTab = query('#data-app-screen .tab-link.active').dataset.tab; const typeMap = { 'world-book': 'worldBook', 'archive': 'archive', 'info': 'info' }; openDataEditor(typeMap[activeTab]); });
 function openDataEditor(type, id = null) {
@@ -3383,6 +3426,57 @@ dataGroupSelect.addEventListener('change', () => {
     }
 });
 saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); const group = dataGroupInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatarId = dataAvatarPreview.dataset.avatarId; if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatarId) item.avatarId = avatarId; if (type === 'worldBook') item.group = group; } } else { const newItem = { id: newId('data'), name, content }; if (avatarId) newItem.avatarId = avatarId; if (type === 'worldBook') newItem.group = group; dataArray.push(newItem); } debouncedSaveState(); dataModal.classList.remove('visible'); switch (type) { case 'worldBook': renderWorldBooks(); break; case 'archive': renderArchives(); break; case 'info': renderInfos(); break; } });
+function renderWorldBookFilterDropdown() {
+        const uniqueGroups = ['all', '未分组', ...new Set(appState.data.worldBooks.map(item => item.group).filter(Boolean).sort())];
+        const selected = runtimeState.worldBookFilter.selectedGroups;
+        worldBookFilterDropdown.innerHTML = uniqueGroups.map(group => `
+            <label class="checkbox-label">
+                <input type="checkbox" value="${group}" ${selected.includes(group) ? 'checked' : ''}>
+                <span>${group}</span>
+            </label>
+        `).join('');
+    }
+
+    function toggleWorldBookFilterDropdown() {
+        if (worldBookFilterDropdown.classList.contains('visible')) {
+            worldBookFilterDropdown.classList.remove('visible');
+        } else {
+            renderWorldBookFilterDropdown();
+            worldBookFilterDropdown.classList.add('visible');
+        }
+    }
+
+    dataFilterBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleWorldBookFilterDropdown();
+    });
+
+    worldBookFilterDropdown.addEventListener('change', (e) => {
+        if (e.target.type === 'checkbox') {
+            const group = e.target.value;
+            const isChecked = e.target.checked;
+            let selected = runtimeState.worldBookFilter.selectedGroups;
+
+            if (group === 'all') {
+                selected = ['all'];
+            } else {
+                selected = selected.filter(g => g !== 'all'); // Remove 'all' if another is selected
+                if (isChecked) {
+                    if (!selected.includes(group)) selected.push(group);
+                } else {
+                    selected = selected.filter(g => g !== group);
+                }
+            }
+
+            if (selected.length === 0) {
+                selected = ['all']; // Default back to 'all' if nothing is selected
+            }
+            
+            runtimeState.worldBookFilter.selectedGroups = selected;
+            renderWorldBookFilterDropdown(); // Re-render to update checks
+            renderWorldBooks(); // Re-render the list based on new filter
+        }
+    });
 dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
 dataAvatarFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, file); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); dataAvatarFileInput.value = ''; } });
 dataAddAvatarUrlBtn.addEventListener('click', async () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, blob); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); } else if (url) { showToast('无效的URL', 'error'); } });
@@ -3390,7 +3484,33 @@ function escapeHTML(str) {
     if (typeof str !== 'string') return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); 
 }
-function renderWorldBooks() { worldBookListEl.innerHTML = appState.data.worldBooks.map(item => `<li class="preset-data-item" data-id="${item.id}" data-type="worldBook"><div class="preset-data-item-content"><div class="preset-data-info"><div class="preset-data-name">${escapeHTML(item.name)}</div><div class="preset-data-excerpt">${item.group ? `[${escapeHTML(item.group)}] ` : ''}${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div></li>`).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无世界书</div></li>'; }
+function renderWorldBooks() {
+    const selectedGroups = runtimeState.worldBookFilter.selectedGroups;
+    
+    let booksToRender = appState.data.worldBooks;
+
+    if (!selectedGroups.includes('all')) {
+        booksToRender = booksToRender.filter(item => {
+            const itemGroup = item.group || '未分组';
+            return selectedGroups.includes(itemGroup);
+        });
+    }
+
+    worldBookListEl.innerHTML = booksToRender.map(item => `
+        <li class="preset-data-item" data-id="${item.id}" data-type="worldBook">
+            <div class="preset-data-item-content">
+                <div class="preset-data-info">
+                    <div class="preset-data-name">${escapeHTML(item.name)}</div>
+                    <div class="preset-data-excerpt">${item.group ? `[${escapeHTML(item.group)}] ` : ''}${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div>
+                </div>
+            </div>
+            <div class="preset-data-item-actions">
+                <div class="edit-action">编辑</div>
+                <div class="delete-action">删除</div>
+            </div>
+        </li>
+    `).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无符合条件的世界书</div></li>'; 
+}
 function renderArchives() { archiveListEl.innerHTML = ''; if (appState.data.archives.length === 0) { archiveListEl.innerHTML = '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; return; } appState.data.archives.forEach(item => { const li = document.createElement('li'); li.className = 'preset-data-item'; li.dataset.id = item.id; li.dataset.type = 'archive'; li.innerHTML = `<div class="preset-data-item-content"><div class="preset-data-avatar" data-avatar-id="${item.avatarId || ''}"></div><div class="preset-data-info"><div class="preset-data-name">${escapeHTML(item.name)}</div><div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; archiveListEl.appendChild(li); setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId); }); }
 function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.length === 0) { infoListEl.innerHTML = '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无信息</div></li>'; return; } appState.data.infos.forEach(item => { const li = document.createElement('li'); li.className = 'preset-data-item'; li.dataset.id = item.id; li.dataset.type = 'info'; li.innerHTML = `<div class="preset-data-item-content"><div class="preset-data-avatar" data-avatar-id="${item.avatarId || ''}"></div><div class="preset-data-info"><div class="preset-data-name">${escapeHTML(item.name)}</div><div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; infoListEl.appendChild(li); setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId); }); }
     
@@ -9282,6 +9402,9 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                             fabOptions.style.display = 'none';
                         }
                     }
+                if (worldBookFilterDropdown.classList.contains('visible') && !e.target.closest('#world-book-filter-dropdown') && !e.target.closest('#data-filter-btn')) {
+                worldBookFilterDropdown.classList.remove('visible');
+            }
                 });
             } catch (error) {
                 console.error("CRITICAL INITIALIZATION FAILURE:", error);
