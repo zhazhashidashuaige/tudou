@@ -258,7 +258,7 @@
         #lyrics-line { font-weight: bold; text-shadow: 1px 1px 2px black; }
 
         /* --- 音乐播放器模态框 --- */
-        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 45%; max-height: 400px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(50, 50, 50, 0.2); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
+        #player-modal { position: absolute; top: 50%; left: 50%; width: 80%; max-width: 300px; height: 60%; max-height: 550px; transform: translate(-50%, -50%) scale(0.9); background-color: rgba(50, 50, 50, 0.2); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 20px; z-index: 150; display: flex; flex-direction: column; color: white; opacity: 0; visibility: hidden; transition: opacity 0.3s, transform 0.3s, visibility 0.3s; }
         #player-modal.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
         .player-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         .player-header .icon-btn { background: none; border: none; cursor: pointer; padding: 5px; font-size: 22px; color: white; }
@@ -4514,6 +4514,7 @@ function handleMusicShareClick() {
         appState.music.queue = [...appState.music.playlist];
         renderPlayerQueue();
         playerModal.classList.add('show');
+        getEl('lyrics-container').classList.add('visible'); // 在此添加
         playSongFromQueue(0, 'user');
     }
 chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const imageId = newId('image'); await addMediaToDB(imageId, file); addMessageToConversation({ id: newId('msg'), type: 'image', imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatImageInput.value = ''; } });
