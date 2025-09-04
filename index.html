@@ -1329,13 +1329,15 @@
                 </div>
                 <input type="file" id="chat-image-input" accept="image/*" style="display: none;">
             </div>
-            <div id="emoji-picker-panel">
-                <div class="emoji-picker-header">
-                    <button id="close-emoji-picker-btn" data-bubble-id="emoji-close">关闭</button>
-                    <div><button id="add-emoji-btn" data-bubble-id="emoji-add">添加</button></div>
-                </div>
-                <div id="emoji-grid"></div>
+                    <div id="emoji-picker-panel">
+            <div class="emoji-picker-header">
+                <button id="close-emoji-picker-btn" data-bubble-id="emoji-close">关闭</button>
+                <button id="emoji-mode-toggle-btn" class="cancel-btn" data-bubble-id="emoji-delete-toggle">删除</button>
+                <button id="add-emoji-btn" data-bubble-id="emoji-add">添加</button>
+                <button id="emoji-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="emoji-delete-confirm">确认</button>
             </div>
+            <div id="emoji-grid"></div>
+        </div>
         </div>
 
         <!-- 单聊设置界面 -->
@@ -1627,7 +1629,7 @@
     <div id="edit-comment-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑评论</h3><div class="modal-body"><textarea id="edit-comment-input" class="wide-textarea"></textarea></div><div class="modal-actions row"><button id="cancel-edit-comment-btn" class="cancel-btn" data-bubble-id="comment-edit-cancel">取消</button><button id="save-edit-comment-btn" class="confirm-btn" data-bubble-id="comment-edit-save">保存</button></div></div></div>
     <div id="view-content-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="view-content-title"></h3><div class="modal-body" id="view-content-body"></div><div class="modal-actions"><button id="close-view-content-btn" class="cancel-btn" data-bubble-id="view-content-close">关闭</button></div></div></div>
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
-    <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button><button id="library-mode-toggle-btn" class="settings-button secondary">删除</button><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button></div></div></div>
+    <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button><button id="library-mode-toggle-btn" class="cancel-btn">删除</button><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
@@ -2255,6 +2257,8 @@ const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
     const uploadEmojiDescInput = getEl('upload-emoji-desc');
     const emojiUrlInput = getEl('emoji-url-input');
     const confirmAddEmojiUrlBtn = getEl('confirm-add-emoji-url-btn');
+    const emojiModeToggleBtn = getEl('emoji-mode-toggle-btn');
+const emojiDeleteBtn = getEl('emoji-delete-btn');
     const patSuffixModal = getEl('pat-suffix-modal');
     const patSuffixInput = getEl('pat-suffix-input');
     const confirmPatBtn = getEl('confirm-pat-btn');
@@ -4278,9 +4282,39 @@ chatSendRealBtn.addEventListener('click', async () => {
             showToast('没有要发送的新消息', 'error');
         }
     });
-closeEmojiPickerBtn.addEventListener('click', () => { if (runtimeState.emojiSelectionMode) { exitEmojiSelectionMode(); } else { emojiPickerPanel.classList.remove('visible'); } });
+closeEmojiPickerBtn.addEventListener('click', () => {
+    if (runtimeState.emojiSelectionMode) {
+        exitEmojiSelectionMode();
+        emojiModeToggleBtn.textContent = '删除'; // 确保文本也重置
+    } else {
+        emojiPickerPanel.classList.remove('visible');
+    }
+});
 function renderEmojiPicker() { emojiGrid.innerHTML = ''; appState.chat.emojis.forEach(emoji => { const item = document.createElement('div'); item.className = 'emoji-item'; item.dataset.emojiId = emoji.id; emojiGrid.appendChild(item); setElementImage(item, emoji.id, 'backgroundImage'); }); }
-addEmojiBtn.addEventListener('click', async () => { if (runtimeState.emojiSelectionMode) { if (runtimeState.selectedEmojis.length > 0 && confirm(`确定要删除选中的 ${runtimeState.selectedEmojis.length} 个表情吗？`)) { for (const emojiId of runtimeState.selectedEmojis) { await deleteMediaFromDB(emojiId); appState.chat.emojis = appState.chat.emojis.filter(em => em.id !== emojiId); } debouncedSaveState(); renderEmojiPicker(); showToast('表情已删除'); } exitEmojiSelectionMode(); } else { addEmojiModal.classList.add('visible'); } });
+addEmojiBtn.addEventListener('click', () => {
+    addEmojiModal.classList.add('visible');
+});
+
+emojiModeToggleBtn.addEventListener('click', () => {
+    if (runtimeState.emojiSelectionMode) {
+        exitEmojiSelectionMode();
+    } else {
+        enterEmojiSelectionMode();
+    }
+});
+
+emojiDeleteBtn.addEventListener('click', async () => {
+    if (runtimeState.selectedEmojis.length > 0 && confirm(`确定要删除选中的 ${runtimeState.selectedEmojis.length} 个表情吗？`)) {
+        for (const emojiId of runtimeState.selectedEmojis) {
+            await deleteMediaFromDB(emojiId);
+            appState.chat.emojis = appState.chat.emojis.filter(em => em.id !== emojiId);
+        }
+        debouncedSaveState();
+        renderEmojiPicker();
+        showToast('表情已删除');
+    }
+    exitEmojiSelectionMode();
+});
 cancelAddEmojiBtn.addEventListener('click', () => addEmojiModal.classList.remove('visible'));
 uploadEmojiFileBtn.addEventListener('click', () => { if (!uploadEmojiDescInput.value.trim()) { showToast('请先输入表情包描述', 'error'); return; } emojiFileInput.click(); });
 emojiFileInput.addEventListener('change', async (e) => { const files = e.target.files; const descs = uploadEmojiDescInput.value.trim().split('\n').filter(d => d); if (files.length === 0 || descs.length === 0) return; if (files.length !== descs.length) { showToast(`文件数量(${files.length})与描述数量(${descs.length})不匹配`, 'error'); return; } for (let i = 0; i < files.length; i++) { const newEmojiId = newId('emoji'); await addMediaToDB(newEmojiId, files[i]); appState.chat.emojis.push({ id: newEmojiId, description: descs[i] }); } debouncedSaveState(); renderEmojiPicker(); showToast(`成功添加 ${files.length} 个表情包`); addEmojiModal.classList.remove('visible'); emojiFileInput.value = ''; uploadEmojiDescInput.value = ''; });
@@ -5957,7 +5991,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                 visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
             }
             const privacyInfo = p.areCommentsPrivate ? ' (评论区私密)' : '';
-            momentsFeedContext += `- ${author.name}的动态${authorMarker}(ID: ${p.id}): "${contentSummary}..."${visibilityInfo}${privacyInfo}\n`;
+            momentsFeedContext += `- ${author.name}的动态${authorMarker}(ID: ${p.id}): "${contentSummary}..."${privacyInfo}\n`;
                             if (p.comments && p.comments.length > 0) {
                 momentsFeedContext += `    - 评论:\n`;
                 let commentsToProcess = p.areCommentsPrivate
@@ -8779,7 +8813,19 @@ if (appState.mailbox && appState.mailbox.loveLetters) {
                 }
             }
         } }); 
-        const emojiInteractionHandler = new ListInteractionHandler(emojiGrid, { itemSelector: '.emoji-item', disableSwipe: true, onTap: (item) => { if (runtimeState.emojiSelectionMode) { toggleEmojiSelection(item); } else { const emoji = appState.chat.emojis.find(em => em.id === item.dataset.emojiId); if (emoji) { addMessageToConversation({ id: newId('msg'), type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); emojiPickerPanel.classList.remove('visible'); } } }, onLongPress: (item) => { if (!runtimeState.emojiSelectionMode) { enterEmojiSelectionMode(item); } } }); runtimeState.emojiInteractionHandler = emojiInteractionHandler;
+    emojiGrid.addEventListener('click', e => {
+    const item = e.target.closest('.emoji-item');
+    if (!item) return;
+    if (runtimeState.emojiSelectionMode) {
+        toggleEmojiSelection(item);
+    } else {
+        const emoji = appState.chat.emojis.find(em => em.id === item.dataset.emojiId);
+        if (emoji) {
+            addMessageToConversation({ id: newId('msg'), type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId });
+            emojiPickerPanel.classList.remove('visible');
+        }
+    }
+});
     }
 
     function setupMomentsListInteraction(feedElement) {
@@ -9658,7 +9704,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         if (mode === 'edit') {
             titleEl.textContent = '编辑情书';
             const recipient = findUserById(letter.recipientId || 'user');
-            recipientInput.value = letter.recipientName || recipient.name; // This is the salutation
+            recipientInput.value = letter.salutation || recipient.name; // This is the salutation
             subjectInput.value = letter.subject || '';
             bodyInput.value = letter.body || '';
             signatureInput.value = letter.signature || '';
@@ -9718,85 +9764,84 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
              openEditLoveLetterModal('new', null);
         });
 
-        getEl('save-love-letter-btn').addEventListener('click', () => {
-        const modal = getEl('edit-love-letter-modal');
-        const mode = modal.dataset.mode;
-        const editingId = getEl('editing-letter-id').value;
-        const replyToId = getEl('letter-reply-to-id').value;
-        const salutation = getEl('letter-recipient-input').value.trim(); // This is the "称呼"
-        const subject = getEl('letter-subject-input').value.trim();
-        const body = getEl('letter-body-input').value.trim();
-        const signature = getEl('letter-signature-input').value.trim();
+    getEl('save-love-letter-btn').addEventListener('click', () => {
+    const modal = getEl('edit-love-letter-modal');
+    const mode = modal.dataset.mode;
+    const editingId = getEl('editing-letter-id').value;
+    const replyToId = getEl('letter-reply-to-id').value;
+    const salutation = getEl('letter-recipient-input').value.trim();
+    const subject = getEl('letter-subject-input').value.trim();
+    const body = getEl('letter-body-input').value.trim();
+    const signature = getEl('letter-signature-input').value.trim();
+    
+    if (!salutation || !subject || !body || !signature) {
+        return showToast('称呼、标题、正文和落款均不能为空', 'error');
+    }
+
+    if (mode === 'edit') {
+        const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
+        if (!letter) return;
         
-        if (!salutation || !subject || !body || !signature) {
-            return showToast('称呼、标题、正文和落款均不能为空', 'error');
+        const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
+        const newSenderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : letter.senderId;
+        if (!newSenderId) return showToast('请选择寄信人', 'error');
+
+        letter.salutation = salutation;
+        letter.senderId = newSenderId;
+        letter.subject = subject;
+        letter.body = body;
+        letter.signature = signature;
+        showToast('情书已更新');
+
+    } else if (mode === 'reply') {
+        const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
+        if (!originalLetter) return;
+        
+        const newLetter = {
+            id: newId('letter'),
+            senderId: 'user',
+            recipientId: originalLetter.senderId,
+            salutation: salutation,
+            subject: subject,
+            body: body,
+            signature: signature,
+            timestamp: Date.now(),
+            isRead: true, 
+        };
+        appState.mailbox.loveLetters.push(newLetter);
+        showToast('回信已保存');
+
+    } else { // mode === 'new'
+        const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
+        const recipientId = selectedAuthorEl ? selectedAuthorEl.dataset.id : null;
+        if (!recipientId) return showToast('请选择收信人', 'error');
+
+        const newLetter = {
+            id: newId('letter'),
+            senderId: 'user',
+            recipientId: recipientId,
+            salutation: salutation,
+            subject: subject,
+            body: body,
+            signature: signature,
+            timestamp: Date.now(),
+            isRead: true,
+        };
+        appState.mailbox.loveLetters.push(newLetter);
+        showToast('情书已保存');
+    }
+
+    if (replyToId) {
+        const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
+        if (originalLetter) {
+            originalLetter.isRead = true;
         }
+    }
 
-        if (mode === 'edit') {
-            const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
-            if (!letter) return;
-            
-            const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
-            const newSenderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : letter.senderId;
-            if (!newSenderId) return showToast('请选择寄信人', 'error');
-
-            letter.recipientName = salutation; // "称呼"
-            letter.senderId = newSenderId;
-            letter.subject = subject;
-            letter.body = body;
-            letter.signature = signature;
-            showToast('情书已更新');
-
-        } else if (mode === 'reply') {
-            const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
-            if (!originalLetter) return;
-            
-            const newLetter = {
-                id: newId('letter'),
-                senderId: 'user',
-                recipientId: originalLetter.senderId,
-                recipientName: salutation,
-                subject: subject,
-                body: body,
-                signature: signature,
-                timestamp: Date.now(),
-                isRead: true, 
-            };
-            appState.mailbox.loveLetters.push(newLetter);
-            showToast('回信已保存');
-
-        } else { // mode === 'new'
-            const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
-            const recipientId = selectedAuthorEl ? selectedAuthorEl.dataset.id : null;
-            if (!recipientId) return showToast('请选择收信人', 'error');
-
-            const newLetter = {
-                id: newId('letter'),
-                senderId: 'user',
-                recipientId: recipientId,
-                recipientName: salutation,
-                subject: subject,
-                body: body,
-                signature: signature,
-                timestamp: Date.now(),
-                isRead: true,
-            };
-            appState.mailbox.loveLetters.push(newLetter);
-            showToast('情书已保存');
-        }
-
-        // Common logic for all modes
-        if (replyToId) { // If it was a reply, mark original as read
-            const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
-            if (originalLetter) {
-                originalLetter.isRead = true;
-            }
-        }
-
-        debouncedSaveState();
-        renderLoveLetterTab();
-        modal.classList.remove('visible');
-    });
+    debouncedSaveState();
+    renderLoveLetterTab();
+    modal.classList.remove('visible');
+});
     editLoveLetterModal.addEventListener('click', e => {
         const item = e.target.closest('#letter-author-selector .author-selector-item');
         if (item) {
@@ -10001,16 +10046,23 @@ function updateRealtimeActivityTimer(contact) {
                 }, intervalMinutes * 60 * 1000); 
             } 
         }
-function enterEmojiSelectionMode(initialItem) { runtimeState.emojiSelectionMode = true; emojiPickerPanel.classList.add('selection-mode'); addEmojiBtn.textContent = '删除'; runtimeState.selectedEmojis = [initialItem.dataset.emojiId]; initialItem.classList.add('selected'); }
+function enterEmojiSelectionMode() {
+    runtimeState.emojiSelectionMode = true;
+    emojiPickerPanel.classList.add('selection-mode');
+    emojiModeToggleBtn.style.display = 'none'; // 隐藏“删除”
+    addEmojiBtn.style.display = 'none'; // 隐藏“添加”
+    emojiDeleteBtn.style.display = 'block'; // 显示“确认”
+    closeEmojiPickerBtn.textContent = '取消'; // “关闭”变为“取消”
+}
 function exitEmojiSelectionMode() {
     runtimeState.emojiSelectionMode = false;
     emojiPickerPanel.classList.remove('selection-mode');
-    addEmojiBtn.textContent = '添加';
+    emojiModeToggleBtn.style.display = 'block'; // 恢复“删除”
+    addEmojiBtn.style.display = 'block'; // 恢复“添加”
+    emojiDeleteBtn.style.display = 'none'; // 隐藏“确认”
+    closeEmojiPickerBtn.textContent = '关闭'; // “取消”变回“关闭”
     runtimeState.selectedEmojis = [];
     queryAll('.emoji-item.selected').forEach(i => i.classList.remove('selected'));
-    if(runtimeState.emojiInteractionHandler) {
-        runtimeState.emojiInteractionHandler.resetState();
-    }
 }
 function toggleEmojiSelection(item) { const emojiId = item.dataset.emojiId; item.classList.toggle('selected'); if (runtimeState.selectedEmojis.includes(emojiId)) { runtimeState.selectedEmojis = runtimeState.selectedEmojis.filter(id => id !== emojiId); } else { runtimeState.selectedEmojis.push(emojiId); } if (runtimeState.selectedEmojis.length === 0) { exitEmojiSelectionMode(); } }
 function showIncomingCallUI(contactId) {
