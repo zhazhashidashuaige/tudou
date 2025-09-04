@@ -322,7 +322,31 @@
         .bubble-item .bubble-preview-container button { background-color: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 10px; font-size: 14px; color: var(--accent-color); }
         .bubble-item .bubble-preview-container button img { height: 24px; width: auto; }
         .bubble-item.global-bubble-item { border: 2px solid transparent; } /* Replaced dashed border with transparent */
-
+            .theme-css-editor {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid var(--border-color);
+        background-color: #ffffff;
+        color: #000000;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 14px;
+        padding: 10px;
+        resize: vertical;
+        white-space: pre;
+        overflow-wrap: normal;
+        overflow-x: auto;
+        border-radius: 5px; /* Added for consistency */
+    }
+        .bubble-css-preview {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #f0f2f5;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-height: 100px;
+    }
         /* --- 弹窗/模态框样式 (Z-Index Management) --- */
         .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; }
         #gcs-member-modal { z-index: 110; }
@@ -1001,8 +1025,32 @@
                 width: 90vw; /* 在小屏幕上，让文字图更宽一些 */
             }
         }
-    </style>
+        .theme-css-preview {
+            margin-top: 10px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            min-height: 80px;
+            border: 1px solid #ced4da;
+            overflow: hidden; /* Prevents children from breaking layout */
+        }
+        #theme-preview-header .app-header, 
+        #theme-preview-list-item .swipe-content,
+        #theme-preview-moments .moments-post-item,
+        #theme-preview-tabs .app-bottom-tabs {
+            position: relative !important; /* Override sticky/absolute for preview */
+            top: 0;
+            bottom: auto; /* Reset bottom positioning */
+            padding-top: 15px; /* Reset safe area padding */
+            min-height: 0;
+        }
+        #theme-preview-list-item .contact-list-item {
+            border-bottom: none; /* Remove border for single item preview */
+        }
+</style>
+<style id="theme-preview-styles"></style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
+    <style id="bubble-preview-styles"></style>
 </head>
 <body>
     <audio id="audio-player"></audio>
@@ -1149,9 +1197,46 @@
                 <div id="font-tab-content" class="tab-content"><ul id="font-list"></ul></div>
                 <div id="icon-tab-content" class="tab-content"><div id="icon-grid"></div></div>
                 <div id="bubble-tab-content" class="tab-content"><div id="bubble-grid"></div></div>
+                                <div id="theme-tab-content" class="tab-content">
+                    <div class="settings-group">
+                        <div class="group-title">空间卡片 (.moments-post-item .post-item-content)</div>
+                        <div class="group-content">
+                        <textarea id="theme-css-moments" class="theme-css-editor" rows="6"></textarea>
+                        </div>
+                        <div class="theme-css-preview" id="theme-preview-moments"></div>
+                    </div>
+                    <div class="settings-group">
+                        <div class="group-title">顶部状态栏 (.app-header)</div>
+                        <div class="group-content">
+                        <textarea id="theme-css-header" class="theme-css-editor" rows="6"></textarea>
+                        </div>
+                        <div class="theme-css-preview" id="theme-preview-header"></div>
+                    </div>
+                    <div class="settings-group">
+                        <div class="group-title">底部标签栏 (.app-bottom-tabs)</div>
+                        <div class="group-content">
+                        <textarea id="theme-css-tabs" class="theme-css-editor" rows="6"></textarea>
+                        </div>
+                        <div class="theme-css-preview" id="theme-preview-tabs"></div>
+                    </div>
+                    <div class="settings-group">
+                        <div class="group-title">通用列表卡片 (.swipe-content)</div>
+                        <div class="group-content">
+                        <textarea id="theme-css-list-item" class="theme-css-editor" rows="6"></textarea>
+                        </div>
+                        <div class="theme-css-preview" id="theme-preview-list-item"></div>
+                    </div>
+                    <div class="settings-group">
+                        <div class="button-group">
+                            <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
+                            <button id="theme-apply-btn" class="settings-button">应用样式</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
             <div class="app-bottom-tabs">
-                <div class="tab-link active" data-tab="wallpaper">壁纸</div><div class="tab-link" data-tab="font">字体</div><div class="tab-link" data-tab="icon">图标</div><div class="tab-link" data-tab="bubble">气泡</div>
+                <div class="tab-link active" data-tab="wallpaper">壁纸</div><div class="tab-link" data-tab="font">字体</div><div class="tab-link" data-tab="icon">图标</div><div class="tab-link" data-tab="bubble">气泡</div><div class="tab-link" data-tab="theme">主题</div>
             </div>
         </div>
 
@@ -1311,6 +1396,26 @@
                     <div class="chat-settings-actions">
                         <div class="button-group"><button id="us-save-persona-btn" class="settings-button secondary" data-bubble-id="us-save-persona">保存到资料</button><button id="us-load-persona-btn" class="settings-button secondary" data-bubble-id="us-load-persona">从资料读取</button></div>
                     </div>
+                                    <div class="settings-group" id="us-bubble-customization">
+                    <div class="group-title">聊天气泡样式</div>
+                    <div class="group-content">
+                        <div class="settings-item">
+                            <label>你的气泡 (.message-item.user .message-bubble)</label>
+                            <textarea id="us-bubble-css-user" class="theme-css-editor" rows="5"></textarea>
+                        </div>
+                        <div class="settings-item">
+                            <label>对方的气泡 (.message-item.contact .message-bubble)</label>
+                            <textarea id="us-bubble-css-char" class="theme-css-editor" rows="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="bubble-css-preview" id="us-bubble-preview">
+                        <!-- Preview will be rendered here -->
+                    </div>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button id="us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                        <button id="us-bubble-apply-btn" class="settings-button">应用样式</button>
+                    </div>
+                </div>
                 </div>
             </div>
             <div class="app-bottom-tabs">
@@ -1379,6 +1484,26 @@
                     <div class="chat-settings-actions">
                         <div class="button-group"><button id="gcs-us-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-us-save-persona">保存到资料</button><button id="gcs-us-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-us-load-persona">从资料读取</button></div>
                     </div>
+                                    <div class="settings-group" id="gcs-us-bubble-customization">
+                    <div class="group-title">聊天气泡样式</div>
+                    <div class="group-content">
+                        <div class="settings-item">
+                            <label>你的气泡 (.message-item.user .message-bubble)</label>
+                            <textarea id="gcs-us-bubble-css-user" class="theme-css-editor" rows="5"></textarea>
+                        </div>
+                        <div class="settings-item">
+                            <label>对方的气泡 (.message-item.contact .message-bubble)</label>
+                            <textarea id="gcs-us-bubble-css-char" class="theme-css-editor" rows="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="bubble-css-preview" id="gcs-us-bubble-preview">
+                        <!-- Preview will be rendered here -->
+                    </div>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button id="gcs-us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                        <button id="gcs-us-bubble-apply-btn" class="settings-button">应用样式</button>
+                    </div>
+                </div>
                 </div>
             </div>
             <div class="app-bottom-tabs">
@@ -2064,6 +2189,12 @@ const globalRealtimeSelectAll = getEl('global-realtime-select-all');
     const restoreBubbleBtn = getEl('restore-bubble-btn');
     const cancelEditBubbleBtn = getEl('cancel-edit-bubble-btn');
     const bubbleIoModal = getEl('bubble-io-modal');
+    const themeCssMoments = getEl('theme-css-moments');
+const themeCssHeader = getEl('theme-css-header');
+const themeCssTabs = getEl('theme-css-tabs');
+const themeCssListItem = getEl('theme-css-list-item');
+const themeApplyBtn = getEl('theme-apply-btn');
+const themeRestoreBtn = getEl('theme-restore-btn');
     const exportBubblesBtn = getEl('export-bubbles-btn');
     const importBubblesBtn = getEl('import-bubbles-btn');
     const importBubblesInput = getEl('import-bubbles-input');
@@ -2210,6 +2341,11 @@ const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
     const usPersona = getEl('us-persona');
     const usSavePersonaBtn = getEl('us-save-persona-btn');
     const usLoadPersonaBtn = getEl('us-load-persona-btn');
+    const usBubbleCssUser = getEl('us-bubble-css-user');
+const usBubbleCssChar = getEl('us-bubble-css-char');
+const usBubblePreview = getEl('us-bubble-preview');
+const usBubbleApplyBtn = getEl('us-bubble-apply-btn');
+const usBubbleRestoreBtn = getEl('us-bubble-restore-btn');
     
     // --- 群聊设置界面 ---
     const gcsBackBtn = getEl('gcs-back-btn');
@@ -2232,6 +2368,11 @@ const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
     const gcsUsPersona = getEl('gcs-us-persona');
     const gcsUsSavePersonaBtn = getEl('gcs-us-save-persona-btn');
     const gcsUsLoadPersonaBtn = getEl('gcs-us-load-persona-btn');
+    const gcsUsBubbleCssUser = getEl('gcs-us-bubble-css-user');
+const gcsUsBubbleCssChar = getEl('gcs-us-bubble-css-char');
+const gcsUsBubblePreview = getEl('gcs-us-bubble-preview');
+const gcsUsBubbleApplyBtn = getEl('gcs-us-bubble-apply-btn');
+const gcsUsBubbleRestoreBtn = getEl('gcs-us-bubble-restore-btn');
     const gcsMemberModal = getEl('gcs-member-modal');
     const gcsMemberModalTitle = getEl('gcs-member-modal-title');
     const gcsEditingMemberIdInput = getEl('gcs-editing-member-id');
@@ -2422,7 +2563,13 @@ return {
     currentFont: 'default',
     fontColor: '#000000',
     icons: {},
-    bubbleSettings: { global: {}, specific: {} }
+    bubbleSettings: { global: {}, specific: {} },
+    customThemes: {
+        momentsPost: '',
+        appHeader: '',
+        bottomTabs: '',
+        listItem: ''
+    }
     },
     data: { worldBooks: [], archives: [], infos: [] },
     chat: {
@@ -2542,7 +2689,7 @@ return {
                 ...savedState, 
                 settings: { ...defaultState.settings, ...savedState.settings, globalRealtimeActivity: { ...defaultState.settings.globalRealtimeActivity, ...(savedState.settings?.globalRealtimeActivity || {}) } },
                     music: { ...defaultState.music, ...savedState.music }, 
-                    beautify: { ...defaultState.beautify, ...savedState.beautify, bubbleSettings: { ...defaultState.beautify.bubbleSettings, ...(savedState.beautify?.bubbleSettings || {}) } }, 
+                    beautify: { ...defaultState.beautify, ...savedState.beautify, bubbleSettings: { ...defaultState.beautify.bubbleSettings, ...(savedState.beautify?.bubbleSettings || {}) }, customThemes: { ...defaultState.beautify.customThemes, ...(savedState.beautify?.customThemes || {}) } }, 
                     data: { ...defaultState.data, ...(savedState.data || {}) }, 
                     chat: { 
                         ...defaultState.chat, 
@@ -2750,7 +2897,18 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     // ===================================================================
     // --- 设置 APP ---
     // ===================================================================
-    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) { contact.userSettings = deepCopy(userProfileDefaults); } else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; } if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+    function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) { 
+    contact.userSettings = {
+        ...deepCopy(userProfileDefaults),
+        bubbleCssUser: '',
+        bubbleCssChar: ''
+    };
+} else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCssUser === 'undefined') {
+            contact.userSettings.bubbleCssUser = '';
+        }
+        if (typeof contact.userSettings.bubbleCssChar === 'undefined') {
+            contact.userSettings.bubbleCssChar = '';
+        }if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
@@ -2759,7 +2917,7 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     };
      } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false}; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
-    async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); }); }
+    async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); });applyCustomThemes(); applyAllCustomBubbleStyles();}
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); debouncedSaveState(); });
     getEl('api-key').addEventListener('input', () => { appState.settings.apiKey = getEl('api-key').value.trim(); debouncedSaveState(); });
     confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { debouncedSaveState(); updateModelSelect(); confirmApiBtn.textContent = '加载模型'; confirmApiBtn.disabled = false; } });
@@ -3062,13 +3220,21 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
         
         const contact = appState.chat.contacts.find(c => c.id === id);
         if (contact) {
-            return {
-                id: contact.id,
-                name: contact.charSettings.name,
-                avatarId: contact.charSettings.avatarId,
-                signature: contact.signature
-            };
-        }
+        // --- 核心Bug修复：增加上下文判断 ---
+        const isMomentsContext = momentsTabContent.offsetParent !== null || charMomentsScreen.classList.contains('active');
+        
+        // 如果在动态的上下文中，并且Char设置了专门的动态头像，则优先使用它
+        const finalAvatarId = (isMomentsContext && contact.charSettings.momentsAvatarId) 
+            ? contact.charSettings.momentsAvatarId 
+            : contact.charSettings.avatarId;
+
+        return {
+            id: contact.id,
+            name: contact.charSettings.name,
+            avatarId: finalAvatarId, // 使用修正后的头像ID
+            signature: contact.signature
+        };
+    }
         return { id: id, name: '未知用户', avatarId: `https://api.multiavatar.com/${id}.png`, signature: '...' };
     }
     function canCharViewMoment(charId, post) {
@@ -3090,7 +3256,11 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
 // ===================================================================
 // --- 美化 APP (优化) ---
 // ===================================================================
-function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none'; if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } }
+function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none';    if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } else if (tabId === 'theme') { 
+    titleEl.textContent = '主题'; 
+    renderThemeEditor(); 
+    ['moments', 'header', 'tabs', 'list-item'].forEach(id => updateThemeCssPreview(id));
+} }
 beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleBeautifyTabChange(tabId); } });
 beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (activeTab === 'wallpaper') { wallpaperFileInput.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
 bubbleActionBtn.addEventListener('click', () => bubbleIoModal.classList.add('visible'));
@@ -3401,6 +3571,159 @@ async function updateBubblePreview() { const bubbleId = editBubbleIdInput.value;
 cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.remove('visible'));
 saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImageId: settingsGroup.backgroundImageId }; const cleanedStyles = Object.fromEntries(Object.entries(newStyles).filter(([_, v]) => v !== '' && v !== '0px')); if (isGlobal) { appState.beautify.bubbleSettings.global = cleanedStyles; } else { appState.beautify.bubbleSettings.specific[bubbleId] = cleanedStyles; } debouncedSaveState(); if (isGlobal) { Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, true)); } else { applyBubbleChange(bubbleId, true); } editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
 restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的样式吗？`)) { const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : appState.beautify.bubbleSettings.specific[bubbleId]; if (settingsGroup?.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } if (isGlobal) { appState.beautify.bubbleSettings.global = {}; Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, false, true)); } else { delete appState.beautify.bubbleSettings.specific[bubbleId]; applyBubbleChange(bubbleId, false, true); } debouncedSaveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
+    const defaultThemeStyles = {
+        momentsPost: `  padding: 15px;`,
+        appHeader: `  position: sticky;\n  top: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 10px 15px;\n  background-color: var(--app-screen-bg);\n  border-bottom: 1px solid var(--border-color);\n  flex-shrink: 0;\n  padding-top: calc(env(safe-area-inset-top, 10px) + 15px);\n  min-height: 45px;\n  box-sizing: content-box;\n  z-index: 10;`,
+        bottomTabs: `  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 50px;\n  padding-bottom: env(safe-area-inset-bottom, 0px);\n  background-color: var(--item-bg);\n  border-top: 1px solid var(--border-color);\n  display: flex;\n  justify-content: space-around;\n  align-items: flex-start;\n  z-index: 5;\n  box-sizing: border-box;`,
+        listItem: `  background-color: var(--item-bg);\n  transition: transform 0.3s ease;\n  position: relative;\n  z-index: 2;`
+    };
+
+    function applyCustomThemes() {
+        const existingStyle = document.getElementById('custom-theme-styles');
+        if (existingStyle) existingStyle.remove();
+
+        const customThemes = appState.beautify.customThemes;
+        let finalCss = '';
+        
+        if (customThemes.momentsPost) finalCss += `.moments-post-item .post-item-content { ${customThemes.momentsPost} }\n`;
+        if (customThemes.appHeader) finalCss += `.app-header { ${customThemes.appHeader} }\n`;
+        if (customThemes.bottomTabs) finalCss += `.app-bottom-tabs { ${customThemes.bottomTabs} }\n`;
+        if (customThemes.listItem) finalCss += `.swipe-content { ${customThemes.listItem} }\n`;
+
+        if (finalCss) {
+            const style = document.createElement('style');
+            style.id = 'custom-theme-styles';
+            style.textContent = finalCss;
+            document.head.appendChild(style);
+        }
+    }
+        function applyAllCustomBubbleStyles() {
+        let existingStyle = document.getElementById('custom-bubble-styles');
+        if (existingStyle) existingStyle.remove();
+
+        let finalCss = '';
+        appState.chat.contacts.forEach(contact => {
+            const { bubbleCssUser, bubbleCssChar } = contact.userSettings;
+            if (bubbleCssUser) {
+                finalCss += `#single-chat-screen[data-contact-id="${contact.id}"] .message-item.user .message-bubble { ${bubbleCssUser} }\n`;
+            }
+            if (bubbleCssChar) {
+                finalCss += `#single-chat-screen[data-contact-id="${contact.id}"] .message-item.contact .message-bubble { ${bubbleCssChar} }\n`;
+            }
+        });
+
+        if (finalCss) {
+            const style = document.createElement('style');
+            style.id = 'custom-bubble-styles';
+            style.textContent = finalCss;
+            document.head.appendChild(style);
+        }
+    }
+
+    const defaultBubbleStyles = {
+        user: `  background-color: var(--accent-color);\n  color: white;\n  border-bottom-right-radius: 4px;`,
+        char: `  background-color: white;\n  color: black;\n  border-bottom-left-radius: 4px;`
+    };
+
+    function updateBubbleCssPreview(context, settings) {
+    const editorUser = getEl(`${context}-bubble-css-user`);
+    const editorChar = getEl(`${context}-bubble-css-char`);
+    const previewArea = getEl(`${context}-bubble-preview`);
+    const previewStyleTag = getEl('bubble-preview-styles');
+
+    const userCss = editorUser.value || defaultBubbleStyles.user;
+    const charCss = editorChar.value || defaultBubbleStyles.char;
+    
+    previewStyleTag.textContent = `
+        #${context}-bubble-preview .message-item.user .message-bubble { ${userCss} }
+        #${context}-bubble-preview .message-item.contact .message-bubble { ${charCss} }
+    `;
+    
+    const userAvatarId = settings.userSettings.avatarId;
+    const userFrameId = settings.userSettings.avatarFrameId;
+    const charAvatarId = settings.charSettings ? settings.charSettings.avatarId : settings.groupSettings.avatarId;
+    const charFrameId = settings.charSettings ? settings.charSettings.avatarFrameId : ''; // Group avatars don't have frames
+
+    previewArea.innerHTML = `
+        <div class="message-item contact">
+            <div class="avatar" data-avatar-id="${charAvatarId}">
+                <div class="avatar-frame" data-avatar-frame-id="${charFrameId}"></div>
+            </div>
+            <div class="message-content-wrapper"><div class="message-bubble">你好呀</div></div>
+        </div>
+        <div class="message-item user">
+            <div class="message-content-wrapper"><div class="message-bubble">嗯，你好</div></div>
+            <div class="avatar" data-avatar-id="${userAvatarId}">
+                 <div class="avatar-frame" data-avatar-frame-id="${userFrameId}"></div>
+            </div>
+        </div>
+    `;
+    previewArea.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
+    previewArea.querySelectorAll('.avatar-frame').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
+}
+    function renderThemeEditor() {
+        const themes = appState.beautify.customThemes;
+        themeCssMoments.value = themes.momentsPost || defaultThemeStyles.momentsPost;
+        themeCssHeader.value = themes.appHeader || defaultThemeStyles.appHeader;
+        themeCssTabs.value = themes.bottomTabs || defaultThemeStyles.bottomTabs;
+        themeCssListItem.value = themes.listItem || defaultThemeStyles.listItem;
+    }
+function updateThemeCssPreview(id) {
+    const editor = getEl(`theme-css-${id}`);
+    const previewArea = getEl(`theme-preview-${id}`);
+    const styleTag = getEl('theme-preview-styles');
+
+    // Populate preview with example HTML if it's empty
+    if (!previewArea.innerHTML.trim()) {
+        switch(id) {
+            case 'moments':
+                previewArea.innerHTML = `<div class="moments-post-item"><div class="post-item-content"><div class="post-header"><div class="post-avatar" style="background-color:#ccc"></div><div class="post-author-info"><div class="post-author-name">预览用户</div><div class="post-timestamp">刚刚</div></div></div><div class="post-content-text">这是一个预览动态...</div></div></div>`;
+                break;
+            case 'header':
+                previewArea.innerHTML = `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`;
+                break;
+            case 'tabs':
+                previewArea.innerHTML = `<div class="app-bottom-tabs"><div class="tab-link active">标签1</div><div class="tab-link">标签2</div><div class="tab-link">标签3</div></div>`;
+                break;
+            case 'list-item':
+                previewArea.innerHTML = `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`;
+                break;
+        }
+    }
+
+    const cssText = `
+        #theme-preview-moments .moments-post-item .post-item-content { ${themeCssMoments.value} }
+        #theme-preview-header .app-header { ${themeCssHeader.value} }
+        #theme-preview-tabs .app-bottom-tabs { ${themeCssTabs.value} }
+        #theme-preview-list-item .swipe-content { ${themeCssListItem.value} }
+    `;
+    styleTag.textContent = cssText;
+}
+
+    ['moments', 'header', 'tabs', 'list-item'].forEach(id => {
+        getEl(`theme-css-${id}`).addEventListener('input', () => updateThemeCssPreview(id));
+    });
+    themeApplyBtn.addEventListener('click', () => {
+        if (confirm('确定要应用这些自定义样式吗？不正确的CSS代码可能导致页面显示异常。')) {
+            appState.beautify.customThemes.momentsPost = themeCssMoments.value;
+            appState.beautify.customThemes.appHeader = themeCssHeader.value;
+            appState.beautify.customThemes.bottomTabs = themeCssTabs.value;
+            appState.beautify.customThemes.listItem = themeCssListItem.value;
+            debouncedSaveState();
+            applyCustomThemes();
+            showToast('主题样式已应用！');
+        }
+    });
+
+    themeRestoreBtn.addEventListener('click', () => {
+        if (confirm('确定要还原所有模块的默认样式吗？此操作不可撤销。')) {
+            appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '' };
+            debouncedSaveState();
+            applyCustomThemes();
+            renderThemeEditor();
+            showToast('已还原为默认样式！');
+        }
+    });
 uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
 bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { handleBubbleImage(file); bubbleFileInput.value = ''; } });
 bubbleUrlInput.addEventListener('input', async () => { const url = bubbleUrlInput.value.trim(); if (url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); handleBubbleImage(blob); } });
@@ -3578,17 +3901,17 @@ chatListBackBtn.addEventListener('click', () => { if (chatAppScreen.classList.co
 query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; renderMomentsPage('user'); } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
 chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (runtimeState.contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', runtimeState.contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, runtimeState.contactSelection); } } else { addContactModal.classList.add('visible'); } });
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; scheduleDailyLoveLetters(newContact.id); }); // Schedule love letters for the new contact
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime); messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; li.dataset.isGroup = contact.isGroup; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let avatarHTML; const unreadBadgeHTML = contact.unreadCount > 0 ? `<div class="unread-badge">${contact.unreadCount}</div>` : ''; const shakeClass = contact.needsShake ? 'shake' : ''; if (contact.isGroup) { const groupAvatarId = contact.groupSettings.avatarId; if (groupAvatarId) { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${groupAvatarId}">${unreadBadgeHTML}</div>`; } else { const memberAvatarIds = ['user', ...contact.members].slice(0, 4).map(id => { if (id === 'user') return appState.chat.userProfile.avatarId; return appState.chat.contacts.find(c => c.id === id)?.charSettings.avatarId || ''; }).filter(Boolean); const puzzlePieces = memberAvatarIds.map(avatarId => `<div class="puzzle-piece" data-avatar-id="${avatarId}"></div>`).join(''); avatarHTML = `<div class="contact-avatar group-puzzle ${shakeClass}">${puzzlePieces}${unreadBadgeHTML}</div>`; } } else { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${contact.charSettings.avatarId}">${unreadBadgeHTML}</div>`; } const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length + 1})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; li.innerHTML = ` <div class="contact-item-content"> ${avatarHTML} <div class="contact-info"> <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name)}</div> <div class="contact-last-msg">${contact.lastMessage || ''}</div> </div> <div class="contact-meta"> <div class="contact-time">${time}</div> ${metaHTML} </div> </div> <div class="contact-item-actions"> <div class="delete-action">删除</div> </div>`; messageListEl.appendChild(li); li.querySelectorAll('[data-avatar-id]').forEach(el => { const id = el.dataset.avatarId; if (id.startsWith('https')) { el.style.backgroundImage = `url(${id})`; } else { setElementImage(el, id); } }); if (contact.needsShake) { setTimeout(() => { const avatarEl = li.querySelector('.contact-avatar'); if (avatarEl) avatarEl.classList.remove('shake'); contact.needsShake = false; debouncedSaveState(); }, 500); } }); }
 function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); runtimeState.contactSelection.push(item.dataset.id); }
 function exitContactSelectionMode() { chatAppScreen.classList.remove('selection-mode'); chatListBackBtn.textContent = '< 返回'; chatListActionBtn.textContent = '+'; chatListActionBtn.classList.remove('small'); queryAll('.contact-list-item.selected').forEach(i => i.classList.remove('selected')); runtimeState.contactSelection = []; }
 function createGroup(name, memberIds) { const members = memberIds.map(id => appState.chat.contacts.find(c => c.id === id)); const newGroup = { id: newId('group'), name: name, avatarId: '', lastMessage: '群聊已创建', lastMessageTime: Date.now(), isGroup: true, members: memberIds, conversation: [] }; initializeContactSettings(newGroup); const memberNames = members.map(m => `'${m.name}'`).join(', '); addSystemNotification(newGroup.id, `'${appState.chat.userProfile.name}' 邀请 ${memberNames} 加入群聊`, true); appState.chat.contacts.unshift(newGroup); saveState(); renderMessageList(); exitContactSelectionMode(); }
-function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; runtimeState.currentChatId = contactId; if (!runtimeState.chatDisplayLimits[contactId]) { runtimeState.chatDisplayLimits[contactId] = 50; } if (contact.unreadCount > 0) { contact.unreadCount = 0; debouncedSaveState(); renderMessageList(); } runtimeState.notificationQueue = runtimeState.notificationQueue.filter(n => n.contactId !== contactId); updateSingleChatUI(); openSubScreen(singleChatScreen, chatAppScreen); }
+function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; runtimeState.currentChatId = contactId;singleChatScreen.dataset.contactId = contactId; if (!runtimeState.chatDisplayLimits[contactId]) { runtimeState.chatDisplayLimits[contactId] = 50; } if (contact.unreadCount > 0) { contact.unreadCount = 0; debouncedSaveState(); renderMessageList(); } runtimeState.notificationQueue = runtimeState.notificationQueue.filter(n => n.contactId !== contactId); updateSingleChatUI(); openSubScreen(singleChatScreen, chatAppScreen); }
 async function updateSingleChatUI() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const isDisbanded = contact.isGroup && contact.groupSettings.isDisbanded; const userIsMuted = contact.isGroup && contact.groupSettings.members['user']?.isMuted; const allMuted = contact.isGroup && contact.groupSettings.isMuted; const userIsAdminOrOwner = contact.isGroup && (contact.groupSettings.owner === 'user' || contact.groupSettings.admins.includes('user')); const canSpeak = !isDisbanded && (!allMuted || userIsAdminOrOwner) && !userIsMuted; if (contact.isGroup) { chatHeaderName.textContent = contact.remark || contact.groupSettings.name; chatHeaderStatus.textContent = `(${contact.members.length + 1})`; chatHeaderSignature.style.display = 'none'; addFriendBtn.style.display = 'none'; chatInput.disabled = !canSpeak; let placeholder = '输入消息...'; if (isDisbanded) placeholder = '群聊已解散'; else if (allMuted) placeholder = '全员禁言中'; else if (userIsMuted) placeholder = '你已被禁言'; chatInput.placeholder = placeholder; const sendIconId = appState.beautify.icons['chat-send-real'];
                 if (sendIconId) setElementImage(chatSendRealBtn, sendIconId, 'src'); else chatSendRealBtn.innerHTML = '<i class="fa-solid fa-comments"></i>';  chatToolbar.querySelectorAll('.icon-btn').forEach(btn => btn.classList.toggle('disabled', !canSpeak)); chatEmojiBtn.classList.toggle('disabled', !canSpeak); } else { const settings = contact.charSettings; const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderName.textContent = contact.remark || settings.name; chatHeaderStatus.innerHTML = `${statusIndicatorHTML} ${statusMap[contact.status] || '未知'} ${contact.statusText ? `- ${contact.statusText}` : ''}`; chatHeaderSignature.textContent = contact.signature || '(点击设置签名)'; chatHeaderSignature.style.display = 'block'; addFriendBtn.style.display = settings.isFriend ? 'none' : 'block'; chatInput.disabled = !settings.isFriend; chatInput.placeholder = settings.isFriend ? '输入消息...' : '你还不是对方的好友'; const sendIconId = appState.beautify.icons['chat-send-real'];
            if (sendIconId) setElementImage(chatSendRealBtn, sendIconId, 'src'); else chatSendRealBtn.innerHTML = settings.isFriend ? '<i class="fa-solid fa-comments"></i>' : '🤝'; chatToolbar.querySelectorAll('.icon-btn').forEach(btn => btn.classList.toggle('disabled', !settings.isFriend)); chatEmojiBtn.classList.toggle('disabled', !settings.isFriend); } const specificBgId = contact.isGroup ? contact.groupSettings.chatBackgroundId : contact.charSettings?.chatBackgroundId; const chatBgId = (specificBgId && specificBgId !== 'default') ? specificBgId : appState.beautify.currentChatBgId; await applyWallpaperById(chatBgId, singleChatScreen); renderConversation(); updateChatInputButtons(); updateTypingIndicator(); }
-chatBackBtn.addEventListener('click', () => { closeSubScreen(singleChatScreen, chatAppScreen); runtimeState.currentChatId = null; if (runtimeState.chatSelectionMode) exitChatSelectionMode(); });
+chatBackBtn.addEventListener('click', () => { closeSubScreen(singleChatScreen, chatAppScreen); runtimeState.currentChatId = null; delete singleChatScreen.dataset.contactId; if (runtimeState.chatSelectionMode) exitChatSelectionMode(); });
 chatSettingsBtn.addEventListener('click', () => { if (runtimeState.chatSelectionMode) { if (runtimeState.selectedMessages.length > 0 && confirm(`确定要删除选中的 ${runtimeState.selectedMessages.length} 条消息吗？`)) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); contact.conversation = contact.conversation.filter(msg => !runtimeState.selectedMessages.includes(msg.id)); updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); } exitChatSelectionMode(); } else { openChatSettings(); } });
 function renderConversation(isLoadingMore = false) {
     let contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
@@ -5047,8 +5370,10 @@ function handleAvatarLongPress(avatarElement) {
 // ===================================================================
 function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
 function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
-function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona; }
-function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona;     usBubbleCssUser.value = runtimeState.tempChatSettings.userSettings.bubbleCssUser || defaultBubbleStyles.user;
+    usBubbleCssChar.value = runtimeState.tempChatSettings.userSettings.bubbleCssChar || defaultBubbleStyles.char;
+    updateBubbleCssPreview('us', runtimeState.tempChatSettings);}
+function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
 query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
 csCharName.addEventListener('input', () => { const newName = csCharName.value; runtimeState.tempChatSettings.charSettings.name = newName; });
@@ -5319,7 +5644,9 @@ async function handleChatBackgroundUpload(file, settingsObject) { if (!file) ret
 // --- 群聊设置界面逻辑 ---
 // ===================================================================
 function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
-function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona; }
+function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona;     gcsUsBubbleCssUser.value = runtimeState.tempChatSettings.userSettings.bubbleCssUser || defaultBubbleStyles.user;
+    gcsUsBubbleCssChar.value = runtimeState.tempChatSettings.userSettings.bubbleCssChar || defaultBubbleStyles.char;
+    updateBubbleCssPreview('gcs-us', runtimeState.tempChatSettings);}
 function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } const finalAvatarId = member.avatarId || user.avatarId; item.innerHTML = ` <div class="avatar" data-avatar-id="${finalAvatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), finalAvatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
 function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; if (contact.groupSettings.members['user']) {
         contact.groupSettings.members['user'].nickname = contact.userSettings.name;
@@ -5327,7 +5654,7 @@ function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c
         contact.groupSettings.members['user'].avatarFrameId = contact.userSettings.avatarFrameId;
         contact.groupSettings.members['user'].persona = contact.userSettings.persona;
     }
-    appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState(); updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+    appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState();applyAllCustomBubbleStyles();  updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
     // 为群聊User设置中的视频背景按钮添加直接上传监听
@@ -5758,7 +6085,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         if (isProactive) {
              prompt += `--- **【本次行动情景：主动交互】** ---\n`;
             prompt += `由于“后台实时活动”功能已开启，现在轮到你行动了。这是【由你，即角色自己，主动发起】的交互，并非对用户消息的回复。请严格遵守以下优先任务列表：\n`;
-            prompt += `0. **优先回复情书**: 检查下方“信箱区”，如果发现有来自用户的新情书，【必须】优先使用 \`[ACTION: SEND_LOVE_LETTER]\` 指令进行回复。\n`;
+            prompt += `0. **【最高优先级】回复情书**: 检查下方“信箱区”，如果发现有来自用户的新情书，【必须】优先使用 \`[ACTION: SEND_LOVE_LETTER]\` 指令进行回复。\n`;
             prompt += `1. **优先回复互动**: 检查下方社交信息，优先使用 \`[ACTION: REPLY_...]\` 指令回复任何你尚未回复的新互动。\n`;
             prompt += `2. **关心用户动态**: 检查用户“${findUserById('user').name}”的动态，对你从未评论过的动态使用 \`[ACTION: COMMENT_MOMENT]\` 进行评论，对你觉得很有趣的动态使用\`[ACTION: LIKE_MOMENT]\`进行点赞。\n`;
             prompt += `3. **鼓励Char间互动**: 浏览其他Char的动态，可点赞、评论、留言或发动态隔空喊话。\n`;
@@ -5769,7 +6096,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         } else {
             prompt += `--- **【回复前置任务：两阶段处理模式】** ---\n`;
             prompt += `在回复用户最新的聊天消息之前，你【必须】严格按照以下两个阶段来组织你的回应，以防止身份混淆。\n`;
-            prompt += `**第一阶段：动作指令生成 (无聊天内容)**: 首先，检查下方【社交环境信息】和【信箱区】。如果发现需要你（即你扮演的角色）回应的互动，【只能】输出相应的【社交类ACTION】指令（如 \`REPLY_MOMENT_COMMENT\`, \`LIKE_MOMENT\` 等），并用 \`<MSG_SPLIT>\` 分隔。\n`;
+            prompt += `**第一阶段：动作指令生成 (无聊天内容)**: 首先，检查下方【社交环境信息】和【信箱区】。如果发现需要你（即你扮演的角色）回应的互动，【只能】输出相应的【社交类ACTION】指令（如 \`REPLY_MOMENT_COMMENT\`, \`LIKE_MOMENT\` 等），并用 \`<MSG_SPLIT>\` 分隔。**【第0顺位任务】**：你【必须】最优先检查“信箱区”，如果有来自用户的未回复情书，则【必须】首先生成 \`[ACTION: SEND_LOVE_LETTER]\` 指令。\n`;
             prompt += `在使用任何与动态相关的指令前，你必须再次确认该动态对你扮演的角色是可见的。\n`;
             prompt += `**第二阶段：聊天内容生成 (可包含表达类指令)**: 完成所有社交ACTION指令后，再开始针对用户的聊天消息，构思你的聊天内容。你的聊天内容【可以且应该】包含【表达类ACTION】（如 \`SEND_EMOJI\`, \`SEND_VOICE\` 等）和文字消息，所有内容都必须遵循上方的【通用聊天规则】。\n\n`;
         }
@@ -9109,36 +9436,33 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         }
     }
 
-    function scheduleDailyLoveLetters() {
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        
-        appState.chat.contacts.forEach(contact => {
-            if (!contact.isGroup) {
-                const lastSentTime = contact.lastLetterSent || 0;
-                
-                if (lastSentTime < startOfToday) {
-                    // This character has not sent a letter today.
-                    let randomDelay;
-                    
-                    if (lastSentTime === 0) {
-                        // **首次快速发送**: If they have NEVER sent a letter, schedule it for 1-3 minutes from now.
-                        randomDelay = (Math.random() * 2 * 60 * 1000) + (1 * 60 * 1000); 
-                        console.log(`Scheduling FIRST letter for ${contact.name} in ${Math.round(randomDelay/1000)} seconds.`);
-                    } else {
-                        // **后续自然发送**: If they have sent before, schedule it for 2-8 hours from now for a natural feel.
-                        randomDelay = (Math.random() * 6 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000);
-                        console.log(`Scheduling daily letter for ${contact.name} in ${Math.round(randomDelay/1000/60)} minutes.`);
-                    }
-                    
-                    setTimeout(() => {
-                        generateAndSendLoveLetter(contact.id);
-                    }, randomDelay);
+    function scheduleDailyLoveLetters(singleContactId = null) {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
+    const contactsToSchedule = singleContactId 
+        ? [appState.chat.contacts.find(c => c.id === singleContactId)] 
+        : appState.chat.contacts;
+
+    contactsToSchedule.forEach(contact => {
+        if (contact && !contact.isGroup) {
+            const lastSentTime = contact.lastLetterSent || 0;
+            
+            if (lastSentTime < startOfToday) {
+                let randomDelay;
+                if (lastSentTime === 0) {
+                    randomDelay = (Math.random() * 2 * 60 * 1000) + (1 * 60 * 1000); 
+                } else {
+                    randomDelay = (Math.random() * 6 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000);
                 }
                 
+                setTimeout(() => {
+                    generateAndSendLoveLetter(contact.id);
+                }, randomDelay);
             }
-        });
-    }
+        }
+    });
+}
     function initializeAllRealtimeActivity() { appState.chat.contacts.forEach(contact => { if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { updateRealtimeActivityTimer(contact); } }); }
         function updateRealtimeActivityTimer(contact) { 
             if (runtimeState.realtimeActivityTimers[contact.id]) { 
@@ -9536,6 +9860,38 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                     }
                 });
                 setupGlobalEventListeners(); // CRITICAL FIX for image uploads
+                    // --- Bubble CSS Editor Listeners ---
+    function setupBubbleEditorListeners(context) {
+        const editorUser = getEl(`${context}-bubble-css-user`);
+        const editorChar = getEl(`${context}-bubble-css-char`);
+        const applyBtn = getEl(`${context}-bubble-apply-btn`);
+        const restoreBtn = getEl(`${context}-bubble-restore-btn`);
+
+        editorUser.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
+        editorChar.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
+
+        applyBtn.addEventListener('click', () => {
+            if (confirm('确定应用当前的气泡样式吗？')) {
+                runtimeState.tempChatSettings.userSettings.bubbleCssUser = editorUser.value;
+                runtimeState.tempChatSettings.userSettings.bubbleCssChar = editorChar.value;
+                showToast('样式已应用！请返回聊天界面查看。');
+                // Saving is handled by the main back button, this just updates temp state
+            }
+        });
+
+        restoreBtn.addEventListener('click', () => {
+            if (confirm('确定要还原此会话的默认气泡样式吗？')) {
+                runtimeState.tempChatSettings.userSettings.bubbleCssUser = '';
+                runtimeState.tempChatSettings.userSettings.bubbleCssChar = '';
+                editorUser.value = defaultBubbleStyles.user;
+                editorChar.value = defaultBubbleStyles.char;
+                updateBubbleCssPreview(context);
+                showToast('已还原为默认样式。');
+            }
+        });
+    }
+    setupBubbleEditorListeners('us');
+    setupBubbleEditorListeners('gcs-us');
                 scheduleDailyLoveLetters();
                 initializeAllRealtimeActivity();
                 // --- 动态通知初始化 ---
