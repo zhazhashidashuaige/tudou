@@ -583,6 +583,40 @@
         .form-group.aligned-right label { margin-bottom: 0; }
         .form-group.aligned-right input[type="checkbox"] { order: 2; -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; position: relative; }
         .form-group.aligned-right input[type="checkbox"]:checked { background-color: var(--accent-color); border-color: var(--accent-color); }
+            .form-group .checkbox-label.tick-style {
+        border: none;
+        padding-left: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 0; /* Override default */
+    }
+    .form-group .checkbox-label.tick-style input[type="checkbox"] {
+        display: inline-block; /* Make it visible */
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+    }
+    .form-group .checkbox-label.tick-style input[type="checkbox"]:checked {
+        background-color: var(--accent-color);
+        border-color: var(--accent-color);
+    }
+    .form-group .checkbox-label.tick-style input[type="checkbox"]:checked::after {
+        content: '✓';
+        color: white;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 12px;
+        font-weight: bold;
+    }
         .form-group.aligned-right input[type="checkbox"]:checked::after { content: '✓'; color: white; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; }
         .form-group.aligned-right input[type="number"] { width: 60px; text-align: right; }
         #cs-context-memory, #gcs-context-memory { width: 80px !important; }
@@ -1642,6 +1676,12 @@
                 <div class="form-group hidden-by-logic" id="upload-photo-friend-selector-container">
                     <div id="upload-photo-friend-selector" class="friend-selector-grid"></div>
                 </div>
+                <div class="form-group">
+                <label class="checkbox-label tick-style">
+                    <input type="checkbox" id="upload-photo-comment-private-checkbox">
+                    <span>评论区加密</span>
+                </label>
+            </div>
             </div>
             <div class="modal-actions row">
                 <button id="cancel-upload-photo-btn" class="cancel-btn">取消</button>
@@ -1703,6 +1743,12 @@
                 <div class="form-group hidden-by-logic" id="post-moment-friend-selector-container">
                     <div id="post-moment-friend-selector" class="friend-selector-grid"></div>
                 </div>
+                                    <div class="form-group" id="post-moment-comment-privacy-container">
+            <label class="checkbox-label tick-style">
+                <input type="checkbox" id="post-moment-comment-private-checkbox">
+                <span>评论区加密</span>
+            </label>
+        </div>
             </div>
             <div class="modal-actions row">
                 <button id="cancel-post-moment-btn" class="cancel-btn">取消</button>
@@ -5556,7 +5602,8 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `2. **【后台活动总纲】**: 当“后台实时活动”功能开启时，你【必须】表现得更主动。你应该【主动】查看并评论 User 和其他所有Char的【每一条】动态，多多点赞、留言，并经常发布自己的动态。这是核心要求。\n`;
         prompt += `3. **【角色身份明确】**: 在对话历史中，` + "`role: 'user'`" + ` 的消息来自用户 “${contact.userSettings.name}”；` + "`role: 'assistant'`" + ` 的消息来自你所扮演的角色。请【绝对不要】混淆两者的发言。\n`;
         prompt += `4. **【可见性规则】**: 当动态或留言信息中标注了 \`(仅对 ... 可见)\` 时，你扮演的角色【只有在自己的名字出现在可见列表中时】才能看到并对其进行互动（如点赞、评论、回复）。严禁扮演 A 角色去评论一条只对 B 角色可见的内容。\n\n`;
-        prompt += `5. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;
+        prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
+        prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
         // --- 通用聊天规则模块 (重构后) ---
         prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前必须加上发言人昵称，格式为 \`[昵称]: 内容\`。例如: \`[小明]: user今天有空吗？<MSG_SPLIT>[小明]: 和我一起出去玩吧？<MSG_SPLIT>[小红]: user之前就和我约好了呀！<MSG_SPLIT>[小明]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
@@ -5576,15 +5623,20 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                     authorMarker = ' (你发布的动态)';
                 }
                 const contentSummary = (p.content.text || p.content.title || '[图片动态]').substring(0, 20);
-                let visibilityInfo = '';
-                if (p.visibility === 'specific' && p.visibleTo && p.visibleTo.length > 0) {
-                    const visibleNames = p.visibleTo.map(id => findUserById(id).name).join(', ');
-                    visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
-                }
-                momentsFeedContext += `- ${author.name}的动态${authorMarker}(ID: ${p.id}): "${contentSummary}..."${visibilityInfo}\n`;
-                if (p.comments && p.comments.length > 0) {
-                    momentsFeedContext += `    - 评论:\n`;
-                    p.comments.forEach(c => {
+                            let visibilityInfo = '';
+            if (p.visibility === 'specific' && p.visibleTo && p.visibleTo.length > 0) {
+                const visibleNames = p.visibleTo.map(id => findUserById(id).name).join(', ');
+                visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
+            }
+            const privacyInfo = p.areCommentsPrivate ? ' (评论区私密)' : '';
+            momentsFeedContext += `- ${author.name}的动态${authorMarker}(ID: ${p.id}): "${contentSummary}..."${visibilityInfo}${privacyInfo}\n`;
+                            if (p.comments && p.comments.length > 0) {
+                momentsFeedContext += `    - 评论:\n`;
+                let commentsToProcess = p.areCommentsPrivate
+                    ? p.comments.filter(c => c.authorId === 'user' || c.authorId === contact.id)
+                    : p.comments;
+
+                commentsToProcess.forEach(c => {
                     const commentAuthor = findUserById(c.authorId);
                     let commentAuthorMarker = '';
                     if (contact.isGroup) {
@@ -5593,8 +5645,13 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                         commentAuthorMarker = ' (你)';
                     }
                     momentsFeedContext += `      - ${commentAuthor.name}${commentAuthorMarker} (ID: ${c.id}): "${c.text}"\n`;
+
                     if (c.replies && c.replies.length > 0) {
-                         c.replies.forEach(r => {
+                        let repliesToProcess = p.areCommentsPrivate
+                            ? c.replies.filter(r => r.authorId === 'user' || r.authorId === contact.id || (c.authorId === contact.id && r.authorId === 'user'))
+                            : c.replies;
+
+                        repliesToProcess.forEach(r => {
                             const replyAuthor = findUserById(r.authorId);
                             let targetName = commentAuthor.name;
                             const targetReply = c.replies.find(tr => tr.id === r.replyTo);
@@ -7531,66 +7588,70 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         return true;
     }
     function openPostMomentModal(type, postId = null) {
-        const isEditing = postId !== null;
-        const post = isEditing ? appState.chat.moments.posts.find(p => p.id === postId) : null;
+    const isEditing = postId !== null;
+    const post = isEditing ? appState.chat.moments.posts.find(p => p.id === postId) : null;
 
-        runtimeState.moments.postContext = { 
-            type: isEditing ? post.type : type,
-            visibility: isEditing ? post.visibility : 'public',
-            visibleTo: isEditing ? [...(post.visibleTo || [])] : [],
-            images: isEditing ? [...(post.content.images || [])] : [],
-            textImageDesc: '',
-            editingPostId: postId
-        };
+    runtimeState.moments.postContext = { 
+        type: isEditing ? post.type : type,
+        visibility: isEditing ? post.visibility : 'public',
+        visibleTo: isEditing ? [...(post.visibleTo || [])] : [],
+        images: isEditing ? [...(post.content.images || [])] : [],
+        textImageDesc: '',
+        editingPostId: postId
+    };
 
-        const titleEl = getEl('post-moment-modal-title');
-        const statusSection = getEl('post-moment-status-section');
-        const logSection = getEl('post-moment-log-section');
-        const modalBody = getEl('post-moment-modal-body');
+    const titleEl = getEl('post-moment-modal-title');
+    const statusSection = getEl('post-moment-status-section');
+    const logSection = getEl('post-moment-log-section');
+    const modalBody = getEl('post-moment-modal-body');
+    const commentPrivateCheckbox = getEl('post-moment-comment-private-checkbox');
 
-        // 动态创建或移除作者选择器
-        if (modalBody.querySelector('#post-author-selector-group')) {
-            modalBody.querySelector('#post-author-selector-group').remove();
-        }
-        if (isEditing) {
-            const authorSelectorHTML = `
-                <div class="form-group" id="post-author-selector-group">
-                    <label>发布者</label>
-                    <div id="moment-post-author-selector"></div>
-                </div>`;
-            modalBody.insertAdjacentHTML('afterbegin', authorSelectorHTML);
-            renderMomentAuthorSelector('moment-post-author-selector', post.authorId);
-        }
-
-
-        titleEl.textContent = isEditing ? '编辑动态' : '发表动态';
-        
-        if (runtimeState.moments.postContext.type === 'status') {
-            statusSection.classList.remove('hidden-by-logic');
-            logSection.classList.add('hidden-by-logic');
-            getEl('post-moment-status-content').value = isEditing ? post.content.text : '';
-        } else if (runtimeState.moments.postContext.type === 'log') {
-            statusSection.classList.add('hidden-by-logic');
-            logSection.classList.remove('hidden-by-logic');
-            getEl('post-moment-log-title').value = isEditing ? post.content.title : '';
-            getEl('post-moment-log-content').value = isEditing ? post.content.text : '';
-        }
-        
-        queryAll('input[name="visibility"]').forEach(radio => radio.checked = radio.value === runtimeState.moments.postContext.visibility);
-        const friendSelector = getEl('post-moment-friend-selector-container');
-        if (runtimeState.moments.postContext.visibility === 'specific') {
-                    renderFriendSelector('post-moment-friend-selector', 'post');
-                    friendSelector.classList.remove('hidden-by-logic');
-                } else {
-            friendSelector.classList.add('hidden-by-logic');
-        }
-        
-        queryAll('input[name="status-type"]').forEach(radio => radio.checked = radio.value === 'text'); // Default to text
-        getEl('post-moment-image-buttons').classList.add('hidden-by-logic');
-        getEl('post-moment-text-image-input').classList.add('hidden-by-logic');
-
-        postMomentModal.classList.add('visible');
+    // 动态创建或移除作者选择器
+    if (modalBody.querySelector('#post-author-selector-group')) {
+        modalBody.querySelector('#post-author-selector-group').remove();
     }
+    if (isEditing) {
+        const authorSelectorHTML = `
+            <div class="form-group" id="post-author-selector-group">
+                <label>发布者</label>
+                <div id="moment-post-author-selector"></div>
+            </div>`;
+        modalBody.insertAdjacentHTML('afterbegin', authorSelectorHTML);
+        renderMomentAuthorSelector('moment-post-author-selector', post.authorId);
+        commentPrivateCheckbox.checked = post.areCommentsPrivate || false; // Load existing setting
+    } else {
+        commentPrivateCheckbox.checked = false; // Reset for new post
+    }
+
+
+    titleEl.textContent = isEditing ? '编辑动态' : '发表动态';
+    
+    if (runtimeState.moments.postContext.type === 'status') {
+        statusSection.classList.remove('hidden-by-logic');
+        logSection.classList.add('hidden-by-logic');
+        getEl('post-moment-status-content').value = isEditing ? post.content.text : '';
+    } else if (runtimeState.moments.postContext.type === 'log') {
+        statusSection.classList.add('hidden-by-logic');
+        logSection.classList.remove('hidden-by-logic');
+        getEl('post-moment-log-title').value = isEditing ? post.content.title : '';
+        getEl('post-moment-log-content').value = isEditing ? post.content.text : '';
+    }
+    
+    queryAll('input[name="visibility"]').forEach(radio => radio.checked = radio.value === runtimeState.moments.postContext.visibility);
+    const friendSelector = getEl('post-moment-friend-selector-container');
+    if (runtimeState.moments.postContext.visibility === 'specific') {
+                renderFriendSelector('post-moment-friend-selector', 'post');
+                friendSelector.classList.remove('hidden-by-logic');
+            } else {
+        friendSelector.classList.add('hidden-by-logic');
+    }
+    
+    queryAll('input[name="status-type"]').forEach(radio => radio.checked = radio.value === 'text'); // Default to text
+    getEl('post-moment-image-buttons').classList.add('hidden-by-logic');
+    getEl('post-moment-text-image-input').classList.add('hidden-by-logic');
+
+    postMomentModal.classList.add('visible');
+}
     function setupNewMomentsFeaturesListeners() {
         // --- Photo Viewer Modal ---
         getEl('viewer-image-view').addEventListener('click', (e) => {
@@ -7699,60 +7760,61 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         getEl('cancel-upload-photo-btn').addEventListener('click', () => uploadPhotoModal.classList.remove('visible'));
         
         getEl('confirm-upload-photo-btn').addEventListener('click', () => {
-            const name = getEl('upload-photo-name').value.trim();
-            if (!name) return showToast('照片名称不能为空', 'error');
-            
-            const description = getEl('upload-photo-desc').value.trim(); // 获取照片描述
+        const name = getEl('upload-photo-name').value.trim();
+        if (!name) return showToast('照片名称不能为空', 'error');
+        
+        const description = getEl('upload-photo-desc').value.trim(); // 获取照片描述
 
-            const localImages = runtimeState.moments.postContext.images;
-            const textImageDescs = getEl('upload-photo-text-image-desc').value.trim().split('\n').filter(d => d);
+        const localImages = runtimeState.moments.postContext.images;
+        const textImageDescs = getEl('upload-photo-text-image-desc').value.trim().split('\n').filter(d => d);
 
-            if (localImages.length === 0 && textImageDescs.length === 0) {
-                return showToast('请至少上传一张图片或输入文字图描述', 'error');
-            }
+        if (localImages.length === 0 && textImageDescs.length === 0) {
+            return showToast('请至少上传一张图片或输入文字图描述', 'error');
+        }
 
-            const photoIds = [];
-            // Process local images
-            localImages.forEach(imageId => {
-                const photo = { id: newId('photo'), ownerId: 'user', imageId: imageId, isTextImage: false, name: name, description: description };
-                appState.chat.moments.photos.push(photo);
-                photoIds.push(photo.id);
-            });
-            // Process text images
-            textImageDescs.forEach(desc => {
-                const photo = { id: newId('photo'), ownerId: 'user', imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: name, description: description };
-                appState.chat.moments.photos.push(photo);
-                photoIds.push(photo.id);
-            });
-            
-            const selectedAlbumId = getEl('upload-photo-album-select').value;
-            const album = appState.chat.moments.albums.find(a => a.id === selectedAlbumId);
-            if(album) {
-                if(!album.photoIds) album.photoIds = [];
-                album.photoIds.unshift(...photoIds);
-            }
-
-            const newPost = {
-                id: newId('post'),
-                authorId: 'user',
-                type: 'photo',
-                content: {
-                    name: name,
-                    description: description, // 动态的描述也使用照片描述
-                    photoIds: photoIds,
-                    albumId: selectedAlbumId
-                },
-                timestamp: Date.now(),
-                visibility: runtimeState.moments.postContext.visibility,
-                visibleTo: runtimeState.moments.postContext.visibleTo,
-                likes: [],
-                comments: []
-            };
-            appState.chat.moments.posts.unshift(newPost);
-            debouncedSaveState();
-            renderMomentsFeed('user');
-            uploadPhotoModal.classList.remove('visible');
+        const photoIds = [];
+        // Process local images
+        localImages.forEach(imageId => {
+            const photo = { id: newId('photo'), ownerId: 'user', imageId: imageId, isTextImage: false, name: name, description: description };
+            appState.chat.moments.photos.push(photo);
+            photoIds.push(photo.id);
         });
+        // Process text images
+        textImageDescs.forEach(desc => {
+            const photo = { id: newId('photo'), ownerId: 'user', imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: name, description: description };
+            appState.chat.moments.photos.push(photo);
+            photoIds.push(photo.id);
+        });
+        
+        const selectedAlbumId = getEl('upload-photo-album-select').value;
+        const album = appState.chat.moments.albums.find(a => a.id === selectedAlbumId);
+        if(album) {
+            if(!album.photoIds) album.photoIds = [];
+            album.photoIds.unshift(...photoIds);
+        }
+
+        const newPost = {
+            id: newId('post'),
+            authorId: 'user',
+            type: 'photo',
+            content: {
+                name: name,
+                description: description, // 动态的描述也使用照片描述
+                photoIds: photoIds,
+                albumId: selectedAlbumId
+            },
+            timestamp: Date.now(),
+            visibility: runtimeState.moments.postContext.visibility,
+            visibleTo: runtimeState.moments.postContext.visibleTo,
+            areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked, // Add this line
+            likes: [],
+            comments: []
+        };
+        appState.chat.moments.posts.unshift(newPost);
+        debouncedSaveState();
+        renderMomentsFeed('user');
+        uploadPhotoModal.classList.remove('visible');
+    });
 
 
         // --- Manage Albums Modal Listeners ---
@@ -8106,53 +8168,55 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         cancelPostMomentBtn.addEventListener('click', () => postMomentModal.classList.remove('visible'));
         
         confirmPostMomentBtn.addEventListener('click', async () => {
-            const { type, visibility, visibleTo, images, editingPostId } = runtimeState.moments.postContext;
-            
-            let postData;
-            if(editingPostId){
-                postData = appState.chat.moments.posts.find(p => p.id === editingPostId);
-                const selectedAuthorEl = getEl('moment-post-author-selector')?.querySelector('.selected');
-                if (selectedAuthorEl) {
-                    postData.authorId = selectedAuthorEl.dataset.id;
+        const { type, visibility, visibleTo, images, editingPostId } = runtimeState.moments.postContext;
+        const areCommentsPrivate = getEl('post-moment-comment-private-checkbox').checked;
+        
+        let postData;
+        if(editingPostId){
+            postData = appState.chat.moments.posts.find(p => p.id === editingPostId);
+            const selectedAuthorEl = getEl('moment-post-author-selector')?.querySelector('.selected');
+            if (selectedAuthorEl) {
+                postData.authorId = selectedAuthorEl.dataset.id;
+            }
+        } else {
+            postData = { id: newId('post'), authorId: 'user', timestamp: Date.now(), likes: [], comments: [] };
+        }
+
+        if (type === 'status') {
+            const text = getEl('post-moment-status-content').value.trim();
+            const statusType = query('input[name="status-type"]:checked').value;
+            let finalImages = [...images];
+
+            if (statusType === 'text-image') {
+                const desc = getEl('post-moment-text-image-desc').value.trim();
+                if (desc) {
+                    finalImages.push({ isTextImage: true, imageId: 'default_camera_image', description: desc });
                 }
-            } else {
-                postData = { id: newId('post'), authorId: 'user', timestamp: Date.now(), likes: [], comments: [] };
             }
-    
-            if (type === 'status') {
-                const text = getEl('post-moment-status-content').value.trim();
-                const statusType = query('input[name="status-type"]:checked').value;
-                let finalImages = [...images];
-    
-                if (statusType === 'text-image') {
-                    const desc = getEl('post-moment-text-image-desc').value.trim();
-                    if (desc) {
-                        finalImages.push({ isTextImage: true, imageId: 'default_camera_image', description: desc });
-                    }
-                }
-    
-                if (!text && finalImages.length === 0) return showToast('请说点什么或添加一张图片吧', 'error');
-                postData.type = 'status';
-                postData.content = { text, images: finalImages };
-            } else if (type === 'log') {
-                const title = getEl('post-moment-log-title').value.trim();
-                const text = getEl('post-moment-log-content').value.trim();
-                if(!title) return showToast('日志标题不能为空', 'error');
-                postData.type = 'log';
-                postData.content = { title, text };
-            }
-    
-            postData.visibility = visibility;
-            postData.visibleTo = visibility === 'specific' ? visibleTo : [];
-            
-            if(!editingPostId) {
-                appState.chat.moments.posts.unshift(postData);
-            }
-    
-            debouncedSaveState();
-            renderMomentsFeed(runtimeState.moments.currentProfileId);
-            postMomentModal.classList.remove('visible');
-        });
+
+            if (!text && finalImages.length === 0) return showToast('请说点什么或添加一张图片吧', 'error');
+            postData.type = 'status';
+            postData.content = { text, images: finalImages };
+        } else if (type === 'log') {
+            const title = getEl('post-moment-log-title').value.trim();
+            const text = getEl('post-moment-log-content').value.trim();
+            if(!title) return showToast('日志标题不能为空', 'error');
+            postData.type = 'log';
+            postData.content = { title, text };
+        }
+
+        postData.visibility = visibility;
+        postData.visibleTo = visibility === 'specific' ? visibleTo : [];
+        postData.areCommentsPrivate = areCommentsPrivate; // Save the new setting
+        
+        if(!editingPostId) {
+            appState.chat.moments.posts.unshift(postData);
+        }
+
+        debouncedSaveState();
+        renderMomentsFeed(runtimeState.moments.currentProfileId);
+        postMomentModal.classList.remove('visible');
+    });
     
         getEl('post-moment-status-type').addEventListener('change', e => {
             const type = e.target.value;
@@ -8561,39 +8625,40 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
     // ===================================================================
     
     function openUploadPhotoModal() {
-        runtimeState.moments.postContext = {
-            images: [], // for local file uploads
-            textImageDescs: [], // for text-to-image
-            albumId: null,
-            visibility: 'public',
-            visibleTo: []
-        };
+    runtimeState.moments.postContext = {
+        images: [], // for local file uploads
+        textImageDescs: [], // for text-to-image
+        albumId: null,
+        visibility: 'public',
+        visibleTo: []
+    };
+
+    getEl('upload-photo-name').value = '';
+    getEl('upload-photo-desc').value = '';
+    getEl('upload-photo-text-image-desc').value = '';
+    getEl('upload-photo-text-image-input-group').classList.add('hidden-by-logic');
+    getEl('upload-photo-image-preview-grid').innerHTML = '';
     
-        getEl('upload-photo-name').value = '';
-        getEl('upload-photo-desc').value = '';
-        getEl('upload-photo-text-image-desc').value = '';
-        getEl('upload-photo-text-image-input-group').classList.add('hidden-by-logic');
-        getEl('upload-photo-image-preview-grid').innerHTML = '';
-        
-        const albumSelect = getEl('upload-photo-album-select');
-        albumSelect.innerHTML = '';
-        if (appState.chat.moments.albums.length === 0) {
-            const defaultAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] };
-            appState.chat.moments.albums.push(defaultAlbum);
-            debouncedSaveState();
-        }
-        appState.chat.moments.albums.forEach(album => {
-            const option = document.createElement('option');
-            option.value = album.id;
-            option.textContent = album.name;
-            albumSelect.appendChild(option);
-        });
-    
-        queryAll('input[name="photo-visibility"]').forEach(r => r.checked = r.value === 'public');
-        getEl('upload-photo-friend-selector-container').classList.add('hidden-by-logic');
-    
-        uploadPhotoModal.classList.add('visible');
+    const albumSelect = getEl('upload-photo-album-select');
+    albumSelect.innerHTML = '';
+    if (appState.chat.moments.albums.length === 0) {
+        const defaultAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] };
+        appState.chat.moments.albums.push(defaultAlbum);
+        debouncedSaveState();
     }
+    appState.chat.moments.albums.forEach(album => {
+        const option = document.createElement('option');
+        option.value = album.id;
+        option.textContent = album.name;
+        albumSelect.appendChild(option);
+    });
+
+    queryAll('input[name="photo-visibility"]').forEach(r => r.checked = r.value === 'public');
+    getEl('upload-photo-friend-selector-container').classList.add('hidden-by-logic');
+    getEl('upload-photo-comment-private-checkbox').checked = false; // Reset the new checkbox
+
+    uploadPhotoModal.classList.add('visible');
+}
     
     function openManageAlbumsModal() {
         renderManageAlbums();
