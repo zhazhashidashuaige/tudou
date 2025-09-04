@@ -1726,9 +1726,9 @@
                     <input type="hidden" id="editing-letter-id">
                     <input type="hidden" id="letter-reply-to-id">
                     <div class="form-group">
-                        <label id="letter-recipient-label">收信人</label>
-                        <input type="text" id="letter-recipient-input" placeholder="To:">
-                    </div>
+                    <label id="letter-recipient-label">称呼</label>
+                    <input type="text" id="letter-recipient-input" placeholder="亲爱的...">
+                </div>
                      <div class="form-group">
                         <label>寄信人</label>
                         <div id="letter-author-selector" class="author-selector-grid"></div>
@@ -1864,6 +1864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const restorePlaylistBtn = getEl('restore-playlist-btn');
     const progressBar = getEl('progress-bar');
     const playerPlayPauseBtn = getEl('player-play-pause-btn');
+    const lyricsLineEl = getEl('lyrics-line');
     const playerPrevBtn = getEl('player-prev-btn');
     const playerNextBtn = getEl('player-next-btn');
     const playerPlaybackModeBtn = getEl('player-playback-mode-btn');
@@ -2601,7 +2602,7 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         avatarFrameId: contact.userSettings.avatarFrameId,
         persona: contact.userSettings.persona // Also sync persona for consistency
     };
-     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: []}; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
+     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false}; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); }); }
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); debouncedSaveState(); });
@@ -2681,7 +2682,9 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         appState.music.currentQueueIndex = -1;
         updateDynamicIsland(false);
         playerModal.classList.remove('show');
+        lyricsLineEl.textContent = '...';
         updateMusicListPlayingStatus();
+        getEl('lyrics-container').classList.remove('visible');
         clearInterval(listenTogetherTimer);
         listenTogetherInfo.style.display = 'none';
         if(runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
@@ -2763,7 +2766,7 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     function updateDynamicIsland(isPlaying, song) { if (isPlaying && song) { dynamicIsland.classList.add('music-active'); islandMusicInfo.textContent = `${song.artist} - ${song.title}`; } else { dynamicIsland.classList.remove('music-active'); } }
     function parseLRC(lrc) { const lines = lrc.split('\n'); const result = []; const timeRegex = /\[(\d{2}):(\d{2})[.:](\d{2,3})\]/g; for (const line of lines) { const text = line.replace(/\[.*?\]/g, '').trim(); if (text) { let match; while ((match = timeRegex.exec(line)) !== null) { const time = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + parseInt(match[3].padEnd(3, '0'), 10) / 1000; result.push({ time, text }); } } } return result.sort((a, b) => a.time - b.time); }
     let currentLyricIndex = -1;
-    function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; } return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1 && lyrics.length > 0) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; renderPlayerLyrics(lyrics, currentLyricIndex); if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { renderSongDetailsLyrics(lyrics, currentLyricIndex); } } }
+function updateLyrics(currentTime) { const song = appState.music.queue[appState.music.currentQueueIndex]; if (!song) return; const lyrics = appState.music.lyrics[song.id]; if (!lyrics || lyrics.length === 0) { playerLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; lyricsLineEl.textContent = '...'; if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { detailsLyricsView.innerHTML = '<div class="lyric-line active">暂无歌词</div>'; } return; } let newLyricIndex = lyrics.findIndex((line, i) => currentTime >= line.time && (!lyrics[i + 1] || currentTime < lyrics[i + 1].time)); if (newLyricIndex === -1 && lyrics.length > 0) newLyricIndex = 0; if (newLyricIndex !== currentLyricIndex) { currentLyricIndex = newLyricIndex; const activeLyricText = lyrics[currentLyricIndex]?.text || '...'; lyricsLineEl.textContent = activeLyricText; renderPlayerLyrics(lyrics, currentLyricIndex); if (songDetailsScreen.classList.contains('active') && songDetailsScreen.dataset.songId === song.id) { renderSongDetailsLyrics(lyrics, currentLyricIndex); } } }
     function renderPlayerLyrics(lyrics, activeIndex) { playerLyricsView.innerHTML = lyrics.map((line, index) => `<div class="lyric-line ${index === activeIndex ? 'active' : ''}">${line.text}</div>`).join(''); const activeLine = playerLyricsView.querySelector('.lyric-line.active'); if (activeLine) { activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
     hidePlayerBtn.addEventListener('click', () => playerModal.classList.remove('show'));
     playerPlayPauseBtn.addEventListener('click', togglePlayPause);
@@ -2835,6 +2838,17 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
             };
         }
         return { id: id, name: '未知用户', avatarId: `https://api.multiavatar.com/${id}.png`, signature: '...' };
+    }
+    function canCharViewMoment(charId, post) {
+        if (!post) return false; // Post does not exist
+        if (post.authorId === charId) return true; // Author can always view their own post
+        if (post.visibility === 'public') return true; // Public post is visible to all
+        // Check if the char is in the specific 'visibleTo' list
+        if (post.visibility === 'specific' && post.visibleTo && post.visibleTo.includes(charId)) return true;
+        // The user can see everything
+        if(charId === 'user') return true;
+        
+        return false; // Otherwise, it's not visible
     }
 
     sendCommentBtn.addEventListener('click', () => { const text = commentInput.value.trim(); if (!text) return; const songId = songDetailsScreen.dataset.songId; if (!songId) return; const newComment = { id: newId('comment'), authorId: 'user', authorName: appState.chat.userProfile.name, text, likes: [], replies: [], timestamp: Date.now() }; appState.music.comments[songId].unshift(newComment); debouncedSaveState(); renderSongComments(songId); commentInput.value = ''; });
@@ -3243,7 +3257,7 @@ chatListBackBtn.addEventListener('click', () => { if (chatAppScreen.classList.co
 query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; renderMomentsPage('user'); } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
 chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (runtimeState.contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', runtimeState.contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, runtimeState.contactSelection); } } else { addContactModal.classList.add('visible'); } });
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'), name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime); messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; li.dataset.isGroup = contact.isGroup; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let avatarHTML; const unreadBadgeHTML = contact.unreadCount > 0 ? `<div class="unread-badge">${contact.unreadCount}</div>` : ''; const shakeClass = contact.needsShake ? 'shake' : ''; if (contact.isGroup) { const groupAvatarId = contact.groupSettings.avatarId; if (groupAvatarId) { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${groupAvatarId}">${unreadBadgeHTML}</div>`; } else { const memberAvatarIds = ['user', ...contact.members].slice(0, 4).map(id => { if (id === 'user') return appState.chat.userProfile.avatarId; return appState.chat.contacts.find(c => c.id === id)?.charSettings.avatarId || ''; }).filter(Boolean); const puzzlePieces = memberAvatarIds.map(avatarId => `<div class="puzzle-piece" data-avatar-id="${avatarId}"></div>`).join(''); avatarHTML = `<div class="contact-avatar group-puzzle ${shakeClass}">${puzzlePieces}${unreadBadgeHTML}</div>`; } } else { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${contact.charSettings.avatarId}">${unreadBadgeHTML}</div>`; } const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length + 1})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; li.innerHTML = ` <div class="contact-item-content"> ${avatarHTML} <div class="contact-info"> <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name)}</div> <div class="contact-last-msg">${contact.lastMessage || ''}</div> </div> <div class="contact-meta"> <div class="contact-time">${time}</div> ${metaHTML} </div> </div> <div class="contact-item-actions"> <div class="delete-action">删除</div> </div>`; messageListEl.appendChild(li); li.querySelectorAll('[data-avatar-id]').forEach(el => { const id = el.dataset.avatarId; if (id.startsWith('https')) { el.style.backgroundImage = `url(${id})`; } else { setElementImage(el, id); } }); if (contact.needsShake) { setTimeout(() => { const avatarEl = li.querySelector('.contact-avatar'); if (avatarEl) avatarEl.classList.remove('shake'); contact.needsShake = false; debouncedSaveState(); }, 500); } }); }
 function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); runtimeState.contactSelection.push(item.dataset.id); }
@@ -3420,11 +3434,19 @@ function renderConversation(isLoadingMore = false) {
     chatMessagesView.querySelectorAll('[data-emoji-id]').forEach(el => setElementImage(el, el.dataset.emojiId, 'src'));
     chatMessagesView.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'src'));
 }
-function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; } contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(message.content, contact.id, message.sender); } 
+function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; }
+// --- ADDED: First Love Letter Trigger ---
+if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstChat && contact.conversation.length === 0) {
+contact.charSettings.hasHadFirstChat = true;
+// Use a timeout to make it feel more natural, as if the character is writing it after the first chat.
+setTimeout(() => generateAndSendLoveLetter(contact.id), 2000);
+}
+// --- END ADDED ---
+contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(message.content, contact.id, message.sender); }
 // When a new message is added, increase the display limit to ensure it's visible
-        if (runtimeState.chatDisplayLimits[contact.id]) {
-            runtimeState.chatDisplayLimits[contact.id]++;
-        }
+if (runtimeState.chatDisplayLimits[contact.id]) {
+runtimeState.chatDisplayLimits[contact.id]++;
+}
 if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === contact.id) { renderConversation(); } updateContactLastMessage(contact.id); renderMessageList(); debouncedSaveState(); }
 function addSystemNotification(contactId, content, triggerAi = false, context = null) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; const notification = { id: newId('msg'), type: 'notification', content, timestamp: Date.now(), contactId: contactId, sender: 'system' }; if (triggerAi === false) { notification.status = 'pending'; } contact.conversation.push(notification); updateContactLastMessage(contactId); debouncedSaveState(); if (runtimeState.currentChatId === contactId) { renderConversation(); } renderMessageList(); if (triggerAi) { const updatedContact = appState.chat.contacts.find(c => c.id === contactId); if (updatedContact.isGroup && updatedContact.members.length === 0) { return; } setTimeout(() => triggerAiResponse(contactId, false, false, false, context), 500); } }
 chatSendFakeBtn.addEventListener('click', () => { const content = chatInput.value.trim(); if (!content) return; addMessageToConversation({ id: newId('msg'), type: 'text', content, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatInput.value = ''; updateChatInputButtons(); });
@@ -5147,6 +5169,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         const allPosts = appState.chat.moments.posts;
         if (allPosts.length > 0) {
             allPosts.forEach(p => {
+            if (!canCharViewMoment(contact.id, p)) return; // 核心修复：如果Char看不见，直接跳过这条动态
                 const author = findUserById(p.authorId);
                 let authorMarker = '';
                 if (contact.isGroup) {
@@ -5707,15 +5730,7 @@ async function processVideoCallInvitationReply(replyContent, contact) {
             // **BUG FIX**: Define messageId and timestamp here for actions that create chat bubbles.
             const messageId = newId('msg');
             const timestamp = Date.now() + actionCounter * 100; // Offset timestamp to prevent collisions
-            actionCounter++;
-
-            const canCharViewMoment = (charId, post) => {
-                if (!post) return false;
-                if (post.authorId === charId) return true;
-                if (post.visibility === 'public') return true;
-                if (post.visibility === 'specific' && post.visibleTo && post.visibleTo.includes(charId)) return true;
-                return false;   
-            };
+            
             if (action === 'SEND_LOVE_LETTER' && args.length >= 5) {
                 const [recipientId, salutation, subject, body, signature] = args;
                 const recipient = findUserById(recipientId);
@@ -6619,21 +6634,21 @@ async function handleMomentsImageUpload(file, profileId, type) {
             openMomentCommentEditor(postId, parentCommentId, isReply ? commentOrReplyItem.dataset.replyId : null, null);
         } else if (action === 'delete-comment') {
             if (confirm(`确定要删除这条${isReply ? '回复' : '评论'}吗？`)) {
-                if (isReply) {
-                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
-                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
-                    // --- 新增：删除关联通知 ---
-                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
-                } else {
-                    const commentIdToDelete = parentCommentId;
-                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
-                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
-                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
-                }
-                debouncedSaveState();
-                updateMomentsNotificationUI(); // 更新角标
-                renderMomentsFeed(profileId);
-            }
+                                if (isReply) {
+                                    const replyIdToDelete = commentOrReplyItem.dataset.replyId;
+                                    parentComment.replies = parentComment.replies.filter(r => r.id !== replyIdToDelete);
+                                    // --- 新增：删除关联通知 ---
+                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalReplyId !== replyIdToDelete);
+                                } else {
+                                    const commentIdToDelete = parentCommentId;
+                                    post.comments = post.comments.filter(c => c.id !== commentIdToDelete);
+                                    // --- 新增：删除关联通知 (包括评论本身和其下的所有回复) ---
+                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.originalCommentId !== commentIdToDelete);
+                                }
+                                debouncedSaveState();
+                                updateMomentsNotificationUI(); // 更新角标
+                                renderMomentsFeed(profileId);
+                            }
         }
             } else if (target.closest('.reply-input-container button')) { // Send reply
                 const replyInput = target.previousElementSibling;
@@ -7818,7 +7833,7 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
 // ===================================================================
     function setupAllListInteractions() { 
         new ListInteractionHandler(presetListEl, { itemSelector: '.preset-list-item', contentSelector: '.preset-item-content', actionsSelector: '.preset-item-actions', onDelete: (item) => { const index = parseInt(item.dataset.index); if (confirm(`确定要删除预设 "${appState.settings.presets[index].name}" 吗？`)) { appState.settings.presets.splice(index, 1); debouncedSaveState(); renderPresetList(); updatePresetSelect(); showToast("预设已删除"); } }, onEdit: (item) => { const index = parseInt(item.dataset.index); const preset = appState.settings.presets[index]; editPresetIndexInput.value = index; editPresetNameInput.value = preset.name; editPresetUrlInput.value = preset.url; editPresetKeyInput.value = preset.key; editPresetModal.classList.add('visible'); } }); 
-        new ListInteractionHandler(musicListEl, { itemSelector: '.music-list-item', contentSelector: '.music-item-content', actionsSelector: '.music-item-actions', onTap: (item) => { const songId = item.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId) { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { runtimeState.currentChatId = null; clearInterval(listenTogetherTimer); listenTogetherInfo.style.display = 'none'; appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); playerModal.classList.add('show'); } } }, onLongPress: (item) => { openSongDetails(item.dataset.id); }, onDelete: async (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { if(song.isLocal) { await deleteMediaFromDB(songId); } appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); debouncedSaveState(); showToast("歌曲已删除"); } } }, onEdit: (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } } });  
+        new ListInteractionHandler(musicListEl, { itemSelector: '.music-list-item', contentSelector: '.music-item-content', actionsSelector: '.music-item-actions', onTap: (item) => { const songId = item.dataset.id; const currentPlayingSong = appState.music.queue[appState.music.currentQueueIndex]; if (currentPlayingSong && currentPlayingSong.id === songId && runtimeState.musicSessionType === 'solo') { stopPlayback(); } else { const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { stopPlayback(); runtimeState.currentChatId = null; runtimeState.musicSessionType = 'solo'; appState.music.queue = [...appState.music.playlist]; playSongFromQueue(songIndex); getEl('lyrics-container').classList.add('visible'); } } }, onLongPress: (item) => { openSongDetails(item.dataset.id); }, onDelete: async (item) => { const songId = item.dataset.id; const songIndex = appState.music.playlist.findIndex(s => s.id === songId); if (songIndex > -1) { const song = appState.music.playlist[songIndex]; if (confirm(`确定要删除歌曲 "${song.title}" 吗？`)) { if(song.isLocal) { await deleteMediaFromDB(songId); } appState.music.playlist.splice(songIndex, 1); delete appState.music.lyrics[songId]; const queueIndex = appState.music.queue.findIndex(s => s.id === songId); if (queueIndex > -1) { appState.music.queue.splice(queueIndex, 1); if (queueIndex === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(queueIndex % appState.music.queue.length); } else { stopPlayback(); } } else if (queueIndex < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } } renderMusicList(); renderPlayerQueue(); debouncedSaveState(); showToast("歌曲已删除"); } } }, onEdit: (item) => { const songId = item.dataset.id; const song = appState.music.playlist.find(s => s.id === songId); if (song) { editSongIdInput.value = song.id; editSongTitleInput.value = song.title; editSongArtistInput.value = song.artist; editSongModal.classList.add('visible'); } } });  
         new ListInteractionHandler(fontListEl, { itemSelector: '.font-list-item', contentSelector: '.font-item-content', actionsSelector: '.font-item-actions', onTap: (item, target) => { if (target.classList.contains('font-color-btn')) { const newColor = prompt("请输入新的字体颜色 (HEX或RGB/A):", appState.beautify.fontColor); if (newColor && isValidColor(newColor)) { appState.beautify.fontColor = newColor; document.documentElement.style.setProperty('--system-font-color', newColor); debouncedSaveState(); showToast('字体颜色已更新'); } else if (newColor) { showToast('无效的颜色格式', 'error'); } } else { const fontName = item.dataset.name; if (confirm(`确定要将系统字体更换为 "${fontName === 'default' ? '默认系统字体' : fontName}" 吗？`)) { applyFont(fontName); } } }, onDelete: async (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法删除', 'error'); return; } if (confirm(`确定要删除字体 "${fontName}" 吗？`)) { const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { await deleteMediaFromDB(appState.beautify.fonts[fontIndex].id); appState.beautify.fonts.splice(fontIndex, 1); } if (appState.beautify.currentFont === fontName) { applyFont('default'); } await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast('字体已删除'); } }, onEdit: async (item) => { const fontName = item.dataset.name; if (fontName === 'default') { showToast('默认字体无法编辑', 'error'); return; } const fontIndex = appState.beautify.fonts.findIndex(f => f.name === fontName); if (fontIndex > -1) { const newName = prompt('请输入新的字体名称:', fontName); if (newName && newName.trim() !== '') { appState.beautify.fonts[fontIndex].name = newName.trim(); if (appState.beautify.currentFont === fontName) { appState.beautify.currentFont = newName.trim(); } await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast('字体名称已更新'); } } } }); 
         const createDataListHandler = (listEl, type, renderFunction) => { new ListInteractionHandler(listEl, { itemSelector: '.preset-data-item', contentSelector: '.preset-data-item-content', actionsSelector: '.preset-data-item-actions', onTap: (item) => { const dataId = item.dataset.id; const dataItem = appState.data[type + 's'].find(d => d.id === dataId); if (dataItem) { viewContentTitle.textContent = escapeHTML(dataItem.name); viewContentBody.innerHTML = `<p>${escapeHTML(dataItem.content || '').replace(/\n/g, '<br>')}</p>`; viewContentModal.classList.add('visible'); } }, onDelete: (item) => { const id = item.dataset.id; const dataArray = appState.data[type + 's']; const itemIndex = dataArray.findIndex(i => i.id === id); if (itemIndex > -1) { if (confirm(`确定要删除 "${dataArray[itemIndex].name}" 吗？`)) { dataArray.splice(itemIndex, 1); debouncedSaveState(); renderFunction(); } } }, onEdit: (item) => { openDataEditor(type, item.dataset.id); } }); }; createDataListHandler(worldBookListEl, 'worldBook', renderWorldBooks); createDataListHandler(archiveListEl, 'archive', renderArchives); createDataListHandler(infoListEl, 'info', renderInfos); 
         new ListInteractionHandler(detailsCommentsList, { itemSelector: '.comment-item', contentSelector: '.comment-item-main', actionsSelector: '.comment-item-actions-swipe', onDelete: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const commentIndex = appState.music.comments[songId].findIndex(c => c.id === commentId); if (commentIndex > -1) { if (confirm('确定要删除这条评论吗？')) { appState.music.comments[songId].splice(commentIndex, 1); debouncedSaveState(); renderSongComments(songId); } } }, onEdit: (item) => { const songId = songDetailsScreen.dataset.songId; const commentId = item.dataset.commentId; const comment = appState.music.comments[songId].find(c => c.id === commentId); if (comment) { runtimeState.editingComment = { source: 'music', songId, commentId, replyId: null }; editCommentInput.value = comment.text; editCommentModal.classList.add('visible'); } } }); 
@@ -7885,9 +7900,9 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
                         });
     
     // 4. Clean Love Letters
-    if (appState.mailbox && appState.mailbox.loveLetters) {
-        appState.mailbox.loveLetters = appState.mailbox.loveLetters.filter(letter => letter.senderId !== charId);
-    }
+if (appState.mailbox && appState.mailbox.loveLetters) {
+    appState.mailbox.loveLetters = appState.mailbox.loveLetters.filter(letter => letter.senderId !== charId && letter.recipientId !== charId);
+}
                     }
                     // --- End of Enhanced Deletion Logic ---
 
@@ -8479,6 +8494,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                         generateAndSendLoveLetter(contact.id);
                     }, randomDelay);
                 }
+                
             }
         });
     }
@@ -8649,68 +8665,80 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 setupMomentsPageListeners();
                 // --- Mail App New Listeners & Functions ---
         function openEditLoveLetterModal(mode, letterId) {
-            const modal = getEl('edit-love-letter-modal');
-    const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
-    
-    // Clear replyToId field initially
-    getEl('letter-reply-to-id').value = '';
-            // Allow creating a new letter if letterId is null
-            if (!letter && mode !== 'new') return showToast('找不到该情书', 'error');
+        const modal = getEl('edit-love-letter-modal');
+        const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
+        
+        // Clear replyToId field initially
+        getEl('letter-reply-to-id').value = '';
+        // Allow creating a new letter if letterId is null
+        if (!letter && mode !== 'new') return showToast('找不到该情书', 'error');
 
-            modal.dataset.mode = mode; 
-            getEl('editing-letter-id').value = letterId || '';
+        modal.dataset.mode = mode; 
+        getEl('editing-letter-id').value = letterId || '';
 
-            const titleEl = getEl('edit-love-letter-title');
-            const recipientLabel = getEl('letter-recipient-label');
-            const recipientInput = getEl('letter-recipient-input');
-            const authorSelector = getEl('letter-author-selector');
-            const subjectInput = getEl('letter-subject-input');
-            const bodyInput = getEl('letter-body-input');
-            const signatureInput = getEl('letter-signature-input');
+        const titleEl = getEl('edit-love-letter-title');
+        const recipientInput = getEl('letter-recipient-input');
+        const authorSelectorContainer = getEl('letter-author-selector').parentElement; // Get the .form-group
+        const authorSelector = getEl('letter-author-selector');
+        const authorSelectorLabel = authorSelectorContainer.querySelector('label');
+        const subjectInput = getEl('letter-subject-input');
+        const bodyInput = getEl('letter-body-input');
+        const signatureInput = getEl('letter-signature-input');
+        
+        // Reset state first
+        recipientInput.readOnly = false;
+        authorSelectorContainer.style.display = 'block';
 
-            if (mode === 'edit') {
-                titleEl.textContent = '编辑情书';
-                const recipient = findUserById(letter.recipientId || 'user');
-                recipientInput.value = letter.recipientName || recipient.name;
-                subjectInput.value = letter.subject || '';
-                bodyInput.value = letter.body || '';
-                signatureInput.value = letter.signature || '';
-                renderLetterAuthorSelector(authorSelector, letter.senderId);
-            } else if (mode === 'reply') {
-                titleEl.textContent = '回信';
-                const originalSender = findUserById(letter.senderId);
-                recipientInput.value = originalSender.name;
-                getEl('letter-reply-to-id').value = letter.id; // Store the ID of the letter being replied to
-                subjectInput.value = `Re: ${letter.subject || '无题'}`;
-                bodyInput.value = `\n\n--- 原信 ---\n${letter.body}`;
-                signatureInput.value = findUserById('user').name;
-                renderLetterAuthorSelector(authorSelector, 'user');
-            } else { // 'new' mode
-                titleEl.textContent = '写新情书';
-                recipientInput.value = '';
-                subjectInput.value = '';
-                bodyInput.value = '';
-                signatureInput.value = findUserById('user').name;
-                renderLetterAuthorSelector(authorSelector, 'user');
-            }
+        if (mode === 'edit') {
+            titleEl.textContent = '编辑情书';
+            const recipient = findUserById(letter.recipientId || 'user');
+            recipientInput.value = letter.recipientName || recipient.name; // This is the salutation
+            subjectInput.value = letter.subject || '';
+            bodyInput.value = letter.body || '';
+            signatureInput.value = letter.signature || '';
+            authorSelectorLabel.textContent = '寄信人';
+            renderLetterAuthorSelector(authorSelector, letter.senderId, false); // false = don't exclude user
+        } else if (mode === 'reply') {
+            titleEl.textContent = '回信';
+            const originalSender = findUserById(letter.senderId);
+            recipientInput.value = originalSender.name; // This is the salutation, for the original sender
             
-            modal.classList.add('visible');
+            authorSelectorContainer.style.display = 'none'; // Hide sender selector
+            getEl('letter-reply-to-id').value = letter.id; // Store the ID of the letter being replied to
+            subjectInput.value = `Re: ${letter.subject || '无题'}`;
+            bodyInput.value = `\n\n--- 原信 ---\n${letter.body}`;
+            signatureInput.value = findUserById('user').name;
+        } else { // 'new' mode
+            titleEl.textContent = '写新情书';
+            recipientInput.value = ''; // Salutation is empty for user to fill
+            subjectInput.value = '';
+            bodyInput.value = '';
+            signatureInput.value = findUserById('user').name;
+            authorSelectorLabel.textContent = '收信人';
+            renderLetterAuthorSelector(authorSelector, null, true); // true = exclude user
         }
         
-        function renderLetterAuthorSelector(container, selectedId) {
-            const availableAuthors = [
-                { id: 'user', name: appState.chat.userProfile.name, avatarId: appState.chat.userProfile.avatarId },
-                ...appState.chat.contacts.filter(c => !c.isGroup).map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
-            ];
+        modal.classList.add('visible');
+    }
+        
+        function renderLetterAuthorSelector(container, selectedId, excludeUser = false) {
+        let availableAuthors = [
+            { id: 'user', name: appState.chat.userProfile.name, avatarId: appState.chat.userProfile.avatarId },
+            ...appState.chat.contacts.filter(c => !c.isGroup).map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
+        ];
 
-            container.innerHTML = availableAuthors.map(author => `
-                <div class="author-selector-item ${author.id === selectedId ? 'selected' : ''}" data-id="${author.id}">
-                    <div class="avatar" data-avatar-id="${author.avatarId}"></div>
-                    <span class="name">${author.name}</span>
-                </div>
-            `).join('');
-            container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+        if (excludeUser) {
+            availableAuthors = availableAuthors.filter(author => author.id !== 'user');
         }
+
+        container.innerHTML = availableAuthors.map(author => `
+            <div class="author-selector-item ${author.id === selectedId ? 'selected' : ''}" data-id="${author.id}">
+                <div class="avatar" data-avatar-id="${author.avatarId}"></div>
+                <span class="name">${author.name}</span>
+            </div>
+        `).join('');
+        container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+    }
 
         // --- Mail App New Listeners & Functions ---
         mailAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
@@ -8725,57 +8753,91 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         });
 
         getEl('save-love-letter-btn').addEventListener('click', () => {
-                    const modal = getEl('edit-love-letter-modal');
-                    const mode = modal.dataset.mode;
-                    const editingId = getEl('editing-letter-id').value;
-                    const replyToId = getEl('letter-reply-to-id').value;
-                    const recipientName = getEl('letter-recipient-input').value.trim();
-                    const subject = getEl('letter-subject-input').value.trim();
-                    const body = getEl('letter-body-input').value.trim();
-                    const signature = getEl('letter-signature-input').value.trim();
-                    const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
-                    const senderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : null;
-                    
-                    if (!recipientName || !subject || !body || !signature || !senderId) {
-                        return showToast('收信人、标题、正文、落款和寄信人均不能为空', 'error');
-                    }
+        const modal = getEl('edit-love-letter-modal');
+        const mode = modal.dataset.mode;
+        const editingId = getEl('editing-letter-id').value;
+        const replyToId = getEl('letter-reply-to-id').value;
+        const salutation = getEl('letter-recipient-input').value.trim(); // This is the "称呼"
+        const subject = getEl('letter-subject-input').value.trim();
+        const body = getEl('letter-body-input').value.trim();
+        const signature = getEl('letter-signature-input').value.trim();
         
-                    if (mode === 'edit') {
-                        const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
-                        if (letter) {
-                            letter.recipientName = recipientName;
-                            letter.senderId = senderId;
-                            letter.subject = subject;
-                            letter.body = body;
-                            letter.signature = signature;
-                            showToast('情书已更新');
-                        }
-                    } else { // reply or new
-                        const newLetter = {
-                            id: newId('letter'),
-                            senderId: senderId,
-                            id: newId('letter'),
-                            recipientName: recipientName,
-                            subject: subject,
-                            body: body,
-                            signature: signature,
-                            timestamp: Date.now(),
-                            isRead: senderId === 'user', // A letter written by the user is considered read by default
-                        };
-                        appState.mailbox.loveLetters.push(newLetter);
-                        showToast(mode === 'reply' ? '回信已保存' : '情书已保存');
-                    }
-                    // If this was a reply, mark the original letter as read
-    if (replyToId) {
-        const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
-        if (originalLetter) {
-            originalLetter.isRead = true;
+        if (!salutation || !subject || !body || !signature) {
+            return showToast('称呼、标题、正文和落款均不能为空', 'error');
         }
-    }
-                    debouncedSaveState();
-                    renderLoveLetterTab();
-                    modal.classList.remove('visible');
-                });
+
+        if (mode === 'edit') {
+            const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
+            if (!letter) return;
+            
+            const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
+            const newSenderId = selectedAuthorEl ? selectedAuthorEl.dataset.id : letter.senderId;
+            if (!newSenderId) return showToast('请选择寄信人', 'error');
+
+            letter.recipientName = salutation; // "称呼"
+            letter.senderId = newSenderId;
+            letter.subject = subject;
+            letter.body = body;
+            letter.signature = signature;
+            showToast('情书已更新');
+
+        } else if (mode === 'reply') {
+            const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
+            if (!originalLetter) return;
+            
+            const newLetter = {
+                id: newId('letter'),
+                senderId: 'user',
+                recipientId: originalLetter.senderId,
+                recipientName: salutation,
+                subject: subject,
+                body: body,
+                signature: signature,
+                timestamp: Date.now(),
+                isRead: true, 
+            };
+            appState.mailbox.loveLetters.push(newLetter);
+            showToast('回信已保存');
+
+        } else { // mode === 'new'
+            const selectedAuthorEl = getEl('letter-author-selector').querySelector('.selected');
+            const recipientId = selectedAuthorEl ? selectedAuthorEl.dataset.id : null;
+            if (!recipientId) return showToast('请选择收信人', 'error');
+
+            const newLetter = {
+                id: newId('letter'),
+                senderId: 'user',
+                recipientId: recipientId,
+                recipientName: salutation,
+                subject: subject,
+                body: body,
+                signature: signature,
+                timestamp: Date.now(),
+                isRead: true,
+            };
+            appState.mailbox.loveLetters.push(newLetter);
+            showToast('情书已保存');
+        }
+
+        // Common logic for all modes
+        if (replyToId) { // If it was a reply, mark original as read
+            const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
+            if (originalLetter) {
+                originalLetter.isRead = true;
+            }
+        }
+
+        debouncedSaveState();
+        renderLoveLetterTab();
+        modal.classList.remove('visible');
+    });
+    editLoveLetterModal.addEventListener('click', e => {
+        const item = e.target.closest('#letter-author-selector .author-selector-item');
+        if (item) {
+            item.parentElement.querySelectorAll('.author-selector-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+        }
+    });
                 getEl('cancel-edit-love-letter-btn').addEventListener('click', () => {
                     getEl('edit-love-letter-modal').classList.remove('visible');
                 });
@@ -9023,6 +9085,64 @@ function showIncomingCallUI(contactId) {
                 addSystemNotification(callerId, '你拒绝了视频通话', true, { callInitiator: 'char' });
             }
         });
+        // --- ADDED: Draggable Floating Lyrics & Player Opener ---
+    const lyricsContainer = getEl('lyrics-container');
+    let isLyricDragging = false, lyricStartX, lyricStartY, lyricInitialLeft, lyricInitialTop;
+    
+    lyricsContainer.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('a')) return; // Ignore links if any are added later
+        isLyricDragging = false;
+        
+        // Set a short timeout to differentiate between a click and a drag
+        const dragCheck = setTimeout(() => {
+            isLyricDragging = true;
+        }, 200);
+
+        lyricStartX = e.clientX;
+        lyricStartY = e.clientY;
+        lyricInitialLeft = lyricsContainer.offsetLeft;
+        lyricInitialTop = lyricsContainer.offsetTop;
+
+        const onPointerMove = (moveEvent) => {
+            const dx = moveEvent.clientX - lyricStartX;
+            const dy = moveEvent.clientY - lyricStartY;
+            if(Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                isLyricDragging = true;
+            }
+
+            if(isLyricDragging) {
+                const screenRect = phoneScreen.getBoundingClientRect();
+                let newLeft = lyricInitialLeft + dx;
+                let newTop = lyricInitialTop + dy;
+
+                // Boundary checks
+                newLeft = Math.max(0, Math.min(newLeft, screenRect.width - lyricsContainer.offsetWidth));
+                newTop = Math.max(0, Math.min(newTop, screenRect.height - lyricsContainer.offsetHeight));
+
+                lyricsContainer.style.left = `${newLeft}px`;
+                lyricsContainer.style.top = `${newTop}px`;
+                lyricsContainer.style.transform = 'none'; // Override the initial transform
+            }
+        };
+        
+        const onPointerUp = () => {
+            clearTimeout(dragCheck);
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+
+            if (!isLyricDragging) {
+                // This was a click, open the player
+                if (appState.music.currentQueueIndex !== -1) {
+                     playerModal.classList.add('show');
+                }
+            }
+        };
+
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    });
+
+    // --- END ADDED ---
 init();
 });
 
