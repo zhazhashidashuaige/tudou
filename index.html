@@ -2803,11 +2803,13 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     function playSongFromQueue(queueIndex, initiatorId = null) {
         if (queueIndex < 0 || queueIndex >= appState.music.queue.length) return;
 
-        if (initiatorId) {
-            runtimeState.musicSessionType = 'together';
-        } else {
-            runtimeState.musicSessionType = 'solo';
+        // --- 核心修复：仅在会话类型改变或没有计时器时才清除 ---
+        const newSessionType = initiatorId ? 'together' : 'solo';
+        if (newSessionType !== runtimeState.musicSessionType && listenTogetherTimer) {
+            clearInterval(listenTogetherTimer);
+            listenTogetherTimer = null;
         }
+        runtimeState.musicSessionType = newSessionType;
 
         appState.music.currentQueueIndex = queueIndex;
         const song = appState.music.queue[queueIndex];
@@ -2833,21 +2835,24 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         audioPlayer.play().catch(e => console.error("播放失败:", e));
         updateAllPlayerUI(song);
     
-        clearInterval(listenTogetherTimer);
         if (runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
             const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
             if (!contact) return;
             if (!contact.listenTogetherDuration) contact.listenTogetherDuration = 0;
             listenTogetherInfo.style.display = 'flex';
-            listenTogetherTimer = setInterval(() => {
-                contact.listenTogetherDuration++;
-                const seconds = contact.listenTogetherDuration;
-                const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
-                const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
-                const s = String(seconds % 60).padStart(2, '0');
-                listenTogetherText.textContent = `一起听了 ${h}:${m}:${s}`;
-                debouncedSaveState();
-            }, 1000);
+            
+            // --- 核心修复：仅在计时器未运行时启动 ---
+            if (!listenTogetherTimer) {
+                listenTogetherTimer = setInterval(() => {
+                    contact.listenTogetherDuration++;
+                    const seconds = contact.listenTogetherDuration;
+                    const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+                    const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+                    const s = String(seconds % 60).padStart(2, '0');
+                    listenTogetherText.textContent = `一起听了 ${h}:${m}:${s}`;
+                    debouncedSaveState();
+                }, 1000);
+            }
         } else {
              listenTogetherInfo.style.display = 'none';
         }
@@ -2879,8 +2884,10 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         } else {
             nextIndex = (currentQueueIndex + 1) % queue.length;
         }
-        playSongFromQueue(nextIndex);
-        if (runtimeState.currentChatId) {
+        // --- 核心修复：在切歌时保持会话类型 ---
+        playSongFromQueue(nextIndex, runtimeState.musicSessionType === 'together' ? 'user' : null);
+        
+        if (runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
             addSystemNotification(runtimeState.currentChatId, `歌曲已自动切换到: 《${appState.music.queue[nextIndex].title}》`, false);
         }
     }
@@ -2894,8 +2901,10 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         } else {
             prevIndex = (currentQueueIndex - 1 + queue.length) % queue.length;
         }
-        playSongFromQueue(prevIndex);
-        if (runtimeState.currentChatId) {
+        // --- 核心修复：在切歌时保持会话类型 ---
+        playSongFromQueue(prevIndex, runtimeState.musicSessionType === 'together' ? 'user' : null);
+
+        if (runtimeState.currentChatId && runtimeState.musicSessionType === 'together') {
             addSystemNotification(runtimeState.currentChatId, `歌曲已切换到: 《${appState.music.queue[prevIndex].title}》`, false);
         }
     }
@@ -2951,7 +2960,7 @@ function updateLyrics(currentTime) { const song = appState.music.queue[appState.
     playerPrevBtn.addEventListener('click', playPrev);
     playerPlaybackModeBtn.addEventListener('click', togglePlaybackMode);
     togglePlaylistViewBtn.addEventListener('click', () => { playerLyricsView.classList.toggle('active'); playerPlaylistViewContainer.classList.toggle('active'); });
-function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="delete-from-queue-btn" data-icon-id="player-delete"><i class="fa-solid fa-trash-can"></i></button>`; playerPlaylistView.appendChild(li); }); }    playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); debouncedSaveState(); } } else { playSongFromQueue(index); } });
+function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music.queue.forEach((song, index) => { const li = document.createElement('li'); li.className = 'player-playlist-item'; li.classList.toggle('playing', index === appState.music.currentQueueIndex); li.dataset.index = index; li.innerHTML = `<div class="info"><div class="title">${song.title}</div><div class="artist">${song.artist}</div></div><button class="delete-from-queue-btn" data-icon-id="player-delete"><i class="fa-solid fa-trash-can"></i></button>`; playerPlaylistView.appendChild(li); }); }    playerPlaylistView.addEventListener('click', (e) => { const item = e.target.closest('.player-playlist-item'); if (!item) return; const index = parseInt(item.dataset.index); if (e.target.closest('.delete-from-queue-btn')) { if (confirm(`确定要从播放列表中移除 "${appState.music.queue[index].title}" 吗？`)) { appState.music.queue.splice(index, 1); if (index === appState.music.currentQueueIndex) { if (appState.music.queue.length > 0) { playSongFromQueue(index % appState.music.queue.length, runtimeState.musicSessionType === 'together' ? 'user' : null); } else { stopPlayback(); } } else if (index < appState.music.currentQueueIndex) { appState.music.currentQueueIndex--; } renderPlayerQueue(); debouncedSaveState(); } } else { playSongFromQueue(index, runtimeState.musicSessionType === 'together' ? 'user' : null); } });
     restorePlaylistBtn.addEventListener('click', () => { appState.music.queue = [...appState.music.playlist]; renderPlayerQueue(); debouncedSaveState(); showToast("播放列表已还原"); });
     
     // ===================================================================
@@ -6189,9 +6198,6 @@ function handleSocialAction(action, args, senderId) {
     }
 }
     async function processAiReply(replyContent, contact) {
-    // 预处理，将AI可能误用的分隔符统一替换掉
-    replyContent = replyContent.replace(/、|，|,/g, '<MSG_SPLIT>');
-
     // 核心修复：使用更强大的正则表达式，优先将所有完整的[ACTION:...]指令从原文中分离出来
     const actionRegex = /\[ACTION:[\s\S]*?\]/g;
     const textParts = replyContent.split(actionRegex);
@@ -6314,7 +6320,7 @@ function handleSocialAction(action, args, senderId) {
             }
 
         } else if (segment.type === 'text') {
-            const messages = segment.content.split('<MSG_SPLIT>').map(s => s.trim()).filter(Boolean);
+            const messages = segment.content.replace(/、|，|,/g, '<MSG_SPLIT>').split('<MSG_SPLIT>').map(s => s.trim()).filter(Boolean);
             for (const message of messages) {
                 let messageContent = message;
                 let senderForThisMessage = currentSenderId;
@@ -6344,7 +6350,6 @@ function handleSocialAction(action, args, actorId) {
     const actorName = getDisplayName(actorId, actorId);
 
     if (action === 'POST_MOMENT' && args.length >= 2) {
-        // --- 核心修复：增加对AI错误参数的兼容性 ---
         let type = (args[0] || '').toLowerCase();
         if (['心情', '说说', 'status'].includes(type)) type = 'status';
         if (['日志', 'log'].includes(type)) type = 'log';
@@ -6392,7 +6397,8 @@ function handleSocialAction(action, args, actorId) {
             appState.music.comments[song.id].unshift({ id: newId('comment'), authorId: actorId, text: reviewText, likes: [], replies: [], timestamp: Date.now() });
         }
     } else if (action === 'LEAVE_MESSAGE' && args[0]) {
-        const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: args[0], senderId: actorId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
+        const content = args[0];
+        const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: content, senderId: actorId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
         appState.chat.moments.messages.push(newMessage);
         queueNotification(`${actorName} 给你留言了`, 'system', actorId, 'moments'); logVisitor('user', actorId);
     } else if (action === 'LIKE_MOMENT' && args[0]) {
@@ -8899,10 +8905,9 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
             }
         });
     }
-    function constructLoveLetterPrompt(charContact) {
+    function constructLoveLetterPrompt(charContact, context) {
         const now = new Date();
         const localTime = now.toLocaleString('zh-CN', { hour12: false, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-        // --- 核心修复：确保使用与该Char关联的特定User人设 ---
         const user = charContact.userSettings;
             
         let prompt = `你正在扮演角色，为你的心上人写一封充满爱意的情书。\n`;
@@ -8923,10 +8928,27 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
             prompt += `\n`;
         }
         
+        // --- 核心优化：动态情景生成 ---
         prompt += `--- **写信情景** ---\n`;
-        prompt += `这是你对 “${user.name}” 之前寄来的一封信的回信。请基于你们的人设、关系，以及当前的世界观设定，写一封充满真情实感的回信。\n`;
-        prompt += `- 你的信可以延续你们之前的话题，分享你后续的想法和更深层的情感。\n`;
-        prompt += `- 你的信应该分享你今天的所见所闻、所思所想，并表达你对“${user.name}”的强烈思念。\n\n`;
+        switch(context.type) {
+            case 'proactive_first':
+                prompt += `这是你【主动】写给 “${user.name}” 的【第一封】情书。你们之间从未通过信件交流。请基于你们的人设、关系和当前的世界观，写一封能够打动对方、开启你们之间书信往来的信。你可以分享你今天的所见所闻，并表达你内心深处对TA的思念与情感。\n`;
+                break;
+            case 'reply_to_user':
+                const originalLetter = context.originalLetter;
+                prompt += `你刚刚收到了 “${user.name}” 寄来的一封情书，现在你需要写一封回信。TA的来信内容如下：\n`;
+                prompt += `标题: ${originalLetter.subject}\n称呼: ${originalLetter.recipientName}\n正文: ${originalLetter.body}\n落款: ${originalLetter.signature}\n`;
+                prompt += `请基于你们的人设、关系、世界观以及TA的来信内容，写一封充满真情实感的回信。你可以延续TA的话题，分享你后续的想法和更深层的情感。\n`;
+                break;
+            case 'pining':
+                const yourLastLetter = context.yourLastLetter;
+                prompt += `你之前曾给 “${user.name}” 写过一封信（标题是：“${yourLastLetter.subject}”），但至今没有收到TA的回信。你现在的心情可能有些复杂（思念、担忧、或是一点点小小的失落）。请你鼓起勇气，【主动】再写一封信给TA。你可以问问TA最近过得好不好，分享一些你的近况，并再次表达你对TA的思念，以及对回信的期盼。\n`;
+                break;
+            default: // Fallback for proactive subsequent letters
+                prompt += `这是你【主动】写给 “${user.name}” 的一封情书。请分享你今天的所见所闻、所思所想，并表达你对TA的强烈思念。\n`;
+                break;
+        }
+        prompt += '\n';
         
         prompt += `--- **【强制要求】** ---\n`;
         prompt += `1. **【自由发挥称呼与落款】**: 信件的称呼（salutation）和落款（signature）**不必**拘泥于固定格式。请你**必须**结合你的人设、你们的关系、信件的语境和情感，进行**完全自由的、个性化的创作**。\n`;
@@ -8959,7 +8981,28 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 return;
             }
             
-            const prompt = constructLoveLetterPrompt(char);
+            // --- 核心优化：动态上下文分析 ---
+            const lettersBetween = appState.mailbox.loveLetters
+                .filter(l => (l.senderId === charId && l.recipientId === 'user') || (l.senderId === 'user' && l.recipientId === charId))
+                .sort((a, b) => a.timestamp - b.timestamp);
+            
+            let context = { type: 'proactive_subsequent' }; // Default context
+
+            if (lettersBetween.length === 0) {
+                context.type = 'proactive_first';
+            } else {
+                const lastLetter = lettersBetween[lettersBetween.length - 1];
+                if (lastLetter.senderId === 'user') {
+                    context.type = 'reply_to_user';
+                    context.originalLetter = lastLetter;
+                } else { // Last letter was from the char
+                    context.type = 'pining';
+                    context.yourLastLetter = lastLetter;
+                }
+            }
+            // --- 优化结束 ---
+
+            const prompt = constructLoveLetterPrompt(char, context);
             const messages = [{ role: 'system', content: prompt }];
             
             const response = await fetch(`${apiUrl}/v1/chat/completions`, {
@@ -8978,15 +9021,15 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 const newLetter = {
                     id: newId('letter'),
                     senderId: charId,
+                    recipientId: 'user', // Char always writes to user
                     timestamp: Date.now(),
                     isRead: false,
                     ...letterData
                 };
                 appState.mailbox.loveLetters.push(newLetter);
-                char.lastLetterSent = Date.now(); // Update last sent time
+                char.lastLetterSent = Date.now();
                 debouncedSaveState();
                 
-                // Show notification and update UI if mail app is open
                 queueNotification(`${char.name} 给你寄来了一封情书`, 'system', charId, 'mail');
                 if (mailAppScreen.classList.contains('active')) {
                     renderLoveLetterTab();
