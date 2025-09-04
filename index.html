@@ -1468,7 +1468,7 @@
     <div id="edit-comment-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑评论</h3><div class="modal-body"><textarea id="edit-comment-input" class="wide-textarea"></textarea></div><div class="modal-actions row"><button id="cancel-edit-comment-btn" class="cancel-btn" data-bubble-id="comment-edit-cancel">取消</button><button id="save-edit-comment-btn" class="confirm-btn" data-bubble-id="comment-edit-save">保存</button></div></div></div>
     <div id="view-content-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="view-content-title"></h3><div class="modal-body" id="view-content-body"></div><div class="modal-actions"><button id="close-view-content-btn" class="cancel-btn" data-bubble-id="view-content-close">关闭</button></div></div></div>
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
-    <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">删除选中</button><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button></div></div></div>
+    <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button><button id="library-mode-toggle-btn" class="settings-button secondary">删除</button><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
@@ -2260,6 +2260,7 @@ const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
     const libraryFileInput = getEl('library-file-input');
     const libraryDeleteBtn = getEl('library-delete-btn');
     const libraryCloseBtn = getEl('library-close-btn');
+    const libraryModeToggleBtn = getEl('library-mode-toggle-btn');
     const loadPersonaModal = getEl('load-persona-modal');
     const loadPersonaTitle = getEl('load-persona-title');
     const loadPersonaList = getEl('load-persona-list');
@@ -3046,11 +3047,12 @@ wallpaperFileInput.addEventListener('change', async (e) => { const files = e.tar
 async function renderWallpapers() { wallpaperGrid.innerHTML = ''; for (const wp of appState.beautify.wallpapers) { const item = document.createElement('div'); item.className = 'wallpaper-item'; item.dataset.id = wp.id; const img = document.createElement('img'); img.alt = '壁纸预览'; item.appendChild(img); if (wp.id === appState.beautify.currentWallpaperId) item.classList.add('is-wallpaper'); if (wp.id === appState.beautify.currentChatBgId) item.classList.add('is-chat-bg'); wallpaperGrid.appendChild(item); setElementImage(img, wp.id, 'src'); } }
 function showWallpaperContextMenu(targetElement, event) { event.preventDefault(); runtimeState.wallpaperContextMenuTarget = targetElement; const screenRect = phoneScreen.getBoundingClientRect(); let x = event.clientX; let y = event.clientY; if (event.touches) { x = event.touches[0].clientX; y = event.touches[0].clientY; } wallpaperContextMenu.style.display = 'flex'; const menuRect = wallpaperContextMenu.getBoundingClientRect(); let top = y - screenRect.top; let left = x - screenRect.left; if (left + menuRect.width > screenRect.width - 10) { left = screenRect.width - menuRect.width - 10; } if (top + menuRect.height > screenRect.height - 10) { top = screenRect.height - menuRect.height - 10; } wallpaperContextMenu.style.top = `${top}px`; wallpaperContextMenu.style.left = `${left}px`; }
 function hideWallpaperContextMenu() { if (wallpaperContextMenu) wallpaperContextMenu.style.display = 'none'; runtimeState.wallpaperContextMenuTarget = null; }
-let wallpaperLongPressTimer;
-wallpaperGrid.addEventListener('pointerdown', (e) => { const item = e.target.closest('.wallpaper-item'); if (item) { clearTimeout(wallpaperLongPressTimer); wallpaperLongPressTimer = setTimeout(() => { showWallpaperContextMenu(item, e); }, 500); } });
-wallpaperGrid.addEventListener('pointermove', () => clearTimeout(wallpaperLongPressTimer));
-wallpaperGrid.addEventListener('pointerup', () => clearTimeout(wallpaperLongPressTimer));
-wallpaperGrid.addEventListener('contextmenu', (e) => { const item = e.target.closest('.wallpaper-item'); if (item) { showWallpaperContextMenu(item, e); } });
+wallpaperGrid.addEventListener('click', (e) => {
+    const item = e.target.closest('.wallpaper-item');
+    if (item) {
+        showWallpaperContextMenu(item, e);
+    }
+});
 document.addEventListener('pointerdown', (e) => { if (wallpaperContextMenu.style.display === 'flex' && !wallpaperContextMenu.contains(e.target)) { hideWallpaperContextMenu(); } }, true);
 getEl('wp-set-wallpaper').addEventListener('click', async () => { if (!runtimeState.wallpaperContextMenuTarget) return; const id = runtimeState.wallpaperContextMenuTarget.dataset.id; appState.beautify.currentWallpaperId = id; await applyWallpaperById(id, phoneScreen); debouncedSaveState(); renderWallpapers(); hideWallpaperContextMenu(); showToast('壁纸已设置'); });
 getEl('wp-set-chat-bg').addEventListener('click', () => { if (!runtimeState.wallpaperContextMenuTarget) return; const id = runtimeState.wallpaperContextMenuTarget.dataset.id; appState.beautify.currentChatBgId = id; debouncedSaveState(); renderWallpapers(); hideWallpaperContextMenu(); showToast('全局聊天背景已设置'); });
@@ -5012,11 +5014,33 @@ function openLibraryModal(context) { runtimeState.libraryContext = context; runt
 function renderLibraryGrid() { let items, activeItem; const context = runtimeState.libraryContext; if (context.isGlobalUserLib) { items = appState.chat.userProfile.avatarLibrary; } else if (context.isFrame) { items = appState.chat.userProfile.avatarFrameLibrary; } else if (context.isGroup) { items = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; } else if (context.memberId) { items = runtimeState.tempGcsMemberSettings[context.libraryKey]; } else { items = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; } if (context.isGroup) { activeItem = runtimeState.tempChatSettings.groupSettings[context.activeKey]; } else if (context.memberId) { activeItem = runtimeState.tempGcsMemberSettings[context.activeKey]; } else { activeItem = runtimeState.tempChatSettings[context.settingsGroup][context.activeKey]; } libraryGrid.innerHTML = ''; if (context.hasNoItemOption) { const noItem = document.createElement('div'); noItem.className = 'library-item no-frame'; noItem.dataset.id = ''; noItem.innerHTML = '🚫'; if (activeItem === '') { noItem.classList.add('selected'); } libraryGrid.appendChild(noItem); } items.forEach(id => { const item = document.createElement('div'); item.className = 'library-item'; if (context.isCircular) item.classList.add('circular'); item.innerHTML = `<img alt="library image">`; item.dataset.id = id; if (id === activeItem) { item.classList.add('selected'); } libraryGrid.appendChild(item); setElementImage(item.querySelector('img'), id, 'src'); }); updateLibraryPreview(); }
 async function updateLibraryPreview() { const context = runtimeState.libraryContext; if (!context.showPreview) return; const previewFrame = query('#avatar-frame-preview .avatar-frame'); if (previewFrame) { let activeFrameId; if (context.memberId) { activeFrameId = runtimeState.tempGcsMemberSettings[context.activeKey]; } else if (context.isGroupUser) { activeFrameId = runtimeState.tempChatSettings.userSettings[context.activeKey]; } else { activeFrameId = runtimeState.tempChatSettings[context.settingsGroup][context.activeKey]; } await setElementImage(previewFrame, activeFrameId); } }
 libraryGrid.addEventListener('click', (e) => { const item = e.target.closest('.library-item'); if (!item) return; const context = runtimeState.libraryContext; if (libraryModal.classList.contains('selection-mode')) { item.classList.toggle('selected'); const id = item.dataset.id; if (id === '') return; if (item.classList.contains('selected')) { if (!runtimeState.librarySelection.includes(id)) runtimeState.librarySelection.push(id); } else { runtimeState.librarySelection = runtimeState.librarySelection.filter(u => u !== id); } } else { const id = item.dataset.id; let settingsObj, uiUpdateFunc; if (context.isGroup) { settingsObj = runtimeState.tempChatSettings.groupSettings; uiUpdateFunc = loadGroupChatSettingsUI; } else if (context.memberId) { settingsObj = runtimeState.tempGcsMemberSettings; uiUpdateFunc = loadGcsMemberModalUI; } else { settingsObj = runtimeState.tempChatSettings[context.settingsGroup]; uiUpdateFunc = context.isGroupUser ? loadGroupChatSettingsUI : loadSingleChatSettingsUI; } settingsObj[context.activeKey] = id; uiUpdateFunc(); renderLibraryGrid(); } });
-let libraryLongPressTimer;
-libraryGrid.addEventListener('pointerdown', (e) => { const item = e.target.closest('.library-item'); if (item && item.dataset.id) { libraryLongPressTimer = setTimeout(() => { libraryModal.classList.add('selection-mode'); libraryDeleteBtn.style.display = 'block'; item.classList.add('selected'); runtimeState.librarySelection.push(item.dataset.id); }, 500); } });
-libraryGrid.addEventListener('pointerup', () => clearTimeout(libraryLongPressTimer));
-libraryGrid.addEventListener('pointerleave', () => clearTimeout(libraryLongPressTimer));
-libraryCloseBtn.addEventListener('click', () => { if (libraryModal.classList.contains('selection-mode')) { libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; runtimeState.librarySelection = []; queryAll('.library-item.selected').forEach(i => i.classList.remove('selected')); } else { libraryModal.classList.remove('visible'); } });
+function enterLibrarySelectionMode() {
+    libraryModal.classList.add('selection-mode');
+    libraryModeToggleBtn.textContent = '取消';
+    libraryDeleteBtn.style.display = 'block';
+    libraryCloseBtn.style.display = 'none';
+}
+
+function exitLibrarySelectionMode() {
+    libraryModal.classList.remove('selection-mode');
+    libraryModeToggleBtn.textContent = '删除';
+    libraryDeleteBtn.style.display = 'none';
+    libraryCloseBtn.style.display = 'block';
+    runtimeState.librarySelection = [];
+    queryAll('#library-grid .library-item.selected').forEach(i => i.classList.remove('selected'));
+}
+
+libraryModeToggleBtn.addEventListener('click', () => {
+    if (libraryModal.classList.contains('selection-mode')) {
+        exitLibrarySelectionMode();
+    } else {
+        enterLibrarySelectionMode();
+    }
+});
+libraryCloseBtn.addEventListener('click', () => {
+    exitLibrarySelectionMode(); // Always reset state on close
+    libraryModal.classList.remove('visible');
+});
 libraryDeleteBtn.addEventListener('click', async () => {
     const context = runtimeState.libraryContext;
     const selection = runtimeState.librarySelection;
@@ -5084,10 +5108,8 @@ libraryDeleteBtn.addEventListener('click', async () => {
 
     // Common cleanup for all cases
     debouncedSaveState();
-    renderLibraryGrid();
-    libraryModal.classList.remove('selection-mode');
-    libraryDeleteBtn.style.display = 'none';
-    runtimeState.librarySelection = [];
+    exitLibrarySelectionMode();
+    renderLibraryGrid(); // Re-render after exiting selection mode
 });libraryUploadBtn.addEventListener('click', () => {
         libraryFileInput.accept = 'image/*,.zip';
         libraryFileInput.click();
@@ -5761,7 +5783,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `--- **关于系统通知与用户编辑行为的【强制】设定** ---\n`;
         prompt += `当聊天记录中出现 ` + "`[System Notification]: ...`" + ` 这样的系统消息时，你必须理解其内容并作为当前情景的一部分进行回应，而不是去质疑或模仿发送系统消息。请【严格区分】以下两种情况：\n`;
         prompt += `1. **趣味互动**: 当系统通知显示【“你”】（指User）修改了【自己】的个性签名、群名片、群头衔，或管理员/群主修改了群名/其他成员信息时，你【可以】对此发表不同的意见，这是聊天互动的一部分。\n`;
-        prompt += `2. **【极其重要】强制接受**: 当系统通知显示【“你”（指User）】修改了【我（指Char）】的状态或签名，或用户通过界面直接编辑了【我】的任何动态、评论、留言（包括内容和发布人）时，这代表User在纠正不符合人设的内容。你【必须】无条件接受这个修改为事实。你的记忆需要立刻更新，并认为它【一直以来】就是这样的。你【绝对禁止】对这一修改提出任何质疑，或表现出“被修改了记忆”的迹象！\n`;
+            prompt += `2. **【极其重要】强制接受 (OOC修正)**: 此规则【仅在单聊中】生效。当系统通知显示【“你”（指User）】通过UI修改了【我（指Char）】的状态或签名时，这代表User在纠正不符合人设的内容。你【必须】无条件接受这个修改为事实，并认为它【一直以来】就是这样的，【绝对禁止】对此提出任何质疑。在【群聊】中，任何成员（包括User）对其他成员信息的修改都属于【趣味互动】，你应该对此作出符合人设的、实时的反应（如惊讶、抱怨、感谢等）。\n`;
         let callNotificationRule = '';
         if (context && context.callInitiator) {
             if (context.callInitiator === 'user') {
@@ -5800,7 +5822,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         
         prompt += `--- **关于“一起听歌”与“动态”功能的【强制】设定** ---\n`;
         prompt += `1. **一起听歌**: 这是一个“虚拟听歌”功能。当系统通知“一起听歌”时，你【必须】接受这个设定，结合歌曲信息（歌名、歌手，如有匹配歌词也可以结合歌词）的文本内容，像真人一样对歌曲进行评论、分享感受或切歌。如果你听到深有感触的歌曲，可以使用 ` + "`[ACTION: POST_MUSIC_REVIEW ...]`" + ` 指令在音乐APP发表乐评。\n`;
-        prompt += `2. **发布与互动动态**: 这是你表达情感的重要方式！当你收到用户消息【深有感触】（例如收到珍贵的礼物、听到动人的情话、经历重要事件）时，或在自己独处时有所感悟，【强烈鼓励你主动】使用 \`[ACTION: POST_MOMENT ...]\` 指令在动态界面发布一条相关动态。在重大情感节点（如收到七夕礼物）却没有发布动态是【不符合人设】的。你也可以使用 \`[ACTION: LEAVE_MESSAGE ...]\` 给用户留言。\n\n`;            
+        prompt += `2. **发布与互动动态**: 这是你表达情感的重要方式！当你收到用户消息【深有感触】（例如收到珍贵的礼物、听到动人的情话、经历重要事件）时，或在自己独处时有所感悟，【强烈鼓励你主动】使用 \`[ACTION: POST_MOMENT ...]\` 指令在动态界面发布一条相关动态。在重大情感节点（如收到七夕礼物）却没有发布动态是【不符合人设】的。你也可以使用 \`[ACTION: LEAVE_MESSAGE ...]\` 给用户留言。【绝对强制】：当决定发布动态时，你【必须】使用 \`[ACTION]\` 指令，【严厉禁止】只用文字回复说“我发了条动态”而不实际使用指令。\n\n`;            
         
         prompt += `--- **关于括号 () 使用的【强制】规则** ---\n`;
         prompt += `你应该通过语言本身来传递情感和语气，尽量减少在【纯文字消息】中使用括号 () 进行描述。如果确实需要使用，必须严格遵守以下所有条件：\n`;
@@ -5845,7 +5867,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `16. **回应好友申请 (单聊)**: \`[ACTION: ACCEPT_FRIEND_REQUEST]\` 或 \`[ACTION: REJECT_FRIEND_REQUEST]\`\n`;
         prompt += `17. **群管理 (仅群主/管理员可用)**: \`[ACTION: MUTE_MEMBER "@成员昵称"]\`, \`[ACTION: UNMUTE_MEMBER "@成员昵称"]\`, \`[ACTION: MUTE_ALL]\`, \`[ACTION: UNMUTE_ALL]\`, \`[ACTION: SET_GROUP_NAME "新群名"]\`, \`[ACTION: SET_TITLE "@成员昵称" "新头衔"]\`, \`[ACTION: SET_NICKNAME "@旧昵称" "新昵称"]\`\n`;
         prompt += `18. **群主专属**: \`[ACTION: TRANSFER_OWNERSHIP "@成员昵称"]\`, \`[ACTION: PROMOTE_ADMIN "@成员昵称"]\`, \`[ACTION: DEMOTE_ADMIN "@成员昵称"]\`\n`;
-        prompt += `19. **发表动态 (通用)**: \`[ACTION: POST_MOMENT "类型" "内容" "可见性"]\`\n`;
+        prompt += `19. **发表动态**: \`[ACTION: POST_MOMENT "type" "content" "visibility"]\` (参数说明：type必须是"status"或"log"；content是动态内容；visibility必须是"public"或"specific"。示例: \`[ACTION: POST_MOMENT "status" "今天天气真好！" "public"]\`)\n`;
         prompt += `20. **上传照片 (通用)**: \`[ACTION: POST_PHOTO "照片名称" "照片描述" "相册名称" "图片描述1|图片描述2"]\`\n`;
         prompt += `21. **发表乐评 (通用)**: \`[ACTION: POST_MUSIC_REVIEW "歌手 - 歌曲名" "乐评内容"]\`\n`;
         prompt += `22. **留言 (通用)**: \`[ACTION: LEAVE_MESSAGE "留言内容"]\`\n`;
@@ -6062,75 +6084,167 @@ async function processVideoCallInvitationReply(replyContent, contact) {
             updateTimer(); // Immediately update the timer
             islandVideoCallTimer = setInterval(updateTimer, 1000);
         }
-
-    async function processAiReply(replyContent, contact) {
-        // --- STAGE 1: Extract all ACTION commands from the raw reply ---
-        const actionRegex = /\[ACTION:\s*[\w_]+\s*(?:".*?"|[^\]])*?\]/gs;
-        const actionMatches = [...replyContent.matchAll(actionRegex)];
-        const actionsToExecute = [];
-
-        for (const match of actionMatches) {
-            const actionString = match[0];
-            const actionMatch = actionString.match(/^\[ACTION:\s*([\w_]+)\s*(.*?)\]$/is);
-            if (actionMatch) {
-                const action = actionMatch[1].toUpperCase();
-                const argsStr = actionMatch[2].trim();
-                const args = argsStr.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg => arg.replace(/"/g, '')) || [];
-                actionsToExecute.push({ action, args });
+function handleSocialAction(action, args, senderId) {
+    const actorName = getDisplayName(senderId);
+    if (action === 'POST_MOMENT' && args.length >= 2) {
+        const type = args[0]; let contentStr = args[1]; const visibility = args[2] || 'public';
+        const newPost = { id: newId('post'), authorId: senderId, timestamp: Date.now(), likes: [], comments: [], visibility: visibility, visibleTo: (visibility === 'specific' ? ['user'] : []) };
+        if (type === 'status') {
+            newPost.type = 'status';
+            let text = contentStr, images = [];
+            if (contentStr.includes('||')) {
+                const parts = contentStr.split('||'); text = parts[0].trim();
+                images = parts[1].trim().split('|').filter(d => d).map(desc => ({ isTextImage: true, imageId: 'default_camera_image', description: desc }));
+            }
+            newPost.content = { text: text, images: images };
+            appState.chat.moments.posts.unshift(newPost);
+            queueNotification(`${actorName} 发表了新动态`, 'system', senderId, 'moments');
+            debouncedSaveState();
+            syncAndUpdateMoments(senderId);
+        } else if (type === 'log') {
+            const [title, text] = contentStr.split('|');
+            if (title && text) { newPost.type = 'log'; newPost.content = { title, text }; appState.chat.moments.posts.unshift(newPost); queueNotification(`${actorName} 发表了新动态`, 'system', senderId, 'moments'); debouncedSaveState(); syncAndUpdateMoments(senderId); }
+        }
+    } else if (action === 'POST_PHOTO' && args.length >= 3) {
+        const [photoName, photoDesc, albumName, imageDescsStr] = args;
+        const imageDescs = imageDescsStr ? imageDescsStr.split('|').filter(d => d) : [];
+        if (imageDescs.length > 0) {
+            let targetAlbum = appState.chat.moments.albums.find(a => a.name === albumName) || appState.chat.moments.albums.find(a => a.id === 'default');
+            if (!targetAlbum) { targetAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] }; appState.chat.moments.albums.push(targetAlbum); }
+            const photoIds = imageDescs.map(desc => {
+                const photo = { id: newId('photo'), ownerId: senderId, imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: photoName, description: photoDesc };
+                appState.chat.moments.photos.push(photo); return photo.id;
+            });
+            if (!targetAlbum.photoIds) targetAlbum.photoIds = [];
+            targetAlbum.photoIds.unshift(...photoIds);
+            const newPost = { id: newId('post'), authorId: senderId, type: 'photo', content: { name: photoName, description: photoDesc, photoIds: photoIds, albumId: targetAlbum.id }, timestamp: Date.now(), visibility: 'public', visibleTo: [], likes: [], comments: [] };
+            appState.chat.moments.posts.unshift(newPost);
+            queueNotification(`${actorName} 上传了新照片`, 'system', senderId, 'moments');
+        }
+    } else if (action === 'POST_MUSIC_REVIEW' && args.length >= 2) {
+        const songQuery = args[0], reviewText = args[1];
+        const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
+        if (song) {
+            if (!appState.music.comments[song.id]) appState.music.comments[song.id] = [];
+            appState.music.comments[song.id].unshift({ id: newId('comment'), authorId: senderId, text: reviewText, likes: [], replies: [], timestamp: Date.now() });
+        }
+    } else if (action === 'LEAVE_MESSAGE' && args[0]) {
+        const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: args[0], senderId: senderId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
+        appState.chat.moments.messages.push(newMessage);
+        queueNotification(`${actorName} 给你留言了`, 'system', senderId, 'moments'); logVisitor('user', senderId);
+    } else if (action === 'LIKE_MOMENT' && args[0]) {
+        const post = appState.chat.moments.posts.find(p => p.id === args[0]);
+        if (post && canCharViewMoment(senderId, post)) {
+            if (!post.likes) post.likes = [];
+            if (!post.likes.includes(senderId)) {
+                post.likes.push(senderId);
+                if (post.authorId === 'user') addMomentsNotification('like', senderId, { postId: post.id, recipientId: 'user' });
+                logVisitor(post.authorId, senderId);
             }
         }
+    } else if (action === 'COMMENT_MOMENT' && args.length >= 2) {
+        const [postId, commentText] = args;
+        const post = appState.chat.moments.posts.find(p => p.id === postId);
+        if (post && canCharViewMoment(senderId, post)) {
+            if (!post.comments) post.comments = [];
+            const newComment = { id: newId('comment'), authorId: senderId, text: commentText, likes: [], replies: [], timestamp: Date.now() };
+            post.comments.push(newComment);
+            if (post.authorId === 'user') addMomentsNotification('comment', senderId, { postId: post.id, recipientId: 'user', content: commentText });
+            logVisitor(post.authorId, senderId);
+        }
+    } else if (action === 'REPLY_MOMENT_COMMENT' && args.length >= 3) {
+        const [postId, commentId, replyText, replyToId] = args;
+        const post = appState.chat.moments.posts.find(p => p.id === postId);
+        if (post && post.comments && canCharViewMoment(senderId, post)) {
+            const comment = post.comments.find(c => c.id === commentId);
+            if (comment) {
+                if (!comment.replies) comment.replies = [];
+                let targetAuthor = replyToId ? findUserById(comment.replies.find(r => r.id === replyToId)?.authorId) : findUserById(comment.authorId);
+                if (!targetAuthor) targetAuthor = findUserById(comment.authorId);
+                const newReply = { id: newId('reply'), authorId: senderId, text: `@${targetAuthor.name} ${replyText}`, replyTo: replyToId || null, timestamp: Date.now() };
+                comment.replies.push(newReply);
+                if (targetAuthor.id === 'user') addMomentsNotification('reply', senderId, { postId: post.id, recipientId: 'user', content: replyText });
+                logVisitor(post.authorId, senderId);
+            }
+        }
+    } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
+        const [songId, commentId, replyText] = args;
+        const songComments = appState.music.comments[songId];
+        if (songComments) {
+            const comment = songComments.find(c => c.id === commentId);
+            if (comment) {
+                if (!comment.replies) comment.replies = [];
+                comment.replies.push({ id: newId('reply'), authorId: senderId, text: replyText, replyTo: commentId, timestamp: Date.now() });
+            }
+        }
+    } else if (action === 'REPLY_MESSAGE_BOARD' && args.length >= 2) {
+        const [messageId, replyText] = args;
+        const message = appState.chat.moments.messages.find(m => m.id === messageId);
+        if (message) {
+            if (!message.replies) message.replies = [];
+            message.replies.push({ id: newId('reply'), authorId: senderId, text: replyText, timestamp: Date.now() });
+            if (message.senderId === 'user') addMomentsNotification('reply', senderId, { messageId: message.id, recipientId: 'user', content: replyText });
+            logVisitor(message.recipientId, senderId);
+        }
+    }
+}
+    async function processAiReply(replyContent, contact) {
+    // 预处理，将AI可能误用的分隔符统一替换掉
+    replyContent = replyContent.replace(/、|，|,/g, '<MSG_SPLIT>');
 
-        // --- STAGE 2: Create a clean chat text by removing all actions ---
-        const cleanReply = replyContent.replace(actionRegex, '').trim();
-        const chatMessages = cleanReply.split('<MSG_SPLIT>').map(s => s.trim()).filter(s => s);
+    // 核心修复：使用更强大的正则表达式，优先将所有完整的[ACTION:...]指令从原文中分离出来
+    const actionRegex = /\[ACTION:[\s\S]*?\]/g;
+    const textParts = replyContent.split(actionRegex);
+    const actionParts = replyContent.match(actionRegex) || [];
+    
+    // 将文本和动作交错合并成一个有序的、待处理的片段列表
+    const combinedSegments = [];
+    for (let i = 0; i < textParts.length; i++) {
+        if (textParts[i] && textParts[i].trim()) {
+            combinedSegments.push({ type: 'text', content: textParts[i] });
+        }
+        if (actionParts[i]) {
+            combinedSegments.push({ type: 'action', content: actionParts[i] });
+        }
+    }
+    
+    let currentSenderId = contact.isGroup ? null : contact.id;
+    let actionCounter = 0;
 
-        // --- STAGE 3: Execute all ACTION commands first (silently, unless they create messages) ---
-        let actionCounter = 0;
-        for (const { action, args } of actionsToExecute) {
-            // Find sender for this action. In group chats, this is tricky. We'll assume the AI is roleplaying the first member if ambiguous.
-            let currentSenderId = contact.isGroup ? (Object.entries(contact.groupSettings.members).find(([id, member]) => args.some(arg => typeof arg === 'string' && arg.includes(member.nickname)))?.[0] || contact.members.find(id => id !== 'user')) : contact.id;
-            if (!currentSenderId && contact.isGroup && contact.members.length > 0) currentSenderId = contact.members[0]; // Fallback
-            if (!currentSenderId) continue;
+    for (const segment of combinedSegments) {
+        const timestamp = Date.now() + actionCounter++ * 100;
+
+        if (segment.type === 'action') {
+            const actionMatch = segment.content.match(/^\[ACTION:\s*([\w_]+)\s*(.*?)\]$/is);
+            if (!actionMatch) continue;
+
+            if (!currentSenderId && contact.isGroup) {
+                currentSenderId = contact.members.find(id => id !== 'user') || contact.members[0];
+                if (!currentSenderId) continue;
+            }
             
-            const currentSenderName = getDisplayName(currentSenderId, contact.id);
-            
-            // **BUG FIX**: Define messageId and timestamp here for actions that create chat bubbles.
+            const action = actionMatch[1].trim().toUpperCase();
+            const argsStr = actionMatch[2].trim();
+            const args = argsStr.match(/(?:[^\s"]+|"[^"]*")+/g)?.map(arg => arg.replace(/"/g, '')) || [];
+            const actorName = getDisplayName(currentSenderId, contact.id);
             const messageId = newId('msg');
-            const timestamp = Date.now() + actionCounter * 100; // Offset timestamp to prevent collisions
             
-            if (action === 'SEND_LOVE_LETTER' && args.length >= 5) {
+            // --- Action Switch Statement (内容不变，仅 senderId 修正为 currentSenderId) ---
+             if (action === 'SEND_LOVE_LETTER' && args.length >= 5) {
                 const [recipientId, salutation, subject, body, signature] = args;
                 const recipient = findUserById(recipientId);
                 if (recipient) {
-                    const newLetter = {
-                        id: newId('letter'),
-                        senderId: currentSenderId,
-                        recipientId: recipientId,
-                        recipientName: recipient.name,
-                        salutation: salutation,
-                        subject: subject,
-                        body: body,
-                        signature: signature,
-                        timestamp: Date.now(),
-                        isRead: false // Char's letter to user starts as unread
-                    };
+                    const newLetter = { id: newId('letter'), senderId: currentSenderId, recipientId: recipientId, recipientName: recipient.name, salutation: salutation, subject: subject, body: body, signature: signature, timestamp: Date.now(), isRead: false };
                     appState.mailbox.loveLetters.push(newLetter);
-                    
                     const charContact = appState.chat.contacts.find(c => c.id === currentSenderId);
                     if (charContact) charContact.lastLetterSent = Date.now();
-                    
-                    queueNotification(`${currentSenderName} 给你寄来了一封情书`, 'system', currentSenderId, 'mail');
-                    if (mailAppScreen.classList.contains('active')) {
-                        handleMailTabChange('love-letter');
-                    }
+                    queueNotification(`${actorName} 给你寄来了一封情书`, 'system', currentSenderId, 'mail');
+                    if (mailAppScreen.classList.contains('active')) { handleMailTabChange('love-letter'); }
                 }
-            } else
-            // --- Full Action Processing Logic ---
-
-            if (action === 'SEND_EMOJI' && args[0]) {
+            } else if (action === 'SEND_EMOJI' && args[0]) {
                 const emojiDesc = args[0].toLowerCase();
                 const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)];
-if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
+                if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
             } else if (action === 'SEND_VOICE' && args[0]) {
                 const cleanText = args[0].replace(/\(.*?\)|（.*?）/g, '');
                 const duration = Math.max(1, Math.ceil(cleanText.length / 2));
@@ -6151,196 +6265,193 @@ if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emo
             } else if (action === 'INITIATE_VIDEO_CALL') {
                 if (appState.chat.videoCallState.isActive) {
                     addMessageToConversation({ id: newId('msg'), type: 'text', content: '（我想给你打视频，但你好像正在通话中...）', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
-                } else if (runtimeState.incomingCall.from) {
-                    // Another call is already incoming, do nothing.
-                } else {
+                } else if (!runtimeState.incomingCall.from) {
                     showIncomingCallUI(currentSenderId);
                 }
             } else if (action === 'PAT' && args[0]) {
-                let targetName = args[0].replace('@', ''); let patterName = currentSenderName; let suffix = args[1] || '';
-                addSystemNotification(contact.id, `'${patterName}' 拍了拍 '${targetName}'${suffix ? ` ${suffix}` : ''}`);
-            } else if (action === 'POST_MOMENT' && args.length >= 2) {
-                const type = args[0]; let contentStr = args[1]; const visibility = args[2] || 'public';
-                const newPost = { id: newId('post'), authorId: currentSenderId, timestamp: Date.now(), likes: [], comments: [], visibility: visibility, visibleTo: (visibility === 'specific' ? ['user'] : []) };
-                if (type === 'status') {
-                    newPost.type = 'status';
-                    let text = contentStr, images = [];
-                    if (contentStr.includes('||')) {
-                        const parts = contentStr.split('||'); text = parts.trim();
-                        images = parts.trim().split('|').filter(d => d).map(desc => ({ isTextImage: true, imageId: 'default_camera_image', description: desc }));
-                    }
-                    newPost.content = { text: text, images: images };
-                    appState.chat.moments.posts.unshift(newPost);
-                    queueNotification(`${currentSenderName} 发表了新动态`, 'system', currentSenderId, 'moments');
-                    debouncedSaveState();
-                    syncAndUpdateMoments(currentSenderId);
-                } else if (type === 'log') {
-                    const [title, text] = contentStr.split('|');
-                    if (title && text) { newPost.type = 'log'; newPost.content = { title, text }; appState.chat.moments.posts.unshift(newPost); queueNotification(`${currentSenderName} 发表了新动态`, 'system', currentSenderId, 'moments'); debouncedSaveState(); syncAndUpdateMoments(currentSenderId); }
-                }
-            } else if (action === 'POST_PHOTO' && args.length >= 3) {
-                const [photoName, photoDesc, albumName, imageDescsStr] = args;
-                const imageDescs = imageDescsStr ? imageDescsStr.split('|').filter(d => d) : [];
-                if (imageDescs.length > 0) {
-                    let targetAlbum = appState.chat.moments.albums.find(a => a.name === albumName) || appState.chat.moments.albums.find(a => a.id === 'default');
-                    if (!targetAlbum) { targetAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] }; appState.chat.moments.albums.push(targetAlbum); }
-                    const photoIds = imageDescs.map(desc => {
-                        const photo = { id: newId('photo'), ownerId: currentSenderId, imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: photoName, description: photoDesc };
-                        appState.chat.moments.photos.push(photo); return photo.id;
-                    });
-                    if (!targetAlbum.photoIds) targetAlbum.photoIds = [];
-                    targetAlbum.photoIds.unshift(...photoIds);
-                    const newPost = { id: newId('post'), authorId: currentSenderId, type: 'photo', content: { name: photoName, description: photoDesc, photoIds: photoIds, albumId: targetAlbum.id }, timestamp: Date.now(), visibility: 'public', visibleTo: [], likes: [], comments: [] };
-                    appState.chat.moments.posts.unshift(newPost);
-                    queueNotification(`${currentSenderName} 上传了新照片`, 'system', currentSenderId, 'moments');
-                }
-            } else if (action === 'POST_MUSIC_REVIEW' && args.length >= 2) {
-                const songQuery = args[0], reviewText = args[1];
-                const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
-                if (song) {
-                    if (!appState.music.comments[song.id]) appState.music.comments[song.id] = [];
-                    appState.music.comments[song.id].unshift({ id: newId('comment'), authorId: currentSenderId, text: reviewText, likes: [], replies: [], timestamp: Date.now() });
-                }
-            } else if (action === 'LEAVE_MESSAGE' && args[0]) {
-                const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: args[0], senderId: currentSenderId, senderName: currentSenderName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
-                appState.chat.moments.messages.push(newMessage);
-                queueNotification(`${currentSenderName} 给你留言了`, 'system', currentSenderId, 'moments'); logVisitor('user', currentSenderId);
-            } else if (action === 'LIKE_MOMENT' && args[0]) {
-                const post = appState.chat.moments.posts.find(p => p.id === args[0]);
-                if (post && canCharViewMoment(currentSenderId, post)) {
-                    if (!post.likes) post.likes = [];
-                    if (!post.likes.includes(currentSenderId)) {
-                        post.likes.push(currentSenderId);
-                        if (post.authorId === 'user') addMomentsNotification('like', currentSenderId, { postId: post.id, recipientId: 'user' });
-                        logVisitor(post.authorId, currentSenderId);
-                    }
-                }
-            } else if (action === 'COMMENT_MOMENT' && args.length >= 2) {
-                const [postId, commentText] = args;
-                const post = appState.chat.moments.posts.find(p => p.id === postId);
-                if (post && canCharViewMoment(currentSenderId, post)) {
-                    if (!post.comments) post.comments = [];
-                    const newComment = { id: newId('comment'), authorId: currentSenderId, text: commentText, likes: [], replies: [], timestamp: Date.now() };
-                    post.comments.push(newComment);
-                    if (post.authorId === 'user') addMomentsNotification('comment', currentSenderId, { postId: post.id, recipientId: 'user', content: commentText });
-                    logVisitor(post.authorId, currentSenderId);
-                }
-            } else if (action === 'REPLY_MOMENT_COMMENT' && args.length >= 3) {
-                const [postId, commentId, replyText, replyToId] = args;
-                const post = appState.chat.moments.posts.find(p => p.id === postId);
-                if (post && post.comments && canCharViewMoment(currentSenderId, post)) {
-                    const comment = post.comments.find(c => c.id === commentId);
-                    if (comment) {
-                        if (!comment.replies) comment.replies = [];
-                        let targetAuthor = replyToId ? findUserById(comment.replies.find(r => r.id === replyToId)?.authorId) : findUserById(comment.authorId);
-                        if (!targetAuthor) targetAuthor = findUserById(comment.authorId);
-                        const newReply = { id: newId('reply'), authorId: currentSenderId, text: `@${targetAuthor.name} ${replyText}`, replyTo: replyToId || null, timestamp: Date.now() };
-                        comment.replies.push(newReply);
-                        if (targetAuthor.id === 'user') addMomentsNotification('reply', currentSenderId, { postId: post.id, recipientId: 'user', content: replyText });
-                        logVisitor(post.authorId, currentSenderId);
-                    }
-                }
-            } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
-                const [songId, commentId, replyText] = args;
-                const songComments = appState.music.comments[songId];
-                if (songComments) {
-                    const comment = songComments.find(c => c.id === commentId);
-                    if (comment) {
-                        if (!comment.replies) comment.replies = [];
-                        comment.replies.push({ id: newId('reply'), authorId: currentSenderId, text: replyText, replyTo: commentId, timestamp: Date.now() });
-                    }
-                }
-            } else if (action === 'REPLY_MESSAGE_BOARD' && args.length >= 2) {
-                const [messageId, replyText] = args;
-                const message = appState.chat.moments.messages.find(m => m.id === messageId);
-                if (message) {
-                    if (!message.replies) message.replies = [];
-                    message.replies.push({ id: newId('reply'), authorId: currentSenderId, text: replyText, timestamp: Date.now() });
-                    if (message.senderId === 'user') addMomentsNotification('reply', currentSenderId, { messageId: message.id, recipientId: 'user', content: replyText });
-                    logVisitor(message.recipientId, currentSenderId);
-                }
+                addSystemNotification(contact.id, `'${actorName}' 拍了拍 '${args[0].replace('@', '')}'${args[1] ? ` ${args[1]}` : ''}`);
+            } else if (action.startsWith('POST_') || action.startsWith('LEAVE_') || action.startsWith('LIKE_') || action.startsWith('COMMENT_') || action.startsWith('REPLY_')) {
+                handleSocialAction(action, args, currentSenderId);
             } else if (action === 'SET_STATUS' && !contact.isGroup && args.length >= 1) {
                 const status = args[0].toLowerCase(); const statusText = args[1] || '';
-                if (['online', 'busy', 'offline'].includes(status)) { contact.status = status; contact.statusText = statusText; addSystemNotification(contact.id, `${currentSenderName} 将状态修改为：${(statusMap[contact.status] || '')} ${contact.statusText || ''}`.trim(), false); updateSingleChatUI(); }
+                if (['online', 'busy', 'offline'].includes(status)) { contact.status = status; contact.statusText = statusText; addSystemNotification(contact.id, `${actorName} 将状态修改为：${(statusMap[contact.status] || '')} ${contact.statusText || ''}`.trim(), false); updateSingleChatUI(); }
             } else if (action === 'SET_SIGNATURE' && !contact.isGroup && args.length >= 1) {
-                contact.signature = args.join(' '); addSystemNotification(contact.id, `${currentSenderName} 将签名修改为：“${contact.signature}”`, false); updateSingleChatUI();
+                contact.signature = args.join(' '); addSystemNotification(contact.id, `${actorName} 将签名修改为：“${contact.signature}”`, false); updateSingleChatUI();
             } else if (action === 'DELETE_FRIEND' && !contact.isGroup) {
-                contact.charSettings.isFriend = false; addSystemNotification(contact.id, `${currentSenderName} 删除你了`, false); updateSingleChatUI();
+                contact.charSettings.isFriend = false; addSystemNotification(contact.id, `${actorName} 删除你了`, false); updateSingleChatUI();
             } else if (action === 'ACCEPT_FRIEND_REQUEST' && !contact.isGroup) {
-                contact.charSettings.isFriend = true; addSystemNotification(contact.id, `${currentSenderName} 接受了你的好友申请`, false);
+                contact.charSettings.isFriend = true; addSystemNotification(contact.id, `${actorName} 接受了你的好友申请`, false);
             } else if (action === 'REJECT_FRIEND_REQUEST' && !contact.isGroup) {
-                addSystemNotification(contact.id, `${currentSenderName} 拒绝了你的好友申请`, false);
+                addSystemNotification(contact.id, `${actorName} 拒绝了你的好友申请`, false);
                 if (args[0]) addMessageToConversation({ id: newId('msg'), type: 'text', content: args[0], sender: currentSenderId, timestamp: Date.now(), status: 'sent', contactId: contact.id }, true);
             } else if (action === 'SET_MY_NICKNAME' && contact.isGroup && args[0]) {
                 const oldNickname = contact.groupSettings.members[currentSenderId].nickname;
                 contact.groupSettings.members[currentSenderId].nickname = args[0];
                 addSystemNotification(contact.id, `'${oldNickname}' 在群里改名为 '${args[0]}'`, false);
             } else if (action.startsWith('MUTE_') && contact.isGroup) {
-                if (action === 'MUTE_ALL') { contact.groupSettings.isMuted = true; addSystemNotification(contact.id, `'${currentSenderName}' 开启了全体禁言`, false); }
-                else if (action === 'UNMUTE_ALL') { contact.groupSettings.isMuted = false; addSystemNotification(contact.id, `'${currentSenderName}' 解除了全体禁言`, false); }
-                else if (args[0]) { const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', '')); if (targetId && targetId !== 'user') { const isMute = action === 'MUTE_MEMBER'; contact.groupSettings.members[targetId].isMuted = isMute; addSystemNotification(contact.id, `'${currentSenderName}' ${isMute ? '禁言了' : '解除了对'} '${args[0].replace('@', '')}'${isMute ? '' : ' 的禁言'}`, false); } }
+                if (action === 'MUTE_ALL') { contact.groupSettings.isMuted = true; addSystemNotification(contact.id, `'${actorName}' 开启了全体禁言`, false); }
+                else if (action === 'UNMUTE_ALL') { contact.groupSettings.isMuted = false; addSystemNotification(contact.id, `'${actorName}' 解除了全体禁言`, false); }
+                else if (args[0]) { const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', '')); if (targetId && targetId !== 'user') { const isMute = action === 'MUTE_MEMBER'; contact.groupSettings.members[targetId].isMuted = isMute; addSystemNotification(contact.id, `'${actorName}' ${isMute ? '禁言了' : '解除了对'} '${args[0].replace('@', '')}'${isMute ? '' : ' 的禁言'}`, false); } }
             } else if (action === 'SET_GROUP_NAME' && contact.isGroup && args[0]) {
-                contact.groupSettings.name = args[0]; addSystemNotification(contact.id, `'${currentSenderName}' 将群名修改为 "${args[0]}"`, false); updateSingleChatUI();
+                contact.groupSettings.name = args[0]; addSystemNotification(contact.id, `'${actorName}' 将群名修改为 "${args[0]}"`, false); updateSingleChatUI();
             } else if ((action === 'SET_TITLE' || action === 'SET_NICKNAME') && contact.isGroup && args.length >= 2) {
                 const targetNickname = args[0].replace('@', '');
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname);
-                if (targetId) { // Can edit user too
-                    if (action === 'SET_TITLE') { contact.groupSettings.members[targetId].title = args[1]; addSystemNotification(contact.id, `'${currentSenderName}' 将 '${targetNickname}' 的群聊头衔修改为 '${args[1]}'`, false); }
-                    else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = args[1]; addSystemNotification(contact.id, `'${currentSenderName}' 修改了 '${oldNickname}' 的群名片为 '${args[1]}'`, false); }
+                if (targetId) {
+                    if (action === 'SET_TITLE') { contact.groupSettings.members[targetId].title = args[1]; addSystemNotification(contact.id, `'${actorName}' 将 '${targetNickname}' 的群聊头衔修改为 '${args[1]}'`, false); }
+                    else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = args[1]; addSystemNotification(contact.id, `'${actorName}' 修改了 '${oldNickname}' 的群名片为 '${args[1]}'`, false); }
                 }
             } else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) {
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', ''));
-                if (targetId && targetId !== 'user') { contact.groupSettings.owner = targetId; if (currentSenderId) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== currentSenderId); addSystemNotification(contact.id, `'${currentSenderName}' 将群主转让给了 '${args[0].replace('@', '')}'`, false); }
+                if (targetId && targetId !== 'user') { contact.groupSettings.owner = targetId; if (currentSenderId) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== currentSenderId); addSystemNotification(contact.id, `'${actorName}' 将群主转让给了 '${args[0].replace('@', '')}'`, false); }
             } else if ((action === 'PROMOTE_ADMIN' || action === 'DEMOTE_ADMIN') && contact.isGroup && args[0]) {
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', ''));
-                if (targetId && targetId !== 'user') { const isPromote = action === 'PROMOTE_ADMIN'; if (isPromote && !contact.groupSettings.admins.includes(targetId)) contact.groupSettings.admins.push(targetId); else if (!isPromote) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== targetId); addSystemNotification(contact.id, `'${args[0].replace('@', '')}' 已被'${currentSenderName}'${isPromote ? '设为' : '撤销'}管理员`, false); }
-            } else if (action === 'VIDEO_ACCEPT' && contact.isGroup && args[0]) {
-                const charId = args[0];
-                if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id) {
-                    if (!appState.chat.videoCallState.participants.includes(charId)) {
-                        appState.chat.videoCallState.participants.push(charId);
-                        addSystemNotification(contact.id, `${getDisplayName(charId, contact.id)} 加入了视频通话`, false); openVideoCallModal();
-                    }
-                }
-            } else if (action === 'VIDEO_REJECT' && contact.isGroup && args[0]) {
-                rejectVideoCall(contact.id, args[0], args[1] || "");
-            } else if (action === 'REQUEST_JOIN_VIDEO' && contact.isGroup) {
-                if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id) {
-                    if (!appState.chat.videoCallState.participants.includes(currentSenderId)) {
-                        appState.chat.videoCallState.participants.push(currentSenderId);
-                        addSystemNotification(contact.id, `${currentSenderName} 加入了视频通话`, false); openVideoCallModal();
-                    }
-                }
-            }
-        }
-
-        // --- STAGE 4: Process and display all chat messages ---
-        for (let i = 0; i < chatMessages.length; i++) {
-            let block = chatMessages[i];
-            if (!block) continue;
-
-            let currentSenderId = contact.isGroup ? null : contact.id;
-            const timestamp = Date.now() + actionCounter * 100 + i * 100;
-
-            if (contact.isGroup) {
-                const speakerMatch = block.match(/^\[(.*?)]:\s*(.*)$/s);
-                if (speakerMatch) {
-                    const currentSenderName = speakerMatch[1].trim();
-                    block = speakerMatch[2].trim();
-                    const memberEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === currentSenderName);
-                    if (memberEntry) currentSenderId = memberEntry[0];
-                    else continue;
-                } else continue;
+                if (targetId && targetId !== 'user') { const isPromote = action === 'PROMOTE_ADMIN'; if (isPromote && !contact.groupSettings.admins.includes(targetId)) contact.groupSettings.admins.push(targetId); else if (!isPromote) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== targetId); addSystemNotification(contact.id, `'${args[0].replace('@', '')}' 已被'${actorName}'${isPromote ? '设为' : '撤销'}管理员`, false); }
+            } else if (action.startsWith('VIDEO_') && contact.isGroup) {
+                if (action === 'VIDEO_ACCEPT' && args[0]) { if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id && !appState.chat.videoCallState.participants.includes(args[0])) { appState.chat.videoCallState.participants.push(args[0]); addSystemNotification(contact.id, `${getDisplayName(args[0], contact.id)} 加入了视频通话`, false); openVideoCallModal(); } }
+                else if (action === 'VIDEO_REJECT' && args[0]) { rejectVideoCall(contact.id, args[0], args[1] || ""); }
+                else if (action === 'REQUEST_JOIN_VIDEO') { if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id && !appState.chat.videoCallState.participants.includes(currentSenderId)) { appState.chat.videoCallState.participants.push(currentSenderId); addSystemNotification(contact.id, `${actorName} 加入了视频通话`, false); openVideoCallModal(); } }
             }
 
-            if (!currentSenderId) continue;
-            if (block) addMessageToConversation({ id: newId('msg'), type: 'text', content: block, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
-            
-            if (i < chatMessages.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 300));
+        } else if (segment.type === 'text') {
+            const messages = segment.content.split('<MSG_SPLIT>').map(s => s.trim()).filter(Boolean);
+            for (const message of messages) {
+                let messageContent = message;
+                let senderForThisMessage = currentSenderId;
+
+                if (contact.isGroup) {
+                    const speakerMatch = message.match(/^\[(.*?)]:\s*(.*)$/s);
+                    if (speakerMatch) {
+                        const senderName = speakerMatch[1].trim();
+                        messageContent = speakerMatch[2].trim();
+                        const memberEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === senderName);
+                        if (memberEntry) {
+                            senderForThisMessage = memberEntry[0];
+                            currentSenderId = senderForThisMessage; // Update context for next messages
+                        } else { continue; }
+                    }
+                }
+
+                if (messageContent && senderForThisMessage) {
+                    addMessageToConversation({ id: newId('msg'), type: 'text', content: messageContent, sender: senderForThisMessage, timestamp, status: 'sent', contactId: contact.id }, true);
+                    await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 200));
+                }
             }
         }
     }
+}
+function handleSocialAction(action, args, actorId) {
+    const actorName = getDisplayName(actorId, actorId);
+
+    if (action === 'POST_MOMENT' && args.length >= 2) {
+        // --- 核心修复：增加对AI错误参数的兼容性 ---
+        let type = (args[0] || '').toLowerCase();
+        if (['心情', '说说', 'status'].includes(type)) type = 'status';
+        if (['日志', 'log'].includes(type)) type = 'log';
+
+        let contentStr = args[1];
+        
+        let visibility = (args[2] || 'public').toLowerCase();
+        if (['所有人', '公开', 'public'].includes(visibility)) visibility = 'public';
+        const newPost = { id: newId('post'), authorId: actorId, timestamp: Date.now(), likes: [], comments: [], visibility: visibility, visibleTo: (visibility === 'specific' ? ['user'] : []) };
+        if (type === 'status') {
+            newPost.type = 'status';
+            let text = contentStr, images = [];
+            if (contentStr.includes('||')) {
+                const parts = contentStr.split('||'); text = parts[0].trim();
+                images = parts[1].trim().split('|').filter(d => d).map(desc => ({ isTextImage: true, imageId: 'default_camera_image', description: desc }));
+            }
+            newPost.content = { text: text, images: images };
+            appState.chat.moments.posts.unshift(newPost);
+            queueNotification(`${actorName} 发表了新动态`, 'system', actorId, 'moments');
+        } else if (type === 'log') {
+            const [title, text] = contentStr.split('|');
+            if (title && text) { newPost.type = 'log'; newPost.content = { title, text }; appState.chat.moments.posts.unshift(newPost); queueNotification(`${actorName} 发表了新动态`, 'system', actorId, 'moments'); }
+        }
+    } else if (action === 'POST_PHOTO' && args.length >= 3) {
+        const [photoName, photoDesc, albumName, imageDescsStr] = args;
+        const imageDescs = imageDescsStr ? imageDescsStr.split('|').filter(d => d) : [];
+        if (imageDescs.length > 0) {
+            let targetAlbum = appState.chat.moments.albums.find(a => a.name === albumName) || appState.chat.moments.albums.find(a => a.id === 'default');
+            if (!targetAlbum) { targetAlbum = { id: 'default', name: '默认相册', createTime: Date.now(), photoIds: [] }; appState.chat.moments.albums.push(targetAlbum); }
+            const photoIds = imageDescs.map(desc => {
+                const photo = { id: newId('photo'), ownerId: actorId, imageId: 'default_camera_image', isTextImage: true, textDescription: desc, name: photoName, description: photoDesc };
+                appState.chat.moments.photos.push(photo); return photo.id;
+            });
+            if (!targetAlbum.photoIds) targetAlbum.photoIds = [];
+            targetAlbum.photoIds.unshift(...photoIds);
+            const newPost = { id: newId('post'), authorId: actorId, type: 'photo', content: { name: photoName, description: photoDesc, photoIds: photoIds, albumId: targetAlbum.id }, timestamp: Date.now(), visibility: 'public', visibleTo: [], likes: [], comments: [] };
+            appState.chat.moments.posts.unshift(newPost);
+            queueNotification(`${actorName} 上传了新照片`, 'system', actorId, 'moments');
+        }
+    } else if (action === 'POST_MUSIC_REVIEW' && args.length >= 2) {
+        const songQuery = args[0], reviewText = args[1];
+        const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
+        if (song) {
+            if (!appState.music.comments[song.id]) appState.music.comments[song.id] = [];
+            appState.music.comments[song.id].unshift({ id: newId('comment'), authorId: actorId, text: reviewText, likes: [], replies: [], timestamp: Date.now() });
+        }
+    } else if (action === 'LEAVE_MESSAGE' && args[0]) {
+        const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: args[0], senderId: actorId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
+        appState.chat.moments.messages.push(newMessage);
+        queueNotification(`${actorName} 给你留言了`, 'system', actorId, 'moments'); logVisitor('user', actorId);
+    } else if (action === 'LIKE_MOMENT' && args[0]) {
+        const post = appState.chat.moments.posts.find(p => p.id === args[0]);
+        if (post && canCharViewMoment(actorId, post)) {
+            if (!post.likes) post.likes = [];
+            if (!post.likes.includes(actorId)) {
+                post.likes.push(actorId);
+                if (post.authorId === 'user') addMomentsNotification('like', actorId, { postId: post.id, recipientId: 'user' });
+                logVisitor(post.authorId, actorId);
+            }
+        }
+    } else if (action === 'COMMENT_MOMENT' && args.length >= 2) {
+        const [postId, commentText] = args;
+        const post = appState.chat.moments.posts.find(p => p.id === postId);
+        if (post && canCharViewMoment(actorId, post)) {
+            if (!post.comments) post.comments = [];
+            const newComment = { id: newId('comment'), authorId: actorId, text: commentText, likes: [], replies: [], timestamp: Date.now() };
+            post.comments.push(newComment);
+            if (post.authorId === 'user') addMomentsNotification('comment', actorId, { postId: post.id, recipientId: 'user', content: commentText });
+            logVisitor(post.authorId, actorId);
+        }
+    } else if (action === 'REPLY_MOMENT_COMMENT' && args.length >= 3) {
+        const [postId, commentId, replyText, replyToId] = args;
+        const post = appState.chat.moments.posts.find(p => p.id === postId);
+        if (post && post.comments && canCharViewMoment(actorId, post)) {
+            const comment = post.comments.find(c => c.id === commentId);
+            if (comment) {
+                if (!comment.replies) comment.replies = [];
+                let targetAuthor = replyToId ? findUserById(comment.replies.find(r => r.id === replyToId)?.authorId) : findUserById(comment.authorId);
+                if (!targetAuthor) targetAuthor = findUserById(comment.authorId);
+                const newReply = { id: newId('reply'), authorId: actorId, text: `@${targetAuthor.name} ${replyText}`, replyTo: replyToId || null, timestamp: Date.now() };
+                comment.replies.push(newReply);
+                if (targetAuthor.id === 'user') addMomentsNotification('reply', actorId, { postId: post.id, recipientId: 'user', content: replyText });
+                logVisitor(post.authorId, actorId);
+            }
+        }
+    } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
+        const [songId, commentId, replyText] = args;
+        const songComments = appState.music.comments[songId];
+        if (songComments) {
+            const comment = songComments.find(c => c.id === commentId);
+            if (comment) {
+                if (!comment.replies) comment.replies = [];
+                comment.replies.push({ id: newId('reply'), authorId: actorId, text: replyText, replyTo: commentId, timestamp: Date.now() });
+            }
+        }
+    } else if (action === 'REPLY_MESSAGE_BOARD' && args.length >= 2) {
+        const [messageId, replyText] = args;
+        const message = appState.chat.moments.messages.find(m => m.id === messageId);
+        if (message) {
+            if (!message.replies) message.replies = [];
+            message.replies.push({ id: newId('reply'), authorId: actorId, text: replyText, timestamp: Date.now() });
+            if (message.senderId === 'user') addMomentsNotification('reply', actorId, { messageId: message.id, recipientId: 'user', content: replyText });
+            logVisitor(message.recipientId, actorId);
+        }
+    }
+    syncAndUpdateMoments(runtimeState.moments.currentProfileId);
+}
 function updateTypingIndicator() { if (!singleChatScreen.classList.contains('active')) { typingIndicator.style.display = 'none'; return; } const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) { typingIndicator.style.display = 'none'; return; } if (runtimeState.activeRequests[runtimeState.currentChatId]) { if (contact.isGroup) { if (contact.groupSettings.isDisbanded) { typingIndicator.style.display = 'none'; return; } const potentialSpeakers = contact.members.filter(id => { const member = contact.groupSettings.members[id]; if (!member) return false; const isOwner = contact.groupSettings.owner === id; const isAdmin = contact.groupSettings.admins.includes(id); const canSpeakWhenGlobalMute = isOwner || isAdmin; return !member.isMuted && (!contact.groupSettings.isMuted || canSpeakWhenGlobalMute); }); if (potentialSpeakers.length > 0) { typingIndicator.textContent = contact.groupSettings.isMuted ? '某些群成员正在输入...' : '群成员们正在输入...'; typingIndicator.style.display = 'block'; } else { typingIndicator.style.display = 'none'; } } else { typingIndicator.textContent = `${contact.remark || contact.charSettings.name}正在输入中...`; typingIndicator.style.display = 'block'; } } else { typingIndicator.style.display = 'none'; } }
 
 // ===================================================================
