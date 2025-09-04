@@ -177,6 +177,42 @@
         .settings-button:active { background-color: #0056b3; }
         .settings-button.secondary { background-color: #555; }
         .settings-button.secondary:active { background-color: #333; }
+        #global-realtime-char-selector {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 15px;
+        padding-top: 5px;
+    }
+    .realtime-char-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        padding: 5px;
+        transition: border-color 0.2s;
+    }
+    .realtime-char-item .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-size: cover;
+        background-position: center;
+        flex-shrink: 0;
+    }
+    .realtime-char-item .name {
+        font-size: 11px;
+        text-align: center;
+        word-break: break-all;
+        line-height: 1.2;
+        height: 2.4em; /* 确保最多显示两行 */
+        overflow: hidden;
+    }
+    .realtime-char-item.selected {
+        border-color: var(--accent-color);
+    }
         #confirm-api-btn { margin-top: 15px; }
         .button-group { display: flex; gap: 10px; margin-top: 10px; }
 
@@ -983,6 +1019,26 @@
                         <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
                     </div>
                     <input type="file" id="import-file-input" style="display: none;">
+                </div>
+            </div>
+            <div class="settings-group">
+                <div class="group-title">全局后台实时活动</div>
+                <div class="group-content">
+                    <div class="settings-item">
+                        <div class="form-group aligned-right">
+                            <label for="global-realtime-interval">全局活动间隔(分钟)</label>
+                            <input type="number" id="global-realtime-interval" value="30" style="width: 80px !important;">
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label>选择要开启的角色</label>
+                            <button id="global-realtime-select-all" class="settings-button secondary" style="width: auto; padding: 5px 10px; font-size: 14px;">全选/全不选</button>
+                        </div>
+                        <div id="global-realtime-char-selector">
+                            <!-- Char items will be injected here -->
+                        </div>
+                    </div>
                 </div>
             </div>
             </div>
@@ -1834,6 +1890,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const editPresetKeyInput = getEl('edit-preset-key');
     const saveEditBtn = getEl('save-edit-btn');
     const cancelEditBtn = getEl('cancel-edit-btn');
+    const globalRealtimeInterval = getEl('global-realtime-interval');
+const globalRealtimeCharSelector = getEl('global-realtime-char-selector');
+const globalRealtimeSelectAll = getEl('global-realtime-select-all');
 
     // --- 音乐 APP & 歌曲详情 ---
     const audioPlayer = getEl('audio-player');
@@ -2275,7 +2334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     function getInitialState() {
 return {
-    settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [] },
+    settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [], globalRealtimeActivity: { interval: 30 } },
     music: { playlist: [], queue: [], lyrics: {}, comments: {}, currentQueueIndex: -1, playbackMode: 'repeat' },
     beautify: {
     wallpapers: [],
@@ -2400,9 +2459,9 @@ return {
                 const savedState = JSON.parse(savedStateJSON);
 
                 appState = { 
-                    ...defaultState, 
-                    ...savedState, 
-                    settings: { ...defaultState.settings, ...savedState.settings }, 
+                ...defaultState, 
+                ...savedState, 
+                settings: { ...defaultState.settings, ...savedState.settings, globalRealtimeActivity: { ...defaultState.settings.globalRealtimeActivity, ...(savedState.settings?.globalRealtimeActivity || {}) } },
                     music: { ...defaultState.music, ...savedState.music }, 
                     beautify: { ...defaultState.beautify, ...savedState.beautify, bubbleSettings: { ...defaultState.beautify.bubbleSettings, ...(savedState.beautify?.bubbleSettings || {}) } }, 
                     data: { ...defaultState.data, ...(savedState.data || {}) }, 
@@ -2596,7 +2655,10 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     // ===================================================================
     // --- APP导航与路由 ---
     // ===================================================================
-    function openApp(appScreen) { phoneScreen.classList.add('app-open'); appScreen.classList.add('active'); if (appScreen.id === 'beautify-app-screen') { const activeTab = query('#beautify-app-screen .tab-link.active')?.dataset.tab || 'wallpaper'; handleBeautifyTabChange(activeTab); } else if (appScreen.id === 'data-app-screen') { const activeTab = query('#data-app-screen .tab-link.active')?.dataset.tab || 'world-book'; handleDataTabChange(activeTab); } }
+    function openApp(appScreen) { phoneScreen.classList.add('app-open'); appScreen.classList.add('active'); if (appScreen.id === 'beautify-app-screen') { const activeTab = query('#beautify-app-screen .tab-link.active')?.dataset.tab || 'wallpaper'; handleBeautifyTabChange(activeTab); } else if (appScreen.id === 'data-app-screen') { const activeTab = query('#data-app-screen .tab-link.active')?.dataset.tab || 'world-book'; handleDataTabChange(activeTab); 
+    } else if (appScreen.id === 'settings-app-screen') {
+            renderGlobalRealtimeSettings();
+        } }
     function closeCurrentApp() { const activeApp = document.querySelector('.app-screen.active:not(.sub-screen)'); if (activeApp) { if (activeApp.id === 'chat-app-screen' && activeApp.classList.contains('selection-mode')) exitContactSelectionMode(); activeApp.classList.remove('active'); phoneScreen.classList.remove('app-open'); } }
     window.closeCurrentApp = closeCurrentApp;
     function closeAllScreens() { queryAll('.app-screen.active').forEach(screen => screen.classList.remove('active')); phoneScreen.classList.remove('app-open'); }
@@ -2628,6 +2690,74 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     presetSelect.addEventListener('change', () => { const index = presetSelect.value; if (index !== "") { const preset = appState.settings.presets[parseInt(index)]; if (preset) { appState.settings.apiUrl = getEl('api-url').value = preset.url; appState.settings.apiKey = getEl('api-key').value = preset.key; appState.settings.selectedModel = preset.model; debouncedSaveState(); updateModelSelect(); showToast(`已加载预设: ${preset.name}`); } } });
     savePresetBtn.addEventListener('click', () => { const presetName = prompt("请输入预设名称:"); if (!presetName || presetName.trim() === "") return; const trimmedName = presetName.trim(); const existingIndex = appState.settings.presets.findIndex(p => p.name === trimmedName); if (existingIndex !== -1) { if (!confirm(`已存在名为 "${trimmedName}" 的预设，要覆盖它吗？`)) return; appState.settings.presets[existingIndex] = { name: trimmedName, url: appState.settings.apiUrl, key: appState.settings.apiKey, model: appState.settings.selectedModel }; showToast("预设已覆盖！"); } else { appState.settings.presets.push({ name: trimmedName, url: appState.settings.apiUrl, key: appState.settings.apiKey, model: appState.settings.selectedModel }); showToast("预设已保存！"); } debouncedSaveState(); updatePresetSelect(); });
     managePresetsBtn.addEventListener('click', () => { renderPresetList(); managePresetsModal.classList.add('visible'); });
+    function renderGlobalRealtimeSettings() {
+        if (!globalRealtimeInterval || !globalRealtimeCharSelector) return;
+
+        globalRealtimeInterval.value = appState.settings.globalRealtimeActivity.interval;
+
+        const chars = appState.chat.contacts.filter(c => !c.isGroup);
+        globalRealtimeCharSelector.innerHTML = chars.map(c => {
+            const isEnabled = c.charSettings.realtimeActivity.enabled;
+            return `
+                <div class="realtime-char-item ${isEnabled ? 'selected' : ''}" data-id="${c.id}">
+                    <div class="avatar" data-avatar-id="${c.charSettings.avatarId}"></div>
+                    <span class="name">${c.charSettings.name}</span>
+                </div>
+            `;
+        }).join('');
+        
+        globalRealtimeCharSelector.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
+    }
+
+    globalRealtimeInterval.addEventListener('input', () => {
+        const oldGlobalInterval = appState.settings.globalRealtimeActivity.interval;
+        const newGlobalInterval = parseInt(globalRealtimeInterval.value) || 30;
+        appState.settings.globalRealtimeActivity.interval = newGlobalInterval;
+
+        appState.chat.contacts.forEach(contact => {
+            if (!contact.isGroup) {
+                if (contact.charSettings.realtimeActivity.interval === oldGlobalInterval) {
+                    contact.charSettings.realtimeActivity.interval = newGlobalInterval;
+                }
+                if (contact.charSettings.realtimeActivity.enabled) {
+                    updateRealtimeActivityTimer(contact);
+                }
+            }
+        });
+        debouncedSaveState();
+    });
+
+    globalRealtimeCharSelector.addEventListener('click', (e) => {
+        const item = e.target.closest('.realtime-char-item');
+        if (!item) return;
+        const contactId = item.dataset.id;
+        const contact = appState.chat.contacts.find(c => c.id === contactId);
+        if (contact) {
+            const charSettings = contact.charSettings.realtimeActivity;
+            charSettings.enabled = !charSettings.enabled;
+            if (charSettings.enabled) {
+                charSettings.interval = appState.settings.globalRealtimeActivity.interval;
+            }
+            updateRealtimeActivityTimer(contact);
+            item.classList.toggle('selected');
+            debouncedSaveState();
+        }
+    });
+
+    globalRealtimeSelectAll.addEventListener('click', () => {
+        const allChars = appState.chat.contacts.filter(c => !c.isGroup);
+        const shouldEnableAll = allChars.some(c => !c.charSettings.realtimeActivity.enabled);
+
+        allChars.forEach(contact => {
+            contact.charSettings.realtimeActivity.enabled = shouldEnableAll;
+            if (shouldEnableAll) {
+                contact.charSettings.realtimeActivity.interval = appState.settings.globalRealtimeActivity.interval;
+            }
+            updateRealtimeActivityTimer(contact);
+        });
+        renderGlobalRealtimeSettings();
+        debouncedSaveState();
+    });
     closeManageModalBtn.addEventListener('click', () => managePresetsModal.classList.remove('visible'));
     function renderPresetList() { presetListEl.innerHTML = ''; if (appState.settings.presets.length === 0) { presetListEl.innerHTML = '<li><div class="preset-item-content">暂无预设</div></li>'; return; } appState.settings.presets.forEach((preset, index) => { const li = document.createElement('li'); li.className = 'preset-list-item'; li.dataset.index = index; li.innerHTML = `<div class="preset-item-content">${preset.name}</div><div class="preset-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; presetListEl.appendChild(li); }); }
     cancelEditBtn.addEventListener('click', () => editPresetModal.classList.remove('visible'));
@@ -4741,7 +4871,7 @@ function openChatSettings() { const contact = appState.chat.contacts.find(c => c
 function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
 function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona; }
 function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
-getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); });
+getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
 query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
 csCharName.addEventListener('input', () => { const newName = csCharName.value; runtimeState.tempChatSettings.charSettings.name = newName; });
 csContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.charSettings.contextMemory = parseInt(csContextMemory.value) || 20);
