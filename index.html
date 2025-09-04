@@ -3928,8 +3928,8 @@ confirmAddEmojiUrlBtn.addEventListener('click', async () => {
             if (desc && url && url.startsWith('http')) {
                 const promise = (async () => {
                     try {
-                        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                        const response = await fetch(proxyUrl);
+                        // --- CORE FIX: Removed the proxy and fetch the URL directly ---
+                        const response = await fetch(url);
                         if (!response.ok) {
                             console.error(`Failed to fetch ${url}: ${response.statusText}`);
                             return; // Skip this one on failure
@@ -6130,22 +6130,7 @@ async function processVideoCallInvitationReply(replyContent, contact) {
             if (action === 'SEND_EMOJI' && args[0]) {
                 const emojiDesc = args[0].toLowerCase();
                 const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)];
-                if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
-            } else if (action === 'SEND_EMOJI_URL' && args.length >= 2) {
-                const [url, description] = args;
-                try {
-                    showToast(`角色正在下载新表情: ${description}`, 'info');
-                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const blob = await response.blob();
-                    const newEmojiId = newId('emoji');
-                    await addMediaToDB(newEmojiId, blob);
-                    appState.chat.emojis.push({ id: newEmojiId, description: description });
-                    addMessageToConversation({ id: messageId, type: 'emoji', emojiId: newEmojiId, description: description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
-                } catch (error) {
-                    addMessageToConversation({ id: messageId, type: 'text', content: `(试图发送表情“${description}”，但图片加载失败了)`, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
-                }
+if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
             } else if (action === 'SEND_VOICE' && args[0]) {
                 const cleanText = args[0].replace(/\(.*?\)|（.*?）/g, '');
                 const duration = Math.max(1, Math.ceil(cleanText.length / 2));
