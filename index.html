@@ -816,6 +816,28 @@
         
         #viewer-text-view { display: flex; flex-direction: column; align-items: center; background-color: white; padding: 22px 20px 20px; box-sizing: border-box; width: 75vw; height: 75vh; max-width: 400px; max-height: 400px; margin: auto; border-radius: 12px; position: relative; }
         #view-photo-text-display { height: 100%; width: 100%; overflow-y: auto; font-size: 16px; line-height: 1.8; color: black; text-align: center; box-sizing: border-box; }
+            #viewer-text-view .photo-viewer-name,
+    #viewer-text-view .photo-viewer-desc {
+        background: transparent;
+        color: black;
+        text-shadow: none;
+        position: relative;
+        padding: 0 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #viewer-text-view .photo-viewer-name {
+        font-size: 18px;
+        font-weight: bold;
+        padding-bottom: 15px;
+        flex-shrink: 0;
+    }
+    #viewer-text-view .photo-viewer-desc {
+        font-size: 14px;
+        padding-top: 15px;
+        color: var(--secondary-text-color);
+        flex-shrink: 0;
+    }
         #view-photo-modal { background-color: rgba(0,0,0,0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
         .photo-viewer-content { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0; box-sizing: border-box; cursor: pointer; }
         .photo-viewer-close-btn { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 15px); right: 15px; font-size: 30px; color: white; background: none; border: none; cursor: pointer; z-index: 10; width: 40px; height: 40px; text-shadow: 0 0 5px black; }
@@ -964,7 +986,7 @@
         .love-letter-meta { display: flex; align-items: center; justify-content: space-between; flex-grow: 1; }
         .love-letter-actions { display: flex; gap: 15px; }
         .love-letter-actions .icon-btn { background: none; border: none; font-size: 16px; color: var(--secondary-text-color); cursor: pointer; padding: 5px; }
-        .letter-reply-btn { position: absolute; bottom: calc(env(safe-area-inset-bottom, 15px) - 5px); left: 50%; transform: translateX(-50%); width: 56px; height: 56px; background-color: #a38c6d; color: white; border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; z-index: 15; }
+        .letter-reply-btn { position: absolute; bottom: calc(env(safe-area-inset-bottom, 50px) - 5px); left: 50%; transform: translateX(-50%); width: 56px; height: 56px; background-color: #a38c6d; color: white; border-radius: 50%; border: none; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; z-index: 15; }
         .letter-reply-btn:active { transform: translateX(-50%) scale(0.95); }
         .author-selector-grid { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
         .author-selector-grid::-webkit-scrollbar { height: 4px; }
@@ -1760,11 +1782,13 @@
                         <div id="view-photo-desc" class="photo-viewer-desc"></div>
                     </div>
                 </div>
-            <!-- 虚拟文字图视图 -->
-            <div id="viewer-text-view">
-                 <button id="view-photo-text-close-btn" class="photo-viewer-close-btn">&times;</button>
-                 <div id="view-photo-text-display"></div>
-            </div>
+                    <!-- 虚拟文字图视图 -->
+        <div id="viewer-text-view">
+             <button id="view-photo-text-close-btn" class="photo-viewer-close-btn">&times;</button>
+             <div id="view-photo-text-name" class="photo-viewer-name"></div>
+             <div id="view-photo-text-display"></div>
+             <div id="view-photo-text-desc" class="photo-viewer-desc"></div>
+        </div>
         </div>
         <button id="photo-viewer-prev-btn" class="viewer-nav-btn prev-btn" style="display: none;">&lt;</button>
         <button id="photo-viewer-next-btn" class="viewer-nav-btn next-btn" style="display: none;">&gt;</button>
@@ -9314,40 +9338,47 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         viewPhotoModal.classList.add('visible');
     }
     function renderPhotoViewerContent(index) {
-                const { items } = runtimeState.moments.viewerContext;
-                const photo = items[index];
-                if (!photo) return;
+            const { items } = runtimeState.moments.viewerContext;
+            const photo = items[index];
+            if (!photo) return;
 
-                const isTextImage = photo.isTextImage || (photo.textDescription && !photo.imageId);
-                
-                const imageView = getEl('viewer-image-view');
-                const textView = getEl('viewer-text-view');
+            const isTextImage = photo.isTextImage || (photo.textDescription && !photo.imageId);
+            
+            const imageView = getEl('viewer-image-view');
+            const textView = getEl('viewer-text-view');
 
-                if (isTextImage) {
-                    viewPhotoModal.className = 'modal-overlay visible text-mode';
-                    imageView.style.display = 'none';
-                    textView.style.display = '';
-                    getEl('view-photo-text-display').textContent = photo.textDescription || photo.description;
-                } else {
-                    viewPhotoModal.className = 'modal-overlay visible image-mode';
-                    textView.style.display = 'none';
-                    imageView.style.display = '';
-                    const imgEl = getEl('view-photo-image');
-                    imgEl.src = '';
-                    setElementImage(imgEl, photo.imageId, 'src');
-                    getEl('view-photo-name').textContent = photo.name;
-                    const descText = photo.description || '';
-                    const descEl = getEl('view-photo-desc');
-                    descEl.textContent = descText;
-                    descEl.style.display = descText ? 'block' : 'none';
-                    viewPhotoModal.classList.remove('text-hidden');
-                }
-
-                const prevBtn = getEl('photo-viewer-prev-btn');
-                const nextBtn = getEl('photo-viewer-next-btn');
-                prevBtn.style.display = (items.length > 1 && index > 0) ? 'block' : 'none';
-                nextBtn.style.display = (items.length > 1 && index < items.length - 1) ? 'block' : 'none';
+            if (isTextImage) {
+                viewPhotoModal.className = 'modal-overlay visible text-mode';
+                imageView.style.display = 'none';
+                textView.style.display = 'flex'; // Use flex for proper layout
+                getEl('view-photo-text-display').textContent = photo.textDescription || '';
+                // --- ADDED: Populate name and description for text view ---
+                getEl('view-photo-text-name').textContent = photo.name;
+                const descText = photo.description || '';
+                const descEl = getEl('view-photo-text-desc');
+                descEl.textContent = descText;
+                descEl.style.display = descText ? 'block' : 'none';
+                // --- END ADDED ---
+            } else {
+                viewPhotoModal.className = 'modal-overlay visible image-mode';
+                textView.style.display = 'none';
+                imageView.style.display = 'flex';
+                const imgEl = getEl('view-photo-image');
+                imgEl.src = '';
+                setElementImage(imgEl, photo.imageId, 'src');
+                getEl('view-photo-name').textContent = photo.name;
+                const descText = photo.description || '';
+                const descEl = getEl('view-photo-desc');
+                descEl.textContent = descText;
+                descEl.style.display = descText ? 'block' : 'none';
+                viewPhotoModal.classList.remove('text-hidden');
             }
+
+            const prevBtn = getEl('photo-viewer-prev-btn');
+            const nextBtn = getEl('photo-viewer-next-btn');
+            prevBtn.style.display = (items.length > 1 && index > 0) ? 'block' : 'none';
+            nextBtn.style.display = (items.length > 1 && index < items.length - 1) ? 'block' : 'none';
+        }
     function setupMomentsPageListeners() {
         // This function is now only for the comment editor modal, 
         // as the file inputs are handled by the new global listener.
