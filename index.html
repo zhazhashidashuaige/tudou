@@ -160,7 +160,7 @@
         .app-bottom-tabs { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; padding-bottom: env(safe-area-inset-bottom, 0px); background-color: var(--item-bg); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: flex-start; z-index: 5; box-sizing: border-box; }
         .tab-link { flex: 1; text-align: center; padding: 8px 0; cursor: pointer; color: var(--secondary-text-color); border-top: 2px solid transparent; font-size: 14px; }
         .tab-link.active { color: var(--accent-color); border-top-color: var(--accent-color); }
-        .tab-content-wrapper { flex-grow: 1; overflow: hidden; position: relative; }
+        .tab-content-wrapper { flex-grow: 1; overflow: hidden; position: relative; z-index: 0; }
         .tab-content { display: none; padding: 15px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; box-sizing: border-box; padding-bottom: 80px; /* FIX: 修复底部遮挡问题 */ }
         .tab-content.active { display: block; }
 #world-book-tab-content, #archive-tab-content, #info-tab-content {
@@ -245,7 +245,7 @@
     .filter-dropdown .checkbox-label:hover {
         background-color: var(--item-active-bg);
     }
-        #styles-tab-content {
+        #styles-tab-content.active {
         display: flex;
         height: 100%;
         padding: 15px;
@@ -324,13 +324,17 @@
         background-color: var(--item-active-bg);
     }
     .style-preview-card .style-preview-name {
-        font-weight: bold;
-        font-size: 14px;
-        text-align: center;
-        border-bottom: 1px solid var(--border-color);
-        padding-bottom: 8px;
-        margin-bottom: 0;
-    }
+    font-weight: bold;
+    font-size: 14px;
+    text-align: left;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
     /* Theme Preview Specific Styles */
     .theme-preview-wrapper {
@@ -406,6 +410,28 @@
         padding: 4px 8px;
         font-size: 9px;
     }
+    .style-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+.style-preview-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.style-preview-actions .icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--secondary-text-color);
+    font-size: 14px;
+    padding: 0 4px;
+}
+.style-preview-actions .icon-btn:hover { color: var(--accent-color); }
+.style-preview-actions .delete-style-btn:hover { color: var(--danger-color); }
         /* --- 音乐 APP --- */
         #music-list { list-style: none; padding: 0; margin: 0; }
         .music-list-item { position: relative; background-color: var(--item-bg); border-bottom: 1px solid var(--border-color); overflow: hidden; }
@@ -1100,9 +1126,9 @@
 .love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
-.love-letter-collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; }
+.love-letter-collection-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
 .collected-letter-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; }
-.collected-letter-item .title { font-size: 11px; font-weight: bold; width: 100%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; margin-bottom: 5px; }
+.collected-letter-item .title { font-size: 11px; font-weight: bold; width: 100%; white-space: normal; word-break: break-all; text-align: center; margin-bottom: 5px; }
 .collected-letter-item .icon { font-size: 48px; color: #a38c6d; margin-bottom: 5px; }
 .collected-letter-item .sender { font-size: 10px; color: var(--secondary-text-color); }
 .collected-letter-item .date { font-size: 9px; color: #ccc; }
@@ -1244,6 +1270,7 @@
         }
 </style>
 <style id="theme-preview-styles"></style>
+<style id="saved-styles-preview-style"></style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
     <style id="bubble-preview-styles"></style>
 </head>
@@ -1758,12 +1785,14 @@
             </div>
             <div class="app-content tab-content-wrapper">
                 <div id="love-letter-tab-content" class="tab-content active">
-                    <div id="unread-letters-container">
-                        <ul class="love-letter-list"></ul>
-                    </div>
-                    <div id="read-letters-container" style="display: none;">
-                        <div class="love-letter-collection-container">
-                            <div class="love-letter-collection-grid"></div>
+                    <div class="styles-container">
+                        <div class="styles-column">
+                            <h3>寄出的信</h3>
+                            <div id="sent-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; overflow-y: auto; padding: 10px; align-content: flex-start;"></div>
+                        </div>
+                        <div class="styles-column">
+                            <h3>收到的信</h3>
+                            <div id="received-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; overflow-y: auto; padding: 10px; align-content: flex-start;"></div>
                         </div>
                     </div>
                 </div>
@@ -2257,6 +2286,27 @@
         <button class="context-menu-btn" id="bg-menu-chat-bg">聊天背景</button>
         <button class="context-menu-btn" id="bg-menu-video-bg">视频背景</button>
     </div>
+    <!-- 新增：编辑样式弹窗 -->
+<div id="edit-style-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 class="modal-title">编辑样式</h3>
+        <div class="modal-body">
+            <input type="hidden" id="edit-style-id">
+            <input type="hidden" id="edit-style-type">
+            <div class="form-group">
+                <label for="edit-style-name">样式名称</label>
+                <input type="text" id="edit-style-name">
+            </div>
+            <div id="edit-style-content-wrapper">
+                <!-- Content textareas will be injected here by JS -->
+            </div>
+        </div>
+        <div class="modal-actions row">
+            <button id="cancel-edit-style-btn" class="cancel-btn">取消</button>
+            <button id="save-edit-style-btn" class="confirm-btn">保存</button>
+        </div>
+    </div>
+</div>
     <div id="toast"></div>
 
 <script>
@@ -2769,90 +2819,208 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
     });
     // --- 新增：样式保存与读取核心逻辑 ---
     function renderStylesTab() {
-        const themesList = getEl('saved-themes-list');
-        const bubblesList = getEl('saved-bubbles-list');
-        const previewStyleTag = getEl('saved-styles-preview-style');
-        let previewCss = '';
+    const themesList = getEl('saved-themes-list');
+    const bubblesList = getEl('saved-bubbles-list');
+    const previewStyleTag = getEl('saved-styles-preview-style');
+    let previewCss = '';
 
-        // Render Theme Previews
-        if (appState.data.savedThemes.length > 0) {
-            themesList.innerHTML = appState.data.savedThemes.map(theme => {
-                const styles = theme.styles;
-                previewCss += `
-                    [data-theme-id="${theme.id}"] .mini-header { ${styles.appHeader || ''} }
-                    [data-theme-id="${theme.id}"] .mini-list-item .swipe-content { ${styles.listItem || ''} }
-                    [data-theme-id="${theme.id}"] .mini-moments-card .post-item-content { ${styles.momentsPost || ''} }
-                    [data-theme-id="${theme.id}"] .mini-tabs { ${styles.bottomTabs || ''} }
-                `;
-                return `
-                    <div class="style-preview-card" data-id="${theme.id}" data-type="theme">
+    // Render Theme Previews
+    if (appState.data.savedThemes.length > 0) {
+        themesList.innerHTML = appState.data.savedThemes.map(theme => {
+            const styles = theme.styles;
+            previewCss += `
+                [data-theme-id="${theme.id}"] .mini-header { ${styles.appHeader || ''} }
+                [data-theme-id="${theme.id}"] .mini-list-item .swipe-content { ${styles.listItem || ''} }
+                [data-theme-id="${theme.id}"] .mini-moments-card .post-item-content { ${styles.momentsPost || ''} }
+                [data-theme-id="${theme.id}"] .mini-tabs { ${styles.bottomTabs || ''} }
+            `;
+            return `
+                <div class="style-preview-card" data-id="${theme.id}" data-type="theme">
+                    <div class="style-preview-header">
                         <div class="style-preview-name">${escapeHTML(theme.name)}</div>
-                        <div class="theme-preview-wrapper" data-theme-id="${theme.id}">
-                            <div class="mini-header">&lt; <span>标题</span> +</div>
-                            <div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>
-                            <div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>
-                            <div class="mini-tabs"><span>标签1</span><span>标签2</span></div>
+                        <div class="style-preview-actions">
+                            <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
-                    </div>`;
-            }).join('');
-        } else {
-            themesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的主题</p>';
-        }
-
-        // Render Bubble Previews
-        if (appState.data.savedBubbles.length > 0) {
-            bubblesList.innerHTML = appState.data.savedBubbles.map(bubble => {
-                const scopedCss = (bubble.css || '').replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-                    const scopedSelector = selector.split(',').map(s => `[data-bubble-id="${bubble.id}"] ${s.trim()}`).join(', ');
-                    return `${scopedSelector} ${body}`;
-                });
-                previewCss += scopedCss;
-                return `
-                    <div class="style-preview-card" data-id="${bubble.id}" data-type="bubble">
-                        <div class="style-preview-name">${escapeHTML(bubble.name)}</div>
-                        <div class="bubble-preview-wrapper" data-bubble-id="${bubble.id}">
-                            <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
-                            <div class="message-item user"><div class="message-bubble">你好呀</div><div class="avatar"></div></div>
-                        </div>
-                    </div>`;
-            }).join('');
-        } else {
-            bubblesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的气泡</p>';
-        }
-
-        previewStyleTag.textContent = previewCss;
+                    </div>
+                    <div class="theme-preview-wrapper" data-theme-id="${theme.id}">
+                        <div class="mini-header">&lt; <span>标题</span> +</div>
+                        <div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>
+                        <div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>
+                        <div class="mini-tabs"><span>标签1</span><span>标签2</span></div>
+                    </div>
+                </div>`;
+        }).join('');
+    } else {
+        themesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的主题</p>';
     }
 
+    // Render Bubble Previews
+    if (appState.data.savedBubbles.length > 0) {
+        bubblesList.innerHTML = appState.data.savedBubbles.map(bubble => {
+            const scopedCss = (bubble.css || '').replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+                const scopedSelector = selector.split(',').map(s => `[data-bubble-id="${bubble.id}"] ${s.trim()}`).join(', ');
+                return `${scopedSelector} ${body}`;
+            });
+            previewCss += scopedCss;
+            return `
+                <div class="style-preview-card" data-id="${bubble.id}" data-type="bubble">
+                    <div class="style-preview-header">
+                        <div class="style-preview-name">${escapeHTML(bubble.name)}</div>
+                        <div class="style-preview-actions">
+                            <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                    <div class="bubble-preview-wrapper" data-bubble-id="${bubble.id}">
+                        <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
+                        <div class="message-item user"><div class="message-bubble">你好呀</div><div class="avatar"></div></div>
+                    </div>
+                </div>`;
+        }).join('');
+    } else {
+        bubblesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的气泡</p>';
+    }
+
+    previewStyleTag.textContent = previewCss;
+}
+
     getEl('styles-tab-content').addEventListener('click', e => {
-        const item = e.target.closest('.style-preview-item');
-        if (!item) return;
+    const card = e.target.closest('.style-preview-card');
+    if (!card) return;
 
-        const styleId = item.dataset.id;
-        const styleType = item.dataset.type;
+    const styleId = card.dataset.id;
+    const styleType = card.dataset.type;
 
-        if (styleType === 'theme') {
-            const theme = appState.data.savedThemes.find(t => t.id === styleId);
-            if (theme && confirm(`确定要立即应用主题样式 "${theme.name}" 吗？`)) {
-                appState.beautify.customThemes = { ...theme.styles };
-                applyCustomThemes();
-                debouncedSaveState();
-                showToast('主题已应用！');
+    // Handle Edit Button Click
+    if (e.target.closest('.edit-style-btn')) {
+        e.stopPropagation();
+        openEditStyleModal(styleId, styleType);
+        return;
+    }
+    
+    // Handle Delete Button Click
+    if (e.target.closest('.delete-style-btn')) {
+        e.stopPropagation();
+        const styleName = card.querySelector('.style-preview-name').textContent;
+        if (confirm(`确定要删除样式 "${styleName}" 吗？此操作不可撤销。`)) {
+            if (styleType === 'theme') {
+                appState.data.savedThemes = appState.data.savedThemes.filter(t => t.id !== styleId);
+            } else { // bubble
+                appState.data.savedBubbles = appState.data.savedBubbles.filter(b => b.id !== styleId);
             }
-        } else if (styleType === 'bubble') {
-            const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
-            if (bubble && runtimeState.currentChatId && confirm(`要将气泡样式 "${bubble.name}" 应用到当前聊天吗？`)) {
-                const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-                if (contact) {
-                    contact.userSettings.bubbleCss = bubble.css;
-                    applyAllCustomBubbleStyles();
-                    debouncedSaveState();
-                    showToast('气泡样式已应用！请返回聊天设置查看。');
-                }
-            } else if (!runtimeState.currentChatId) {
-                showToast('请先进入一个聊天设置界面再应用气泡样式。', 'error');
-            }
+            debouncedSaveState();
+            renderStylesTab();
+            showToast('样式已删除');
         }
-    });
+        return;
+    }
+
+    // Original click-to-apply logic
+    if (styleType === 'theme') {
+        const theme = appState.data.savedThemes.find(t => t.id === styleId);
+        if (theme && confirm(`确定要立即应用主题样式 "${theme.name}" 吗？`)) {
+            appState.beautify.customThemes = { ...theme.styles };
+            applyCustomThemes();
+            debouncedSaveState();
+            showToast('主题已应用！');
+        }
+    } else if (styleType === 'bubble') {
+        const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
+        if (bubble && runtimeState.currentChatId && confirm(`要将气泡样式 "${bubble.name}" 应用到当前聊天吗？`)) {
+            const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+            if (contact) {
+                contact.userSettings.bubbleCss = bubble.css;
+                applyAllCustomBubbleStyles();
+                debouncedSaveState();
+                showToast('气泡样式已应用！请返回聊天设置查看。');
+            }
+        } else if (!runtimeState.currentChatId) {
+            showToast('请先进入一个聊天设置界面再应用气泡样式。', 'error');
+        }
+    }
+});
+
+function openEditStyleModal(styleId, styleType) {
+    const modal = getEl('edit-style-modal');
+    getEl('edit-style-id').value = styleId;
+    getEl('edit-style-type').value = styleType;
+    const nameInput = getEl('edit-style-name');
+    const contentWrapper = getEl('edit-style-content-wrapper');
+    contentWrapper.innerHTML = ''; // Clear previous content
+
+    if (styleType === 'theme') {
+        const theme = appState.data.savedThemes.find(t => t.id === styleId);
+        if (!theme) return;
+        nameInput.value = theme.name;
+        contentWrapper.innerHTML = `
+            <div class="form-group">
+                <label>空间卡片</label>
+                <textarea id="edit-theme-css-moments" class="theme-css-editor" rows="4">${theme.styles.momentsPost || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>顶部状态栏</label>
+                <textarea id="edit-theme-css-header" class="theme-css-editor" rows="4">${theme.styles.appHeader || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>底部标签栏</label>
+                <textarea id="edit-theme-css-tabs" class="theme-css-editor" rows="4">${theme.styles.bottomTabs || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>通用列表卡片</label>
+                <textarea id="edit-theme-css-list-item" class="theme-css-editor" rows="4">${theme.styles.listItem || ''}</textarea>
+            </div>
+        `;
+    } else { // bubble
+        const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
+        if (!bubble) return;
+        nameInput.value = bubble.name;
+        contentWrapper.innerHTML = `
+            <div class="form-group">
+                <label>气泡 CSS</label>
+                <textarea id="edit-bubble-css-content" class="theme-css-editor" rows="10">${bubble.css || ''}</textarea>
+            </div>
+        `;
+    }
+
+    modal.classList.add('visible');
+}
+
+// Add listeners for the new modal
+getEl('cancel-edit-style-btn').addEventListener('click', () => getEl('edit-style-modal').classList.remove('visible'));
+
+getEl('save-edit-style-btn').addEventListener('click', () => {
+    const styleId = getEl('edit-style-id').value;
+    const styleType = getEl('edit-style-type').value;
+    const newName = getEl('edit-style-name').value.trim();
+
+    if (!newName) {
+        showToast('样式名称不能为空', 'error');
+        return;
+    }
+
+    if (styleType === 'theme') {
+        const theme = appState.data.savedThemes.find(t => t.id === styleId);
+        if (theme) {
+            theme.name = newName;
+            theme.styles.momentsPost = getEl('edit-theme-css-moments').value;
+            theme.styles.appHeader = getEl('edit-theme-css-header').value;
+            theme.styles.bottomTabs = getEl('edit-theme-css-tabs').value;
+            theme.styles.listItem = getEl('edit-theme-css-list-item').value;
+        }
+    } else { // bubble
+        const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
+        if (bubble) {
+            bubble.name = newName;
+            bubble.css = getEl('edit-bubble-css-content').value;
+        }
+    }
+    
+    debouncedSaveState();
+    renderStylesTab();
+    getEl('edit-style-modal').classList.remove('visible');
+    showToast('样式已更新！');
+});
 
     function openLoadStyleModal(type, context) {
         runtimeState.styleLoadContext = { type, context };
@@ -3696,79 +3864,56 @@ getEl('wp-set-chat-bg').addEventListener('click', () => { if (!runtimeState.wall
 getEl('wp-delete').addEventListener('click', async () => { if (!runtimeState.wallpaperContextMenuTarget) return; if (confirm('确定要删除这张壁纸吗？')) { const id = runtimeState.wallpaperContextMenuTarget.dataset.id; await deleteMediaFromDB(id); appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => wp.id !== id); if (appState.beautify.currentWallpaperId === id) { appState.beautify.currentWallpaperId = 'default'; await applyWallpaperById('default', phoneScreen); } if (appState.beautify.currentChatBgId === id) { appState.beautify.currentChatBgId = 'default'; } appState.chat.contacts.forEach(contact => { if (contact.isGroup && contact.groupSettings.chatBackgroundId === id) { contact.groupSettings.chatBackgroundId = 'default'; } else if (!contact.isGroup && contact.charSettings.chatBackgroundId === id) { contact.charSettings.chatBackgroundId = 'default'; } }); debouncedSaveState(); renderWallpapers(); hideWallpaperContextMenu(); showToast('壁纸已删除'); } });
 async function applyWallpaperById(id, element) { if (!id || id === 'default' || id === 'default_moments_cover') { element.style.backgroundImage = (id === 'default_moments_cover') ? 'none' : `url(${DEFAULT_WALLPAPER_URL})`; element.style.backgroundColor = (id === 'default_moments_cover') ? '#ccc' : 'var(--bg-color)'; return; } const url = await getMediaURL(id); if (url) { element.style.backgroundImage = `url(${url})`; element.style.backgroundColor = 'transparent'; } else { element.style.backgroundImage = `url(${DEFAULT_WALLPAPER_URL})`; element.style.backgroundColor = 'var(--bg-color)'; } }
 function renderLoveLetterTab() {
-        const unreadContainer = getEl('unread-letters-container');
-        const readContainer = getEl('read-letters-container');
-        const unreadListEl = unreadContainer.querySelector('.love-letter-list');
-        const readGridEl = readContainer.querySelector('.love-letter-collection-grid');
-        const unreadPrompt = getEl('unread-letter-prompt');
+    const sentListEl = getEl('sent-letters-list');
+    const receivedListEl = getEl('received-letters-list');
+    const unreadPrompt = getEl('unread-letter-prompt');
 
-        const allLetters = [...appState.mailbox.loveLetters].sort((a, b) => b.timestamp - a.timestamp);
-        const unreadLetters = allLetters.filter(l => !l.isRead);
-        const readLetters = allLetters.filter(l => l.isRead);
+    const allLetters = [...appState.mailbox.loveLetters].sort((a, b) => b.timestamp - a.timestamp);
+    const sentLetters = allLetters.filter(l => l.senderId === 'user');
+    const receivedLetters = allLetters.filter(l => l.senderId !== 'user');
 
-        // Render Unread Letters List
-        if (unreadLetters.length > 0) {
-            unreadContainer.style.display = 'block';
-            unreadListEl.innerHTML = unreadLetters.map(letter => {
-                const sender = findUserById(letter.senderId);
-                if (letter.senderId === 'user') { sender.avatarId = appState.chat.moments.profile.avatarId; }
-                return `
-                    <li class="love-letter-item unread" data-letter-id="${letter.id}">
-                        <div class="love-letter-avatar" data-avatar-id="${sender.avatarId}"></div>
-                        <div class="love-letter-info">
-                            <div class="love-letter-sender">${sender.name}</div>
-                            <div class="love-letter-preview">${escapeHTML(letter.subject) || '一封未命名的信'}</div>
-                        </div>
-                        <div class="love-letter-meta">
-                            <span>${new Date(letter.timestamp).toLocaleDateString()}</span>
-                            <div class="love-letter-actions">
-                                <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                            </div>
-                        </div>
-                    </li>
-                `;
-            }).join('');
-            unreadListEl.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
-            
-            // Show the prompt for the first unread letter
-            unreadPrompt.dataset.letterId = unreadLetters[0].id;
-            unreadPrompt.classList.add('visible');
+    const createLetterHTML = (letter, displayName) => `
+        <div class="collected-letter-item" data-letter-id="${letter.id}">
+            <div class="title">${escapeHTML(letter.subject || '无题')}</div>
+            <div class="icon"><i class="fa-solid ${!letter.isRead && letter.senderId !== 'user' ? 'fa-envelope' : 'fa-scroll'}"></i></div>
+            <div class="sender">${escapeHTML(displayName)}</div>
+            <div class="date">${new Date(letter.timestamp).toLocaleDateString()}</div>
+            <div class="love-letter-actions" style="margin-top: 5px;">
+                <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+        </div>
+    `;
 
-        } else {
-            unreadContainer.style.display = 'none';
-            unreadPrompt.classList.remove('visible');
-        }
-
-        // Render Read Letters Collection Grid
-        if (readLetters.length > 0) {
-            readContainer.style.display = 'block';
-            readGridEl.innerHTML = readLetters.map(letter => {
-                const sender = findUserById(letter.senderId);
-                if (letter.senderId === 'user') { sender.avatarId = appState.chat.moments.profile.avatarId; }
-                return `
-                    <div class="collected-letter-item" data-letter-id="${letter.id}">
-                        <div class="title">${escapeHTML(letter.subject || '无题')}</div>
-                        <div class="icon"><i class="fa-solid fa-scroll"></i></div>
-                        <div class="sender">${escapeHTML(sender.name)}</div>
-                        <div class="date">${new Date(letter.timestamp).toLocaleDateString()}</div>
-                         <div class="love-letter-actions" style="margin-top: 5px;">
-                            <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            readContainer.style.display = 'none';
-        }
-
-        // Show a message if there are no letters at all
-        if (allLetters.length === 0) {
-             unreadContainer.style.display = 'block'; // Show the container to display the message
-             unreadListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">还没有收到任何情书...</li>';
-        }
+    // Render Sent Letters
+    if (sentLetters.length > 0) {
+        sentListEl.innerHTML = sentLetters.map(letter => {
+            const recipient = findUserById(letter.recipientId);
+            return createLetterHTML(letter, recipient.name);
+        }).join('');
+    } else {
+        sentListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有寄出过情书...</p>';
     }
+
+    // Render Received Letters
+    if (receivedLetters.length > 0) {
+        receivedListEl.innerHTML = receivedLetters.map(letter => {
+            const sender = findUserById(letter.senderId);
+            return createLetterHTML(letter, sender.name);
+        }).join('');
+    } else {
+        receivedListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有收到过情书...</p>';
+    }
+
+    // Handle unread prompt
+    const firstUnread = receivedLetters.find(l => !l.isRead);
+    if (firstUnread) {
+        unreadPrompt.dataset.letterId = firstUnread.id;
+        unreadPrompt.classList.add('visible');
+    } else {
+        unreadPrompt.classList.remove('visible');
+    }
+}
 
     function openLoveLetter(letterId) {
         const letterColors = [
@@ -3789,7 +3934,14 @@ function renderLoveLetterTab() {
         viewer.querySelector('.letter-body').textContent = letter.body ? letter.body.replace(/\\n/g, '\n') : '信中似乎没有内容...';
         viewer.querySelector('.letter-sender-name').textContent = letter.signature ? letter.signature.replace(/\\n/g, '\n') : sender.name;
             viewer.querySelector('.letter-timestamp').textContent = new Date(letter.timestamp).toLocaleString();
-            setElementImage(viewer.querySelector('.letter-stamp'), sender.avatarId);
+            let stampAvatarId;
+        if (letter.senderId === 'user') {
+            const recipientContact = appState.chat.contacts.find(c => c.id === letter.recipientId);
+            stampAvatarId = recipientContact ? recipientContact.userSettings.avatarId : appState.chat.userProfile.avatarId;
+        } else {
+            stampAvatarId = sender.avatarId;
+        }
+        setElementImage(viewer.querySelector('.letter-stamp'), stampAvatarId);
 
             viewer.classList.add('visible');
 
@@ -7434,8 +7586,11 @@ function handleSocialAction(action, args, senderId) {
                 const targetNickname = args[0].replace('@', '');
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname);
                 if (targetId) {
-                    if (action === 'SET_TITLE') { contact.groupSettings.members[targetId].title = args[1]; addSystemNotification(contact.id, `'${actorName}' 将 '${targetNickname}' 的群聊头衔修改为 '${args[1]}'`, false); }
-                    else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = args[1]; addSystemNotification(contact.id, `'${actorName}' 修改了 '${oldNickname}' 的群名片为 '${args[1]}'`, false); }
+if (action === 'SET_TITLE') {
+                        contact.groupSettings.members[targetId].title = args[1];
+                        const memberToChange = contact.groupSettings.members[targetId];
+                        addSystemNotification(contact.id, `'${actorName}' 将 '${memberToChange.nickname}' 的群聊头衔修改为 '${args[1]}'`, false);
+                    }                    else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = args[1]; addSystemNotification(contact.id, `'${actorName}' 修改了 '${oldNickname}' 的群名片为 '${args[1]}'`, false); }
                 }
             } else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) {
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', ''));
@@ -8296,46 +8451,50 @@ async function handleMomentsImageUpload(file, profileId, type) {
             if (!message) return;
             const target = e.target;
 
-            // --- Reply item actions ---
-            const replyItem = target.closest('.reply-item');
-            if (replyItem) {
-                const replyId = replyItem.dataset.replyId;
-                const reply = (message.replies || []).find(r => r.id === replyId);
-                if (!reply) return;
+                    // --- Reply item actions ---
+        const replyItem = target.closest('.reply-item');
+        if (replyItem) {
+            const replyId = replyItem.dataset.replyId;
+            const reply = (message.replies || []).find(r => r.id === replyId);
+            if (!reply) return;
 
-                const editBtn = target.closest('.edit-reply-btn');
-                const deleteBtn = target.closest('.delete-reply-btn');
-                const sendBtn = target.closest('.reply-input-container button');
-                
-                if (editBtn) {
+            const actionBtn = target.closest('.icon-btn[data-action]');
+            const sendBtn = target.closest('.reply-input-container button');
+            
+            if (actionBtn) {
+                const action = actionBtn.dataset.action;
+                if (action === 'edit-comment') {
                     openMomentCommentEditor(null, null, replyId, messageId);
-                } else if (deleteBtn) {
+                } else if (action === 'delete-comment') {
                     if (confirm('确定要删除这条回复吗？')) {
                         message.replies = message.replies.filter(r => r.id !== replyId);
                         debouncedSaveState();
                         renderMomentsFeed(profileId);
                     }
-                } else if (sendBtn) {
-                    const input = sendBtn.previousElementSibling;
-                    const text = input.value.trim();
-                    if (!text) return;
-                    const newReply = { id: newId('reply'), authorId: 'user', text, timestamp: Date.now(), replyTo: replyId };
-                    message.replies.push(newReply);
-                    debouncedSaveState();
-                    renderMomentsFeed(profileId);
-                } else {
-                    // Click on reply body to toggle actions
-                    const actionIcons = replyItem.querySelector('.comment-actions-inline');
-                    const replyInputArea = replyItem.querySelector('.reply-input-container');
-                    
-                    if (actionIcons) actionIcons.style.display = actionIcons.style.display === 'flex' ? 'none' : 'flex';
-                    if (replyInputArea) replyInputArea.classList.toggle('active');
-                     if (replyInputArea && replyInputArea.classList.contains('active')) {
-                        replyInputArea.querySelector('input').focus();
-                    }
                 }
-                return;
+            } else if (sendBtn) {
+                const input = sendBtn.closest('.reply-input-container').querySelector('input');
+                const text = input.value.trim();
+                if (!text) return;
+                const targetReply = message.replies.find(r => r.id === replyId);
+                const targetAuthor = findUserById(targetReply.authorId);
+                const newReply = { id: newId('reply'), authorId: 'user', text: `@${targetAuthor.name} ${text}`, timestamp: Date.now(), replyTo: replyId };
+                message.replies.push(newReply);
+                debouncedSaveState();
+                renderMomentsFeed(profileId);
+            } else {
+                // Click on reply body to toggle actions
+                const actionIcons = replyItem.querySelector('.comment-actions-inline');
+                const replyInputArea = replyItem.querySelector('.reply-input-container');
+                
+                if (actionIcons) actionIcons.style.display = actionIcons.style.display === 'flex' ? 'none' : 'flex';
+                if (replyInputArea) replyInputArea.classList.toggle('active');
+                 if (replyInputArea && replyInputArea.classList.contains('active')) {
+                    replyInputArea.querySelector('input').focus();
+                }
             }
+            return;
+        }
 
             // --- Main item actions ---
             const mainReplyInputArea = messageItem.querySelector('.message-board-item-main > .reply-input-container');
@@ -9832,66 +9991,76 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             const sender = findUserById(msg.senderId);
             const repliesHTML = (msg.replies || []).map(reply => renderSingleMessageReply(reply, msg.replies || [], msg.id)).join('');
 
-            return `
-            <div class="message-board-item" data-message-id="${msg.id}">
-                <div class="message-board-item-main swipe-content">
-                    <div class="message-board-header">
-                        <div class="message-board-avatar" data-avatar-id="${recipient.avatarId}"></div>
-                        <p class="message-board-recipient">To: ${escapeHTML(msg.recipientName)}</p>
-                    </div>
-                    <p class="message-board-content">${escapeHTML(msg.content).replace(/\n/g, '<br>')}</p>
-                    <div class="message-board-footer">
-                        <div class="message-board-signature">
-                            <span class="message-board-sender">From: ${escapeHTML(msg.senderName)}</span>
-                            <div class="message-board-avatar" data-avatar-id="${sender.avatarId}"></div>
-                        </div>
-                        <div class="message-board-timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
-                    </div>
-                    <div class="message-board-replies">${repliesHTML}</div>
-                    <div class="reply-input-container" style="margin-top:10px;">
-                        <input type="text" placeholder="回复 ${escapeHTML(msg.senderName)}...">
-                        <button class="settings-button secondary" style="padding: 5px 10px;">发送</button>
-                    </div>
+                return `
+        <div class="message-board-item" data-message-id="${msg.id}">
+            <div class="message-board-item-main swipe-content">
+                <div class="message-board-header">
+                    <div class="message-board-avatar" data-avatar-id="${recipient.avatarId}"></div>
+                    <p class="message-board-recipient">To: ${escapeHTML(msg.recipientName)}</p>
                 </div>
-                <div class="message-board-item-actions swipe-actions">
-                    <div class="edit-action">编辑</div>
-                    <div class="delete-action">删除</div>
+                <p class="message-board-content">${escapeHTML(msg.content).replace(/\n/g, '<br>')}</p>
+                <div class="message-board-footer">
+                    <div class="message-board-signature">
+                        <span class="message-board-sender">From: ${escapeHTML(msg.senderName)}</span>
+                        <div class="message-board-avatar" data-avatar-id="${sender.avatarId}"></div>
+                    </div>
+                    <div class="message-board-timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
                 </div>
-            </div>`;
+                <div class="message-board-replies">${repliesHTML}</div>
+                <div class="reply-input-container" style="margin-top:10px;">
+                    <input type="text" placeholder="回复 ${escapeHTML(msg.senderName)}...">
+                    <button class="settings-button secondary send-comment-btn" data-icon-id="comment-send" style="padding: 5px 10px; min-width: 44px; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+            <div class="message-board-item-actions swipe-actions">
+                <div class="edit-action">编辑</div>
+                <div class="delete-action">删除</div>
+            </div>
+        </div>`;
         }
 
-        function renderSingleMessageReply(reply, allReplies, messageId) {
-            const author = findUserById(reply.authorId);
-            let targetHTML = '';
-            if (reply.replyTo) {
-                const targetReply = allReplies.find(r => r.id === reply.replyTo);
-                if (targetReply) {
-                    const targetAuthor = findUserById(targetReply.authorId);
-                    targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>`;
-                }
+            function renderSingleMessageReply(reply, allReplies, messageId) {
+        const author = findUserById(reply.authorId);
+        
+        let replyText = escapeHTML(reply.text);
+        const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s); // Added 's' flag for multiline
+        let targetHTML = '';
+        if(mentionMatch) {
+            targetHTML = `回复 <span class="reply-target">@${mentionMatch[1]}</span>: `;
+            replyText = mentionMatch[2];
+        } else if (reply.replyTo) { // Fallback for older data
+             const targetReply = allReplies.find(r => r.id === reply.replyTo);
+            if (targetReply) {
+                const targetAuthor = findUserById(targetReply.authorId);
+                targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>: `;
             }
-            const canModify = true; // 假设用户总是可以修改
+        }
 
-            return `
+        const canModify = true; 
+        return `
             <div class="reply-item" data-reply-id="${reply.id}">
-                <div class="comment-header" style="justify-content: space-between;">
-                    <div>
-                        <span class="reply-author">${author.name}</span> ${targetHTML}:
+                <div class="reply-avatar" data-avatar-id="${author.avatarId}"></div>
+                <div class="reply-content">
+                    <div class="comment-header">
+                         <div>
+                            <span class="reply-author">${author.name}</span>
+                            <span class="reply-timestamp">${new Date(reply.timestamp).toLocaleString()}</span>
+                         </div>
+                         <div class="comment-actions-inline" style="display: none;">
+                            ${canModify ? `
+                            <button class="icon-btn" data-action="edit-comment" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="icon-btn" data-action="delete-comment" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                            ` : ''}
+                         </div>
                     </div>
-                    <div class="comment-actions-inline" style="display: none;">
-                        ${canModify ? `
-                        <button class="icon-btn edit-reply-btn" title="编辑">✏️</button>
-                        <button class="icon-btn delete-reply-btn" title="删除">❌</button>
-                        ` : ''}
+                    <p class="comment-text">${targetHTML}${replyText}</p>
+                    <div class="reply-input-container">
+                        <input type="text" placeholder="回复 ${author.name}...">
+                        <button class="settings-button secondary send-comment-btn" data-icon-id="comment-send" style="padding: 5px 10px; min-width: 44px; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-paper-plane"></i></button>
                     </div>
-                </div>
-                <p class="comment-text" style="margin-top: 2px;">${escapeHTML(reply.text)}</p>
-                <div class="reply-input-container">
-                    <input type="text" placeholder="回复 ${author.name}...">
-                    <button class="settings-button secondary" style="padding: 5px 10px;">发送</button>
                 </div>
             </div>`;
-        }
+    }
     
     function openLeaveMessageModal(messageId = null) {
             const isEditing = messageId !== null;
@@ -10381,6 +10550,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                 // --- Mail App New Listeners & Functions ---
         function openEditLoveLetterModal(mode, letterId) {
         const modal = getEl('edit-love-letter-modal');
+    const saveBtn = getEl('save-love-letter-btn');
         const letter = appState.mailbox.loveLetters.find(l => l.id === letterId);
         
         // Clear replyToId field initially
@@ -10426,14 +10596,38 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
         } else { // 'new' mode
             titleEl.textContent = '写新情书';
             recipientInput.value = ''; // Salutation is empty for user to fill
-            subjectInput.value = '';
-            bodyInput.value = '';
-            signatureInput.value = findUserById('user').name;
-            authorSelectorLabel.textContent = '收信人';
-            renderLetterAuthorSelector(authorSelector, null, true); // true = exclude user
         }
         
+        // Dynamically change button text based on mode
+        if (mode === 'edit') {
+        saveBtn.textContent = '保存';
+    } else if (mode === 'reply') {
+        saveBtn.textContent = '发送';
+        const originalSenderContact = appState.chat.contacts.find(c => c.id === letter.senderId);
+        signatureInput.value = originalSenderContact ? originalSenderContact.userSettings.name : findUserById('user').name;
+        authorSelectorContainer.style.display = 'none';
+    } else { // 'new' mode
+        saveBtn.textContent = '发送';
+        subjectInput.value = '';
+        bodyInput.value = '';
+        signatureInput.value = findUserById('user').name;
+        authorSelectorLabel.textContent = '收信人';
+        renderLetterAuthorSelector(authorSelector, null, true); // true = exclude user
+    }
+        
         modal.classList.add('visible');
+        // --- ADDED: Update signature on recipient selection ---
+authorSelector.addEventListener('click', e => {
+    const item = e.target.closest('.author-selector-item');
+    if (item) {
+        const currentMode = getEl('edit-love-letter-modal').dataset.mode;
+        if (currentMode === 'new') {
+            const recipientId = item.dataset.id;
+            const chatContact = appState.chat.contacts.find(c => c.id === recipientId);
+            signatureInput.value = chatContact ? chatContact.userSettings.name : findUserById('user').name;
+        }
+    }
+}, { once: true }); // Use 'once' to avoid attaching multiple listeners if the modal is reopened
     }
         
         function renderLetterAuthorSelector(container, selectedId, excludeUser = false) {
