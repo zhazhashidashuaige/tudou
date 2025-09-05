@@ -337,6 +337,10 @@
         overflow-x: auto;
         border-radius: 5px; /* Added for consistency */
     }
+    .theme-css-editor::placeholder {
+        color: #aaa;
+        font-style: italic;
+    }
         .bubble-css-preview {
         margin-top: 15px;
         padding: 15px;
@@ -1226,28 +1230,28 @@
                 <div id="bubble-tab-content" class="tab-content"><div id="bubble-grid"></div></div>
                                 <div id="theme-tab-content" class="tab-content">
                     <div class="settings-group">
-                        <div class="group-title">空间卡片 (.moments-post-item .post-item-content)</div>
+                        <div class="group-title">空间卡片</div>
                         <div class="group-content">
                         <textarea id="theme-css-moments" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-moments"></div>
                     </div>
                     <div class="settings-group">
-                        <div class="group-title">顶部状态栏 (.app-header)</div>
+                        <div class="group-title">顶部状态栏</div>
                         <div class="group-content">
                         <textarea id="theme-css-header" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-header"></div>
                     </div>
                     <div class="settings-group">
-                        <div class="group-title">底部标签栏 (.app-bottom-tabs)</div>
+                        <div class="group-title">底部标签栏</div>
                         <div class="group-content">
                         <textarea id="theme-css-tabs" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-tabs"></div>
                     </div>
                     <div class="settings-group">
-                        <div class="group-title">通用列表卡片 (.swipe-content)</div>
+                        <div class="group-title">通用列表卡片</div>
                         <div class="group-content">
                         <textarea id="theme-css-list-item" class="theme-css-editor" rows="6"></textarea>
                         </div>
@@ -1427,16 +1431,11 @@
                     </div>
                                     <div class="settings-group" id="us-bubble-customization">
                     <div class="group-title">聊天气泡样式</div>
-                    <div class="group-content">
-                        <div class="settings-item">
-                            <label>你的气泡 (.message-item.user .message-bubble)</label>
-                            <textarea id="us-bubble-css-user" class="theme-css-editor" rows="5"></textarea>
-                        </div>
-                        <div class="settings-item">
-                            <label>对方的气泡 (.message-item.contact .message-bubble)</label>
-                            <textarea id="us-bubble-css-char" class="theme-css-editor" rows="5"></textarea>
-                        </div>
-                    </div>
+    <div class="group-content">
+        <div class="settings-item">
+            <textarea id="us-bubble-css" class="theme-css-editor" rows="10"></textarea>
+        </div>
+    </div>
                     <div class="bubble-css-preview" id="us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
@@ -1515,16 +1514,11 @@
                     </div>
                                     <div class="settings-group" id="gcs-us-bubble-customization">
                     <div class="group-title">聊天气泡样式</div>
-                    <div class="group-content">
-                        <div class="settings-item">
-                            <label>你的气泡 (.message-item.user .message-bubble)</label>
-                            <textarea id="gcs-us-bubble-css-user" class="theme-css-editor" rows="5"></textarea>
-                        </div>
-                        <div class="settings-item">
-                            <label>对方的气泡 (.message-item.contact .message-bubble)</label>
-                            <textarea id="gcs-us-bubble-css-char" class="theme-css-editor" rows="5"></textarea>
-                        </div>
-                    </div>
+    <div class="group-content">
+        <div class="settings-item">
+            <textarea id="gcs-us-bubble-css" class="theme-css-editor" rows="10"></textarea>
+        </div>
+    </div>
                     <div class="bubble-css-preview" id="gcs-us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
@@ -2932,16 +2926,14 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     // ===================================================================
     function initializeContactSettings(contact) { const deepCopy = (obj) => JSON.parse(JSON.stringify(obj)); const userProfileDefaults = appState.chat.userProfile; if (!contact.userSettings) { 
     contact.userSettings = {
+        bubbleCss: '',
         ...deepCopy(userProfileDefaults),
         bubbleCssUser: '',
         bubbleCssChar: ''
     };
-} else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCssUser === 'undefined') {
-            contact.userSettings.bubbleCssUser = '';
-        }
-        if (typeof contact.userSettings.bubbleCssChar === 'undefined') {
-            contact.userSettings.bubbleCssChar = '';
-        }if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+} else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCss === 'undefined') {
+        contact.userSettings.bubbleCss = '';
+    }if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
@@ -3605,10 +3597,10 @@ cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.re
 saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImageId: settingsGroup.backgroundImageId }; const cleanedStyles = Object.fromEntries(Object.entries(newStyles).filter(([_, v]) => v !== '' && v !== '0px')); if (isGlobal) { appState.beautify.bubbleSettings.global = cleanedStyles; } else { appState.beautify.bubbleSettings.specific[bubbleId] = cleanedStyles; } debouncedSaveState(); if (isGlobal) { Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, true)); } else { applyBubbleChange(bubbleId, true); } editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
 restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的样式吗？`)) { const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : appState.beautify.bubbleSettings.specific[bubbleId]; if (settingsGroup?.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } if (isGlobal) { appState.beautify.bubbleSettings.global = {}; Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, false, true)); } else { delete appState.beautify.bubbleSettings.specific[bubbleId]; applyBubbleChange(bubbleId, false, true); } debouncedSaveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
     const defaultThemeStyles = {
-        momentsPost: `  padding: 15px;`,
-        appHeader: `  position: sticky;\n  top: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 10px 15px;\n  background-color: var(--app-screen-bg);\n  border-bottom: 1px solid var(--border-color);\n  flex-shrink: 0;\n  padding-top: calc(env(safe-area-inset-top, 10px) + 15px);\n  min-height: 45px;\n  box-sizing: content-box;\n  z-index: 10;`,
-        bottomTabs: `  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 50px;\n  padding-bottom: env(safe-area-inset-bottom, 0px);\n  background-color: var(--item-bg);\n  border-top: 1px solid var(--border-color);\n  display: flex;\n  justify-content: space-around;\n  align-items: flex-start;\n  z-index: 5;\n  box-sizing: border-box;`,
-        listItem: `  background-color: var(--item-bg);\n  transition: transform 0.3s ease;\n  position: relative;\n  z-index: 2;`
+        momentsPost: `.MOMENTS-POST-ITEM.POST-ITEM-CONTENT{\n  padding: 15px;}`,
+        appHeader: `.APP-HEADER{\n  position: sticky;\n  top: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 10px 15px;\n  background-color: var(--app-screen-bg);\n  border-bottom: 1px solid var(--border-color);\n  flex-shrink: 0;\n  padding-top: calc(env(safe-area-inset-top, 10px) + 15px);\n  min-height: 45px;\n  box-sizing: content-box;\n  z-index: 10;}`,
+        bottomTabs: `.APP-BOTTOM-TABS{\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 50px;\n  padding-bottom: env(safe-area-inset-bottom, 0px);\n  background-color: var(--item-bg);\n  border-top: 1px solid var(--border-color);\n  display: flex;\n  justify-content: space-around;\n  align-items: flex-start;\n  z-index: 5;\n  box-sizing: border-box;}`,
+        listItem: `.SWIPE-CONTENT{\n  background-color: var(--item-bg);\n  transition: transform 0.3s ease;\n  position: relative;\n  z-index: 2;}`
     };
 
     function applyCustomThemes() {
@@ -3636,12 +3628,14 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
 
         let finalCss = '';
         appState.chat.contacts.forEach(contact => {
-            const { bubbleCssUser, bubbleCssChar } = contact.userSettings;
-            if (bubbleCssUser) {
-                finalCss += `#single-chat-screen[data-contact-id="${contact.id}"] .message-item.user .message-bubble { ${bubbleCssUser} }\n`;
-            }
-            if (bubbleCssChar) {
-                finalCss += `#single-chat-screen[data-contact-id="${contact.id}"] .message-item.contact .message-bubble { ${bubbleCssChar} }\n`;
+            const { bubbleCss } = contact.userSettings;
+            if (bubbleCss) {
+                // Prepend the contact-specific selector to each rule in the custom CSS
+                const scopedCss = bubbleCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+                    const scopedSelector = selector.split(',').map(s => `#single-chat-screen[data-contact-id="${contact.id}"] ${s.trim()}`).join(', ');
+                    return `${scopedSelector} ${body}`;
+                });
+                finalCss += scopedCss + '\n';
             }
         });
 
@@ -3659,47 +3653,51 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     };
 
     function updateBubbleCssPreview(context, settings) {
-    const editorUser = getEl(`${context}-bubble-css-user`);
-    const editorChar = getEl(`${context}-bubble-css-char`);
-    const previewArea = getEl(`${context}-bubble-preview`);
-    const previewStyleTag = getEl('bubble-preview-styles');
+        const editor = getEl(`${context}-bubble-css`);
+        const previewArea = getEl(`${context}-bubble-preview`);
+        const previewStyleTag = getEl('bubble-preview-styles');
 
-    const userCss = editorUser.value || defaultBubbleStyles.user;
-    const charCss = editorChar.value || defaultBubbleStyles.char;
-    
-    previewStyleTag.textContent = `
-        #${context}-bubble-preview .message-item.user .message-bubble { ${userCss} }
-        #${context}-bubble-preview .message-item.contact .message-bubble { ${charCss} }
-    `;
-    
-    const userAvatarId = settings.userSettings.avatarId;
-    const userFrameId = settings.userSettings.avatarFrameId;
-    const charAvatarId = settings.charSettings ? settings.charSettings.avatarId : settings.groupSettings.avatarId;
-    const charFrameId = settings.charSettings ? settings.charSettings.avatarFrameId : ''; // Group avatars don't have frames
+        const customCss = editor.value;
+        const scopedCss = customCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+            const scopedSelector = selector.split(',').map(s => `#${context}-bubble-preview ${s.trim()}`).join(', ');
+            return `${scopedSelector} ${body}`;
+        });
+        
+        previewStyleTag.textContent = scopedCss;
 
-    previewArea.innerHTML = `
-        <div class="message-item contact">
-            <div class="avatar" data-avatar-id="${charAvatarId}">
-                <div class="avatar-frame" data-avatar-frame-id="${charFrameId}"></div>
+        const userAvatarId = settings.userSettings.avatarId;
+        const userFrameId = settings.userSettings.avatarFrameId;
+        const charAvatarId = settings.charSettings ? settings.charSettings.avatarId : settings.groupSettings.avatarId;
+        const charFrameId = settings.charSettings ? settings.charSettings.avatarFrameId : '';
+
+        previewArea.innerHTML = `
+            <div class="message-item contact">
+                <div class="avatar" data-avatar-id="${charAvatarId}">
+                    <div class="avatar-frame" data-avatar-frame-id="${charFrameId}"></div>
+                </div>
+                <div class="message-content-wrapper"><div class="message-bubble">你好呀</div></div>
             </div>
-            <div class="message-content-wrapper"><div class="message-bubble">你好呀</div></div>
-        </div>
-        <div class="message-item user">
-            <div class="message-content-wrapper"><div class="message-bubble">嗯，你好</div></div>
-            <div class="avatar" data-avatar-id="${userAvatarId}">
-                 <div class="avatar-frame" data-avatar-frame-id="${userFrameId}"></div>
+            <div class="message-item user">
+                <div class="message-content-wrapper"><div class="message-bubble">嗯，你好</div></div>
+                <div class="avatar" data-avatar-id="${userAvatarId}">
+                     <div class="avatar-frame" data-avatar-frame-id="${userFrameId}"></div>
+                </div>
             </div>
-        </div>
-    `;
-    previewArea.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
-    previewArea.querySelectorAll('.avatar-frame').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
-}
+        `;
+        previewArea.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
+        previewArea.querySelectorAll('.avatar-frame').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
+    }
     function renderThemeEditor() {
         const themes = appState.beautify.customThemes;
-        themeCssMoments.value = themes.momentsPost || defaultThemeStyles.momentsPost;
-        themeCssHeader.value = themes.appHeader || defaultThemeStyles.appHeader;
-        themeCssTabs.value = themes.bottomTabs || defaultThemeStyles.bottomTabs;
-        themeCssListItem.value = themes.listItem || defaultThemeStyles.listItem;
+        themeCssMoments.value = themes.momentsPost || '';
+        themeCssHeader.value = themes.appHeader || '';
+        themeCssTabs.value = themes.bottomTabs || '';
+        themeCssListItem.value = themes.listItem || '';
+        
+        themeCssMoments.placeholder = defaultThemeStyles.momentsPost;
+        themeCssHeader.placeholder = defaultThemeStyles.appHeader;
+        themeCssTabs.placeholder = defaultThemeStyles.bottomTabs;
+        themeCssListItem.placeholder = defaultThemeStyles.listItem;
     }
 function updateThemeCssPreview(id) {
     const editor = getEl(`theme-css-${id}`);
@@ -3999,9 +3997,9 @@ function renderConversation(isLoadingMore = false) {
                     notificationEl.className = 'message-timestamp';
                     notificationEl.dataset.id = msg.id;
                     notificationEl.textContent = msg.content;
-                    if (msg.originalContent) {
-                        notificationEl.dataset.originalContent = JSON.stringify(msg.originalContent);
-                    }
+                                    if (msg.originalContent) {
+                    notificationEl.dataset.originalContent = msg.originalContent;
+                }
                     fragment.appendChild(notificationEl);
                     return;
                 }
@@ -5433,10 +5431,12 @@ function handleAvatarLongPress(avatarElement) {
 // ===================================================================
 function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
 function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
-function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona;     usBubbleCssUser.value = runtimeState.tempChatSettings.userSettings.bubbleCssUser || defaultBubbleStyles.user;
-    usBubbleCssChar.value = runtimeState.tempChatSettings.userSettings.bubbleCssChar || defaultBubbleStyles.char;
+function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona;     const usBubbleCss = getEl('us-bubble-css');
+    usBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || '';
+    usBubbleCss.placeholder = `/* 示例: */\n.message-item.user .message-bubble {\n  background-color: var(--accent-color);\n  color: white;\n  border-bottom-right-radius: 4px}\n.message-item.contact .message-bubble {\n  background-color: white;\n  color: black;\n  border-bottom-right-radius: 4px}`;
     updateBubbleCssPreview('us', runtimeState.tempChatSettings);}
-function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();
+    applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
 query('#chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } });
 csCharName.addEventListener('input', () => { const newName = csCharName.value; runtimeState.tempChatSettings.charSettings.name = newName; });
@@ -5717,7 +5717,8 @@ function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c
         contact.groupSettings.members['user'].avatarFrameId = contact.userSettings.avatarFrameId;
         contact.groupSettings.members['user'].persona = contact.userSettings.persona;
     }
-    appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState();applyAllCustomBubbleStyles();  updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
+    appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState();
+    applyAllCustomBubbleStyles();  updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
     // 为群聊User设置中的视频背景按钮添加直接上传监听
@@ -10011,30 +10012,24 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                 setupGlobalEventListeners(); // CRITICAL FIX for image uploads
                     // --- Bubble CSS Editor Listeners ---
     function setupBubbleEditorListeners(context) {
-        const editorUser = getEl(`${context}-bubble-css-user`);
-        const editorChar = getEl(`${context}-bubble-css-char`);
+        const editor = getEl(`${context}-bubble-css`);
         const applyBtn = getEl(`${context}-bubble-apply-btn`);
         const restoreBtn = getEl(`${context}-bubble-restore-btn`);
 
-        editorUser.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
-        editorChar.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
+        editor.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
 
         applyBtn.addEventListener('click', () => {
             if (confirm('确定应用当前的气泡样式吗？')) {
-                runtimeState.tempChatSettings.userSettings.bubbleCssUser = editorUser.value;
-                runtimeState.tempChatSettings.userSettings.bubbleCssChar = editorChar.value;
+                runtimeState.tempChatSettings.userSettings.bubbleCss = editor.value;
                 showToast('样式已应用！请返回聊天界面查看。');
-                // Saving is handled by the main back button, this just updates temp state
             }
         });
 
         restoreBtn.addEventListener('click', () => {
             if (confirm('确定要还原此会话的默认气泡样式吗？')) {
-                runtimeState.tempChatSettings.userSettings.bubbleCssUser = '';
-                runtimeState.tempChatSettings.userSettings.bubbleCssChar = '';
-                editorUser.value = defaultBubbleStyles.user;
-                editorChar.value = defaultBubbleStyles.char;
-                updateBubbleCssPreview(context);
+                runtimeState.tempChatSettings.userSettings.bubbleCss = '';
+                editor.value = '';
+                updateBubbleCssPreview(context, runtimeState.tempChatSettings);
                 showToast('已还原为默认样式。');
             }
         });
