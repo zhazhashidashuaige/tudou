@@ -3377,9 +3377,9 @@ function renderLoveLetterTab() {
             if (!letter) return;
             const sender = findUserById(letter.senderId);
 
-            viewer.querySelector('.letter-salutation').textContent = letter.salutation || `${appState.chat.userProfile.name}：`;
-            viewer.querySelector('.letter-body').textContent = letter.body || '信中似乎没有内容...';
-            viewer.querySelector('.letter-sender-name').textContent = letter.signature || sender.name;
+        viewer.querySelector('.letter-salutation').textContent = letter.salutation ? letter.salutation.replace(/\\n/g, '\n') : `${appState.chat.userProfile.name}：`;
+        viewer.querySelector('.letter-body').textContent = letter.body ? letter.body.replace(/\\n/g, '\n') : '信中似乎没有内容...';
+        viewer.querySelector('.letter-sender-name').textContent = letter.signature ? letter.signature.replace(/\\n/g, '\n') : sender.name;
             viewer.querySelector('.letter-timestamp').textContent = new Date(letter.timestamp).toLocaleString();
             setElementImage(viewer.querySelector('.letter-stamp'), sender.avatarId);
 
@@ -3905,7 +3905,7 @@ chatListBackBtn.addEventListener('click', () => { if (chatAppScreen.classList.co
 query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; renderMomentsPage('user'); } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
 chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (runtimeState.contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', runtimeState.contactSelection.map(id => appState.chat.contacts.find(c => c.id === id).name).join(', ')); if (groupName) { createGroup(groupName, runtimeState.contactSelection); } } else { addContactModal.classList.add('visible'); } });
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; scheduleDailyLoveLetters(newContact.id); }); // Schedule love letters for the new contact
+confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime); messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; li.dataset.isGroup = contact.isGroup; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let avatarHTML; const unreadBadgeHTML = contact.unreadCount > 0 ? `<div class="unread-badge">${contact.unreadCount}</div>` : ''; const shakeClass = contact.needsShake ? 'shake' : ''; if (contact.isGroup) { const groupAvatarId = contact.groupSettings.avatarId; if (groupAvatarId) { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${groupAvatarId}">${unreadBadgeHTML}</div>`; } else { const memberAvatarIds = ['user', ...contact.members].slice(0, 4).map(id => { if (id === 'user') return appState.chat.userProfile.avatarId; return appState.chat.contacts.find(c => c.id === id)?.charSettings.avatarId || ''; }).filter(Boolean); const puzzlePieces = memberAvatarIds.map(avatarId => `<div class="puzzle-piece" data-avatar-id="${avatarId}"></div>`).join(''); avatarHTML = `<div class="contact-avatar group-puzzle ${shakeClass}">${puzzlePieces}${unreadBadgeHTML}</div>`; } } else { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${contact.charSettings.avatarId}">${unreadBadgeHTML}</div>`; } const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length + 1})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; li.innerHTML = ` <div class="contact-item-content"> ${avatarHTML} <div class="contact-info"> <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name)}</div> <div class="contact-last-msg">${contact.lastMessage || ''}</div> </div> <div class="contact-meta"> <div class="contact-time">${time}</div> ${metaHTML} </div> </div> <div class="contact-item-actions"> <div class="delete-action">删除</div> </div>`; messageListEl.appendChild(li); li.querySelectorAll('[data-avatar-id]').forEach(el => { const id = el.dataset.avatarId; if (id.startsWith('https')) { el.style.backgroundImage = `url(${id})`; } else { setElementImage(el, id); } }); if (contact.needsShake) { setTimeout(() => { const avatarEl = li.querySelector('.contact-avatar'); if (avatarEl) avatarEl.classList.remove('shake'); contact.needsShake = false; debouncedSaveState(); }, 500); } }); }
 function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); runtimeState.contactSelection.push(item.dataset.id); }
@@ -5765,15 +5765,29 @@ function claimRedPacket(msg) {
         return;
     }
 
-    if ((msg.packetType === 'lucky' || msg.packetType === 'normal') && msg.count > 0) {
-        if (Object.keys(msg.claimedBy).length >= msg.count) {
-            showToast('手慢了，红包派完了');
-            msg.status = 'claimed'; 
-            debouncedSaveState();
-            renderConversation();
-            showRedPacketDetails(msg);
-            return;
-        }
+    const contact = appState.chat.contacts.find(c => c.id === msg.contactId);
+    if (!contact) return;
+
+    // In single chat, sender cannot claim. In group, sender can claim lucky/normal.
+    if (msg.sender === 'user' && !contact.isGroup) {
+         showToast('不能领取自己发的红包哦');
+         showRedPacketDetails(msg);
+         return;
+    }
+    if (msg.sender === 'user' && contact.isGroup && msg.packetType === 'exclusive') {
+        showToast('不能领取自己发的专属红包');
+        return;
+    }
+    
+    const claimedCount = Object.keys(msg.claimedBy || {}).length;
+    const totalCount = msg.count || 1;
+    if (claimedCount >= totalCount) {
+        showToast('手慢了，红包派完了');
+        msg.status = 'claimed'; 
+        debouncedSaveState();
+        renderConversation();
+        showRedPacketDetails(msg);
+        return;
     }
     
     if (msg.packetType === 'exclusive' && msg.exclusiveTo !== 'user') {
@@ -5784,16 +5798,17 @@ function claimRedPacket(msg) {
     let claimedAmount = 0;
     if (msg.packetType === 'exclusive' || (msg.packetType === 'normal' && !msg.count)) {
         claimedAmount = msg.amount;
-        msg.status = 'claimed';
     } else if (msg.packetType === 'lucky') {
-        const remainingCount = msg.count - Object.keys(msg.claimedBy).length;
-        const remainingAmount = msg.totalAmount - Object.values(msg.claimedBy).reduce((sum, val) => sum + val, 0);
+        const remainingCount = totalCount - claimedCount;
+        const totalClaimedAmount = Object.values(msg.claimedBy || {}).reduce((sum, val) => sum + val, 0);
+        const remainingAmount = msg.totalAmount - totalClaimedAmount;
         if (remainingCount === 1) {
             claimedAmount = remainingAmount;
         } else {
             const avg = remainingAmount / remainingCount;
-            claimedAmount = Math.random() * avg * 1.8 + 0.1 * avg;
-            claimedAmount = Math.max(0.01, Math.min(claimedAmount, remainingAmount - (remainingCount - 1) * 0.01));
+            const randomFactor = Math.random() * 1.8 + 0.1;
+            claimedAmount = Math.max(0.01, avg * randomFactor);
+            claimedAmount = Math.min(claimedAmount, remainingAmount - (remainingCount - 1) * 0.01);
         }
         claimedAmount = parseFloat(claimedAmount.toFixed(2));
     } else if (msg.packetType === 'normal' && msg.count > 0) {
@@ -5803,36 +5818,85 @@ function claimRedPacket(msg) {
     if (!msg.claimedBy) msg.claimedBy = {};
     msg.claimedBy['user'] = claimedAmount;
     
-    const contact = appState.chat.contacts.find(c => c.id === msg.contactId);
     const senderDisplayName = getDisplayName(msg.sender, msg.contactId);
     const userName = getDisplayName('user', msg.contactId);
     
-    addSystemNotification(msg.contactId, `'${userName}' 领取了 ${senderDisplayName} 的红包`, false);
+    addSystemNotification(msg.contactId, `'${userName}' 领取了 ${senderDisplayName} 的红包`, true); // Trigger AI response after user claims
 
-    if ((msg.packetType === 'lucky' || msg.packetType === 'normal') && msg.count > 0) {
-        if (Object.keys(msg.claimedBy).length >= msg.count) {
-            msg.status = 'claimed';
-            if (msg.packetType === 'lucky') {
-                let luckiestKingId = '';
-                let maxAmount = 0;
-                for (const [memberId, amount] of Object.entries(msg.claimedBy)) {
-                    if (amount > maxAmount) {
-                        maxAmount = amount;
-                        luckiestKingId = memberId;
-                    }
-                }
-                if (luckiestKingId) {
-                    const luckiestKingName = contact.groupSettings.members[luckiestKingId]?.nickname || findUserById(luckiestKingId).name;
-                    addSystemNotification(msg.contactId, `${luckiestKingName} 是手气王！`, true);
-                }
-            }
-        }
+    if (Object.keys(msg.claimedBy).length >= totalCount) {
+        msg.status = 'claimed';
+         addSystemNotification(msg.contactId, `红包已被领完`, false);
     }
 
     debouncedSaveState();
     renderConversation();
     showRedPacketDetails(msg);
 }
+
+    function claimRedPacketByAI(messageId, claimerId) {
+        const contact = appState.chat.contacts.find(c => c.conversation.some(m => m.id === messageId));
+        if (!contact) return;
+        const msg = contact.conversation.find(m => m.id === messageId);
+        if (!msg || msg.type !== 'redPacket') return;
+
+        // Rule checks
+        if (msg.status === 'claimed' || msg.status === 'expired' || msg.status === 'returned') return;
+        if (msg.claimedBy && msg.claimedBy[claimerId]) return; // Already claimed by this char
+
+        const claimedCount = Object.keys(msg.claimedBy || {}).length;
+        const totalCount = msg.count || 1;
+        if (claimedCount >= totalCount) {
+            msg.status = 'claimed';
+            debouncedSaveState();
+            renderConversation();
+            return;
+        }
+
+        if (msg.packetType === 'exclusive' && msg.exclusiveTo !== claimerId) return;
+
+        // In single chat, sender cannot claim their own packet.
+        if (!contact.isGroup && msg.sender === claimerId) return;
+
+        // --- Amount Calculation ---
+        let claimedAmount = 0;
+        if (msg.packetType === 'exclusive' || (msg.packetType === 'normal' && !msg.count)) {
+            claimedAmount = msg.amount;
+        } else if (msg.packetType === 'lucky') {
+            const remainingCount = totalCount - claimedCount;
+            const totalClaimedAmount = Object.values(msg.claimedBy || {}).reduce((sum, val) => sum + val, 0);
+            const remainingAmount = msg.totalAmount - totalClaimedAmount;
+            if (remainingCount === 1) {
+                claimedAmount = remainingAmount;
+            } else {
+                const avg = remainingAmount / remainingCount;
+                // Random amount between 0.1 * avg and 1.9 * avg, ensuring it's at least 0.01
+                const randomFactor = Math.random() * 1.8 + 0.1;
+                claimedAmount = Math.max(0.01, avg * randomFactor);
+                // Ensure the claim doesn't leave less than 0.01 for each remaining person
+                claimedAmount = Math.min(claimedAmount, remainingAmount - (remainingCount - 1) * 0.01);
+            }
+            claimedAmount = parseFloat(claimedAmount.toFixed(2));
+        } else if (msg.packetType === 'normal' && msg.count > 0) {
+            claimedAmount = msg.amount;
+        }
+        
+        if (!msg.claimedBy) msg.claimedBy = {};
+        msg.claimedBy[claimerId] = claimedAmount;
+
+        const claimerDisplayName = getDisplayName(claimerId, contact.id);
+        const senderDisplayName = getDisplayName(msg.sender, contact.id);
+        addSystemNotification(contact.id, `'${claimerDisplayName}' 领取了 ${senderDisplayName} 的红包`, false);
+
+        if (Object.keys(msg.claimedBy).length >= totalCount) {
+            msg.status = 'claimed';
+            addSystemNotification(contact.id, `红包已被领完`, false);
+        }
+        
+        // If the details modal is currently open for this packet, refresh it
+        if (viewContentModal.classList.contains('visible') && viewContentTitle.textContent.includes(senderDisplayName)) {
+             showRedPacketDetails(msg);
+        }
+    }
 function showRedPacketDetails(msg) {
     const contact = appState.chat.contacts.find(c => c.id === msg.contactId);
         const senderName = getDisplayName(msg.sender, msg.contactId);
@@ -6239,14 +6303,16 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `    - **弥补遗憾**: 如果你之前因为有事而拒绝了用户的通话邀请，或通话意外中断，你可以在稍后的回复中主动打过去作为弥补。\n`;
         prompt += `5. **【回应用户的通话操作】**: 当系统通知显示“你拒绝了视频通话”或“对方正在通话中”时，这代表用户刚刚拒绝了【你主动发起】的通话。你的下一条回复【必须】是在【普通聊天】中，对此作出反应（例如抱怨、委屈、期待下次通话等）。当系统通知显示“通话意外中断”时，代表用户可能接听了别人的电话，你的回应【必须】体现出疑惑或嫉妒的情绪。\n\n`;
         
-        prompt += `--- **关于“红包”功能的【强制】设定** ---\n`;
-        prompt += `红包是一种特殊的消息。当你看到 ` + "`[User sends a ... red packet]`" + ` 消息时，你【必须】作出反应。\n`;
-        prompt += `1.  **立即领取**: 你扮演的角色会立即尝试领取红包。这是一个瞬时动作，你不需要用[ACTION]指令。\n`;
-        prompt += `2.  **虚构结果并回应**: 你的任务是根据红包的类型（普通、拼手气、专属）和你的角色人设，【虚构一个合理的领取结果】并进行回应。\n`;
-        prompt += `    *   **拼手气红包**: 虚构一个有高有低的随机金额。在群聊中，你还要虚构其他AI角色的领取金额，并让他们之间产生互动，比如谁是运气王。\n`;
-        prompt += `    *   **专属红包**: 只有被指定的人才能领取。如果红包是给你的，你就领取；如果不是，你应该表现出知道这是给别人的。\n`;
-        prompt += `3.  **群聊互动**: 在群聊中，你必须为【所有符合领取条件的AI角色】生成领取红包后的反应。\n`;
-        prompt += `4.  **牢记细节**: 你是一个能看到所有红包详情的真人，而不是一个无法操作的AI。\n\n`;
+            prompt += `--- **关于“红包”功能的【强制】设定** ---\n`;
+    prompt += `红包是一种需要你使用 [ACTION] 指令进行交互的特殊消息。当你看到聊天记录中出现一个【新】的、你尚未领取过的红包时，你【必须】立即为所有符合条件的角色生成领取指令，并紧接着进行聊天互动。\n`;
+    prompt += `1.  **【核心指令】**: 领取红包的【唯一】方式是使用指令: \`[ACTION: CLAIM_REDPACKET "messageId" "characterId"]\`。其中 "messageId" 是红包消息的ID，"characterId" 是领取该红包的【你的角色】的ID。\n`;
+    prompt += `2.  **【群聊规则】**: 在群聊中，你【必须】为你扮演的【每一个】符合领取条件的在线角色，都生成一条独立的 \`CLAIM_REDPACKET\` 指令。\n`;
+    prompt += `3.  **【领取资格判断】(必须遵守)**:\n`;
+    prompt += `    - **专属红包**: 你【只能】为你ID匹配 \`exclusiveTo\` 字段的角色生成领取指令。\n`;
+    prompt += `    - **数量限制**: 对于普通和拼手气红包，你【必须】检查红包是否还有剩余数量。如果 \`已领取人数 >= 红包总个数\`，则不能再领取。\n`;
+    prompt += `    - **高级RP规则**: 在群聊中，如果红包数量少于群内总人数，你可以根据角色性格，选择性地让某个角色“手慢了”或“故意不领”，从而不为他生成领取指令，把机会留给用户或其他角色。这是一个展现角色个性的好机会。\n`;
+    prompt += `4.  **【发包人规则】**: 在【群聊】中，红包的发送者【可以】领取自己发送的“普通”或“拼手气”红包。但在【单聊】中，发送者【不能】领取自己的红包。\n`;
+    prompt += `5.  **【后续互动】**: 在生成所有 \`CLAIM_REDPACKET\` 指令之后，你【必须】紧接着生成符合人设的聊天内容，例如感谢发红包的人、讨论领取的金额、或在群聊中讨论谁是“手气王”等。\n\n`;
         
         prompt += `--- **关于“一起听歌”与“动态”功能的【强制】设定** ---\n`;
         prompt += `1. **一起听歌**: 这是一个“虚拟听歌”功能。当系统通知“一起听歌”时，你【必须】接受这个设定，结合歌曲信息（歌名、歌手，如有匹配歌词也可以结合歌词）的文本内容，像真人一样对歌曲进行评论、分享感受或切歌。如果你听到深有感触的歌曲，可以使用 ` + "`[ACTION: POST_MUSIC_REVIEW ...]`" + ` 指令在音乐APP发表乐评。\n`;
@@ -6681,13 +6747,19 @@ function handleSocialAction(action, args, senderId) {
                 const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
                 if (song) addMessageToConversation({ id: messageId, type: 'musicShare', songId: song.id, title: song.title, artist: song.artist, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
             } else if (action.startsWith('SEND_REDPACKET')) {
+            
                 let packetData;
                 if (action === 'SEND_REDPACKET_LUCKY' && contact.isGroup && args.length >= 3) { let [message, totalAmount, count] = args; packetData = { packetType: 'lucky', message, totalAmount: parseFloat(totalAmount), count: parseInt(count) }; }
                 else if (action === 'SEND_REDPACKET_EXCLUSIVE' && contact.isGroup && args.length >= 3) { let [message, amount, targetNickname] = args; const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname.replace('@', '')); if (targetId) packetData = { packetType: 'exclusive', message, amount: parseFloat(amount), exclusiveTo: targetId }; }
                 else if (action === 'SEND_REDPACKET_NORMAL' && contact.isGroup && args.length >= 3) { let [message, amount, count] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount), count: parseInt(count) }; }
                 else if (action === 'SEND_REDPACKET' && !contact.isGroup && args.length >= 2) { let [message, amount] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount) }; }
                 if (packetData) addMessageToConversation({ id: messageId, type: 'redPacket', ...packetData, sender: currentSenderId, timestamp, status: 'unclaimed', claimedBy: {}, contactId: contact.id }, true);
-            } else if (action === 'INITIATE_VIDEO_CALL') {
+            } 
+                        else if (action === 'CLAIM_REDPACKET' && args.length >= 2) {
+                const [messageId, claimerId] = args;
+                claimRedPacketByAI(messageId, claimerId);
+            }
+            else if (action === 'INITIATE_VIDEO_CALL') {
                 if (appState.chat.videoCallState.isActive) {
                     addMessageToConversation({ id: newId('msg'), type: 'text', content: '（我想给你打视频，但你好像正在通话中...）', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true);
                 } else if (!runtimeState.incomingCall.from) {
@@ -6739,7 +6811,7 @@ function handleSocialAction(action, args, senderId) {
             }
 
         } else if (segment.type === 'text') {
-            const messages = segment.content.replace(/、|，|,/g, '<MSG_SPLIT>').split('<MSG_SPLIT>').map(s => s.trim()).filter(Boolean);
+            const messages = segment.content.split('<MSG_SPLIT>').map(s => s.trim()).filter(Boolean);
             for (const message of messages) {
                 let messageContent = message;
                 let senderForThisMessage = currentSenderId;
@@ -9482,33 +9554,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         }
     }
 
-    function scheduleDailyLoveLetters(singleContactId = null) {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     
-    const contactsToSchedule = singleContactId 
-        ? [appState.chat.contacts.find(c => c.id === singleContactId)] 
-        : appState.chat.contacts;
-
-    contactsToSchedule.forEach(contact => {
-        if (contact && !contact.isGroup) {
-            const lastSentTime = contact.lastLetterSent || 0;
-            
-            if (lastSentTime < startOfToday) {
-                let randomDelay;
-                if (lastSentTime === 0) {
-                    randomDelay = (Math.random() * 2 * 60 * 1000) + (1 * 60 * 1000); 
-                } else {
-                    randomDelay = (Math.random() * 6 * 60 * 60 * 1000) + (2 * 60 * 60 * 1000);
-                }
-                
-                setTimeout(() => {
-                    generateAndSendLoveLetter(contact.id);
-                }, randomDelay);
-            }
-        }
-    });
-}
     function initializeAllRealtimeActivity() { appState.chat.contacts.forEach(contact => { if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { updateRealtimeActivityTimer(contact); } }); }
         function updateRealtimeActivityTimer(contact) { 
             if (runtimeState.realtimeActivityTimers[contact.id]) { 
@@ -9522,7 +9568,17 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
                     const userSilenceDuration = lastUserMessage ? (Date.now() - lastUserMessage.timestamp) : Infinity;
                     // 检查用户在其他聊天或动态中的近期活动
                     const isUserActiveElsewhere = appState.chat.contacts.some(c => c.id !== contact.id && c.conversation.some(m => m.sender === 'user' && (Date.now() - m.timestamp < 5 * 60 * 1000))) || appState.chat.moments.posts.some(p => p.authorId === 'user' && (Date.now() - p.timestamp < 5 * 60 * 1000));
-                    
+                                    // --- NEW: Proactive Love Letter Check ---
+                const now = new Date();
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                const lastSentTime = contact.lastLetterSent || 0;
+
+                // Check if it's been more than a day and if a random chance hits (e.g., 15% chance per interval)
+                if (lastSentTime < startOfToday && Math.random() < 0.15) {
+                    generateAndSendLoveLetter(contact.id);
+                    return; // A char will either send a letter OR do another activity, not both at once.
+                }
+                // --- END NEW ---
                     if (userSilenceDuration > intervalMinutes * 60 * 1000 && isUserActiveElsewhere) {
                         triggerAiResponse(contact.id, false, true); // Jealousy trigger
                     } else {
@@ -9838,10 +9894,22 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         }
     }
 
-    debouncedSaveState();
-    renderLoveLetterTab();
-    modal.classList.remove('visible');
-});
+            debouncedSaveState();
+        renderLoveLetterTab();
+        modal.classList.remove('visible');
+        
+        // --- CORE FIX: Trigger AI response after user sends a letter ---
+        if (mode === 'reply' || mode === 'new') {
+            const recipientId = (mode === 'reply') 
+                ? appState.mailbox.loveLetters.find(l => l.id === replyToId)?.senderId
+                : getEl('letter-author-selector').querySelector('.selected')?.dataset.id;
+            
+            if (recipientId) {
+                // Use a short timeout to let the UI close smoothly before AI processing
+                setTimeout(() => triggerAiResponse(recipientId), 500);
+            }
+        }
+    });
     editLoveLetterModal.addEventListener('click', e => {
         const item = e.target.closest('#letter-author-selector .author-selector-item');
         if (item) {
@@ -9937,7 +10005,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
     }
     setupBubbleEditorListeners('us');
     setupBubbleEditorListeners('gcs-us');
-                scheduleDailyLoveLetters();
+
                 initializeAllRealtimeActivity();
                 // --- 动态通知初始化 ---
                 momentsNotificationBtn.addEventListener('click', openMomentsNotificationModal);
@@ -10020,32 +10088,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
 
 function setupModalTabs(modal) { if (!modal) return; const tabs = modal.querySelectorAll('.tab-btn'); const contents = modal.querySelectorAll('.modal-tab-content'); if (tabs.length === 0) return; tabs.forEach(tab => { tab.addEventListener('click', () => { tabs.forEach(t => t.classList.remove('active')); contents.forEach(c => c.classList.remove('active')); tab.classList.add('active'); const contentId = tab.dataset.tab; const targetContent = modal.querySelector(`.modal-tab-content[id*="${contentId}"]`); if (targetContent) { targetContent.classList.add('active'); } }); }); }
 function initializeAllRealtimeActivity() { appState.chat.contacts.forEach(contact => { if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { updateRealtimeActivityTimer(contact); } }); }
-function updateRealtimeActivityTimer(contact) { 
-            if (runtimeState.realtimeActivityTimers[contact.id]) { 
-                clearInterval(runtimeState.realtimeActivityTimers[contact.id]); 
-            } 
-            if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { 
-                const intervalMinutes = contact.charSettings.realtimeActivity.interval || 30; 
-                runtimeState.realtimeActivityTimers[contact.id] = setInterval(() => { 
-                    // 检查用户是否在该聊天中沉默，但在别处活跃（嫉妒触发器）
-                    const lastUserMessage = [...contact.conversation].reverse().find(m => m.sender === 'user');
-                    const userSilenceDuration = lastUserMessage ? (Date.now() - lastUserMessage.timestamp) : Infinity;
-                    // 检查用户在其他聊天或动态中的近期活动
-                    const isUserActiveElsewhere = appState.chat.contacts.some(c => c.id !== contact.id && c.conversation.some(m => m.sender === 'user' && (Date.now() - m.timestamp < 5 * 60 * 1000))) || appState.chat.moments.posts.some(p => p.authorId === 'user' && (Date.now() - p.timestamp < 5 * 60 * 1000));
-                    
-                    if (userSilenceDuration > intervalMinutes * 60 * 1000 && isUserActiveElsewhere) {
-                        triggerAiResponse(contact.id, false, true); // Jealousy trigger
-                    } else {
-                        // Standard proactive action. Add a chance for the char to "visit" the user's moments page.
-                        if (Math.random() < 0.25) { // 25% chance to just visit instead of messaging
-                           logVisitor('user', contact.id);
-                        } else {
-                           triggerAiResponse(contact.id, true); // Standard proactive message
-                        }
-                    }
-                }, intervalMinutes * 60 * 1000); 
-            } 
-        }
+
 function enterEmojiSelectionMode() {
     runtimeState.emojiSelectionMode = true;
     emojiPickerPanel.classList.add('selection-mode');
