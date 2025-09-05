@@ -6208,8 +6208,9 @@ async function handleChatBackgroundUpload(file, settingsObject) { if (!file) ret
 // --- 群聊设置界面逻辑 ---
 // ===================================================================
 function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
-function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona;     gcsUsBubbleCssUser.value = runtimeState.tempChatSettings.userSettings.bubbleCssUser || defaultBubbleStyles.user;
-    gcsUsBubbleCssChar.value = runtimeState.tempChatSettings.userSettings.bubbleCssChar || defaultBubbleStyles.char;
+function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona;     const gcsUsBubbleCss = getEl('gcs-us-bubble-css');
+    gcsUsBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || '';
+    gcsUsBubbleCss.placeholder = `/* 示例: */\n.message-item.user .message-bubble {\n  background-color: var(--accent-color);\n  color: white;\n  border-bottom-right-radius: 4px}\n.message-item.contact .message-bubble {\n  background-color: white;\n  color: black;\n  border-bottom-right-radius: 4px}`;
     updateBubbleCssPreview('gcs-us', runtimeState.tempChatSettings);}
 function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } const finalAvatarId = member.avatarId || user.avatarId; item.innerHTML = ` <div class="avatar" data-avatar-id="${finalAvatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), finalAvatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
 function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; if (contact.groupSettings.members['user']) {
@@ -6220,7 +6221,7 @@ function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c
     }
     appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState();
     applyAllCustomBubbleStyles();  updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
-function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
+function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsGroupBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.groupSettings }); }); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
     // 为群聊User设置中的视频背景按钮添加直接上传监听
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
@@ -6747,31 +6748,52 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         }
         socialContextSections.push(musicCommentsContext);
 
-        let messageBoardContext = `**【${findUserById('user').name}的留言板】**\n`;
-        const userMessages = (appState.chat.moments.messages || []).filter(m => m.recipientId === 'user');
-        if (userMessages.length > 0) {
-            userMessages.forEach(m => {
-                const sender = findUserById(m.senderId);
-                let visibilityInfo = '';
-                if (m.visibility === 'specific' && m.visibleTo && m.visibleTo.length > 0) {
-                    const visibleNames = m.visibleTo.map(id => findUserById(id).name).join(', ');
-                    visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
+                let messageBoardContext = '';
+        const allMessages = appState.chat.moments.messages || [];
+        const visibleMessages = allMessages.filter(m => {
+            if (m.visibility === 'public') return true;
+            if (m.recipientId === contact.id) return true;
+            if (m.senderId === contact.id) return true;
+            if (m.visibleTo && m.visibleTo.includes(contact.id)) return true;
+            return false;
+        });
+
+        if (visibleMessages.length > 0) {
+            const messagesByRecipient = visibleMessages.reduce((acc, msg) => {
+                const recipientId = msg.recipientId;
+                if (!acc[recipientId]) {
+                    acc[recipientId] = [];
                 }
-                messageBoardContext += `- ${m.senderName}(${sender.name}) 留言 (ID: ${m.id}): "${m.content}"${visibilityInfo}\n`;
-                 if (m.replies && m.replies.length > 0) {
-                    m.replies.forEach(r => {
-                        const replyAuthor = findUserById(r.authorId);
-                        let targetName = m.senderName;
-                        if(r.replyTo){
-                             const targetReply = m.replies.find(tr => tr.id === r.replyTo);
-                             if(targetReply) targetName = findUserById(targetReply.authorId).name;
-                        }
-                        messageBoardContext += `    - ${replyAuthor.name} 回复 ${targetName}: "${r.text}"\n`;
-                    });
-                }
-            });
+                acc[recipientId].push(msg);
+                return acc;
+            }, {});
+
+            for (const recipientId in messagesByRecipient) {
+                const recipient = findUserById(recipientId);
+                messageBoardContext += `**【${recipient.name}的留言板】**\n`;
+                messagesByRecipient[recipientId].forEach(m => {
+                    const sender = findUserById(m.senderId);
+                    let visibilityInfo = '';
+                    if (m.visibility === 'specific' && m.visibleTo && m.visibleTo.length > 0) {
+                        const visibleNames = m.visibleTo.map(id => findUserById(id).name).join(', ');
+                        visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
+                    }
+                    messageBoardContext += `- ${m.senderName}(${sender.name}) 留言 (ID: ${m.id}): "${m.content}"${visibilityInfo}\n`;
+                    if (m.replies && m.replies.length > 0) {
+                        m.replies.forEach(r => {
+                            const replyAuthor = findUserById(r.authorId);
+                            let targetName = m.senderName;
+                            if (r.replyTo) {
+                                const targetReply = m.replies.find(tr => tr.id === r.replyTo);
+                                if(targetReply) targetName = findUserById(targetReply.authorId).name;
+                            }
+                            messageBoardContext += `    - ${replyAuthor.name} 回复 ${targetName}: "${r.text}"\n`;
+                        });
+                    }
+                });
+            }
         } else {
-            messageBoardContext += `- 留言板是空的。\n`;
+            messageBoardContext = `**【留言板区】**\n- 留言板是空的。\n`;
         }
         socialContextSections.push(messageBoardContext);
         let loveLetterContext = `**【信箱区】**\n`;
