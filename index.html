@@ -338,9 +338,9 @@
         border-radius: 5px; /* Added for consistency */
     }
     .theme-css-editor::placeholder {
-        color: #aaa;
-        font-style: italic;
-    }
+    color: #aaa;
+    font-style: italic;
+}
         .bubble-css-preview {
         margin-top: 15px;
         padding: 15px;
@@ -1065,6 +1065,86 @@
             border: 1px solid #ced4da;
             overflow: hidden; /* Prevents children from breaking layout */
         }
+            /* --- 资料APP - 样式界面 --- */
+    #styles-tab-content {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        height: 100%;
+        box-sizing: border-box;
+    }
+    .styles-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--item-bg);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .styles-column-header {
+        padding: 10px;
+        font-weight: bold;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+        flex-shrink: 0;
+    }
+    .styles-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .style-item-card {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px;
+        cursor: pointer;
+    }
+    .style-item-card:hover {
+        background-color: var(--item-active-bg);
+    }
+    .style-item-preview {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: 1px solid #ccc;
+        margin-bottom: 8px;
+        transform: scale(0.9); /* Make preview slightly smaller */
+        transform-origin: top left;
+        width: 111.11%; /* Counteract scale */
+        height: auto;
+        pointer-events: none; /* Prevent interaction with preview elements */
+        overflow: hidden;
+        border-radius: 4px;
+    }
+     .style-item-preview .bubble-css-preview {
+        background-color: transparent;
+        min-height: 0;
+        padding: 5px;
+        border: none;
+    }
+    .style-item-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .style-item-name {
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .style-item-timestamp {
+        font-size: 11px;
+        color: var(--secondary-text-color);
+    }
+    .style-item-delete-btn {
+        background: none;
+        border: none;
+        color: var(--danger-color);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 0 5px;
+    }
         #theme-preview-header .app-header, 
         #theme-preview-list-item .swipe-content,
         #theme-preview-moments .moments-post-item,
@@ -1258,10 +1338,14 @@
                         <div class="theme-css-preview" id="theme-preview-list-item"></div>
                     </div>
                     <div class="settings-group">
-                        <div class="button-group">
-                            <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
-                            <button id="theme-apply-btn" class="settings-button">应用样式</button>
-                        </div>
+                                            <div class="button-group">
+                        <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
+                        <button id="theme-apply-btn" class="settings-button">应用样式</button>
+                    </div>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button id="theme-save-style-btn" class="settings-button secondary">保存样式</button>
+                        <button id="theme-load-style-btn" class="settings-button secondary">读取样式</button>
+                    </div>
                     </div>
                 </div>
 
@@ -1286,10 +1370,19 @@
                 <div id="world-book-tab-content" class="tab-content active"><ul id="world-book-list" class="preset-data-list"></ul></div>
                 <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
                 <div id="info-tab-content" class="tab-content"><ul id="info-list" class="preset-data-list"></ul></div>
-                <div id="memory-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">记忆功能待开发...</p></div>
+                <div id="styles-tab-content" class="tab-content">
+            <div class="styles-column">
+                <div class="styles-column-header">主题</div>
+                <div id="styles-theme-list" class="styles-list"></div>
+            </div>
+            <div class="styles-column">
+                <div class="styles-column-header">气泡</div>
+                <div id="styles-bubble-list" class="styles-list"></div>
+            </div>
+        </div>
             </div>
             <div class="app-bottom-tabs">
-                <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div><div class="tab-link" data-tab="memory">记忆</div>
+                <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div>        <div class="tab-link" data-tab="styles">样式</div>
             </div>
         </div>
 
@@ -1439,10 +1532,14 @@
                     <div class="bubble-css-preview" id="us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
-                    <div class="button-group" style="margin-top: 10px;">
-                        <button id="us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
-                        <button id="us-bubble-apply-btn" class="settings-button">应用样式</button>
-                    </div>
+                                    <div class="button-group" style="margin-top: 10px;">
+                    <button id="us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                    <button id="us-bubble-apply-btn" class="settings-button">应用样式</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button id="us-bubble-save-style-btn" class="settings-button secondary">保存样式</button>
+                    <button id="us-bubble-load-style-btn" class="settings-button secondary">读取样式</button>
+                </div>
                 </div>
                 </div>
             </div>
@@ -1522,10 +1619,14 @@
                     <div class="bubble-css-preview" id="gcs-us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
-                    <div class="button-group" style="margin-top: 10px;">
-                        <button id="gcs-us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
-                        <button id="gcs-us-bubble-apply-btn" class="settings-button">应用样式</button>
-                    </div>
+                                    <div class="button-group" style="margin-top: 10px;">
+                    <button id="gcs-us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                    <button id="gcs-us-bubble-apply-btn" class="settings-button">应用样式</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button id="gcs-us-bubble-save-style-btn" class="settings-button secondary">保存样式</button>
+                    <button id="gcs-us-bubble-load-style-btn" class="settings-button secondary">读取样式</button>
+                </div>
                 </div>
                 </div>
             </div>
@@ -1652,6 +1753,7 @@
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
     <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button><button id="library-mode-toggle-btn" class="cancel-btn">删除</button><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
+   <div id="load-style-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-style-title">读取样式</h3><div class="modal-body" id="load-style-list" style="padding:0;"></div><div class="modal-actions"><button id="load-style-cancel-btn" class="cancel-btn">取消</button></div></div></div>
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
     <div id="gcs-member-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-action-title">管理成员</h3><div class="modal-body" id="gcs-member-action-body"></div><div class="modal-actions"><button id="gcs-member-action-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-action-cancel">取消</button></div></div></div>
@@ -1832,6 +1934,12 @@
                     <span>评论区加密</span>
                 </label>
             </div>
+            <div class="form-group">
+                <label class="checkbox-label tick-style">
+                    <input type="checkbox" id="upload-photo-visibility-public-checkbox">
+                    <span>对Char公开可见范围</span>
+                </label>
+            </div>
             </div>
             <div class="modal-actions row">
                 <button id="cancel-upload-photo-btn" class="cancel-btn">取消</button>
@@ -1899,6 +2007,12 @@
                 <span>评论区加密</span>
             </label>
         </div>
+        <div class="form-group" id="post-moment-visibility-privacy-container">
+                <label class="checkbox-label tick-style">
+                    <input type="checkbox" id="post-moment-visibility-public-checkbox">
+                    <span>对Char公开可见范围</span>
+                </label>
+            </div>
             </div>
             <div class="modal-actions row">
                 <button id="cancel-post-moment-btn" class="cancel-btn">取消</button>
@@ -2247,6 +2361,7 @@ const themeRestoreBtn = getEl('theme-restore-btn');
     const cancelDataBtn = getEl('cancel-data-btn');
     const dataFilterBtn = getEl('data-filter-btn');
 const worldBookFilterDropdown = getEl('world-book-filter-dropdown');
+const loadStyleModal = getEl('load-style-modal');
     // --- 聊天 APP ---
     const chatListBackBtn = getEl('chat-list-back-btn');
     const chatListTitle = getEl('chat-list-title');
@@ -2598,7 +2713,7 @@ return {
         listItem: ''
     }
     },
-    data: { worldBooks: [], archives: [], infos: [] },
+    data: { worldBooks: [], archives: [], infos: [], savedStyles: { themes: [], bubbles: [] } },
     chat: {
     contacts: [],
     emojis: [],
@@ -2717,7 +2832,7 @@ return {
                 settings: { ...defaultState.settings, ...savedState.settings, globalRealtimeActivity: { ...defaultState.settings.globalRealtimeActivity, ...(savedState.settings?.globalRealtimeActivity || {}) } },
                     music: { ...defaultState.music, ...savedState.music }, 
                     beautify: { ...defaultState.beautify, ...savedState.beautify, bubbleSettings: { ...defaultState.beautify.bubbleSettings, ...(savedState.beautify?.bubbleSettings || {}) }, customThemes: { ...defaultState.beautify.customThemes, ...(savedState.beautify?.customThemes || {}) } }, 
-                    data: { ...defaultState.data, ...(savedState.data || {}) }, 
+                    data: { ...defaultState.data, ...(savedState.data || {}), savedStyles: { ...defaultState.data.savedStyles, ...(savedState.data?.savedStyles || {}) } }, 
                     chat: { 
                         ...defaultState.chat, 
                         ...savedState.chat, 
@@ -3597,55 +3712,99 @@ cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.re
 saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImageId: settingsGroup.backgroundImageId }; const cleanedStyles = Object.fromEntries(Object.entries(newStyles).filter(([_, v]) => v !== '' && v !== '0px')); if (isGlobal) { appState.beautify.bubbleSettings.global = cleanedStyles; } else { appState.beautify.bubbleSettings.specific[bubbleId] = cleanedStyles; } debouncedSaveState(); if (isGlobal) { Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, true)); } else { applyBubbleChange(bubbleId, true); } editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
 restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的样式吗？`)) { const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : appState.beautify.bubbleSettings.specific[bubbleId]; if (settingsGroup?.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } if (isGlobal) { appState.beautify.bubbleSettings.global = {}; Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, false, true)); } else { delete appState.beautify.bubbleSettings.specific[bubbleId]; applyBubbleChange(bubbleId, false, true); } debouncedSaveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
     const defaultThemeStyles = {
-        momentsPost: `.MOMENTS-POST-ITEM.POST-ITEM-CONTENT{\n  padding: 15px;}`,
-        appHeader: `.APP-HEADER{\n  position: sticky;\n  top: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 10px 15px;\n  background-color: var(--app-screen-bg);\n  border-bottom: 1px solid var(--border-color);\n  flex-shrink: 0;\n  padding-top: calc(env(safe-area-inset-top, 10px) + 15px);\n  min-height: 45px;\n  box-sizing: content-box;\n  z-index: 10;}`,
-        bottomTabs: `.APP-BOTTOM-TABS{\n  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 50px;\n  padding-bottom: env(safe-area-inset-bottom, 0px);\n  background-color: var(--item-bg);\n  border-top: 1px solid var(--border-color);\n  display: flex;\n  justify-content: space-around;\n  align-items: flex-start;\n  z-index: 5;\n  box-sizing: border-box;}`,
-        listItem: `.SWIPE-CONTENT{\n  background-color: var(--item-bg);\n  transition: transform 0.3s ease;\n  position: relative;\n  z-index: 2;}`
+        momentsPost: `  padding: 15px;`,
+        appHeader: `  position: sticky;\n  top: 0;\n  display: flex;\n  align-items: center;\n  justify-content: space-between;\n  padding: 10px 15px;\n  background-color: var(--app-screen-bg);\n  border-bottom: 1px solid var(--border-color);\n  flex-shrink: 0;\n  padding-top: calc(env(safe-area-inset-top, 10px) + 15px);\n  min-height: 45px;\n  box-sizing: content-box;\n  z-index: 10;`,
+        bottomTabs: `  position: absolute;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  height: 50px;\n  padding-bottom: env(safe-area-inset-bottom, 0px);\n  background-color: var(--item-bg);\n  border-top: 1px solid var(--border-color);\n  display: flex;\n  justify-content: space-around;\n  align-items: flex-start;\n  z-index: 5;\n  box-sizing: border-box;`,
+        listItem: `  background-color: var(--item-bg);\n  transition: transform 0.3s ease;\n  position: relative;\n  z-index: 2;`
+    };
+const defaultBubbleCssStyle = `.message-item.user .message-bubble {
+  /* 在此编辑你的气泡样式 */
+  background-color: var(--accent-color);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.message-item.contact .message-bubble {
+  /* 在此编辑对方的气泡样式 */
+  background-color: white;
+  color: black;
+  border-bottom-left-radius: 4px;
+}`;
+function processScopedCss(rawCss, scope) {
+    if (!rawCss) return { keyframes: '', scopedRules: '' };
+
+    const keyframesRegex = /@keyframes\s+[\s\S]*?\}\s*\}/g;
+    let keyframes = rawCss.match(keyframesRegex) || [];
+    
+    const rulesOnly = rawCss.replace(keyframesRegex, '');
+
+    const scopedRules = rulesOnly.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+        // Do not scope the preview ID itself if it's already there
+        if (selector.includes(scope)) return `${selector.trim()} ${body}`;
+        
+        const scopedSelector = selector.split(',')
+            .map(s => `${scope} ${s.trim()}`)
+            .join(', ');
+        return `${scopedSelector} ${body}`;
+    });
+
+    return {
+        keyframes: keyframes.join('\n'),
+        scopedRules: scopedRules
+    };
+}
+    function applyCustomThemes() {
+    const existingStyle = document.getElementById('custom-theme-styles');
+    if (existingStyle) existingStyle.remove();
+
+    const customThemes = appState.beautify.customThemes;
+    let finalKeyframes = '';
+    let finalRules = '';
+
+    const process = (css, scope) => {
+        const result = processScopedCss(css, scope);
+        finalKeyframes += result.keyframes + '\n';
+        finalRules += result.scopedRules + '\n';
     };
 
-    function applyCustomThemes() {
-        const existingStyle = document.getElementById('custom-theme-styles');
-        if (existingStyle) existingStyle.remove();
+    if (customThemes.momentsPost) process(customThemes.momentsPost, '.moments-post-item .post-item-content');
+    if (customThemes.appHeader) process(customThemes.appHeader, '.app-header');
+    if (customThemes.bottomTabs) process(customThemes.bottomTabs, '.app-bottom-tabs');
+    if (customThemes.listItem) process(customThemes.listItem, '.swipe-content');
 
-        const customThemes = appState.beautify.customThemes;
-        let finalCss = '';
-        
-        if (customThemes.momentsPost) finalCss += `.moments-post-item .post-item-content { ${customThemes.momentsPost} }\n`;
-        if (customThemes.appHeader) finalCss += `.app-header { ${customThemes.appHeader} }\n`;
-        if (customThemes.bottomTabs) finalCss += `.app-bottom-tabs { ${customThemes.bottomTabs} }\n`;
-        if (customThemes.listItem) finalCss += `.swipe-content { ${customThemes.listItem} }\n`;
-
-        if (finalCss) {
-            const style = document.createElement('style');
-            style.id = 'custom-theme-styles';
-            style.textContent = finalCss;
-            document.head.appendChild(style);
-        }
+    const finalCss = finalKeyframes + finalRules;
+    if (finalCss.trim()) {
+        const style = document.createElement('style');
+        style.id = 'custom-theme-styles';
+        style.textContent = finalCss;
+        document.head.appendChild(style);
     }
-        function applyAllCustomBubbleStyles() {
-        let existingStyle = document.getElementById('custom-bubble-styles');
-        if (existingStyle) existingStyle.remove();
+}
+            function applyAllCustomBubbleStyles() {
+    let existingStyle = document.getElementById('custom-bubble-styles');
+    if (existingStyle) existingStyle.remove();
 
-        let finalCss = '';
-        appState.chat.contacts.forEach(contact => {
-            const { bubbleCss } = contact.userSettings;
-            if (bubbleCss) {
-                // Prepend the contact-specific selector to each rule in the custom CSS
-                const scopedCss = bubbleCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-                    const scopedSelector = selector.split(',').map(s => `#single-chat-screen[data-contact-id="${contact.id}"] ${s.trim()}`).join(', ');
-                    return `${scopedSelector} ${body}`;
-                });
-                finalCss += scopedCss + '\n';
-            }
-        });
+    let finalKeyframes = '';
+    let finalRules = '';
 
-        if (finalCss) {
-            const style = document.createElement('style');
-            style.id = 'custom-bubble-styles';
-            style.textContent = finalCss;
-            document.head.appendChild(style);
+    appState.chat.contacts.forEach(contact => {
+        const { bubbleCss } = contact.userSettings;
+        if (bubbleCss) {
+            const scope = `#single-chat-screen[data-contact-id="${contact.id}"]`;
+            const result = processScopedCss(bubbleCss, scope);
+            finalKeyframes += result.keyframes + '\n';
+            finalRules += result.scopedRules + '\n';
         }
+    });
+    
+    const finalCss = finalKeyframes + finalRules;
+    if (finalCss.trim()) {
+        const style = document.createElement('style');
+        style.id = 'custom-bubble-styles';
+        style.textContent = finalCss;
+        document.head.appendChild(style);
     }
+}
 
     const defaultBubbleStyles = {
         user: `  background-color: var(--accent-color);\n  color: white;\n  border-bottom-right-radius: 4px;`,
@@ -3658,12 +3817,9 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         const previewStyleTag = getEl('bubble-preview-styles');
 
         const customCss = editor.value;
-        const scopedCss = customCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-            const scopedSelector = selector.split(',').map(s => `#${context}-bubble-preview ${s.trim()}`).join(', ');
-            return `${scopedSelector} ${body}`;
-        });
-        
-        previewStyleTag.textContent = scopedCss;
+const scope = `#${context}-bubble-preview`;
+const result = processScopedCss(customCss, scope);
+previewStyleTag.textContent = result.keyframes + result.scopedRules;
 
         const userAvatarId = settings.userSettings.avatarId;
         const userFrameId = settings.userSettings.avatarFrameId;
@@ -3689,15 +3845,17 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     }
     function renderThemeEditor() {
         const themes = appState.beautify.customThemes;
-        themeCssMoments.value = themes.momentsPost || '';
-        themeCssHeader.value = themes.appHeader || '';
-        themeCssTabs.value = themes.bottomTabs || '';
-        themeCssListItem.value = themes.listItem || '';
+        // -- CORE FIX: Set value directly to default if custom is empty --
+        themeCssMoments.value = themes.momentsPost || defaultThemeStyles.momentsPost;
+        themeCssHeader.value = themes.appHeader || defaultThemeStyles.appHeader;
+        themeCssTabs.value = themes.bottomTabs || defaultThemeStyles.bottomTabs;
+        themeCssListItem.value = themes.listItem || defaultThemeStyles.listItem;
         
-        themeCssMoments.placeholder = defaultThemeStyles.momentsPost;
-        themeCssHeader.placeholder = defaultThemeStyles.appHeader;
-        themeCssTabs.placeholder = defaultThemeStyles.bottomTabs;
-        themeCssListItem.placeholder = defaultThemeStyles.listItem;
+        // Placeholders now act as a fallback example if the user clears the input
+        themeCssMoments.placeholder = `/* 示例: a {\n  color: red;\n} */`;
+        themeCssHeader.placeholder = `/* 示例: background-color: pink; */`;
+        themeCssTabs.placeholder = `/* 示例: border-top: 2px solid blue; */`;
+        themeCssListItem.placeholder = `/* 示例: border-radius: 20px; */`;
     }
 function updateThemeCssPreview(id) {
     const editor = getEl(`theme-css-${id}`);
@@ -3722,13 +3880,21 @@ function updateThemeCssPreview(id) {
         }
     }
 
-    const cssText = `
-        #theme-preview-moments .moments-post-item .post-item-content { ${themeCssMoments.value} }
-        #theme-preview-header .app-header { ${themeCssHeader.value} }
-        #theme-preview-tabs .app-bottom-tabs { ${themeCssTabs.value} }
-        #theme-preview-list-item .swipe-content { ${themeCssListItem.value} }
-    `;
-    styleTag.textContent = cssText;
+    let finalKeyframes = '';
+let finalRules = '';
+
+const processPreview = (css, scope) => {
+    const result = processScopedCss(css, scope);
+    finalKeyframes += result.keyframes + '\n';
+    finalRules += result.scopedRules + '\n';
+};
+
+processPreview(themeCssMoments.value, '#theme-preview-moments .moments-post-item .post-item-content');
+processPreview(themeCssHeader.value, '#theme-preview-header .app-header');
+processPreview(themeCssTabs.value, '#theme-preview-tabs .app-bottom-tabs');
+processPreview(themeCssListItem.value, '#theme-preview-list-item .swipe-content');
+
+styleTag.textContent = finalKeyframes + finalRules;
 }
 
     ['moments', 'header', 'tabs', 'list-item'].forEach(id => {
@@ -3766,7 +3932,7 @@ async function applyBubbleChange(bubbleId, isInitialLoad = false, isRestoring = 
 // --- 资料 APP ---
 // ===================================================================
 function handleDataTabChange(tabId) { 
-    dataActionBtn.style.display = (tabId === 'memory') ? 'none' : 'block'; 
+    dataActionBtn.style.display = (tabId === 'styles') ? 'none' : 'block'; 
     dataFilterBtn.style.display = (tabId === 'world-book') ? 'block' : 'none';
     
     if (tabId !== 'world-book') {
@@ -3776,6 +3942,7 @@ function handleDataTabChange(tabId) {
     if (tabId === 'world-book') renderWorldBooks(); 
     else if (tabId === 'archive') renderArchives(); 
     else if (tabId === 'info') renderInfos(); 
+    else if (tabId === 'styles') renderStylesTab();
 }
 dataAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#data-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#data-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleDataTabChange(tabId); } });
 dataActionBtn.addEventListener('click', () => { const activeTab = query('#data-app-screen .tab-link.active').dataset.tab; const typeMap = { 'world-book': 'worldBook', 'archive': 'archive', 'info': 'info' }; openDataEditor(typeMap[activeTab]); });
@@ -3837,6 +4004,222 @@ dataGroupSelect.addEventListener('change', () => {
     }
 });
 saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); const group = dataGroupInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatarId = dataAvatarPreview.dataset.avatarId; if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatarId) item.avatarId = avatarId; if (type === 'worldBook') item.group = group; } } else { const newItem = { id: newId('data'), name, content }; if (avatarId) newItem.avatarId = avatarId; if (type === 'worldBook') newItem.group = group; dataArray.push(newItem); } debouncedSaveState(); dataModal.classList.remove('visible'); switch (type) { case 'worldBook': renderWorldBooks(); break; case 'archive': renderArchives(); break; case 'info': renderInfos(); break; } });
+    // --- 样式库 (资料APP) ---
+    function renderStylesTab() {
+        renderSavedThemes();
+        renderSavedBubbles();
+    }
+
+    function renderSavedThemes() {
+        const listEl = getEl('styles-theme-list');
+        const themes = appState.data.savedStyles.themes;
+        if (themes.length === 0) {
+            listEl.innerHTML = `<p style="text-align:center; color:#888;">暂无已存主题</p>`;
+            return;
+        }
+        listEl.innerHTML = themes.map(theme => `
+            <div class="style-item-card" data-id="${theme.id}" data-type="theme">
+                <div class="style-item-preview">
+                    <div class="theme-css-preview" style="display:flex; flex-direction:column; gap: 5px; background: #fff; padding: 5px;">
+                        <div class="app-header" style="${theme.css.appHeader}">...</div>
+                        <div class="swipe-content" style="${theme.css.listItem}; padding: 5px;">...</div>
+                        <div class="moments-post-item" style="flex-grow:1;"><div class="post-item-content" style="${theme.css.momentsPost}"></div></div>
+                        <div class="app-bottom-tabs" style="${theme.css.bottomTabs}">...</div>
+                    </div>
+                </div>
+                <div class="style-item-info">
+                    <div>
+                        <div class="style-item-name">${escapeHTML(theme.name)}</div>
+                        <div class="style-item-timestamp">${new Date(theme.timestamp).toLocaleDateString()}</div>
+                    </div>
+                    <button class="style-item-delete-btn">&times;</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderSavedBubbles() {
+        const listEl = getEl('styles-bubble-list');
+        const bubbles = appState.data.savedStyles.bubbles;
+        if (bubbles.length === 0) {
+            listEl.innerHTML = `<p style="text-align:center; color:#888;">暂无已存气泡</p>`;
+            return;
+        }
+        listEl.innerHTML = bubbles.map(bubble => `
+            <div class="style-item-card" data-id="${bubble.id}" data-type="bubble">
+                <div class="style-item-preview">
+                    <div class="bubble-css-preview">
+                         <style>${bubble.css.replace(/([^{]+)({[^{}]*})/g, (m, s, b) => `.preview-${bubble.id} ${s.trim()}${b}`)}</style>
+                         <div class="preview-${bubble.id}">
+                             <div class="message-item contact"><div class="message-content-wrapper"><div class="message-bubble">你好</div></div></div>
+                             <div class="message-item user"><div class="message-content-wrapper"><div class="message-bubble">你好</div></div></div>
+                         </div>
+                    </div>
+                </div>
+                 <div class="style-item-info">
+                    <div>
+                        <div class="style-item-name">${escapeHTML(bubble.name)}</div>
+                        <div class="style-item-timestamp">${new Date(bubble.timestamp).toLocaleDateString()}</div>
+                    </div>
+                    <button class="style-item-delete-btn">&times;</button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    getEl('styles-tab-content').addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.style-item-delete-btn');
+        const card = e.target.closest('.style-item-card');
+        
+        if (deleteBtn) {
+            e.stopPropagation();
+            const type = card.dataset.type === 'theme' ? 'themes' : 'bubbles';
+            const id = card.dataset.id;
+            if (confirm('确定要删除这个已存样式吗？')) {
+                appState.data.savedStyles[type] = appState.data.savedStyles[type].filter(s => s.id !== id);
+                debouncedSaveState();
+                renderStylesTab();
+            }
+        } else if (card) {
+            // Future: could open a detail/edit view here.
+            const type = card.dataset.type;
+            if(type === 'theme') {
+                getEl('beautify-app-btn').click();
+                setTimeout(() => getEl('beautify-app-screen').querySelector('.tab-link[data-tab="theme"]').click(), 50);
+            }
+        }
+    });
+    
+    // --- 读取样式弹窗 ---
+    function openLoadStyleModal(type, context = null) {
+        runtimeState.loadStyleContext = { type, context };
+        const titleEl = getEl('load-style-title');
+        const listEl = getEl('load-style-list');
+        const styles = appState.data.savedStyles[type === 'theme' ? 'themes' : 'bubbles'];
+        
+        titleEl.textContent = `读取${type === 'theme' ? '主题' : '气泡'}样式`;
+        
+        if (styles.length === 0) {
+            listEl.innerHTML = `<p style="text-align:center; color:#888; padding: 20px;">暂无已存样式</p>`;
+        } else {
+             listEl.innerHTML = `<ul class="preset-data-list">${styles.map(s => `
+                <li class="preset-data-item" data-id="${s.id}" style="cursor:pointer;">
+                    <div class="preset-data-item-content">
+                        <div class="preset-data-info">
+                            <div class="preset-data-name">${escapeHTML(s.name)}</div>
+                            <div class="preset-data-excerpt">${new Date(s.timestamp).toLocaleString()}</div>
+                        </div>
+                    </div>
+                </li>
+             `).join('')}</ul>`;
+        }
+        loadStyleModal.classList.add('visible');
+    }
+
+    getEl('load-style-cancel-btn').addEventListener('click', () => loadStyleModal.classList.remove('visible'));
+    
+    getEl('load-style-list').addEventListener('click', (e) => {
+        const item = e.target.closest('.preset-data-item');
+        if (!item) return;
+        
+        const id = item.dataset.id;
+        const { type, context } = runtimeState.loadStyleContext;
+        
+        if (type === 'theme') {
+            const theme = appState.data.savedStyles.themes.find(t => t.id === id);
+            if(theme) {
+                getEl('theme-css-moments').value = theme.css.momentsPost;
+                getEl('theme-css-header').value = theme.css.appHeader;
+                getEl('theme-css-tabs').value = theme.css.bottomTabs;
+                getEl('theme-css-list-item').value = theme.css.listItem;
+                showToast(`已加载主题: ${theme.name}`);
+            }
+        } else if (type === 'bubble') {
+            const bubble = appState.data.savedStyles.bubbles.find(b => b.id === id);
+            const editor = getEl(`${context}-bubble-css`);
+            if(bubble && editor) {
+                editor.value = bubble.css;
+                updateBubbleCssPreview(context, runtimeState.tempChatSettings);
+                showToast(`已加载气泡样式: ${bubble.name}`);
+            }
+        }
+        loadStyleModal.classList.remove('visible');
+    });
+    
+    // --- 样式保存与读取按钮 ---
+    // --- 样式保存与读取按钮 (重构后) ---
+function setupThemeEditorListeners() {
+    const context = 'theme';
+    const saveBtn = getEl(`${context}-save-style-btn`);
+    const loadBtn = getEl(`${context}-load-style-btn`);
+    
+    saveBtn.addEventListener('click', () => {
+        const name = prompt('请输入主题样式名称:');
+        if (name && name.trim()) {
+            const newTheme = {
+                id: newId('theme_style'), name: name.trim(), timestamp: Date.now(),
+                css: {
+                    momentsPost: getEl('theme-css-moments').value,
+                    appHeader: getEl('theme-css-header').value,
+                    bottomTabs: getEl('theme-css-tabs').value,
+                    listItem: getEl('theme-css-list-item').value
+                }
+            };
+            appState.data.savedStyles.themes.push(newTheme);
+            debouncedSaveState();
+            showToast('主题已保存！');
+        }
+    });
+    
+    loadBtn.addEventListener('click', () => openLoadStyleModal('theme'));
+}
+
+function setupBubbleEditorListeners(context) {
+    const editor = getEl(`${context}-bubble-css`);
+    const applyBtn = getEl(`${context}-bubble-apply-btn`);
+    const restoreBtn = getEl(`${context}-bubble-restore-btn`);
+    const saveBtn = getEl(`${context}-bubble-save-style-btn`);
+    const loadBtn = getEl(`${context}-bubble-load-style-btn`);
+
+    editor.addEventListener('input', () => updateBubbleCssPreview(context, runtimeState.tempChatSettings));
+
+    applyBtn.addEventListener('click', () => {
+        if (confirm('确定应用当前的气泡样式吗？')) {
+            runtimeState.tempChatSettings.userSettings.bubbleCss = editor.value;
+            showToast('样式已应用！请返回聊天界面查看。');
+        }
+    });
+
+    restoreBtn.addEventListener('click', () => {
+        if (confirm('确定要还原此会话的默认气泡样式吗？')) {
+            runtimeState.tempChatSettings.userSettings.bubbleCss = '';
+            editor.value = defaultBubbleCssStyle;
+            updateBubbleCssPreview(context, runtimeState.tempChatSettings);
+            showToast('已还原为默认样式。');
+        }
+    });
+    
+    saveBtn.addEventListener('click', () => {
+        const name = prompt('请输入气泡样式名称:');
+        if (name && name.trim()) {
+            const newBubble = {
+                id: newId('bubble_style'), name: name.trim(), timestamp: Date.now(),
+                css: editor.value
+            };
+            appState.data.savedStyles.bubbles.push(newBubble);
+            debouncedSaveState();
+            showToast('气泡样式已保存！');
+        }
+    });
+
+    loadBtn.addEventListener('click', () => openLoadStyleModal('bubble', context));
+}
+
+setupThemeEditorListeners();
+setupBubbleEditorListeners('us');
+setupBubbleEditorListeners('gcs-us');
+    
+
 function renderWorldBookFilterDropdown() {
         const uniqueGroups = ['all', '未分组', ...new Set(appState.data.worldBooks.map(item => item.group).filter(Boolean).sort())];
         const selected = runtimeState.worldBookFilter.selectedGroups;
@@ -3938,177 +4321,237 @@ function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessa
 function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); runtimeState.contactSelection.push(item.dataset.id); }
 function exitContactSelectionMode() { chatAppScreen.classList.remove('selection-mode'); chatListBackBtn.textContent = '< 返回'; chatListActionBtn.textContent = '+'; chatListActionBtn.classList.remove('small'); queryAll('.contact-list-item.selected').forEach(i => i.classList.remove('selected')); runtimeState.contactSelection = []; }
 function createGroup(name, memberIds) { const members = memberIds.map(id => appState.chat.contacts.find(c => c.id === id)); const newGroup = { id: newId('group'), name: name, avatarId: '', lastMessage: '群聊已创建', lastMessageTime: Date.now(), isGroup: true, members: memberIds, conversation: [] }; initializeContactSettings(newGroup); const memberNames = members.map(m => `'${m.name}'`).join(', '); addSystemNotification(newGroup.id, `'${appState.chat.userProfile.name}' 邀请 ${memberNames} 加入群聊`, true); appState.chat.contacts.unshift(newGroup); saveState(); renderMessageList(); exitContactSelectionMode(); }
-function openSingleChat(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; runtimeState.currentChatId = contactId;singleChatScreen.dataset.contactId = contactId; if (!runtimeState.chatDisplayLimits[contactId]) { runtimeState.chatDisplayLimits[contactId] = 50; } if (contact.unreadCount > 0) { contact.unreadCount = 0; debouncedSaveState(); renderMessageList(); } runtimeState.notificationQueue = runtimeState.notificationQueue.filter(n => n.contactId !== contactId); updateSingleChatUI(); openSubScreen(singleChatScreen, chatAppScreen); }
+function openSingleChat(contactId) {
+        // --- 核心修复：实施“原子化”跳转流程 ---
+
+        // 1. **验证目标**
+        const contact = appState.chat.contacts.find(c => c.id === contactId);
+        if (!contact) {
+            console.error("Attempted to open chat with non-existent contact:", contactId);
+            return;
+        }
+
+        // 2. **清场：关闭所有可能打开的子屏幕**
+        // 这一步至关重要，它确保在切换上下文之前，所有旧的UI都已关闭。
+        if (chatSettingsScreen.classList.contains('active')) {
+            closeSubScreen(chatSettingsScreen, singleChatScreen);
+        }
+        if (groupChatSettingsScreen.classList.contains('active')) {
+            closeSubScreen(groupChatSettingsScreen, singleChatScreen);
+        }
+        // 如果是从其他APP跳转而来，确保主APP界面是聊天APP
+        if (!chatAppScreen.classList.contains('active')) {
+            closeAllScreens();
+            openApp(chatAppScreen);
+        }
+        
+        // 3. **切换上下文**
+        runtimeState.currentChatId = contactId;
+        singleChatScreen.dataset.contactId = contactId;
+        
+        // 4. **初始化新会话状态**
+        if (!runtimeState.chatDisplayLimits[contactId]) {
+            runtimeState.chatDisplayLimits[contactId] = 50;
+        }
+        if (contact.unreadCount > 0) {
+            contact.unreadCount = 0;
+            debouncedSaveState(); // 立即保存未读数变化
+            renderMessageList();
+        }
+        runtimeState.notificationQueue = runtimeState.notificationQueue.filter(n => n.contactId !== contactId);
+
+        // 5. **渲染并打开新界面**
+        updateSingleChatUI();
+        openSubScreen(singleChatScreen, chatAppScreen);
+    }
 async function updateSingleChatUI() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const isDisbanded = contact.isGroup && contact.groupSettings.isDisbanded; const userIsMuted = contact.isGroup && contact.groupSettings.members['user']?.isMuted; const allMuted = contact.isGroup && contact.groupSettings.isMuted; const userIsAdminOrOwner = contact.isGroup && (contact.groupSettings.owner === 'user' || contact.groupSettings.admins.includes('user')); const canSpeak = !isDisbanded && (!allMuted || userIsAdminOrOwner) && !userIsMuted; if (contact.isGroup) { chatHeaderName.textContent = contact.remark || contact.groupSettings.name; chatHeaderStatus.textContent = `(${contact.members.length + 1})`; chatHeaderSignature.style.display = 'none'; addFriendBtn.style.display = 'none'; chatInput.disabled = !canSpeak; let placeholder = '输入消息...'; if (isDisbanded) placeholder = '群聊已解散'; else if (allMuted) placeholder = '全员禁言中'; else if (userIsMuted) placeholder = '你已被禁言'; chatInput.placeholder = placeholder; const sendIconId = appState.beautify.icons['chat-send-real'];
                 if (sendIconId) setElementImage(chatSendRealBtn, sendIconId, 'src'); else chatSendRealBtn.innerHTML = '<i class="fa-solid fa-comments"></i>';  chatToolbar.querySelectorAll('.icon-btn').forEach(btn => btn.classList.toggle('disabled', !canSpeak)); chatEmojiBtn.classList.toggle('disabled', !canSpeak); } else { const settings = contact.charSettings; const statusIndicatorHTML = `<div class="status-indicator ${contact.status}"></div>`; chatHeaderName.textContent = contact.remark || settings.name; chatHeaderStatus.innerHTML = `${statusIndicatorHTML} ${statusMap[contact.status] || '未知'} ${contact.statusText ? `- ${contact.statusText}` : ''}`; chatHeaderSignature.textContent = contact.signature || '(点击设置签名)'; chatHeaderSignature.style.display = 'block'; addFriendBtn.style.display = settings.isFriend ? 'none' : 'block'; chatInput.disabled = !settings.isFriend; chatInput.placeholder = settings.isFriend ? '输入消息...' : '你还不是对方的好友'; const sendIconId = appState.beautify.icons['chat-send-real'];
            if (sendIconId) setElementImage(chatSendRealBtn, sendIconId, 'src'); else chatSendRealBtn.innerHTML = settings.isFriend ? '<i class="fa-solid fa-comments"></i>' : '🤝'; chatToolbar.querySelectorAll('.icon-btn').forEach(btn => btn.classList.toggle('disabled', !settings.isFriend)); chatEmojiBtn.classList.toggle('disabled', !settings.isFriend); } const specificBgId = contact.isGroup ? contact.groupSettings.chatBackgroundId : contact.charSettings?.chatBackgroundId; const chatBgId = (specificBgId && specificBgId !== 'default') ? specificBgId : appState.beautify.currentChatBgId; await applyWallpaperById(chatBgId, singleChatScreen); renderConversation(); updateChatInputButtons(); updateTypingIndicator(); }
 chatBackBtn.addEventListener('click', () => { closeSubScreen(singleChatScreen, chatAppScreen); runtimeState.currentChatId = null; delete singleChatScreen.dataset.contactId; if (runtimeState.chatSelectionMode) exitChatSelectionMode(); });
 chatSettingsBtn.addEventListener('click', () => { if (runtimeState.chatSelectionMode) { if (runtimeState.selectedMessages.length > 0 && confirm(`确定要删除选中的 ${runtimeState.selectedMessages.length} 条消息吗？`)) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); contact.conversation = contact.conversation.filter(msg => !runtimeState.selectedMessages.includes(msg.id)); updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); } exitChatSelectionMode(); } else { openChatSettings(); } });
 function renderConversation(isLoadingMore = false) {
-    let contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-    if (!contact) return;
+        let contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+        if (!contact) return;
 
-    if (!isLoadingMore) {
-        chatMessagesView.innerHTML = '';
-    }
-
-    const isSettingsPreview = (groupChatSettingsScreen.classList.contains('active') || chatSettingsScreen.classList.contains('active')) && runtimeState.tempChatSettings && Object.keys(runtimeState.tempChatSettings).length > 0;
-    if (isSettingsPreview) {
-        const tempContact = JSON.parse(JSON.stringify(contact));
-        if (tempContact.isGroup) {
-            tempContact.groupSettings = runtimeState.tempChatSettings.groupSettings;
-            tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
-        } else {
-            tempContact.charSettings = runtimeState.tempChatSettings.charSettings;
-            tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
-        }
-        contact = tempContact;
-    }
-
-    const displayLimit = runtimeState.chatDisplayLimits[contact.id] || 50;
-    const conversation = contact.conversation;
-    const messagesToRender = conversation.slice(-displayLimit);
-
-    const fragment = document.createDocumentFragment();
-
-    if (conversation.length > displayLimit) {
-        const loadMoreEl = document.createElement('div');
-        loadMoreEl.className = 'message-timestamp';
-        loadMoreEl.id = 'load-more-messages-btn';
-        loadMoreEl.textContent = '加载更多消息';
-        loadMoreEl.style.cursor = 'pointer';
-        loadMoreEl.style.color = 'var(--accent-color)';
-        fragment.appendChild(loadMoreEl);
-    }
-    
-    let lastTimestamp = (messagesToRender.length > 0) ? (messagesToRender[0].timestamp - 6 * 60 * 1000) : 0;
-    
-    messagesToRender.forEach(msg => {
-        if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) {
-            const timeEl = document.createElement('div');
-                    timeEl.className = 'message-timestamp';
-                    timeEl.textContent = new Date(msg.timestamp).toLocaleString();
-                    fragment.appendChild(timeEl);
-                    lastTimestamp = msg.timestamp;
-                }
-
-                if (msg.type === 'notification') {
-                    const notificationEl = document.createElement('div');
-                    notificationEl.className = 'message-timestamp';
-                    notificationEl.dataset.id = msg.id;
-                    notificationEl.textContent = msg.content;
-                                    if (msg.originalContent) {
-                    notificationEl.dataset.originalContent = msg.originalContent;
-                }
-                    fragment.appendChild(notificationEl);
-                    return;
-                }
-
-                const msgItem = document.createElement('div');
-                msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`;
-                msgItem.dataset.id = msg.id;
-                msgItem.dataset.sender = msg.sender;
-                const isUser = msg.sender === 'user';
-
-        let avatarId, avatarFrameId, senderName;
-        if (contact.isGroup) {
-            const memberSettings = contact.groupSettings.members[msg.sender];
-            const userProfile = findUserById(msg.sender);
-            avatarId = memberSettings?.avatarId || userProfile.avatarId;
-            senderName = memberSettings?.nickname || userProfile.name;
-            avatarFrameId = memberSettings?.avatarFrameId || '';
-        } else {
-            avatarId = isUser ? contact.userSettings.avatarId : contact.charSettings.avatarId;
-            senderName = isUser ? contact.userSettings.name : (contact.remark || contact.charSettings.name);
-            avatarFrameId = isUser ? contact.userSettings.avatarFrameId : contact.charSettings.avatarFrameId;
-        }
-
-        const avatarHTML = `<div class="avatar" data-avatar-id="${avatarId}"><div class="avatar-frame" data-avatar-frame-id="${avatarFrameId}"></div></div>`;
-        let contentHTML = '';
-
-        if (contact.isGroup && msg.sender !== 'system') {
-            const memberSettings = contact.groupSettings.members[msg.sender];
-            if (memberSettings) {
-                const role = msg.sender === contact.groupSettings.owner ? 'owner' : (contact.groupSettings.admins.includes(msg.sender) ? 'admin' : 'member');
-                contentHTML += `<div class="group-message-header"><span class="group-title title-${role}" data-member-id="${msg.sender}">${memberSettings.title || '成员'}</span><span class="group-nickname" data-member-id="${msg.sender}">${memberSettings.nickname || '未知成员'}</span></div>`;
-            } else if (msg.sender) {
-                contentHTML += `<div class="group-message-header"><span class="group-nickname" data-member-id="${msg.sender}">${senderName}</span></div>`;
+        // --- 核心修复：如果是加载更多，先移除旧的“加载更多”按钮 ---
+        if (isLoadingMore) {
+            const oldLoadMoreBtn = chatMessagesView.querySelector('#load-more-messages-btn');
+            if (oldLoadMoreBtn) {
+                oldLoadMoreBtn.remove();
             }
+        } else {
+            // 如果是初次加载或刷新，则清空视图
+            chatMessagesView.innerHTML = '';
         }
 
-        if (msg.quote) {
-            contentHTML += `<div class="message-quote"><strong>${msg.quote.senderName}:</strong> ${msg.quote.content}</div>`;
+        const isSettingsPreview = (groupChatSettingsScreen.classList.contains('active') || chatSettingsScreen.classList.contains('active')) && runtimeState.tempChatSettings && Object.keys(runtimeState.tempChatSettings).length > 0;
+        if (isSettingsPreview) {
+            const tempContact = JSON.parse(JSON.stringify(contact));
+            if (tempContact.isGroup) {
+                tempContact.groupSettings = runtimeState.tempChatSettings.groupSettings;
+                tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
+            } else {
+                tempContact.charSettings = runtimeState.tempChatSettings.charSettings;
+                tempContact.userSettings = runtimeState.tempChatSettings.userSettings;
+            }
+            contact = tempContact;
+        }
+
+        const displayLimit = runtimeState.chatDisplayLimits[contact.id] || 50;
+        const conversation = contact.conversation;
+
+        // --- 核心修复：精确计算要渲染的消息切片 ---
+        let messagesToRender;
+        if (isLoadingMore) {
+            const previousLimit = displayLimit - 50;
+            // 只获取需要新加载的消息
+            messagesToRender = conversation.slice(-displayLimit, -previousLimit);
+        } else {
+            // 初次加载时，获取最后一部分消息
+            messagesToRender = conversation.slice(-displayLimit);
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        // 如果还有更早的消息未显示，则在顶部添加“加载更多”按钮
+        if (conversation.length > displayLimit) {
+            const loadMoreEl = document.createElement('div');
+            loadMoreEl.className = 'message-timestamp';
+            loadMoreEl.id = 'load-more-messages-btn';
+            loadMoreEl.textContent = '加载更多消息';
+            loadMoreEl.style.cursor = 'pointer';
+            loadMoreEl.style.color = 'var(--accent-color)';
+            fragment.appendChild(loadMoreEl);
         }
         
-        switch(msg.type) {
-            case 'text':
-                contentHTML += `<div class="message-bubble">${msg.content}</div>`;
-                break;
-            case 'emoji':
-                contentHTML += `<div class="message-bubble emoji-bubble"><img data-emoji-id="${msg.emojiId}" alt="${msg.description}"></div>`;
-                break;
-            case 'voice':
-                const bubbleWidth = Math.min(60 + msg.duration * 8, 220);
-                const spanCount = Math.floor(bubbleWidth / 4);
-                const waveformSpans = Array(spanCount).fill(0).map(() => `<span style="height: ${Math.random() * 90 + 10}%"></span>`).join('');
-                contentHTML += `<div class="message-bubble voice" style="width: ${bubbleWidth}px;"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`;
-                break;
-            case 'image':
-            case 'camera':
-                const isCamera = msg.type === 'camera';
-                const cameraOverlay = isCamera ? `<div class="camera-text-overlay">(${msg.content})</div>` : '';
-                contentHTML += `<div class="message-bubble ${msg.type}"><img data-image-id="${msg.imageId}">${cameraOverlay}</div>`;
-                break;
-            case 'link':
-                 contentHTML += `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="link-info"><div class="title">${msg.title}</div><div class="summary">${msg.summary}</div><div class="source">${msg.source || '链接'}</div></div></div>`;
-                 break;
-            case 'musicShare':
-                 contentHTML += `<div class="message-bubble link" data-song-id="${msg.songId}"><div class="link-info"><div class="title">分享音乐: ${msg.title}</div><div class="summary">歌手: ${msg.artist}</div><div class="source">▶️ 点击一起听</div></div></div>`;
-                 break;
-            case 'redPacket':
-                let packetStatusText = '';
-                const claimedCount = Object.keys(msg.claimedBy || {}).length;
-                if (msg.status === 'claimed' || (claimedCount > 0 && claimedCount >= (msg.count || 1))) {
-                    packetStatusText = '红包已被领完';
-                } else if (msg.status === 'returned') {
-                    packetStatusText = '红包已被退回';
-                } else if (msg.status === 'expired') {
-                    packetStatusText = '红包已过期';
+        let lastTimestamp = (messagesToRender.length > 0) ? (messagesToRender[0].timestamp - 6 * 60 * 1000) : 0;
+        
+        messagesToRender.forEach(msg => {
+            if (msg.timestamp - lastTimestamp > 5 * 60 * 1000) {
+                const timeEl = document.createElement('div');
+                timeEl.className = 'message-timestamp';
+                timeEl.textContent = new Date(msg.timestamp).toLocaleString();
+                fragment.appendChild(timeEl);
+                lastTimestamp = msg.timestamp;
+            }
+
+            if (msg.type === 'notification') {
+                const notificationEl = document.createElement('div');
+                notificationEl.className = 'message-timestamp';
+                notificationEl.dataset.id = msg.id;
+                notificationEl.textContent = msg.content;
+                if (msg.originalContent) {
+                    notificationEl.dataset.originalContent = msg.originalContent;
                 }
-                let packetTypeFooter = '个人红包';
-                if(contact.isGroup) {
-                    switch(msg.packetType){
-                        case 'exclusive': 
-                            const targetName = findUserById(msg.exclusiveTo)?.name || '未知用户';
-                            packetTypeFooter = `给${targetName}的专属红包`;
-                            break;
-                        case 'lucky': packetTypeFooter = '拼手气红包'; break;
-                        case 'normal': packetTypeFooter = '普通红包'; break;
+                fragment.appendChild(notificationEl);
+                return;
+            }
+
+            const msgItem = document.createElement('div');
+            msgItem.className = `message-item ${msg.sender === 'user' ? 'user' : 'contact'}`;
+            msgItem.dataset.id = msg.id;
+            msgItem.dataset.sender = msg.sender;
+            const isUser = msg.sender === 'user';
+
+            let avatarId, avatarFrameId, senderName;
+            if (contact.isGroup) {
+                const memberSettings = contact.groupSettings.members[msg.sender];
+                const userProfile = findUserById(msg.sender);
+                avatarId = memberSettings?.avatarId || userProfile.avatarId;
+                senderName = memberSettings?.nickname || userProfile.name;
+                avatarFrameId = memberSettings?.avatarFrameId || '';
+            } else {
+                avatarId = isUser ? contact.userSettings.avatarId : contact.charSettings.avatarId;
+                senderName = isUser ? contact.userSettings.name : (contact.remark || contact.charSettings.name);
+                avatarFrameId = isUser ? contact.userSettings.avatarFrameId : contact.charSettings.avatarFrameId;
+            }
+
+            const avatarHTML = `<div class="avatar" data-avatar-id="${avatarId}"><div class="avatar-frame" data-avatar-frame-id="${avatarFrameId}"></div></div>`;
+            let contentHTML = '';
+
+            if (contact.isGroup && msg.sender !== 'system') {
+                const memberSettings = contact.groupSettings.members[msg.sender];
+                if (memberSettings) {
+                    const role = msg.sender === contact.groupSettings.owner ? 'owner' : (contact.groupSettings.admins.includes(msg.sender) ? 'admin' : 'member');
+                    contentHTML += `<div class="group-message-header"><span class="group-title title-${role}" data-member-id="${msg.sender}">${memberSettings.title || '成员'}</span><span class="group-nickname" data-member-id="${msg.sender}">${memberSettings.nickname || '未知成员'}</span></div>`;
+                } else if (msg.sender) {
+                    contentHTML += `<div class="group-message-header"><span class="group-nickname" data-member-id="${msg.sender}">${senderName}</span></div>`;
+                }
+            }
+
+            if (msg.quote) {
+                contentHTML += `<div class="message-quote"><strong>${msg.quote.senderName}:</strong> ${msg.quote.content}</div>`;
+            }
+            
+            switch(msg.type) {
+                case 'text':
+                    contentHTML += `<div class="message-bubble">${msg.content}</div>`;
+                    break;
+                case 'emoji':
+                    contentHTML += `<div class="message-bubble emoji-bubble"><img data-emoji-id="${msg.emojiId}" alt="${msg.description}"></div>`;
+                    break;
+                case 'voice':
+                    const bubbleWidth = Math.min(60 + msg.duration * 8, 220);
+                    const spanCount = Math.floor(bubbleWidth / 4);
+                    const waveformSpans = Array(spanCount).fill(0).map(() => `<span style="height: ${Math.random() * 90 + 10}%"></span>`).join('');
+                    contentHTML += `<div class="message-bubble voice" style="width: ${bubbleWidth}px;"><div class="voice-waveform-container">${waveformSpans}</div><span class="voice-duration">${msg.duration}”</span></div><div class="voice-text">${msg.content}</div>`;
+                    break;
+                case 'image':
+                case 'camera':
+                    const isCamera = msg.type === 'camera';
+                    const cameraOverlay = isCamera ? `<div class="camera-text-overlay">(${msg.content})</div>` : '';
+                    contentHTML += `<div class="message-bubble ${msg.type}"><img data-image-id="${msg.imageId}">${cameraOverlay}</div>`;
+                    break;
+                case 'link':
+                    contentHTML += `<div class="message-bubble link" data-link-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="link-info"><div class="title">${msg.title}</div><div class="summary">${msg.summary}</div><div class="source">${msg.source || '链接'}</div></div></div>`;
+                    break;
+                case 'musicShare':
+                    contentHTML += `<div class="message-bubble link" data-song-id="${msg.songId}"><div class="link-info"><div class="title">分享音乐: ${msg.title}</div><div class="summary">歌手: ${msg.artist}</div><div class="source">▶️ 点击一起听</div></div></div>`;
+                    break;
+                case 'redPacket':
+                    let packetStatusText = '';
+                    const claimedCount = Object.keys(msg.claimedBy || {}).length;
+                    if (msg.status === 'claimed' || (claimedCount > 0 && claimedCount >= (msg.count || 1))) {
+                        packetStatusText = '红包已被领完';
+                    } else if (msg.status === 'returned') {
+                        packetStatusText = '红包已被退回';
+                    } else if (msg.status === 'expired') {
+                        packetStatusText = '红包已过期';
                     }
-                }
-                contentHTML += `<div class="message-bubble red-packet ${msg.status || ''}" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body">${packetStatusText}</div><div class="red-packet-footer">${packetTypeFooter}</div></div>`;
-                break;
+                    let packetTypeFooter = '个人红包';
+                    if(contact.isGroup) {
+                        switch(msg.packetType){
+                            case 'exclusive': 
+                                const targetName = findUserById(msg.exclusiveTo)?.name || '未知用户';
+                                packetTypeFooter = `给${targetName}的专属红包`;
+                                break;
+                            case 'lucky': packetTypeFooter = '拼手气红包'; break;
+                            case 'normal': packetTypeFooter = '普通红包'; break;
+                        }
+                    }
+                    contentHTML += `<div class="message-bubble red-packet ${msg.status || ''}" data-packet-content="${encodeURIComponent(JSON.stringify(msg))}"><div class="red-packet-header"><span class="red-packet-icon">🧧</span><span>${msg.message}</span></div><div class="red-packet-body">${packetStatusText}</div><div class="red-packet-footer">${packetTypeFooter}</div></div>`;
+                    break;
+            }
+
+            msgItem.innerHTML = `${isUser ? '' : avatarHTML}<div class="message-content-wrapper">${contentHTML}</div>${isUser ? avatarHTML : ''}`;
+            fragment.appendChild(msgItem);
+        });
+        
+        // --- 核心修复：精确处理滚动定位 ---
+        if (isLoadingMore) {
+            const oldScrollHeight = chatMessagesView.scrollHeight;
+            chatMessagesView.prepend(fragment);
+            chatMessagesView.scrollTop = chatMessagesView.scrollHeight - oldScrollHeight;
+        } else {
+            chatMessagesView.appendChild(fragment);
+            chatMessagesView.scrollTop = chatMessagesView.scrollHeight;
         }
 
-        msgItem.innerHTML = `${isUser ? '' : avatarHTML}<div class="message-content-wrapper">${contentHTML}</div>${isUser ? avatarHTML : ''}`;
-        fragment.appendChild(msgItem);
-    });
-    
-    const oldScrollHeight = chatMessagesView.scrollHeight;
-    if (isLoadingMore) {
-        const firstChild = chatMessagesView.firstChild;
-        chatMessagesView.insertBefore(fragment, firstChild);
-        chatMessagesView.scrollTop = chatMessagesView.scrollHeight - oldScrollHeight;
-    } else {
-        chatMessagesView.appendChild(fragment);
-        chatMessagesView.scrollTop = chatMessagesView.scrollHeight;
+        chatMessagesView.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+        chatMessagesView.querySelectorAll('[data-avatar-frame-id]').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
+        chatMessagesView.querySelectorAll('[data-emoji-id]').forEach(el => setElementImage(el, el.dataset.emojiId, 'src'));
+        chatMessagesView.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'src'));
     }
-
-    chatMessagesView.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
-    chatMessagesView.querySelectorAll('[data-avatar-frame-id]').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
-    chatMessagesView.querySelectorAll('[data-emoji-id]').forEach(el => setElementImage(el, el.dataset.emojiId, 'src'));
-    chatMessagesView.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'src'));
-}
 function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; }
 // --- ADDED: First Love Letter Trigger ---
 if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstChat && contact.conversation.length === 0) {
@@ -5431,10 +5874,12 @@ function handleAvatarLongPress(avatarElement) {
 // ===================================================================
 function openChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; if (contact.isGroup) { openGroupChatSettings(); } else { openSingleChatSettings(); } }
 function openSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ charSettings: contact.charSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); openSubScreen(chatSettingsScreen, singleChatScreen); }
-function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona;     const usBubbleCss = getEl('us-bubble-css');
-    usBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || '';
-    usBubbleCss.placeholder = `/* 示例: */\n.message-item.user .message-bubble {\n  background-color: var(--accent-color);\n  color: white;\n  border-bottom-right-radius: 4px}\n.message-item.contact .message-bubble {\n  background-color: white;\n  color: black;\n  border-bottom-right-radius: 4px}`;
-    updateBubbleCssPreview('us', runtimeState.tempChatSettings);}
+function loadSingleChatSettingsUI() { const { charSettings, userSettings } = runtimeState.tempChatSettings; csCharName.value = charSettings.name; setupWorldBookSelector(csWorldBookGroupSelector, csWorldBookList, charSettings.linkedWorldBooks); setElementImage(csCharAvatar, charSettings.avatarId); setElementImage(csCharAvatar.querySelector('.avatar-frame'), charSettings.avatarFrameId); csContextMemory.value = charSettings.contextMemory; csPersona.value = charSettings.persona; csRealtimeActivityToggle.checked = charSettings.realtimeActivity.enabled; csRealtimeIntervalGroup.style.display = charSettings.realtimeActivity.enabled ? 'flex' : 'none'; csRealtimeInterval.value = charSettings.realtimeActivity.interval; csDeleteFriendBtn.textContent = charSettings.isFriend ? '删除好友' : '已删除'; csDeleteFriendBtn.disabled = !charSettings.isFriend; usUserName.value = userSettings.name; setElementImage(usUserAvatar, userSettings.avatarId); setElementImage(usUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); usPersona.value = userSettings.persona;
+    const usBubbleCss = getEl('us-bubble-css');
+    usBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || defaultBubbleCssStyle;
+    usBubbleCss.placeholder = `/* 示例: .message-bubble { font-style: italic; } */`;
+    updateBubbleCssPreview('us', runtimeState.tempChatSettings);
+}
 function saveSingleChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const oldSettings = contact.charSettings.realtimeActivity; const newSettings = runtimeState.tempChatSettings.charSettings.realtimeActivity; contact.charSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.charSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();
     applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
@@ -5443,7 +5888,19 @@ csCharName.addEventListener('input', () => { const newName = csCharName.value; r
 csContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.charSettings.contextMemory = parseInt(csContextMemory.value) || 20);
 csPersona.addEventListener('input', () => runtimeState.tempChatSettings.charSettings.persona = csPersona.value);
 csRealtimeActivityToggle.addEventListener('change', () => { const enabled = csRealtimeActivityToggle.checked; runtimeState.tempChatSettings.charSettings.realtimeActivity.enabled = enabled; csRealtimeIntervalGroup.style.display = enabled ? 'flex' : 'none'; });
-csRealtimeInterval.addEventListener('input', () => runtimeState.tempChatSettings.charSettings.realtimeActivity.interval = parseInt(csRealtimeInterval.value) || 30);
+csRealtimeInterval.addEventListener('input', () => {
+                const newInterval = parseInt(csRealtimeInterval.value) || 30;
+                // 1. 更新临时状态以保持UI一致性
+                runtimeState.tempChatSettings.charSettings.realtimeActivity.interval = newInterval;
+
+                // 2. 直接更新永久状态并立即保存
+                const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+                if (contact) {
+                    contact.charSettings.realtimeActivity.interval = newInterval;
+                    // 使用 saveState() 而不是 debouncedSaveState() 来确保关键设置的即时持久化
+                    saveState(); 
+                }
+            });
 csRestoreBtn.addEventListener('click', () => { if (confirm('确定要还原所有未保存的更改吗？')) { runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); showToast('设置已还原'); } });
 csClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空与该角色的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (contact) { contact.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } });
 csDeleteFriendBtn.addEventListener('click', () => { if (confirm('确定要删除该好友吗？此操作会通知对方。')) { runtimeState.tempChatSettings.charSettings.isFriend = false; addSystemNotification(runtimeState.currentChatId, "你删除了对方好友", false); loadSingleChatSettingsUI(); showToast('好友已删除'); } });
@@ -5707,9 +6164,12 @@ async function handleChatBackgroundUpload(file, settingsObject) { if (!file) ret
 // --- 群聊设置界面逻辑 ---
 // ===================================================================
 function openGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.originalChatSettings = JSON.parse(JSON.stringify({ groupSettings: contact.groupSettings, userSettings: contact.userSettings, remark: contact.remark })); runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadGroupChatSettingsUI(); openSubScreen(groupChatSettingsScreen, singleChatScreen); }
-function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona;     gcsUsBubbleCssUser.value = runtimeState.tempChatSettings.userSettings.bubbleCssUser || defaultBubbleStyles.user;
-    gcsUsBubbleCssChar.value = runtimeState.tempChatSettings.userSettings.bubbleCssChar || defaultBubbleStyles.char;
-    updateBubbleCssPreview('gcs-us', runtimeState.tempChatSettings);}
+function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = runtimeState.tempChatSettings; gcsGroupName.value = groupSettings.name; setupWorldBookSelector(gcsWorldBookGroupSelector, gcsWorldBookList, groupSettings.linkedWorldBooks); setElementImage(gcsGroupAvatar, groupSettings.avatarId); gcsContextMemory.value = groupSettings.contextMemory; renderGroupMemberList(); gcsMuteAllBtn.textContent = groupSettings.isMuted ? '解除禁言' : '全体禁言'; gcsDisbandBtn.textContent = groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; gcsUsUserName.value = userSettings.name; setElementImage(gcsUsUserAvatar, userSettings.avatarId); setElementImage(gcsUsUserAvatar.querySelector('.avatar-frame'), userSettings.avatarFrameId); gcsUsPersona.value = userSettings.persona;
+    const gcsUsBubbleCss = getEl('gcs-us-bubble-css');
+    gcsUsBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || defaultBubbleCssStyle;
+    gcsUsBubbleCss.placeholder = `/* 示例: .message-bubble { font-style: italic; } */`;
+    updateBubbleCssPreview('gcs-us', runtimeState.tempChatSettings);
+}
 function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } const finalAvatarId = member.avatarId || user.avatarId; item.innerHTML = ` <div class="avatar" data-avatar-id="${finalAvatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), finalAvatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
 function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; if (contact.groupSettings.members['user']) {
         contact.groupSettings.members['user'].nickname = contact.userSettings.name;
@@ -6071,7 +6531,15 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         if (allPosts.length > 0) {
             allPosts.forEach(p => {
             if (!canCharViewMoment(contact.id, p)) return; // 核心修复：如果Char看不见，直接跳过这条动态
-                const author = findUserById(p.authorId);
+    
+                    // --- AI世界观净化：确保AI只看到真实名字 ---
+                    let author;
+                    if (p.authorId === 'user') {
+                        author = findUserById('user');
+                    } else {
+                        const authorContact = appState.chat.contacts.find(c => c.id === p.authorId);
+                        author = authorContact ? { id: authorContact.id, name: authorContact.charSettings.name } : { id: p.authorId, name: '未知用户' };
+                    }
                 let authorMarker = '';
                 if (contact.isGroup) {
                     if (contact.members.includes(p.authorId)) authorMarker = ' (你扮演的角色)';
@@ -6079,11 +6547,11 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                     authorMarker = ' (你发布的动态)';
                 }
                 const contentSummary = (p.content.text || p.content.title || '[图片动态]').substring(0, 20);
-                            let visibilityInfo = '';
-            if (p.visibility === 'specific' && p.visibleTo && p.visibleTo.length > 0) {
-                const visibleNames = p.visibleTo.map(id => findUserById(id).name).join(', ');
-                visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
-            }
+                                    let visibilityInfo = '';
+        if (p.isVisibilityPublic && p.visibility === 'specific' && p.visibleTo && p.visibleTo.length > 0) {
+            const visibleNames = p.visibleTo.map(id => findUserById(id).name).join(', ');
+            visibilityInfo = ` (仅对 ${visibleNames} 可见)`;
+        }
             const privacyInfo = p.areCommentsPrivate ? ' (评论区私密)' : '';
             momentsFeedContext += `- ${author.name}的动态${authorMarker}(ID: ${p.id}): "${contentSummary}..."${privacyInfo}\n`;
                             if (p.comments && p.comments.length > 0) {
@@ -6093,7 +6561,13 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                     : p.comments;
 
                 commentsToProcess.forEach(c => {
-                    const commentAuthor = findUserById(c.authorId);
+                    let commentAuthor;
+                        if (c.authorId === 'user') {
+                            commentAuthor = findUserById('user');
+                        } else {
+                            const commentAuthorContact = appState.chat.contacts.find(contact => contact.id === c.authorId);
+                            commentAuthor = commentAuthorContact ? { id: commentAuthorContact.id, name: commentAuthorContact.charSettings.name } : { id: c.authorId, name: '未知用户' };
+                        }
                     let commentAuthorMarker = '';
                     if (contact.isGroup) {
                         if (contact.members.includes(c.authorId)) commentAuthorMarker = ' (你扮演的角色)';
@@ -6108,9 +6582,23 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
                             : c.replies;
 
                         repliesToProcess.forEach(r => {
-                            const replyAuthor = findUserById(r.authorId);
+                             let replyAuthor;
+                            if (r.authorId === 'user') {
+                                replyAuthor = findUserById('user');
+                            } else {
+                                const replyAuthorContact = appState.chat.contacts.find(contact => contact.id === r.authorId);
+                                replyAuthor = replyAuthorContact ? { id: replyAuthorContact.id, name: replyAuthorContact.charSettings.name } : { id: r.authorId, name: '未知用户' };
+                            }
                             let targetName = commentAuthor.name;
                             const targetReply = c.replies.find(tr => tr.id === r.replyTo);
+                            if (targetReply) {
+                                if (targetReply.authorId === 'user') {
+                                    targetName = findUserById('user').name;
+                                } else {
+                                    const targetReplyAuthorContact = appState.chat.contacts.find(contact => contact.id === targetReply.authorId);
+                                    targetName = targetReplyAuthorContact ? targetReplyAuthorContact.charSettings.name : '未知用户';
+                                }
+                            }
                             if (targetReply) {
                                 targetName = findUserById(targetReply.authorId).name;
                             }
@@ -7880,7 +8368,23 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
 }
 
     function renderSingleMomentPost(post) {
-        const author = findUserById(post.authorId);
+        let authorDisplayName, authorAvatarId;
+        if (post.authorId === 'user') {
+            const userProfile = findUserById('user');
+            authorDisplayName = userProfile.name;
+            authorAvatarId = userProfile.avatarId;
+        } else {
+            const authorContact = appState.chat.contacts.find(c => c.id === post.authorId);
+            if (authorContact) {
+                authorDisplayName = authorContact.remark || authorContact.charSettings.name;
+                authorAvatarId = (charMomentsScreen.classList.contains('active') && authorContact.charSettings.momentsAvatarId) 
+                    ? authorContact.charSettings.momentsAvatarId 
+                    : authorContact.charSettings.avatarId;
+            } else {
+                authorDisplayName = '未知用户';
+                authorAvatarId = '';
+            }
+        }
         const isLiked = post.likes.includes('user');
         const commentsHTML = (post.comments || []).map(comment => renderSingleMomentComment(comment, post.id)).join('');
         
@@ -7927,9 +8431,9 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
             <div class="moments-post-item" data-post-id="${post.id}">
                 <div class="post-item-content swipe-content">
                     <div class="post-header">
-                        <div class="post-avatar" data-avatar-id="${author.avatarId}"></div>
+                        <div class="post-avatar" data-avatar-id="${authorAvatarId}"></div>
                         <div class="post-author-info">
-                            <div class="post-author-name">${author.name}</div>
+                            <div class="post-author-name">${authorDisplayName}</div>
                             <div class="post-timestamp">${new Date(post.timestamp).toLocaleString()}</div>
                         </div>
                     </div>
@@ -7956,16 +8460,30 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
         `;
     }
     function renderSingleMomentComment(comment, postId) {
-        const author = findUserById(comment.authorId);
+        let authorDisplayName, authorAvatarId;
+        if (comment.authorId === 'user') {
+            const userProfile = findUserById('user');
+            authorDisplayName = userProfile.name;
+            authorAvatarId = userProfile.avatarId;
+        } else {
+            const authorContact = appState.chat.contacts.find(c => c.id === comment.authorId);
+            if (authorContact) {
+                authorDisplayName = authorContact.remark || authorContact.charSettings.name;
+                authorAvatarId = authorContact.charSettings.avatarId;
+            } else {
+                authorDisplayName = '未知用户';
+                authorAvatarId = '';
+            }
+        }
         const repliesHTML = (comment.replies || []).map(reply => renderSingleMomentReply(reply, comment.replies, postId)).join('');
         const canModify = true; // 假设User总是可以编辑和删除
         return `
             <div class="comment-item" data-comment-id="${comment.id}">
                 <div class="comment-item-main" style="padding-top: 8px; padding-bottom: 8px;">
-                    <div class="comment-avatar" data-avatar-id="${author.avatarId}" style="width: 32px; height: 32px;"></div>
+                    <div class="comment-avatar" data-avatar-id="${authorAvatarId}" style="width: 32px; height: 32px;"></div>
                     <div class="comment-content">
                         <div class="comment-header">
-                            <span class="comment-author">${author.name}</span>
+                            <span class="comment-author">${authorDisplayName}</span>
                             <span class="comment-timestamp">${new Date(comment.timestamp).toLocaleString()}</span>
                             <div class="comment-actions-inline" style="display: none;">
                                 ${canModify ? `
@@ -7985,24 +8503,48 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
             </div>`;
     }
     function renderSingleMomentReply(reply, allReplies, postId) {
-            const author = findUserById(reply.authorId);
+            let authorDisplayName, authorAvatarId;
+            if (reply.authorId === 'user') {
+                const userProfile = findUserById('user');
+                authorDisplayName = userProfile.name;
+                authorAvatarId = userProfile.avatarId;
+            } else {
+                const authorContact = appState.chat.contacts.find(c => c.id === reply.authorId);
+                if (authorContact) {
+                    authorDisplayName = authorContact.remark || authorContact.charSettings.name;
+                    authorAvatarId = authorContact.charSettings.avatarId;
+                } else {
+                    authorDisplayName = '未知用户';
+                    authorAvatarId = '';
+                }
+            }
             
             let replyText = escapeHTML(reply.text);
-            const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s); // Added 's' flag for multiline
+            const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s);
             let targetHTML = '';
             if(mentionMatch) {
-                targetHTML = `回复 <span class="reply-target">@${mentionMatch[1]}</span>: `;
+                // Find the original target to get their display name
+                const originalTargetReply = allReplies.find(r => r.id === reply.replyTo);
+                let targetDisplayName = mentionMatch[1]; // Fallback to the name in text
+                if (originalTargetReply) {
+                    const targetContact = appState.chat.contacts.find(c => c.id === originalTargetReply.authorId);
+                    if (targetContact) {
+                        targetDisplayName = targetContact.remark || targetContact.charSettings.name;
+                    }
+                }
+                
+                targetHTML = `回复 <span class="reply-target">@${targetDisplayName}</span>: `;
                 replyText = mentionMatch[2];
             }
 
             const canModify = true; 
             return `
                 <div class="reply-item" data-reply-id="${reply.id}">
-                    <div class="reply-avatar" data-avatar-id="${author.avatarId}"></div>
+                    <div class="reply-avatar" data-avatar-id="${authorAvatarId}"></div>
                     <div class="reply-content">
                         <div class="comment-header">
                              <div>
-                                <span class="reply-author">${author.name}</span>
+                                <span class="reply-author">${authorDisplayName}</span>
                                 <span class="reply-timestamp">${new Date(reply.timestamp).toLocaleString()}</span>
                              </div>
                              <div class="comment-actions-inline" style="display: none;">
@@ -8083,10 +8625,11 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         modalBody.insertAdjacentHTML('afterbegin', authorSelectorHTML);
         renderMomentAuthorSelector('moment-post-author-selector', post.authorId);
         commentPrivateCheckbox.checked = post.areCommentsPrivate || false; // Load existing setting
+        getEl('post-moment-visibility-public-checkbox').checked = post.isVisibilityPublic || false; // Load existing setting
     } else {
         commentPrivateCheckbox.checked = false; // Reset for new post
+        getEl('post-moment-visibility-public-checkbox').checked = false; // Reset for new post
     }
-
 
     titleEl.textContent = isEditing ? '编辑动态' : '发表动态';
     
@@ -8270,8 +8813,8 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
             timestamp: Date.now(),
             visibility: runtimeState.moments.postContext.visibility,
             visibleTo: runtimeState.moments.postContext.visibleTo,
-            areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked, // Add this line
-            likes: [],
+areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked,
+        isVisibilityPublic: getEl('upload-photo-visibility-public-checkbox').checked,            likes: [],
             comments: []
         };
         appState.chat.moments.posts.unshift(newPost);
@@ -8672,7 +9215,7 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
         postData.visibility = visibility;
         postData.visibleTo = visibility === 'specific' ? visibleTo : [];
         postData.areCommentsPrivate = areCommentsPrivate; // Save the new setting
-        
+        postData.isVisibilityPublic = getEl('post-moment-visibility-public-checkbox').checked;
         if(!editingPostId) {
             appState.chat.moments.posts.unshift(postData);
         }
@@ -9132,7 +9675,7 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
     queryAll('input[name="photo-visibility"]').forEach(r => r.checked = r.value === 'public');
     getEl('upload-photo-friend-selector-container').classList.add('hidden-by-logic');
     getEl('upload-photo-comment-private-checkbox').checked = false; // Reset the new checkbox
-
+getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the new checkbox
     uploadPhotoModal.classList.add('visible');
 }
     
