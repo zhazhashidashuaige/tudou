@@ -163,6 +163,9 @@
         .tab-content-wrapper { flex-grow: 1; overflow: hidden; position: relative; }
         .tab-content { display: none; padding: 15px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; box-sizing: border-box; padding-bottom: 80px; /* FIX: 修复底部遮挡问题 */ }
         .tab-content.active { display: block; }
+#world-book-tab-content, #archive-tab-content, #info-tab-content {
+    padding-bottom: 80px;
+}
 
         /* --- 设置 APP 特定样式 --- */
         .settings-group { margin-bottom: 25px; padding: 0 20px; }
@@ -241,6 +244,167 @@
     }
     .filter-dropdown .checkbox-label:hover {
         background-color: var(--item-active-bg);
+    }
+        #styles-tab-content {
+        display: flex;
+        height: 100%;
+        padding: 15px;
+    }
+    .styles-container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        gap: 15px;
+    }
+    .styles-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .styles-column h3 {
+        text-align: center;
+        margin-top: 0;
+        margin-bottom: 10px;
+        flex-shrink: 0;
+    }
+    .styles-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 5px;
+        background-color: var(--bg-color);
+        border-radius: 8px;
+    }
+    .style-preview-item {
+        padding: 10px;
+        background-color: var(--item-bg);
+        border-radius: 5px;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+    }
+    .style-preview-item:hover {
+        background-color: var(--item-active-bg);
+    }
+    .style-preview-name {
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    .style-preview-content {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        white-space: pre;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-height: 4.5em; /* Limit to about 3 lines */
+    }
+        .styles-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns for bubbles */
+    gap: 10px;
+    align-content: start;
+}
+    
+
+    .style-preview-card {
+    padding: 10px;
+    background-color: var(--item-bg);
+    border-radius: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    aspect-ratio: 1 / 1.2;
+    overflow: hidden;
+}
+    .style-preview-card:hover {
+        background-color: var(--item-active-bg);
+    }
+    .style-preview-card .style-preview-name {
+        font-weight: bold;
+        font-size: 14px;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 8px;
+        margin-bottom: 0;
+    }
+
+    /* Theme Preview Specific Styles */
+    .theme-preview-wrapper {
+        background-color: var(--bg-color);
+        padding: 8px;
+        border-radius: 5px;
+        transform: scale(0.9);
+        transform-origin: top center;
+        pointer-events: none; /* Prevent clicks inside preview */
+    }
+    .mini-header {
+        font-size: 8px;
+        padding: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--app-screen-bg);
+    }
+    .mini-list-item {
+        margin-top: 4px;
+    }
+    .mini-list-item .swipe-content {
+        padding: 4px;
+        font-size: 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background-color: var(--item-bg);
+    }
+    .mini-list-item .avatar {
+        width: 16px; height: 16px; border-radius: 50%; background-color: #ccc;
+    }
+    .mini-moments-card {
+        margin-top: 4px;
+    }
+    .mini-moments-card .post-item-content {
+        padding: 4px;
+        font-size: 8px;
+        background-color: var(--item-bg);
+    }
+    .mini-tabs {
+        margin-top: 4px;
+        display: flex;
+        justify-content: space-around;
+        font-size: 8px;
+        padding: 4px 0;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--item-bg);
+    }
+    
+    /* Bubble Preview Specific Styles */
+    .bubble-preview-wrapper {
+    padding: 8px;
+    border-radius: 5px;
+    background-color: #f0f2f5; /* A neutral chat background */
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex-grow: 1;
+    justify-content: center;
+}
+    .bubble-preview-wrapper .message-item {
+        transform: scale(0.9);
+        gap: 4px;
+    }
+    .bubble-preview-wrapper .avatar {
+        width: 20px;
+        height: 20px;
+    }
+    .bubble-preview-wrapper .message-bubble {
+        padding: 4px 8px;
+        font-size: 9px;
     }
         /* --- 音乐 APP --- */
         #music-list { list-style: none; padding: 0; margin: 0; }
@@ -1258,10 +1422,14 @@
                         <div class="theme-css-preview" id="theme-preview-list-item"></div>
                     </div>
                     <div class="settings-group">
-                        <div class="button-group">
-                            <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
-                            <button id="theme-apply-btn" class="settings-button">应用样式</button>
-                        </div>
+                                        <div class="button-group">
+                    <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
+                    <button id="theme-apply-btn" class="settings-button">应用样式</button>
+                </div>
+                <div class="button-group" style="margin-top: 10px;">
+                    <button id="theme-save-style-btn" class="settings-button secondary">保存样式</button>
+                    <button id="theme-load-style-btn" class="settings-button secondary">读取样式</button>
+                </div>
                     </div>
                 </div>
 
@@ -1284,12 +1452,23 @@
         <div id="world-book-filter-dropdown" class="filter-dropdown"></div>
             <div class="app-content tab-content-wrapper">
                 <div id="world-book-tab-content" class="tab-content active"><ul id="world-book-list" class="preset-data-list"></ul></div>
-                <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
-                <div id="info-tab-content" class="tab-content"><ul id="info-list" class="preset-data-list"></ul></div>
-                <div id="memory-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">记忆功能待开发...</p></div>
+                        <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
+        <div id="info-tab-content" class="tab-content"><ul id="info-list" class="preset-data-list"></ul></div>
+        <div id="styles-tab-content" class="tab-content">
+            <div class="styles-container">
+                <div class="styles-column">
+                    <h3>主题样式</h3>
+                    <div id="saved-themes-list" class="styles-list"></div>
+                </div>
+                <div class="styles-column">
+                    <h3>气泡样式</h3>
+                    <div id="saved-bubbles-list" class="styles-list"></div>
+                </div>
+            </div>
+        </div>
             </div>
             <div class="app-bottom-tabs">
-                <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div><div class="tab-link" data-tab="memory">记忆</div>
+                <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div><div class="tab-link" data-tab="styles">样式</div>
             </div>
         </div>
 
@@ -1439,10 +1618,14 @@
                     <div class="bubble-css-preview" id="us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
-                    <div class="button-group" style="margin-top: 10px;">
-                        <button id="us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
-                        <button id="us-bubble-apply-btn" class="settings-button">应用样式</button>
-                    </div>
+                                <div class="button-group" style="margin-top: 10px;">
+                <button id="us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                <button id="us-bubble-apply-btn" class="settings-button">应用样式</button>
+            </div>
+            <div class="button-group" style="margin-top: 10px;">
+                <button id="us-bubble-save-style-btn" class="settings-button secondary">保存样式</button>
+                <button id="us-bubble-load-style-btn" class="settings-button secondary">读取样式</button>
+            </div>
                 </div>
                 </div>
             </div>
@@ -1522,10 +1705,14 @@
                     <div class="bubble-css-preview" id="gcs-us-bubble-preview">
                         <!-- Preview will be rendered here -->
                     </div>
-                    <div class="button-group" style="margin-top: 10px;">
-                        <button id="gcs-us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
-                        <button id="gcs-us-bubble-apply-btn" class="settings-button">应用样式</button>
-                    </div>
+                                <div class="button-group" style="margin-top: 10px;">
+                <button id="gcs-us-bubble-restore-btn" class="settings-button danger-btn">还原默认</button>
+                <button id="gcs-us-bubble-apply-btn" class="settings-button">应用样式</button>
+            </div>
+            <div class="button-group" style="margin-top: 10px;">
+                <button id="gcs-us-bubble-save-style-btn" class="settings-button secondary">保存样式</button>
+                <button id="gcs-us-bubble-load-style-btn" class="settings-button secondary">读取样式</button>
+            </div>
                 </div>
                 </div>
             </div>
@@ -1652,6 +1839,7 @@
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
     <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button><button id="library-mode-toggle-btn" class="cancel-btn">删除</button><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
+    <div id="load-style-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-style-title">读取样式</h3><div class="modal-body" id="load-style-list"></div><div class="modal-actions"><button id="load-style-cancel-btn" class="cancel-btn">取消</button></div></div></div>
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
     <div id="gcs-manage-members-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-manage-members-title">管理成员</h3><div class="modal-body" id="gcs-manage-members-list"></div><div class="modal-actions row"><button id="gcs-manage-members-cancel-btn" class="cancel-btn" data-bubble-id="gcs-manage-cancel">取消</button><button id="gcs-manage-members-confirm-btn" class="confirm-btn" data-bubble-id="gcs-manage-confirm">确认</button></div></div></div>
     <div id="gcs-member-action-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-action-title">管理成员</h3><div class="modal-body" id="gcs-member-action-body"></div><div class="modal-actions"><button id="gcs-member-action-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-action-cancel">取消</button></div></div></div>
@@ -2491,6 +2679,10 @@ const gcsUsBubbleRestoreBtn = getEl('gcs-us-bubble-restore-btn');
     const loadPersonaTitle = getEl('load-persona-title');
     const loadPersonaList = getEl('load-persona-list');
     const loadPersonaCancelBtn = getEl('load-persona-cancel-btn');
+    const loadStyleModal = getEl('load-style-modal');
+const loadStyleTitle = getEl('load-style-title');
+const loadStyleList = getEl('load-style-list');
+const loadStyleCancelBtn = getEl('load-style-cancel-btn');
     // Function to open the persona loading modal
     function openLoadPersonaModal(dataType, settingsGroup, memberId = null) {
         // Store context for when an item is selected
@@ -2575,7 +2767,181 @@ const gcsUsBubbleRestoreBtn = getEl('gcs-us-bubble-restore-btn');
     loadPersonaCancelBtn.addEventListener('click', () => {
         loadPersonaModal.classList.remove('visible');
     });
+    // --- 新增：样式保存与读取核心逻辑 ---
+    function renderStylesTab() {
+        const themesList = getEl('saved-themes-list');
+        const bubblesList = getEl('saved-bubbles-list');
+        const previewStyleTag = getEl('saved-styles-preview-style');
+        let previewCss = '';
 
+        // Render Theme Previews
+        if (appState.data.savedThemes.length > 0) {
+            themesList.innerHTML = appState.data.savedThemes.map(theme => {
+                const styles = theme.styles;
+                previewCss += `
+                    [data-theme-id="${theme.id}"] .mini-header { ${styles.appHeader || ''} }
+                    [data-theme-id="${theme.id}"] .mini-list-item .swipe-content { ${styles.listItem || ''} }
+                    [data-theme-id="${theme.id}"] .mini-moments-card .post-item-content { ${styles.momentsPost || ''} }
+                    [data-theme-id="${theme.id}"] .mini-tabs { ${styles.bottomTabs || ''} }
+                `;
+                return `
+                    <div class="style-preview-card" data-id="${theme.id}" data-type="theme">
+                        <div class="style-preview-name">${escapeHTML(theme.name)}</div>
+                        <div class="theme-preview-wrapper" data-theme-id="${theme.id}">
+                            <div class="mini-header">&lt; <span>标题</span> +</div>
+                            <div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>
+                            <div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>
+                            <div class="mini-tabs"><span>标签1</span><span>标签2</span></div>
+                        </div>
+                    </div>`;
+            }).join('');
+        } else {
+            themesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的主题</p>';
+        }
+
+        // Render Bubble Previews
+        if (appState.data.savedBubbles.length > 0) {
+            bubblesList.innerHTML = appState.data.savedBubbles.map(bubble => {
+                const scopedCss = (bubble.css || '').replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+                    const scopedSelector = selector.split(',').map(s => `[data-bubble-id="${bubble.id}"] ${s.trim()}`).join(', ');
+                    return `${scopedSelector} ${body}`;
+                });
+                previewCss += scopedCss;
+                return `
+                    <div class="style-preview-card" data-id="${bubble.id}" data-type="bubble">
+                        <div class="style-preview-name">${escapeHTML(bubble.name)}</div>
+                        <div class="bubble-preview-wrapper" data-bubble-id="${bubble.id}">
+                            <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
+                            <div class="message-item user"><div class="message-bubble">你好呀</div><div class="avatar"></div></div>
+                        </div>
+                    </div>`;
+            }).join('');
+        } else {
+            bubblesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的气泡</p>';
+        }
+
+        previewStyleTag.textContent = previewCss;
+    }
+
+    getEl('styles-tab-content').addEventListener('click', e => {
+        const item = e.target.closest('.style-preview-item');
+        if (!item) return;
+
+        const styleId = item.dataset.id;
+        const styleType = item.dataset.type;
+
+        if (styleType === 'theme') {
+            const theme = appState.data.savedThemes.find(t => t.id === styleId);
+            if (theme && confirm(`确定要立即应用主题样式 "${theme.name}" 吗？`)) {
+                appState.beautify.customThemes = { ...theme.styles };
+                applyCustomThemes();
+                debouncedSaveState();
+                showToast('主题已应用！');
+            }
+        } else if (styleType === 'bubble') {
+            const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
+            if (bubble && runtimeState.currentChatId && confirm(`要将气泡样式 "${bubble.name}" 应用到当前聊天吗？`)) {
+                const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+                if (contact) {
+                    contact.userSettings.bubbleCss = bubble.css;
+                    applyAllCustomBubbleStyles();
+                    debouncedSaveState();
+                    showToast('气泡样式已应用！请返回聊天设置查看。');
+                }
+            } else if (!runtimeState.currentChatId) {
+                showToast('请先进入一个聊天设置界面再应用气泡样式。', 'error');
+            }
+        }
+    });
+
+    function openLoadStyleModal(type, context) {
+        runtimeState.styleLoadContext = { type, context };
+        const dataArray = (type === 'theme') ? appState.data.savedThemes : appState.data.savedBubbles;
+
+        loadStyleTitle.textContent = `读取${type === 'theme' ? '主题' : '气泡'}样式`;
+        
+        if (dataArray.length === 0) {
+            loadStyleList.innerHTML = `<p style="text-align:center; color:#888;">暂无已保存的样式</p>`;
+        } else {
+            loadStyleList.innerHTML = dataArray.map(item => `
+                <div class="style-preview-item" data-id="${item.id}">
+                    <div class="style-preview-name">${escapeHTML(item.name)}</div>
+                </div>
+            `).join('');
+        }
+        loadStyleModal.classList.add('visible');
+    }
+
+    loadStyleList.addEventListener('click', e => {
+        const item = e.target.closest('.style-preview-item');
+        if (!item) return;
+
+        const styleId = item.dataset.id;
+        const { type, context } = runtimeState.styleLoadContext;
+        
+        if (type === 'theme') {
+            const theme = appState.data.savedThemes.find(t => t.id === styleId);
+            if (theme) {
+                themeCssMoments.value = theme.styles.momentsPost || '';
+                themeCssHeader.value = theme.styles.appHeader || '';
+                themeCssTabs.value = theme.styles.bottomTabs || '';
+                themeCssListItem.value = theme.styles.listItem || '';
+                ['moments', 'header', 'tabs', 'list-item'].forEach(id => updateThemeCssPreview(id));
+            }
+            } else if (type === 'bubble') {
+        const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
+        if (bubble) {
+            const editor = getEl(`${context}-css`); // Bug Fix: Correctly construct the editor ID
+            editor.value = bubble.css;
+            updateBubbleCssPreview(context.replace('-bubble', ''), runtimeState.tempChatSettings);
+        }
+    }
+        loadStyleModal.classList.remove('visible');
+    });
+
+    loadStyleCancelBtn.addEventListener('click', () => loadStyleModal.classList.remove('visible'));
+
+    function setupStyleSaver(context, type) {
+        const saveBtn = getEl(`${context}-save-style-btn`);
+        const loadBtn = getEl(`${context}-load-style-btn`);
+
+        saveBtn.addEventListener('click', () => {
+            const name = prompt('请输入样式名称:');
+            if (!name || !name.trim()) return;
+
+            if (type === 'theme') {
+                const newTheme = {
+                    id: newId('theme_style'),
+                    name: name.trim(),
+                    styles: {
+                        momentsPost: themeCssMoments.value,
+                        appHeader: themeCssHeader.value,
+                        bottomTabs: themeCssTabs.value,
+                        listItem: themeCssListItem.value
+                    }
+                };
+                appState.data.savedThemes.push(newTheme);
+            } else { // bubble
+        const editor = getEl(`${context}-css`);
+        const newBubble = {
+            id: newId('bubble_style'),
+            name: name.trim(),
+            css: editor.value
+        };
+        appState.data.savedBubbles.push(newBubble);
+    }
+            debouncedSaveState();
+            showToast('样式已保存！');
+        });
+
+        loadBtn.addEventListener('click', () => {
+            openLoadStyleModal(type, context);
+        });
+    }
+    
+    setupStyleSaver('us-bubble', 'bubble');
+    setupStyleSaver('gcs-us-bubble', 'bubble');
+    setupStyleSaver('theme', 'theme');
     // --- 全局状态管理 (可序列化) ---
     const DB_KEY = 'EmperorPhoneData_v2';
     const DEFAULT_WALLPAPER_URL = 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302';
@@ -2610,7 +2976,7 @@ return {
         listItem: ''
     }
     },
-    data: { worldBooks: [], archives: [], infos: [] },
+    data: { worldBooks: [], archives: [], infos: [], savedThemes: [], savedBubbles: [] },
     chat: {
     contacts: [],
     emojis: [],
@@ -2643,6 +3009,10 @@ return {
                         loveLetters: [] 
                     },
                     diary: { activeTab: 'secret-diary' }
+                    ,
+meta: {
+    lastUserActivityTimestamp: 0 // Tracks the timestamp of the last user interaction
+}
                     }
     };
     }
@@ -2692,10 +3062,14 @@ return {
                 postContext: {},
                 viewerContext: { items: [], currentIndex: 0 }
         },
+loveLetterTimers: {} // Stores timers for daily letters and replies
+,
+
         videoCallContext: { // Add this new object
             aiIsResponding: false,
             userIsTyping: false
         }
+        
     };
 }
 
@@ -2737,7 +3111,8 @@ return {
                         moments: { ...defaultState.chat.moments, ...(savedState.chat?.moments || {}), profile: { ...defaultState.chat.moments.profile, ...(savedState.chat?.moments?.profile || {}) }, notifications: (savedState.chat?.moments?.notifications || []) }
                     },
                     mailbox: { ...defaultState.mailbox, ...(savedState.mailbox || {}), loveLetters: (savedState.mailbox?.loveLetters || []) },
-                    diary: { ...defaultState.diary, ...(savedState.diary || {}) }
+                    diary: { ...defaultState.diary, ...(savedState.diary || {}) },
+meta: { ...defaultState.meta, ...(savedState.meta || {}) }
                 };
                 if (!appState.beautify.bubbleSettings) appState.beautify.bubbleSettings = defaultState.beautify.bubbleSettings;
                 if (!appState.music.comments) appState.music.comments = {};
@@ -3458,6 +3833,55 @@ function handleMailTabChange(tabId) {
         appState.diary.activeTab = tabId;
         debouncedSaveState();
     }
+    function scheduleLoveLetterChecks() {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        
+        // If the last activity was already today, no need to schedule again.
+        if (appState.meta.lastUserActivityTimestamp >= todayStart) {
+            return;
+        }
+        
+        console.log("First user activity of the day detected. Scheduling love letter checks...");
+        appState.meta.lastUserActivityTimestamp = now.getTime();
+        debouncedSaveState();
+
+        appState.chat.contacts.forEach(contact => {
+            if (contact.isGroup) return;
+
+            const hasSentToday = (contact.lastLetterSent || 0) >= todayStart;
+            
+            if (!hasSentToday) {
+                // Schedule a letter to be sent between 3 to 8 hours from now.
+                const randomDelay = (Math.random() * 5 + 3) * 60 * 60 * 1000; // 3-8 hours in ms
+                console.log(`Scheduling a proactive letter for ${contact.name} in ${Math.round(randomDelay / 3600000)} hours.`);
+                
+                const timerId = setTimeout(() => {
+                    generateAndSendLoveLetter(contact.id);
+                    delete runtimeState.loveLetterTimers[`daily_${contact.id}`];
+                }, randomDelay);
+
+                runtimeState.loveLetterTimers[`daily_${contact.id}`] = timerId;
+            }
+        });
+    }
+
+    function scheduleLoveLetterReply(originalLetterId, recipientCharId) {
+        // Clear any existing reply timer for this specific letter to prevent duplicates
+        if (runtimeState.loveLetterTimers[originalLetterId]) {
+            clearTimeout(runtimeState.loveLetterTimers[originalLetterId]);
+        }
+
+        const randomDelay = (Math.random() * 2 + 1) * 60 * 60 * 1000; // 1-3 hours in ms
+        console.log(`Scheduling a reply from ${recipientCharId} for letter ${originalLetterId} in ${Math.round(randomDelay / 3600000)} hours.`);
+
+        const timerId = setTimeout(() => {
+            generateAndSendLoveLetter(recipientCharId);
+            delete runtimeState.loveLetterTimers[originalLetterId];
+        }, randomDelay);
+
+        runtimeState.loveLetterTimers[originalLetterId] = timerId;
+    }
 async function loadAllCustomFonts() { const existingStyle = document.getElementById('all-custom-fonts-style'); if (existingStyle) existingStyle.remove(); const style = document.createElement('style'); style.id = 'all-custom-fonts-style'; let fontFaceRules = ''; for (const font of appState.beautify.fonts) { const url = await getMediaURL(font.id); if (url) { fontFaceRules += `@font-face { font-family: "${font.name}"; src: url("${url}"); }\n`; } } style.textContent = fontFaceRules; document.head.appendChild(style); }
 function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false, font) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; const fontStyle = isDefault ? '' : `style="font-family: '${fontName}'"`; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span ${fontStyle}>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name, false, font)); }
 function isValidColor(str) { return /^#([0-9A-F]{3}){1,2}$/i.test(str) || /^(rgb|rgba)\(/i.test(str); }
@@ -3619,13 +4043,13 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         const existingStyle = document.getElementById('custom-theme-styles');
         if (existingStyle) existingStyle.remove();
 
-        const customThemes = appState.beautify.customThemes;
-        let finalCss = '';
-        
-        if (customThemes.momentsPost) finalCss += `.moments-post-item .post-item-content { ${customThemes.momentsPost} }\n`;
-        if (customThemes.appHeader) finalCss += `.app-header { ${customThemes.appHeader} }\n`;
-        if (customThemes.bottomTabs) finalCss += `.app-bottom-tabs { ${customThemes.bottomTabs} }\n`;
-        if (customThemes.listItem) finalCss += `.swipe-content { ${customThemes.listItem} }\n`;
+            const customThemes = appState.beautify.customThemes;
+    let finalCss = '';
+
+    finalCss += processAndScopeCss(customThemes.momentsPost, '.moments-post-item .post-item-content');
+    finalCss += processAndScopeCss(customThemes.appHeader, '.app-header');
+    finalCss += processAndScopeCss(customThemes.bottomTabs, '.app-bottom-tabs');
+    finalCss += processAndScopeCss(customThemes.listItem, '.swipe-content');
 
         if (finalCss) {
             const style = document.createElement('style');
@@ -3642,12 +4066,9 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         appState.chat.contacts.forEach(contact => {
             const { bubbleCss } = contact.userSettings;
             if (bubbleCss) {
-                // Prepend the contact-specific selector to each rule in the custom CSS
-                const scopedCss = bubbleCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-                    const scopedSelector = selector.split(',').map(s => `#single-chat-screen[data-contact-id="${contact.id}"] ${s.trim()}`).join(', ');
-                    return `${scopedSelector} ${body}`;
-                });
-                finalCss += scopedCss + '\n';
+                        // Prepend the contact-specific selector to each rule in the custom CSS
+        const scopedCss = processAndScopeCss(bubbleCss, `#single-chat-screen[data-contact-id="${contact.id}"]`);
+        finalCss += scopedCss + '\n';
             }
         });
 
@@ -3670,12 +4091,8 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         const previewStyleTag = getEl('bubble-preview-styles');
 
         const customCss = editor.value;
-        const scopedCss = customCss.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-            const scopedSelector = selector.split(',').map(s => `#${context}-bubble-preview ${s.trim()}`).join(', ');
-            return `${scopedSelector} ${body}`;
-        });
-        
-        previewStyleTag.textContent = scopedCss;
+const scopedCss = processAndScopeCss(customCss, `#${context}-bubble-preview`);
+previewStyleTag.textContent = scopedCss;
 
         const userAvatarId = settings.userSettings.avatarId;
         const userFrameId = settings.userSettings.avatarFrameId;
@@ -3734,13 +4151,12 @@ function updateThemeCssPreview(id) {
         }
     }
 
-    const cssText = `
-        #theme-preview-moments .moments-post-item .post-item-content { ${themeCssMoments.value} }
-        #theme-preview-header .app-header { ${themeCssHeader.value} }
-        #theme-preview-tabs .app-bottom-tabs { ${themeCssTabs.value} }
-        #theme-preview-list-item .swipe-content { ${themeCssListItem.value} }
-    `;
-    styleTag.textContent = cssText;
+    let cssText = '';
+cssText += processAndScopeCss(themeCssMoments.value, '#theme-preview-moments .moments-post-item .post-item-content');
+cssText += processAndScopeCss(themeCssHeader.value, '#theme-preview-header .app-header');
+cssText += processAndScopeCss(themeCssTabs.value, '#theme-preview-tabs .app-bottom-tabs');
+cssText += processAndScopeCss(themeCssListItem.value, '#theme-preview-list-item .swipe-content');
+styleTag.textContent = cssText;
 }
 
     ['moments', 'header', 'tabs', 'list-item'].forEach(id => {
@@ -3785,9 +4201,10 @@ function handleDataTabChange(tabId) {
         worldBookFilterDropdown.classList.remove('visible');
     }
 
-    if (tabId === 'world-book') renderWorldBooks(); 
-    else if (tabId === 'archive') renderArchives(); 
-    else if (tabId === 'info') renderInfos(); 
+    if (tabId === 'world-book') renderWorldBooks();
+else if (tabId === 'archive') renderArchives();
+else if (tabId === 'info') renderInfos();
+else if (tabId === 'styles') renderStylesTab(); 
 }
 dataAppTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#data-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#data-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleDataTabChange(tabId); } });
 dataActionBtn.addEventListener('click', () => { const activeTab = query('#data-app-screen .tab-link.active').dataset.tab; const typeMap = { 'world-book': 'worldBook', 'archive': 'archive', 'info': 'info' }; openDataEditor(typeMap[activeTab]); });
@@ -5834,7 +6251,93 @@ gcsManageMembersConfirmBtn.addEventListener('click', () => { const { type, selec
 function handleGcsMemberLongPress(memberId) { const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = runtimeState.tempChatSettings.groupSettings.owner === 'user'; if (memberId === 'user') return; runtimeState.gcsMemberActionContext.memberId = memberId; const memberName = runtimeState.tempChatSettings.groupSettings.members[memberId].nickname; gcsMemberActionTitle.textContent = `管理成员: ${memberName}`; let options = []; if (userIsOwner) { if (memberId !== owner) { options.push({ text: '转让群主', value: 'transfer' }); if (admins.includes(memberId)) { options.push({ text: '撤销管理员', value: 'demote' }); } else { options.push({ text: '设为管理员', value: 'promote' }); } } } else { if (memberId === owner) { options.push({ text: '夺回群主', value: 'reclaim', isDanger: true }); } } if (options.length === 0) { showToast('无可用操作', 'info'); return; } gcsMemberActionBody.innerHTML = options.map(opt => `<button class="settings-button ${opt.isDanger ? 'danger-btn' : 'secondary'}" data-action="${opt.value}">${opt.text}</button>`).join(''); gcsMemberActionModal.classList.add('visible'); }
 gcsMemberActionCancelBtn.addEventListener('click', () => gcsMemberActionModal.classList.remove('visible'));
 gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.closest('button'); if (!btn) return; const action = btn.dataset.action; const memberId = runtimeState.gcsMemberActionContext.memberId; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; const memberName = memberSettings.nickname; const userName = runtimeState.tempChatSettings.userSettings.name; switch (action) { case 'transfer': if (confirm(`确定要将群主转让给 ${memberName} 吗？你将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = memberId; runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== 'user'); addSystemNotification(runtimeState.currentChatId, `'${userName}' 将群主转让给了 '${memberName}'`, false); } break; case 'reclaim': if (confirm(`确定要从 ${memberName} 处夺回群主身份吗？对方将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = 'user'; if (memberId) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); } addSystemNotification(runtimeState.currentChatId, `'${userName}' 从 '${memberName}' 处夺回了群主身份`, false); } break; case 'promote': if (confirm(`确定要将 ${memberName} 设为管理员吗？`)) { if (!runtimeState.tempChatSettings.groupSettings.admins.includes(memberId)) { runtimeState.tempChatSettings.groupSettings.admins.push(memberId); } addSystemNotification(runtimeState.currentChatId, `'${memberName}' 已被设为管理员`, false); } break; case 'demote': if (confirm(`确定要撤销 ${memberName} 的管理员身份吗？`)) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); addSystemNotification(runtimeState.currentChatId, `'${memberName}' 的管理员身份已被撤销`, false); } break; } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
+function processAndScopeCss(cssString, scopeSelector) {
+    if (!cssString || !scopeSelector) {
+        return cssString || '';
+    }
 
+    let globalStyles = '';
+    let rulesToScope = cssString;
+
+    // --- Part 1: Extract global @-rules that handle nested braces correctly ---
+    const atRuleKeywords = ['@keyframes', '@font-face'];
+    let remainingCss = rulesToScope;
+    rulesToScope = '';
+    let lastIndex = 0;
+
+    while (lastIndex < remainingCss.length) {
+        let firstAtRuleIndex = -1;
+        
+        // Find the earliest occurrence of any of our keywords
+        for (const keyword of atRuleKeywords) {
+            const index = remainingCss.indexOf(keyword, lastIndex);
+            if (index !== -1 && (firstAtRuleIndex === -1 || index < firstAtRuleIndex)) {
+                firstAtRuleIndex = index;
+            }
+        }
+
+        if (firstAtRuleIndex !== -1) {
+            // Add the text before the @-rule to the scopable CSS
+            rulesToScope += remainingCss.substring(lastIndex, firstAtRuleIndex);
+            
+            const openBraceIndex = remainingCss.indexOf('{', firstAtRuleIndex);
+            if (openBraceIndex === -1) {
+                rulesToScope += remainingCss.substring(firstAtRuleIndex); // Malformed rule
+                break;
+            }
+
+            let braceCount = 1;
+            let closeBraceIndex = -1;
+            for (let i = openBraceIndex + 1; i < remainingCss.length; i++) {
+                if (remainingCss[i] === '{') braceCount++;
+                else if (remainingCss[i] === '}') braceCount--;
+                if (braceCount === 0) {
+                    closeBraceIndex = i;
+                    break;
+                }
+            }
+
+            if (closeBraceIndex !== -1) {
+                // Found a complete @-rule block, add it to global styles
+                const atRuleBlock = remainingCss.substring(firstAtRuleIndex, closeBraceIndex + 1);
+                globalStyles += atRuleBlock + '\n';
+                lastIndex = closeBraceIndex + 1;
+            } else {
+                rulesToScope += remainingCss.substring(firstAtRuleIndex); // Unmatched brace
+                break;
+            }
+        } else {
+            rulesToScope += remainingCss.substring(lastIndex); // No more @-rules
+            break;
+        }
+    }
+
+    // --- Part 2: Extract :root rules from the remaining scopable CSS ---
+    const rootRegex = /:root\s*\{[\s\S]*?\}/g;
+    rulesToScope = rulesToScope.replace(rootRegex, (match) => {
+        globalStyles += match + '\n';
+        return '';
+    });
+
+    // --- Part 3: Scope the rest ---
+    const scopedRules = rulesToScope.replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+        if (selector.trim() === '') return '';
+        try {
+            const scopedSelector = selector.split(',')
+                .map(s => {
+                    const trimmed = s.trim();
+                    return trimmed ? `${scopeSelector} ${trimmed}` : '';
+                })
+                .filter(Boolean)
+                .join(', ');
+            return scopedSelector ? `${scopedSelector} ${body}` : '';
+        } catch (e) {
+            return `${scopeSelector} ${selector.trim()} ${body}`;
+        }
+    });
+
+    return globalStyles + '\n' + scopedRules;
+}
 // ===================================================================
 // --- 红包逻辑 ---
 // ===================================================================
@@ -9956,6 +10459,8 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
         return showToast('称呼、标题、正文和落款均不能为空', 'error');
     }
 
+    let newLetterForReplyTrigger = null;
+
     if (mode === 'edit') {
         const letter = appState.mailbox.loveLetters.find(l => l.id === editingId);
         if (!letter) return;
@@ -9987,6 +10492,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             isRead: true, 
         };
         appState.mailbox.loveLetters.push(newLetter);
+        newLetterForReplyTrigger = newLetter; // Mark this letter for reply scheduling
         showToast('回信已保存');
 
     } else { // mode === 'new'
@@ -10006,6 +10512,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             isRead: true,
         };
         appState.mailbox.loveLetters.push(newLetter);
+        newLetterForReplyTrigger = newLetter; // Mark this letter for reply scheduling
         showToast('情书已保存');
     }
 
@@ -10016,22 +10523,15 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
         }
     }
 
-            debouncedSaveState();
-        renderLoveLetterTab();
-        modal.classList.remove('visible');
-        
-        // --- CORE FIX: Trigger AI response after user sends a letter ---
-        if (mode === 'reply' || mode === 'new') {
-            const recipientId = (mode === 'reply') 
-                ? appState.mailbox.loveLetters.find(l => l.id === replyToId)?.senderId
-                : getEl('letter-author-selector').querySelector('.selected')?.dataset.id;
-            
-            if (recipientId) {
-                // Use a short timeout to let the UI close smoothly before AI processing
-                setTimeout(() => triggerAiResponse(recipientId), 500);
-            }
-        }
-    });
+    debouncedSaveState();
+    renderLoveLetterTab();
+    modal.classList.remove('visible');
+    
+    // --- NEW: Schedule a reply from the char ---
+    if (newLetterForReplyTrigger) {
+        scheduleLoveLetterReply(newLetterForReplyTrigger.id, newLetterForReplyTrigger.recipientId);
+    }
+});
     editLoveLetterModal.addEventListener('click', e => {
         const item = e.target.closest('#letter-author-selector .author-selector-item');
         if (item) {
@@ -10055,11 +10555,19 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             } else if (e.target.closest('.delete-letter-btn')) {
                 e.stopPropagation(); // --- 核心修复：阻止事件冒泡 ---
                 if(confirm('确定要永久删除这封情书吗？')) {
-                    appState.mailbox.loveLetters = appState.mailbox.loveLetters.filter(l => l.id !== letterId);
-                    saveState(); // Immediate save for deletion
-                    renderLoveLetterTab();
-                    showToast('情书已删除');
-                }
+    // --- NEW: Clear any pending reply timer for this letter ---
+    if (runtimeState.loveLetterTimers[letterId]) {
+        clearTimeout(runtimeState.loveLetterTimers[letterId]);
+        delete runtimeState.loveLetterTimers[letterId];
+        console.log(`Cancelled reply timer for deleted letter ${letterId}.`);
+    }
+    // --- END NEW ---
+
+    appState.mailbox.loveLetters = appState.mailbox.loveLetters.filter(l => l.id !== letterId);
+    saveState(); // Immediate save for deletion
+    renderLoveLetterTab();
+    showToast('情书已删除');
+}
             } else {
                  openLoveLetter(letterId);
             }
@@ -10160,7 +10668,19 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                     }
                 });
 
-            
+                        // --- Love Letter Daily Scheduler Listener ---
+            let initialActivityDone = false;
+            const activityHandler = () => {
+                if (!initialActivityDone) {
+                    scheduleLoveLetterChecks();
+                    initialActivityDone = true;
+                    // To be safe, remove the listener after first trigger if not needed constantly
+                    // document.removeEventListener('pointerdown', activityHandler);
+                    // document.removeEventListener('keydown', activityHandler);
+                }
+            };
+            document.addEventListener('pointerdown', activityHandler, { once: true });
+            document.addEventListener('keydown', activityHandler, { once: true });
                 // 初始化角标
                 updateMomentsNotificationUI(false);
 
