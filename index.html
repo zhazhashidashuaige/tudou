@@ -1351,6 +1351,10 @@ align-content: start;
                         <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
                     </div>
                     <input type="file" id="import-file-input" style="display: none;">
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+    <button id="optimize-media-btn" class="settings-button secondary">优化媒体存储</button>
+    <button id="recache-media-btn" class="settings-button secondary">重新缓存链接媒体</button>
+</div>
                 </div>
             </div>
             <div class="settings-group">
@@ -3236,6 +3240,8 @@ return {
     fontColor: '#000000',
     icons: {},
     bubbleSettings: { global: {}, specific: {} },
+        mediaSources: {},
+    iconSources: {},
     customThemes: {
         momentsPost: '',
         appHeader: '',
@@ -3243,7 +3249,7 @@ return {
         listItem: ''
     }
     },
-    data: { worldBooks: [], archives: [], infos: [], savedThemes: [], savedBubbles: [] },
+    data: { worldBooks: [], archives: [], infos: [], savedThemes: [], savedBubbles: [], mediaSources: {} },
     chat: {
     contacts: [],
     emojis: [],
@@ -3432,8 +3438,30 @@ meta: { ...defaultState.meta, ...(savedState.meta || {}) }
     async function getMediaFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.get(id); request.onsuccess = () => resolve(request.result ? request.result.data : null); request.onerror = () => reject(request.error); }); }
     async function deleteMediaFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.delete(id); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
     async function getAllMediaFromDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
-    async function clearMediaDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.clear(); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
-    async function getMediaURL(id) { if (!id || id === 'default' || id.startsWith('https://') || id.startsWith('data:')) return id; if (runtimeState.mediaObjectURLs.has(id)) return runtimeState.mediaObjectURLs.get(id); try { const data = await getMediaFromDB(id); if (data) { const blob = (data instanceof Blob) ? data : new Blob([data]); const url = URL.createObjectURL(blob); runtimeState.mediaObjectURLs.set(id, url); return url; } return null; } catch (error) { console.error(`Failed to get media URL for ${id}:`, error); return null; } }
+async function clearMediaDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.clear(); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
+async function getMediaURL(id) {
+// 核心优化：如果ID本身就是URL，直接返回它
+if (!id || id === 'default' || id.startsWith('http') || id.startsWith('data:')) {
+    return id;
+}
+// 检查内存缓存
+if (runtimeState.mediaObjectURLs.has(id)) {
+    return runtimeState.mediaObjectURLs.get(id);
+}
+// 从IndexedDB读取
+try {
+    const data = await getMediaFromDB(id);
+    if (data) {
+        const blob = (data instanceof Blob) ? data : new Blob([data]);
+        const url = URL.createObjectURL(blob);
+        runtimeState.mediaObjectURLs.set(id, url);
+        return url;
+    }
+    return null;
+} catch (error) {
+    console.error(`Failed to get media URL for ${id}:`, error);
+    return null;
+}}
     async function setElementImage(element, id, property = 'backgroundImage') { if (!element) return; const url = await getMediaURL(id); if (url) { if (property === 'src') { element.src = url; } else { element.style.backgroundImage = `url("${url}")`; } } else { if (property === 'src') { element.src = ''; } else { element.style.backgroundImage = 'none'; } } }
 
     // ===================================================================
@@ -3888,7 +3916,8 @@ if (!contact.userSettings.videoBackgroundLibrary) {
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); let meta, url; if (separatorIndex === -1) { url = line.trim(); meta = url.substring(url.lastIndexOf('/') + 1); } else { meta = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.replace(/\.[^/.]+$/, "").split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta; const newSong = { id: newId('song'), title, artist, url, duration: NaN, isLocal: false }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); debouncedSaveState(); } for (const { meta, url } of lrcUrls) { try { const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
+    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); let meta, url; if (separatorIndex === -1) { url = line.trim(); meta = url.substring(url.lastIndexOf('/') + 1); } else { meta = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.replace(/\.[^/.]+$/, "").split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';             const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta;
+            const newSong = { id: newId('song'), title, artist, url, duration: NaN, isLocal: false, sourceUrl: url }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); debouncedSaveState(); } for (const { meta, url } of lrcUrls) { try { const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
     function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const reader = new FileReader(); reader.onload = (event) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: newId('song'), title, artist, url: event.target.result, duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; if (addedCount === audioFiles.length) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); debouncedSaveState(); } }; reader.readAsDataURL(file); }); lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); }
     function normalizeStringForMatching(str) { if (!str) return ''; return decodeURIComponent(str).toLowerCase().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').replace(/['".,]/g, '').replace(/\s+/g, ' ').trim(); }
     function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeStringForMatching(baseName); const songMap = new Map(); appState.music.playlist.forEach(s => { const songBaseName = normalizeStringForMatching(`${s.artist} - ${s.title}`); songMap.set(songBaseName, s.id); }); const matchingSongId = songMap.get(normalizedBaseName); if (matchingSongId) { appState.music.lyrics[matchingSongId] = lrcData; showToast(`歌词已匹配到: ${appState.music.playlist.find(s=>s.id === matchingSongId).title}`); debouncedSaveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); console.log("Failed to match lyrics. Base name:", normalizedBaseName, "Available songs:", [...songMap.keys()]); } }
@@ -4300,7 +4329,8 @@ function applyFont(fontName, isInitialLoad = false) { document.documentElement.s
 cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
 uploadFontBtn.addEventListener('click', () => fontFileInput.click());
 fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { for (const file of files) { const newFontId = newId('font'); const name = file.name.replace(/\.[^/.]+$/, ""); await addMediaToDB(newFontId, file); appState.beautify.fonts.push({ id: newFontId, name }); } await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
-confirmAddFontUrlBtn.addEventListener('click', async () => { const btn = confirmAddFontUrlBtn; if (btn.disabled) return; btn.disabled = true; btn.textContent = '处理中...'; try { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; let name, url; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { name = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } else { url = line.trim(); name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, ""); } if (name && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newFontId = newId('font'); await addMediaToDB(newFontId, blob); appState.beautify.fonts.push({ id: newFontId, name }); addedCount++; } } if (addedCount > 0) { await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; } catch (error) { console.error("Error adding font from URL:", error); showToast("添加字体失败", "error"); } finally { btn.disabled = false; btn.textContent = '添加URL'; } });
+confirmAddFontUrlBtn.addEventListener('click', async () => { const btn = confirmAddFontUrlBtn; if (btn.disabled) return; btn.disabled = true; btn.textContent = '处理中...'; try { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; let name, url; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { name = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } else { url = line.trim(); name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, ""); } if (name && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newFontId = newId('font');             await addMediaToDB(newFontId, blob);
+            appState.beautify.fonts.push({ id: newFontId, name, sourceUrl: url }); appState.beautify.fonts.push({ id: newFontId, name }); addedCount++; } } if (addedCount > 0) { await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; } catch (error) { console.error("Error adding font from URL:", error); showToast("添加字体失败", "error"); } finally { btn.disabled = false; btn.textContent = '添加URL'; } });
 const iconNameMap = {
         // System & Apps
         'status-battery-default': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料',
@@ -4392,7 +4422,10 @@ iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon
 cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
 uploadIconBtn.addEventListener('click', () => iconFileInput.click());
 iconFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const newIconId = newId('icon'); await addMediaToDB(newIconId, file); applyIconChange(replaceIconIdInput.value, newIconId); iconFileInput.value = ''; } });
-confirmReplaceIconUrlBtn.addEventListener('click', async () => { const url = iconUrlInput.value.trim(); if (url) { const response = await fetch(url); const blob = await response.blob(); const newIconId = newId('icon'); await addMediaToDB(newIconId, blob); applyIconChange(replaceIconIdInput.value, newIconId); iconUrlInput.value = ''; } });
+confirmReplaceIconUrlBtn.addEventListener('click', async () => { const url = iconUrlInput.value.trim(); if (url) { const response = await fetch(url); const blob = await response.blob(); const newIconId = newId('icon');        await addMediaToDB(newIconId, blob);
+        // 附加sourceUrl到appState.beautify.icons的一个隐藏属性中
+        if(!appState.beautify.iconSources) appState.beautify.iconSources = {};
+        appState.beautify.iconSources[newIconId] = url; applyIconChange(replaceIconIdInput.value, newIconId); iconUrlInput.value = ''; } });
 restoreIconBtn.addEventListener('click', async () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { const oldMediaId = appState.beautify.icons[iconId]; if (oldMediaId) await deleteMediaFromDB(oldMediaId); delete appState.beautify.icons[iconId]; applyIconChange(iconId, null, false, true); debouncedSaveState(); renderIcons(); showToast('图标已还原'); replaceIconModal.classList.remove('visible'); } });
 async function applyIconChange(iconId, mediaId, isInitialLoad = false, isRestoring = false) { if (!isRestoring) { appState.beautify.icons[iconId] = mediaId; } queryAll(`[data-icon-id="${iconId}"]`).forEach(async targetEl => { if (targetEl) { if (isRestoring) { targetEl.innerHTML = runtimeState.originalIconContent[iconId]; } else { const img = targetEl.querySelector('img') || document.createElement('img'); if (!targetEl.querySelector('img')) { targetEl.innerHTML = ''; targetEl.appendChild(img); } await setElementImage(img, mediaId, 'src'); } } }); if (!isInitialLoad) { if (!isRestoring) { debouncedSaveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } } }
 const bubbleNameMap = { 'global_bubble': '全局气泡', 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'modal-restore-icon': '弹窗 还原图标', 'modal-cancel-icon': '弹窗 取消图标', 'font-color-btn': '字体 颜色按钮', 'comment-send-btn': '评论 发送', 'comment-reply-send': '评论 回复发送', 'emoji-close': '表情 关闭', 'emoji-add': '表情 添加', 'cs-avatar-lib': '设置 Char头像库', 'cs-frame-lib': '设置 Char头像框库', 'cs-chat-bg': '设置 Char聊天背景', 'cs-save-persona': '设置 Char保存资料', 'cs-load-persona': '设置 Char读取资料', 'cs-clear-history': '设置 Char清空记录', 'cs-delete-friend': '设置 Char删除好友', 'cs-restore': '设置 Char还原更改', 'us-avatar-lib': '设置 User头像库', 'us-frame-lib': '设置 User头像框库', 'us-video-bg': '设置 User视频背景', 'us-save-persona': '设置 User保存资料', 'us-load-persona': '设置 User读取资料', 'bubble-upload-img': '气泡 上传图片', 'bubble-save': '气泡 保存', 'bubble-restore': '气泡 还原', 'bubble-cancel': '气泡 取消', 'data-upload-avatar': '资料 上传头像', 'data-add-avatar-url': '资料 添加头像URL', 'data-cancel': '资料 取消', 'data-save': '资料 保存', 'contact-add-cancel': '联系人 添加取消', 'contact-add-confirm': '联系人 添加确认', 'emoji-upload-file': '表情 上传文件', 'emoji-add-url': '表情 添加URL', 'emoji-add-cancel': '表情 添加取消', 'pat-cancel': '拍一拍 取消', 'pat-confirm': '拍一拍 确认', 'status-edit-cancel': '状态编辑 取消', 'status-edit-confirm': '状态编辑 确认', 'voice-cancel': '语音 取消', 'voice-confirm': '语音 确认', 'camera-cancel': '拍照 取消', 'camera-confirm': '拍照 确认', 'link-cancel': '链接 取消', 'link-confirm': '链接 确认', 'rp-cancel': '红包 取消', 'rp-confirm': '红包 确认', 'grp-cancel': '群红包 取消', 'grp-confirm': '群红包 确认', 'comment-edit-cancel': '评论编辑 取消', 'comment-edit-save': '评论编辑 保存', 'view-content-close': '查看内容 关闭', 'msg-edit-cancel': '消息编辑 取消', 'msg-edit-save': '消息编辑 保存', 'lib-upload': '库 上传', 'lib-add-url': '库 添加URL', 'lib-delete': '库 删除', 'lib-close': '库 关闭', 'persona-load-cancel': '资料读取 取消', 'gcs-avatar-lib': '群设置 头像库', 'gcs-chat-bg': '群设置 背景', 'gcs-clear-history': '群设置 清空记录', 'gcs-mute-all': '群设置 全体禁言', 'gcs-disband': '群设置 解散群聊', 'gcs-us-avatar-lib': '群我的设置 头像库', 'gcs-us-frame-lib': '群我的设置 头像框', 'gcs-us-video-bg': '群我的设置 视频背景', 'gcs-us-save-persona': '群我的设置 保存资料', 'gcs-us-load-persona': '群我的设置 读取资料', 'gcs-member-avatar-lib': '群成员设置 头像库', 'gcs-member-frame-lib': '群成员设置 头像框', 'gcs-member-save-persona': '群成员设置 保存资料', 'gcs-member-load-persona': '群成员设置 读取资料', 'gcs-member-cancel': '群成员设置 取消', 'gcs-member-save': '群成员设置 保存', 'gcs-manage-cancel': '群管理 取消', 'gcs-manage-confirm': '群管理 确认', 'gcs-member-action-cancel': '群成员操作 取消' };
@@ -4817,7 +4850,9 @@ function renderWorldBookFilterDropdown() {
     });
 dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
 dataAvatarFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, file); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); dataAvatarFileInput.value = ''; } });
-dataAddAvatarUrlBtn.addEventListener('click', async () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, blob); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); } else if (url) { showToast('无效的URL', 'error'); } });
+dataAddAvatarUrlBtn.addEventListener('click', async () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newAvatarId = newId('data_avatar');         await addMediaToDB(newAvatarId, blob);
+        if(!appState.data.mediaSources) appState.data.mediaSources = {};
+        appState.data.mediaSources[newAvatarId] = url; dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); } else if (url) { showToast('无效的URL', 'error'); } });
 function escapeHTML(str) { 
     if (typeof str !== 'string') return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); 
@@ -6538,7 +6573,9 @@ libraryDeleteBtn.addEventListener('click', async () => {
         libraryFileInput.accept = 'image/*,.zip';
         libraryFileInput.click();
     });
-libraryAddUrlBtn.addEventListener('click', async () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; } else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; } else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; } else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; } else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; } for (const url of urlArray) { const response = await fetch(url); const blob = await response.blob(); const newLibId = newId('lib'); await addMediaToDB(newLibId, blob); lib.push(newLibId); } debouncedSaveState(); renderLibraryGrid(); } } });
+libraryAddUrlBtn.addEventListener('click', async () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; } else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; } else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; } else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; } else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; } for (const url of urlArray) { const response = await fetch(url); const blob = await response.blob(); const newLibId = newId('lib');             await addMediaToDB(newLibId, blob);
+            if(!appState.beautify.mediaSources) appState.beautify.mediaSources = {};
+            appState.beautify.mediaSources[newLibId] = url; lib.push(newLibId); } debouncedSaveState(); renderLibraryGrid(); } } });
 libraryFileInput.addEventListener('change', async (e) => {
         const files = e.target.files;
         if (files.length === 0) return;
@@ -11791,6 +11828,95 @@ function showIncomingCallUI(contactId) {
 
     // --- END ADDED ---
 init();
+
+// --- 新增：媒体优化功能 ---
+getEl('optimize-media-btn').addEventListener('click', async () => {
+    if (!confirm('【警告】此操作会将所有通过URL添加的媒体文件从本地删除，并直接引用原始链接。\n\n优点：极大节省本地存储空间。\n缺点：需要网络才能显示，且若原始链接失效则媒体丢失。\n\n确定要继续吗？')) {
+        return;
+    }
+    showToast('正在扫描和优化媒体库...', 'info');
+    let optimizedCount = 0;
+    const tasks = [];
+
+    // 优化音乐
+    appState.music.playlist.forEach(song => {
+        if (song.sourceUrl && song.url.startsWith('song_')) {
+            tasks.push(deleteMediaFromDB(song.url).then(() => {
+                song.url = song.sourceUrl;
+                optimizedCount++;
+            }));
+        }
+    });
+    
+    // 优化字体
+    appState.beautify.fonts.forEach(font => {
+        if (font.sourceUrl && font.id.startsWith('font_')) {
+            tasks.push(deleteMediaFromDB(font.id).then(() => {
+                font.id = font.sourceUrl;
+                optimizedCount++;
+            }));
+        }
+    });
+
+    // 优化通用媒体库
+    for(const [id, url] of Object.entries(appState.beautify.mediaSources || {})) {
+        tasks.push(deleteMediaFromDB(id));
+        // 查找并替换所有使用此ID的地方
+        appState.chat.userProfile.avatarLibrary = appState.chat.userProfile.avatarLibrary.map(i => i === id ? url : i);
+        appState.chat.userProfile.avatarFrameLibrary = appState.chat.userProfile.avatarFrameLibrary.map(i => i === id ? url : i);
+        appState.chat.contacts.forEach(c => {
+             if (c.userSettings && c.userSettings.avatarLibrary) c.userSettings.avatarLibrary = c.userSettings.avatarLibrary.map(i => i === id ? url : i);
+             if (c.charSettings && c.charSettings.avatarLibrary) c.charSettings.avatarLibrary = c.charSettings.avatarLibrary.map(i => i === id ? url : i);
+        });
+        optimizedCount++;
+    }
+    appState.beautify.mediaSources = {}; // 清空源
+
+    await Promise.all(tasks);
+    debouncedSaveState();
+    showToast(`优化完成！共处理了 ${optimizedCount} 个媒体文件。`, 'info');
+    // 刷新应用以应用更改
+    setTimeout(() => window.location.reload(), 1500);
+});
+
+getEl('recache-media-btn').addEventListener('click', async () => {
+    if (!confirm('此操作将重新下载所有已优化的链接媒体到本地，会增加存储占用，但能确保离线可用性。确定吗？')) {
+        return;
+    }
+    showToast('开始重新缓存，请保持网络通畅...', 'info');
+    let recachedCount = 0;
+    const tasks = [];
+
+    const processItem = async (item, idField, urlField, prefix) => {
+        if (item[urlField] && item[urlField].startsWith('http')) {
+            try {
+                const response = await fetch(item[urlField]);
+                const blob = await response.blob();
+                const newId = newId(prefix);
+                await addMediaToDB(newId, blob);
+                item[idField] = newId;
+                item[urlField] = newId; // 确保所有相关字段都更新
+                recachedCount++;
+            } catch (e) { console.error(`Failed to recache ${item[urlField]}:`, e); }
+        }
+    };
+    
+    for (const song of appState.music.playlist) {
+        if(song.sourceUrl && song.url.startsWith('http')) {
+            tasks.push(processItem(song, 'url', 'url', 'song'));
+        }
+    }
+    for (const font of appState.beautify.fonts) {
+        if(font.sourceUrl && font.id.startsWith('http')) {
+            tasks.push(processItem(font, 'id', 'id', 'font'));
+        }
+    }
+    
+    await Promise.all(tasks);
+    debouncedSaveState();
+    showToast(`重新缓存完成！共处理了 ${recachedCount} 个文件。`, 'info');
+    setTimeout(() => window.location.reload(), 1500);
+});
 });
 
 </script>
