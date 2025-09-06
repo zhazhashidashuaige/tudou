@@ -1449,7 +1449,14 @@ align-content: start;
                         <textarea id="theme-css-list-item" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-list-item"></div>
+                        
+                    </div>                <div class="settings-group">
+                    <div class="group-title">情书信纸</div>
+                    <div class="group-content">
+                    <textarea id="theme-css-letter" class="theme-css-editor" rows="6"></textarea>
                     </div>
+                    <div class="theme-css-preview" id="theme-preview-letter"></div>
+                </div>
                     <div class="settings-group">
                                         <div class="button-group">
                     <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
@@ -2973,6 +2980,10 @@ function openEditStyleModal(styleId, styleType) {
                 <label>通用列表卡片</label>
                 <textarea id="edit-theme-css-list-item" class="theme-css-editor" rows="4">${theme.styles.listItem || ''}</textarea>
             </div>
+            <div class="form-group">
+            <label>情书信纸</label>
+            <textarea id="edit-theme-css-letter" class="theme-css-editor" rows="4">${theme.styles.loveLetter || ''}</textarea>
+        </div>
         `;
     } else { // bubble
         const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
@@ -3008,6 +3019,7 @@ getEl('save-edit-style-btn').addEventListener('click', () => {
             theme.name = newName;
             theme.styles.momentsPost = getEl('edit-theme-css-moments').value;
             theme.styles.appHeader = getEl('edit-theme-css-header').value;
+                theme.styles.loveLetter = getEl('edit-theme-css-letter').value;
             theme.styles.bottomTabs = getEl('edit-theme-css-tabs').value;
             theme.styles.listItem = getEl('edit-theme-css-list-item').value;
         }
@@ -3055,6 +3067,7 @@ getEl('save-edit-style-btn').addEventListener('click', () => {
             if (theme) {
                 themeCssMoments.value = theme.styles.momentsPost || '';
                 themeCssHeader.value = theme.styles.appHeader || '';
+                        getEl('theme-css-letter').value = theme.styles.loveLetter || '';
                 themeCssTabs.value = theme.styles.bottomTabs || '';
                 themeCssListItem.value = theme.styles.listItem || '';
                 ['moments', 'header', 'tabs', 'list-item'].forEach(id => updateThemeCssPreview(id));
@@ -3087,6 +3100,7 @@ getEl('save-edit-style-btn').addEventListener('click', () => {
                     styles: {
                         momentsPost: themeCssMoments.value,
                         appHeader: themeCssHeader.value,
+                                        loveLetter: getEl('theme-css-letter').value,
                         bottomTabs: themeCssTabs.value,
                         listItem: themeCssListItem.value
                     }
@@ -3893,7 +3907,7 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
 function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none';    if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } else if (tabId === 'theme') { 
     titleEl.textContent = '主题'; 
     renderThemeEditor(); 
-    ['moments', 'header', 'tabs', 'list-item'].forEach(id => updateThemeCssPreview(id));
+    ['moments', 'header', 'tabs', 'list-item', 'letter'].forEach(id => updateThemeCssPreview(id));
 } }
 beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleBeautifyTabChange(tabId); } });
 beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (activeTab === 'wallpaper') { wallpaperFileInput.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
@@ -4238,7 +4252,8 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     momentsPost: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #ffffff;\n@font-family: default;\n@font-size: 15px;\n@color: #000000;\n\n/* 在下方输入自定义CSS */\n.post-header {\n  padding-bottom: 5px;\n}',
     appHeader: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
     bottomTabs: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
-    listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}'
+    listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}',
+    loveLetter: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f4f0e8;\n@font-family: KaiTi;\n@font-size: 17px;\n@color: #333333;\n\n/* 在下方输入自定义CSS */\n.letter-signature {\n  text-align: right;\n}'
     };
 
     function applyCustomThemes() {
@@ -4251,6 +4266,7 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         momentsPost: '.moments-post-item .post-item-content',
         appHeader: '.app-header',
         bottomTabs: '.app-bottom-tabs',
+                loveLetter: '#love-letter-viewer',
         listItem: '.swipe-content'
     };
 
@@ -4380,6 +4396,7 @@ border-bottom-left-radius: 4px;
     themeCssMoments.value = themes.momentsPost || defaultThemeStyles.momentsPost;
     themeCssHeader.value = themes.appHeader || defaultThemeStyles.appHeader;
     themeCssTabs.value = themes.bottomTabs || defaultThemeStyles.bottomTabs;
+        getEl('theme-css-letter').value = themes.loveLetter || defaultThemeStyles.loveLetter;
     themeCssListItem.value = themes.listItem || defaultThemeStyles.listItem;
 }
 function updateThemeCssPreview(id) {
@@ -4391,6 +4408,7 @@ function updateThemeCssPreview(id) {
         const previewHTML = {
             moments: `<div class="moments-post-item"><div class="post-item-content"><div class="post-header"><div class="post-avatar" style="background-color:#ccc"></div><div class="post-author-info"><div class="post-author-name">预览用户</div><div class="post-timestamp">刚刚</div></div></div><div class="post-content-text">这是一个预览动态...</div></div></div>`,
             header: `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`,
+                    letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 10px; font-size: 10px; line-height: 1.5; color: #333; background-color: #f4f0e8;"><p>亲爱的...</p><p>这是信件内容预览...</p><div class="letter-signature" style="text-align: right; margin-top: 1em;"><span>签名</span></div></div>`,
             tabs: `<div class="app-bottom-tabs"><div class="tab-link active">标签1</div><div class="tab-link">标签2</div><div class="tab-link">标签3</div></div>`,
             'list-item': `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`
         };
@@ -4400,6 +4418,7 @@ function updateThemeCssPreview(id) {
     const modules = {
         moments: { editor: themeCssMoments, scope: '#theme-preview-moments .moments-post-item .post-item-content' },
         header: { editor: themeCssHeader, scope: '#theme-preview-header .app-header' },
+            letter: { editor: getEl('theme-css-letter'), scope: '#theme-preview-letter #love-letter-viewer-preview' },
         tabs: { editor: themeCssTabs, scope: '#theme-preview-tabs .app-bottom-tabs' },
         'list-item': { editor: themeCssListItem, scope: '#theme-preview-list-item .swipe-content' }
     };
@@ -4441,13 +4460,14 @@ function updateThemeCssPreview(id) {
     styleTag.textContent = finalPreviewCss;
 }
 
-    ['moments', 'header', 'tabs', 'list-item'].forEach(id => {
+    ['moments', 'header', 'tabs', 'list-item', 'letter'].forEach(id => {
         getEl(`theme-css-${id}`).addEventListener('input', () => updateThemeCssPreview(id));
     });
     themeApplyBtn.addEventListener('click', () => {
         if (confirm('确定要应用这些自定义样式吗？不正确的CSS代码可能导致页面显示异常。')) {
             appState.beautify.customThemes.momentsPost = themeCssMoments.value;
             appState.beautify.customThemes.appHeader = themeCssHeader.value;
+                appState.beautify.customThemes.loveLetter = getEl('theme-css-letter').value;
             appState.beautify.customThemes.bottomTabs = themeCssTabs.value;
             appState.beautify.customThemes.listItem = themeCssListItem.value;
             debouncedSaveState();
@@ -4458,7 +4478,7 @@ function updateThemeCssPreview(id) {
 
     themeRestoreBtn.addEventListener('click', () => {
         if (confirm('确定要还原所有模块的默认样式吗？此操作不可撤销。')) {
-            appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '' };
+            appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '', loveLetter: '' };
             debouncedSaveState();
             applyCustomThemes();
             renderThemeEditor();
@@ -4645,7 +4665,7 @@ chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
 confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
-function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime); messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; li.dataset.isGroup = contact.isGroup; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let avatarHTML; const unreadBadgeHTML = contact.unreadCount > 0 ? `<div class="unread-badge">${contact.unreadCount}</div>` : ''; const shakeClass = contact.needsShake ? 'shake' : ''; if (contact.isGroup) { const groupAvatarId = contact.groupSettings.avatarId; if (groupAvatarId) { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${groupAvatarId}">${unreadBadgeHTML}</div>`; } else { const memberAvatarIds = ['user', ...contact.members].slice(0, 4).map(id => { if (id === 'user') return appState.chat.userProfile.avatarId; return appState.chat.contacts.find(c => c.id === id)?.charSettings.avatarId || ''; }).filter(Boolean); const puzzlePieces = memberAvatarIds.map(avatarId => `<div class="puzzle-piece" data-avatar-id="${avatarId}"></div>`).join(''); avatarHTML = `<div class="contact-avatar group-puzzle ${shakeClass}">${puzzlePieces}${unreadBadgeHTML}</div>`; } } else { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${contact.charSettings.avatarId}">${unreadBadgeHTML}</div>`; } const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length + 1})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`; li.innerHTML = ` <div class="contact-item-content"> ${avatarHTML} <div class="contact-info"> <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name)}</div> <div class="contact-last-msg">${contact.lastMessage || ''}</div> </div> <div class="contact-meta"> <div class="contact-time">${time}</div> ${metaHTML} </div> </div> <div class="contact-item-actions"> <div class="delete-action">删除</div> </div>`; messageListEl.appendChild(li); li.querySelectorAll('[data-avatar-id]').forEach(el => { const id = el.dataset.avatarId; if (id.startsWith('https')) { el.style.backgroundImage = `url(${id})`; } else { setElementImage(el, id); } }); if (contact.needsShake) { setTimeout(() => { const avatarEl = li.querySelector('.contact-avatar'); if (avatarEl) avatarEl.classList.remove('shake'); contact.needsShake = false; debouncedSaveState(); }, 500); } }); }
+function renderMessageList() { appState.chat.contacts.sort((a, b) => b.lastMessageTime - a.lastMessageTime); messageListEl.innerHTML = ''; if (appState.chat.contacts.length === 0) { messageListEl.innerHTML = '<li style="padding: 20px; text-align: center; color: #888;">暂无联系人，点击右上角+添加</div>'; return; } appState.chat.contacts.forEach(contact => { const li = document.createElement('li'); li.className = 'contact-list-item'; li.dataset.id = contact.id; li.dataset.isGroup = contact.isGroup; const time = new Date(contact.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let avatarHTML; const unreadBadgeHTML = contact.unreadCount > 0 ? `<div class="unread-badge">${contact.unreadCount}</div>` : ''; const shakeClass = contact.needsShake ? 'shake' : ''; if (contact.isGroup) { const groupAvatarId = contact.groupSettings.avatarId; if (groupAvatarId) { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${groupAvatarId}">${unreadBadgeHTML}</div>`; } else { const memberAvatarIds = ['user', ...contact.members].slice(0, 4).map(id => { if (id === 'user') return appState.chat.userProfile.avatarId; return appState.chat.contacts.find(c => c.id === id)?.charSettings.avatarId || ''; }).filter(Boolean); const puzzlePieces = memberAvatarIds.map(avatarId => `<div class="puzzle-piece" data-avatar-id="${avatarId}"></div>`).join(''); avatarHTML = `<div class="contact-avatar group-puzzle ${shakeClass}">${puzzlePieces}${unreadBadgeHTML}</div>`; } } else { avatarHTML = `<div class="contact-avatar ${shakeClass}" data-avatar-id="${contact.charSettings.avatarId}">${unreadBadgeHTML}</div>`; } const statusIndicator = `<div class="status-indicator ${contact.status}"></div>`; const metaHTML = contact.isGroup ? `<span>(${contact.members.length + 1})</span>` : `<div class="contact-status">${statusIndicator} ${statusMap[contact.status] || '未知'}</div>`;         li.innerHTML = ` <div class="contact-item-content swipe-content"> ${avatarHTML} <div class="contact-info"> <div class="contact-name">${contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name)}</div> <div class="contact-last-msg">${contact.lastMessage || ''}</div> </div> <div class="contact-meta"> <div class="contact-time">${time}</div> ${metaHTML} </div> </div> <div class="contact-item-actions"> <div class="delete-action">删除</div> </div>`; messageListEl.appendChild(li); li.querySelectorAll('[data-avatar-id]').forEach(el => { const id = el.dataset.avatarId; if (id.startsWith('https')) { el.style.backgroundImage = `url(${id})`; } else { setElementImage(el, id); } }); if (contact.needsShake) { setTimeout(() => { const avatarEl = li.querySelector('.contact-avatar'); if (avatarEl) avatarEl.classList.remove('shake'); contact.needsShake = false; debouncedSaveState(); }, 500); } }); }
 function enterContactSelectionMode(item) { if (item.dataset.isGroup === 'true') { showToast('不能选择群组加入新群聊', 'error'); return; } chatAppScreen.classList.add('selection-mode'); chatListBackBtn.textContent = '取消'; chatListActionBtn.textContent = '建群'; chatListActionBtn.classList.add('small'); item.classList.add('selected'); runtimeState.contactSelection.push(item.dataset.id); }
 function exitContactSelectionMode() { chatAppScreen.classList.remove('selection-mode'); chatListBackBtn.textContent = '< 返回'; chatListActionBtn.textContent = '+'; chatListActionBtn.classList.remove('small'); queryAll('.contact-list-item.selected').forEach(i => i.classList.remove('selected')); runtimeState.contactSelection = []; }
 function createGroup(name, memberIds) { const members = memberIds.map(id => appState.chat.contacts.find(c => c.id === id)); const newGroup = { id: newId('group'), name: name, avatarId: '', lastMessage: '群聊已创建', lastMessageTime: Date.now(), isGroup: true, members: memberIds, conversation: [] }; initializeContactSettings(newGroup); const memberNames = members.map(m => `'${m.name}'`).join(', '); addSystemNotification(newGroup.id, `'${appState.chat.userProfile.name}' 邀请 ${memberNames} 加入群聊`, true); appState.chat.contacts.unshift(newGroup); saveState(); renderMessageList(); exitContactSelectionMode(); }
