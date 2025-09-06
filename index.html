@@ -1319,6 +1319,7 @@ align-content: start;
                 <div class="app-icon"><div class="icon" data-icon-id="app-pet"><i class="fa-solid fa-paw"></i></div><span class="label">桌宠</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-game"><i class="fa-solid fa-gamepad"></i></div><span class="label">游戏</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-forum"><i class="fa-solid fa-blog"></i></div><span class="label">论坛</span></div>
+                                <div class="app-icon" id="assets-app-btn"><div class="icon" data-icon-id="app-assets"><i class="fa-solid fa-building-columns"></i></div><span class="label">资产</span></div>
             </div>
         </div>
 
@@ -1868,6 +1869,7 @@ align-content: start;
     <div id="view-content-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="view-content-title"></h3><div class="modal-body" id="view-content-body"></div><div class="modal-actions"><button id="close-view-content-btn" class="cancel-btn" data-bubble-id="view-content-close">关闭</button></div></div></div>
     <div id="edit-message-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title">编辑消息</h3><div class="modal-body"><input type="hidden" id="editing-message-id"><div class="form-group"><label>消息类型</label><div id="edit-message-type-group" class="radio-group"></div></div><div id="edit-message-inputs-container"></div></div><div class="modal-actions row"><button id="cancel-edit-message-btn" class="cancel-btn" data-bubble-id="msg-edit-cancel">取消</button><button id="save-edit-message-btn" class="confirm-btn" data-bubble-id="msg-edit-save">保存</button></div></div></div>
     <div id="library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="library-modal-title">库</h3><div class="modal-body"><div id="library-modal-preview-area"></div><div class="button-group" style="margin-bottom: 15px;"><button id="library-upload-btn" class="settings-button" data-bubble-id="lib-upload">上传</button><button id="library-add-url-btn" class="settings-button" data-bubble-id="lib-add-url">添加URL</button></div><div id="library-grid" class="library-grid"></div><input type="file" id="library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="library-close-btn" class="cancel-btn" data-bubble-id="lib-close">关闭</button><button id="library-mode-toggle-btn" class="cancel-btn">删除</button><button id="library-delete-btn" class="danger-btn" style="display:none;" data-bubble-id="lib-delete">确认删除</button></div></div></div>
+        <div id="background-library-modal" class="modal-overlay"><div class="modal-content library-modal"><h3 class="modal-title" id="background-library-modal-title">选择背景</h3><div class="modal-body"><div class="button-group" style="margin-bottom: 15px;"><button id="background-library-upload-btn" class="settings-button">上传</button><button id="background-library-add-url-btn" class="settings-button">添加URL</button></div><div id="background-library-grid" class="library-grid"></div><input type="file" id="background-library-file-input" style="display:none" multiple></div><div class="modal-actions"><button id="background-library-close-btn" class="cancel-btn">关闭</button><button id="background-library-mode-toggle-btn" class="cancel-btn">删除</button><button id="background-library-delete-btn" class="danger-btn" style="display:none;">确认删除</button></div></div></div>
     <div id="load-persona-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-persona-title">读取资料</h3><div class="modal-body" id="load-persona-list"></div><div class="modal-actions"><button id="load-persona-cancel-btn" class="cancel-btn" data-bubble-id="persona-load-cancel">取消</button></div></div></div>
     <div id="load-style-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="load-style-title">读取样式</h3><div class="modal-body" id="load-style-list"></div><div class="modal-actions"><button id="load-style-cancel-btn" class="cancel-btn">取消</button></div></div></div>
     <div id="gcs-member-modal" class="modal-overlay"><div class="modal-content"><h3 class="modal-title" id="gcs-member-modal-title">成员设置</h3><div class="modal-body"><input type="hidden" id="gcs-editing-member-id"><div class="chat-settings-layout"><div class="chat-settings-main"><div class="form-group"><label>群名片</label><input type="text" id="gcs-member-nickname"></div><div class="chat-settings-section"><div class="world-book-header"><label>关联世界书 (仅对该成员生效)</label><div id="gcs-member-world-book-group-selector" class="wb-group-selector"><button class="wb-group-selector-btn">选择分组</button><div class="wb-group-dropdown"></div></div></div><div id="gcs-member-world-book-list-container" class="world-book-list-container"><ul id="gcs-member-world-book-list" class="checkbox-list"></ul></div></div></div><div class="chat-settings-side"><div id="gcs-member-avatar" class="chat-settings-avatar"><div class="avatar-frame"></div></div><button id="gcs-member-avatar-library-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-avatar-lib">头像库</button><button id="gcs-member-avatar-frame-btn" class="chat-settings-side-btn" data-bubble-id="gcs-member-frame-lib">头像框</button></div></div><div class="form-group"><label>人设</label><textarea id="gcs-member-persona" class="wide-textarea" rows="5"></textarea></div><div class="button-group"><button id="gcs-member-save-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-save-persona">保存到资料</button><button id="gcs-member-load-persona-btn" class="settings-button secondary" data-bubble-id="gcs-member-load-persona">从资料读取</button></div></div><div class="modal-actions row"><button id="gcs-member-modal-cancel-btn" class="cancel-btn" data-bubble-id="gcs-member-cancel">取消</button><button id="gcs-member-modal-save-btn" class="confirm-btn" data-bubble-id="gcs-member-save">保存</button></div></div></div>
@@ -3488,15 +3490,18 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         bubbleCssChar: ''
     };
 } else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCss === 'undefined') {
-        contact.userSettings.bubbleCss = '';
-    }if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+            contact.userSettings.bubbleCss = '';
+}
+if (!contact.userSettings.videoBackgroundLibrary) {
+    contact.userSettings.videoBackgroundLibrary = [];
+}if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
         avatarFrameId: contact.userSettings.avatarFrameId,
         persona: contact.userSettings.persona // Also sync persona for consistency
     };
-     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
+     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } if (!contact.charSettings.videoBackgroundLibrary) { contact.charSettings.videoBackgroundLibrary = []; } if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); });applyCustomThemes(); applyAllCustomBubbleStyles();}
     function applyAllCustomBubbleStyles() {
@@ -6440,22 +6445,27 @@ async function handleChatBackgroundUpload(file, settingsObject) { if (!file) ret
     getEl('bg-menu-chat-bg').addEventListener('click', () => {
         const context = runtimeState.backgroundMenuContext;
         if(context) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => handleChatBackgroundUpload(e.target.files[0], context.settingsObject);
-            input.click();
+            openBackgroundLibraryModal({
+                type: 'chat',
+                title: '选择聊天背景',
+                settingsObject: context.settingsObject,
+                activeKey: 'chatBackgroundId',
+                defaultId: 'default'
+            });
         }
         hideBackgroundContextMenu();
     });
     getEl('bg-menu-video-bg').addEventListener('click', () => {
         const context = runtimeState.backgroundMenuContext;
         if(context) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], context.settingsObject);
-            input.click();
+            openBackgroundLibraryModal({
+                type: 'video',
+                title: '选择视频背景',
+                settingsObject: context.settingsObject,
+                activeKey: 'videoBackgroundId',
+                libraryKey: 'videoBackgroundLibrary',
+                defaultId: ''
+            });
         }
         hideBackgroundContextMenu();
     });
@@ -6484,14 +6494,17 @@ function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click'
     // 为群聊User设置中的视频背景按钮添加直接上传监听
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
     if(gcsUsUserVideoBackgroundBtn) {
-        gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
-             const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], runtimeState.tempChatSettings.userSettings);
-            input.click();
+    gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
+        openBackgroundLibraryModal({
+            type: 'video',
+            title: '选择视频背景',
+            settingsObject: runtimeState.tempChatSettings.userSettings,
+            activeKey: 'videoBackgroundId',
+            libraryKey: 'videoBackgroundLibrary',
+            defaultId: ''
         });
-    }
+    });
+}
     let gcsLongPressTimer = null; let gcsIsDragging = false; let gcsStartX, gcsStartY; gcsMemberList.addEventListener('pointerdown', e => { if (e.button !== 0) return; const target = e.target; const item = target.closest('.gcs-member-item'); if (!item) return; gcsIsDragging = false; gcsStartX = e.clientX; gcsStartY = e.clientY; gcsLongPressTimer = setTimeout(() => { if (!gcsIsDragging) { handleGcsMemberLongPress(item.dataset.id); } }, 500); }); gcsMemberList.addEventListener('pointermove', e => { if (Math.abs(e.clientX - gcsStartX) > 10 || Math.abs(e.clientY - gcsStartY) > 10) { gcsIsDragging = true; clearTimeout(gcsLongPressTimer); } }); gcsMemberList.addEventListener('pointerup', e => { clearTimeout(gcsLongPressTimer); if (!gcsIsDragging) { const item = e.target.closest('.gcs-member-item'); const addBtn = e.target.closest('#gcs-add-member-btn'); const removeBtn = e.target.closest('#gcs-remove-member-btn'); if (item) { openGcsMemberModal(item.dataset.id); } else if (addBtn) { openGcsManageMembersModal('add'); } else if (removeBtn) { openGcsManageMembersModal('remove'); } } }); }
 function openGcsMemberModal(memberId) { if (memberId === 'user') return; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; runtimeState.tempGcsMemberSettings = JSON.parse(JSON.stringify(memberSettings)); gcsEditingMemberIdInput.value = memberId; loadGcsMemberModalUI(); gcsMemberModal.classList.add('visible'); }
 function loadGcsMemberModalUI() { gcsMemberModalTitle.textContent = `设置 ${runtimeState.tempGcsMemberSettings.nickname}`; gcsMemberNickname.value = runtimeState.tempGcsMemberSettings.nickname; setupWorldBookSelector(gcsMemberWorldBookGroupSelector, gcsMemberWorldBookList, runtimeState.tempGcsMemberSettings.linkedWorldBooks); setElementImage(gcsMemberAvatar, runtimeState.tempGcsMemberSettings.avatarId); setElementImage(gcsMemberAvatar.querySelector('.avatar-frame'), runtimeState.tempGcsMemberSettings.avatarFrameId); gcsMemberPersona.value = runtimeState.tempGcsMemberSettings.persona; }
@@ -9979,7 +9992,204 @@ if (appState.mailbox && appState.mailbox.loveLetters) {
 function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像库', settingsGroup: 'charSettings', libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); csCharAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: 'Char头像框库', isFrame: true, settingsGroup: 'charSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.charSettings.avatarId })); usUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true }));usUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); 
 
     csCharBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.charSettings }); });
-    const usUserVideoBackgroundBtn = getEl('us-user-video-background-btn'); if(usUserVideoBackgroundBtn) { usUserVideoBackgroundBtn.addEventListener('click', (e) => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = (e) => handleVideoBackgroundUpload(e.target.files[0], runtimeState.tempChatSettings.userSettings); input.click(); }); }
+    const usUserVideoBackgroundBtn = getEl('us-user-video-background-btn'); if(usUserVideoBackgroundBtn) {
+    usUserVideoBackgroundBtn.addEventListener('click', (e) => {
+        openBackgroundLibraryModal({
+            type: 'video',
+            title: '选择视频背景',
+            settingsObject: runtimeState.tempChatSettings.userSettings,
+            activeKey: 'videoBackgroundId',
+            libraryKey: 'videoBackgroundLibrary',
+            defaultId: ''
+        });
+    });
+}
+}
+
+function openBackgroundLibraryModal(context) {
+    runtimeState.backgroundLibraryContext = context;
+    runtimeState.backgroundLibrarySelection = [];
+    const modal = getEl('background-library-modal');
+    modal.classList.remove('selection-mode');
+    getEl('background-library-delete-btn').style.display = 'none';
+    getEl('background-library-mode-toggle-btn').textContent = '删除';
+    getEl('background-library-close-btn').style.display = 'block';
+    getEl('background-library-modal-title').textContent = context.title;
+    renderBackgroundLibraryGrid();
+    modal.classList.add('visible');
+}
+
+function renderBackgroundLibraryGrid() {
+    const context = runtimeState.backgroundLibraryContext;
+    const grid = getEl('background-library-grid');
+    grid.innerHTML = '';
+
+    let items, activeItem;
+    if (context.type === 'chat') {
+        items = appState.beautify.wallpapers.map(wp => wp.id);
+        activeItem = context.settingsObject.chatBackgroundId;
+    } else { // video
+        items = context.settingsObject[context.libraryKey] || [];
+        activeItem = context.settingsObject[context.activeKey];
+    }
+
+    // Add the 'default' option first
+    const noItem = document.createElement('div');
+    noItem.className = 'library-item no-frame';
+    noItem.dataset.id = context.defaultId;
+    noItem.innerHTML = '🚫';
+    if (activeItem === context.defaultId) {
+        noItem.classList.add('selected');
+    }
+    grid.appendChild(noItem);
+
+    items.forEach(id => {
+        const item = document.createElement('div');
+        item.className = 'library-item';
+        item.innerHTML = `<img>`;
+        item.dataset.id = id;
+        if (id === activeItem) {
+            item.classList.add('selected');
+        }
+        grid.appendChild(item);
+        setElementImage(item.querySelector('img'), id, 'src');
+    });
+}
+
+function setupBackgroundLibraryListeners() {
+    const modal = getEl('background-library-modal');
+    const grid = getEl('background-library-grid');
+    const uploadBtn = getEl('background-library-upload-btn');
+    const addUrlBtn = getEl('background-library-add-url-btn');
+    const fileInput = getEl('background-library-file-input');
+    const closeBtn = getEl('background-library-close-btn');
+    const modeToggleBtn = getEl('background-library-mode-toggle-btn');
+    const deleteBtn = getEl('background-library-delete-btn');
+
+    grid.addEventListener('click', async e => {
+        const item = e.target.closest('.library-item');
+        if (!item) return;
+
+        const context = runtimeState.backgroundLibraryContext;
+        const id = item.dataset.id;
+        
+        if (modal.classList.contains('selection-mode')) {
+            if (id !== context.defaultId) {
+                item.classList.toggle('selected');
+                if (item.classList.contains('selected')) {
+                    runtimeState.backgroundLibrarySelection.push(id);
+                } else {
+                    runtimeState.backgroundLibrarySelection = runtimeState.backgroundLibrarySelection.filter(selId => selId !== id);
+                }
+            }
+        } else {
+            context.settingsObject[context.activeKey] = id;
+            renderBackgroundLibraryGrid();
+            
+            if (context.type === 'chat') {
+                await updateSingleChatUI();
+            } else { // video
+                if (appState.chat.videoCallState.isActive) {
+                    await openVideoCallModal();
+                }
+            }
+        }
+    });
+
+    uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async e => {
+        const files = e.target.files;
+        if (files.length === 0) return;
+        showToast(`正在添加 ${files.length} 张背景...`);
+        const context = runtimeState.backgroundLibraryContext;
+
+        for (const file of files) {
+            const newId = newId('bg');
+            await addMediaToDB(newId, file);
+            if (context.type === 'chat') {
+                appState.beautify.wallpapers.push({ id: newId });
+            } else { // video
+                context.settingsObject[context.libraryKey].push(newId);
+            }
+        }
+        debouncedSaveState();
+        renderBackgroundLibraryGrid();
+        fileInput.value = '';
+    });
+
+    addUrlBtn.addEventListener('click', async () => {
+        const url = prompt('请输入图片URL:');
+        if (url && url.startsWith('http')) {
+            showToast('正在下载背景...');
+            const context = runtimeState.backgroundLibraryContext;
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const newId = newId('bg');
+                await addMediaToDB(newId, blob);
+                 if (context.type === 'chat') {
+                    appState.beautify.wallpapers.push({ id: newId });
+                } else { // video
+                    context.settingsObject[context.libraryKey].push(newId);
+                }
+                debouncedSaveState();
+                renderBackgroundLibraryGrid();
+            } catch (error) {
+                showToast('下载失败', 'error');
+            }
+        }
+    });
+
+    closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
+    modeToggleBtn.addEventListener('click', () => {
+        modal.classList.toggle('selection-mode');
+        const isSelectionMode = modal.classList.contains('selection-mode');
+        deleteBtn.style.display = isSelectionMode ? 'block' : 'none';
+        closeBtn.style.display = isSelectionMode ? 'none' : 'block';
+        modeToggleBtn.textContent = isSelectionMode ? '取消' : '删除';
+        if (!isSelectionMode) {
+            runtimeState.backgroundLibrarySelection = [];
+            grid.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+            renderBackgroundLibraryGrid();
+        }
+    });
+
+    deleteBtn.addEventListener('click', async () => {
+        const selection = runtimeState.backgroundLibrarySelection;
+        if (selection.length === 0) return;
+        if (!confirm(`确定要永久删除这 ${selection.length} 张背景图片吗？`)) return;
+
+        const context = runtimeState.backgroundLibraryContext;
+        
+        for (const idToDelete of selection) {
+            await deleteMediaFromDB(idToDelete);
+
+            if (context.type === 'chat') {
+                appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => wp.id !== idToDelete);
+                // Reset any chat that uses this wallpaper
+                appState.chat.contacts.forEach(contact => {
+                    if (contact.isGroup && contact.groupSettings.chatBackgroundId === idToDelete) {
+                        contact.groupSettings.chatBackgroundId = 'default';
+                    } else if (!contact.isGroup && contact.charSettings.chatBackgroundId === idToDelete) {
+                        contact.charSettings.chatBackgroundId = 'default';
+                    }
+                });
+                 if (appState.beautify.currentChatBgId === idToDelete) {
+                    appState.beautify.currentChatBgId = 'default';
+                }
+            } else { // video
+                context.settingsObject[context.libraryKey] = context.settingsObject[context.libraryKey].filter(id => id !== idToDelete);
+                if (context.settingsObject[context.activeKey] === idToDelete) {
+                    context.settingsObject[context.activeKey] = '';
+                }
+            }
+        }
+        
+        runtimeState.backgroundLibrarySelection = [];
+        debouncedSaveState();
+        modeToggleBtn.click(); // Exit selection mode
+        showToast('背景已删除');
+    });
 }
 function setupWorldBookSelector(selectorContainer, listContainer, linkedIdsArray) {
         const btn = selectorContainer.querySelector('.wb-group-selector-btn');
@@ -11305,7 +11515,8 @@ function showIncomingCallUI(contactId) {
                 addSystemNotification(callerId, '你拒绝了视频通话', true, { callInitiator: 'char' });
             }
         });
-        // --- ADDED: Draggable Floating Lyrics & Player Opener ---
+        setupBackgroundLibraryListeners();
+    // --- ADDED: Draggable Floating Lyrics & Player Opener ---
     const lyricsContainer = getEl('lyrics-container');
     let isLyricDragging = false, lyricStartX, lyricStartY, lyricInitialLeft, lyricInitialTop;
     
