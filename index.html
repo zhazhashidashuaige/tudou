@@ -1486,13 +1486,9 @@ padding: 0 10px;
                 <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button" data-bubble-id="settings-save-preset">保存预设</button><button id="manage-presets-btn" class="settings-button secondary" data-bubble-id="settings-manage-presets">管理预设</button></div></div>
                 <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group" style="flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 10px;">
-                        <button id="export-config-btn" class="settings-button" data-bubble-id="settings-export-config">导出配置与记录</button>
-                        <button id="import-config-btn" class="settings-button secondary" data-bubble-id="settings-import-config">导入配置与记录</button>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="export-media-btn" class="settings-button" data-bubble-id="settings-export-media">导出媒体库</button>
-                        <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
-                    </div>
+                    <button id="export-all-btn" class="settings-button">导出全部数据</button>
+                    <button id="import-all-btn" class="settings-button secondary">导入全部数据</button>
+                </div>
                     <input type="file" id="import-file-input" style="display: none;" multiple accept=".zip">
                     
                 </div>
@@ -3766,224 +3762,105 @@ try {
     async function setElementImage(element, id, property = 'backgroundImage') { if (!element) return; const url = await getMediaURL(id); if (url) { if (property === 'src') { element.src = url; } else { element.style.backgroundImage = `url("${url}")`; } } else { if (property === 'src') { element.src = ''; } else { element.style.backgroundImage = 'none'; } } }
 
     // ===================================================================
-    // --- 完整备份与恢复 ---
-    // ===================================================================
-    function downloadFile(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        a.remove();
-    }
+// --- 统一备份与恢复 ---
+// ===================================================================
+function downloadFile(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+}
 
-    getEl('export-config-btn').addEventListener('click', () => {
-        try {
-            const dataStr = JSON.stringify(appState);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            downloadFile(blob, `EmperorPhone-ConfigBackup-${new Date().toISOString().slice(0, 10)}.json`);
-            showToast("配置与记录已导出！");
-        } catch (error) {
-            showToast("导出配置失败", 'error');
-            console.error(error);
-        }
-    });
+getEl('export-all-btn').addEventListener('click', async () => {
+    showToast('正在准备导出...', 'info');
+    try {
+        const zip = new JSZip();
 
-    getEl('import-config-btn').addEventListener('click', () => {
-        importFileInput.accept = '.json';
-        importFileInput.onchange = (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (confirm("这将覆盖所有当前的配置和聊天记录（媒体文件不受影响），确定吗？")) {
-                    try {
-                        const importedState = JSON.parse(e.target.result);
-                        localStorage.setItem(DB_KEY, JSON.stringify(importedState));
-                        showToast("导入成功，正在刷新...", 'info');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (error) {
-                        showToast(`导入失败: ${error.message}`, 'error');
-                        console.error("导入错误:", error);
-                    }
-                }
-                importFileInput.value = ''; // Reset for next import
-            };
-            reader.readAsText(file);
-        };
-        importFileInput.click();
-    });
+        // 1. 添加配置文件
+        const configStr = JSON.stringify(appState);
+        zip.file('config.json', configStr);
 
-    getEl('export-media-btn').addEventListener('click', () => {
-const CHUNK_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
-
-const processNextChunk = () => {
-    if (!db) return showToast("数据库未初始化", 'error');
-    const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(IDB_STORE_NAME);
-    
-    let zip = new JSZip();
-    let currentChunkSize = 0;
-    let filesInThisChunk = 0;
-
-    const cursorRequest = store.openCursor();
-    let isAdvancing = runtimeState.exportProgress.filesProcessed > 0;
-    showToast(`准备导出第 ${runtimeState.exportProgress.currentPart} 部分...`, 'info');
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-
-        if (isAdvancing && cursor) {
-            isAdvancing = false;
-            cursor.advance(runtimeState.exportProgress.filesProcessed);
-            return;
+        // 2. 添加所有媒体文件
+        const allMedia = await getAllMediaFromDB();
+        if (allMedia.length > 0) {
+            showToast(`正在压缩 ${allMedia.length} 个媒体文件...`);
+            allMedia.forEach(mediaItem => {
+                zip.file(mediaItem.id, mediaItem.data);
+            });
         }
 
-        if (cursor) {
-            const item = cursor.value;
-            const itemSize = item.data.size || item.data.byteLength || 0;
-
-            if (filesInThisChunk > 0 && currentChunkSize + itemSize > CHUNK_SIZE_BYTES) {
-                finalizeAndDownload();
-                return; 
+        // 3. 生成并下载ZIP文件
+        showToast('正在生成压缩包...', 'info');
+        const content = await zip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 6 // A good balance between speed and compression
             }
-
-            zip.file(item.id, item.data);
-            currentChunkSize += itemSize;
-            filesInThisChunk++;
-            cursor.continue();
-        } else {
-            if (filesInThisChunk > 0) {
-                finalizeAndDownload(true);
-            }
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        showToast('导出媒体时发生错误', 'error');
-        console.error("Cursor error:", event.target.error);
-    };
-
-    const finalizeAndDownload = async (isLastChunk = false) => {
-        const partNum = runtimeState.exportProgress.currentPart;
-        showToast(`正在生成第 ${partNum} 部分...`, 'info');
-        try {
-            const content = await zip.generateAsync({ type: "blob" });
-            downloadFile(content, `EmperorPhone-MediaBackup-part${partNum}-${new Date().toISOString().slice(0, 10)}.zip`);
-            
-            runtimeState.exportProgress.filesProcessed += filesInThisChunk;
-            runtimeState.exportProgress.currentPart++;
-
-            if (isLastChunk) {
-                showToast("媒体库导出完成！", 'info');
-                runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
-            } else {
-                showToast(`第 ${partNum} 部分导出成功！请再次点击按钮继续。`, 'info');
-            }
-        } catch (e) {
-            showToast(`生成第 ${partNum} 部分失败`, 'error');
-            console.error(e);
-        }
-    };
-};
-
-if (!db) return showToast("数据库未初始化", 'error');
-const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
-const store = transaction.objectStore(IDB_STORE_NAME);
-store.count().onsuccess = async (e) => {
-    const totalFiles = e.target.result;
-    if (totalFiles === 0) return showToast("媒体库为空");
-
-    if (runtimeState.exportProgress.filesProcessed >= totalFiles) {
-         runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
-    }
-
-    const currentPart = runtimeState.exportProgress.currentPart;
-    if (currentPart === 1) {
-        showToast('正在计算文件大小...', 'info');
-        const allItems = await getAllMediaFromDB();
-        let totalSize = 0;
-        allItems.forEach(item => {
-            totalSize += item.data.size || item.data.byteLength || 0;
         });
-        const totalParts = Math.ceil(totalSize / CHUNK_SIZE_BYTES) || 1;
-
-        if (confirm(`您的媒体库(${totalFiles}个文件)将被拆分为 ${totalParts} 个压缩包。\n\n是否开始导出第 1 部分？`)) {
-            processNextChunk();
-        } else {
-            showToast("导出已取消");
-        }
-    } else {
-        if (confirm(`导出未完成。是否继续导出第 ${currentPart} 部分？`)) {
-            processNextChunk();
-        } else {
-            showToast("导出已暂停");
-        }
+        
+        downloadFile(content, `EmperorPhone-FullBackup-${new Date().toISOString().slice(0, 10)}.zip`);
+        showToast('全部数据导出成功！', 'info');
+    } catch (error) {
+        showToast('导出失败，请查看控制台获取详情', 'error');
+        console.error("Full export failed:", error);
     }
-};
 });
-    
-    getEl('import-media-btn').addEventListener('click', () => {
+
+getEl('import-all-btn').addEventListener('click', () => {
     importFileInput.accept = '.zip';
     importFileInput.onchange = async (event) => {
-        const files = event.target.files;
-        if (files.length === 0) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-        if (confirm(`即将导入 ${files.length} 个压缩包。这将把所有文件添加到您现有的媒体库中。确定吗？`)) {
-            showToast(`准备导入 ${files.length} 个压缩包...`, 'info');
-            let totalImportedCount = 0;
-
-            for (const file of files) {
-                showToast(`正在处理 ${file.name}...`, 'info');
-                try {
-                    const zip = await JSZip.loadAsync(file);
-                    const promises = [];
-                    let filesInThisZip = 0;
-
-                    zip.forEach((relativePath, zipEntry) => {
-                        if (zipEntry.dir) return;
-                        filesInThisZip++;
-
-                        const promise = zipEntry.async("blob").then(async (blobData) => {
-                            const id = zipEntry.name;
-                            await addMediaToDB(id, blobData);
-
-                            if (id.startsWith('wp_')) {
-                                if (!appState.beautify.wallpapers.some(wp => wp.id === id)) {
-                                    appState.beautify.wallpapers.push({ id });
-                                }
-                            } else if (id.startsWith('font_')) {
-                                if (!appState.beautify.fonts.some(f => f.id === id)) {
-                                    const name = id.replace(/\.[^/.]+$/, '').replace(/^font_/, '');
-                                    appState.beautify.fonts.push({ id, name });
-                                }
-                            } else if (id.startsWith('song_')) {
-                                 if (!appState.music.playlist.some(s => s.id === id)) {
-                                    const title = id.replace(/\.[^/.]+$/, '').replace(/^song_/, '');
-                                    appState.music.playlist.push({ id, title, artist: '未知艺术家', url: id, duration: NaN, isLocal: true });
-                                 }
-                            }
-                        });
-                        promises.push(promise);
-                    });
-                    
-                    await Promise.all(promises);
-                    totalImportedCount += filesInThisZip;
-
-                } catch (error) {
-                    showToast(`处理文件 ${file.name} 失败`, 'error');
-                    console.error(`Error processing ${file.name}:`, error);
+        if (confirm("【最高警告】\n\n此操作将彻底覆盖您当前的所有配置、记录和媒体文件！\n\n确定要继续吗？")) {
+            showToast('正在导入，请勿操作...', 'info');
+            try {
+                const zip = await JSZip.loadAsync(file);
+                
+                // 1. 验证并读取配置文件
+                const configFile = zip.file('config.json');
+                if (!configFile) {
+                    throw new Error('压缩包内未找到 "config.json" 配置文件。');
                 }
-            }
+                const configStr = await configFile.async('string');
+                const importedState = JSON.parse(configStr);
 
-            saveState(); // 在处理完所有文件后，进行一次性保存
-            
-            showToast(`导入完成！共处理了 ${totalImportedCount} 个文件。正在刷新...`, 'info');
-            setTimeout(() => window.location.reload(), 1500);
+                // 2. 清空现有媒体库
+                showToast('正在清空旧媒体库...', 'info');
+                await clearMediaDB();
+
+                // 3. 导入新的媒体文件
+                const mediaFiles = [];
+                zip.forEach((relativePath, zipEntry) => {
+                    if (!zipEntry.dir && zipEntry.name !== 'config.json') {
+                        mediaFiles.push(
+                            zipEntry.async('blob').then(blobData => addMediaToDB(zipEntry.name, blobData))
+                        );
+                    }
+                });
+                
+                if(mediaFiles.length > 0) {
+                    showToast(`正在导入 ${mediaFiles.length} 个媒体文件...`, 'info');
+                    await Promise.all(mediaFiles);
+                }
+
+                // 4. 应用新的配置
+                localStorage.setItem(DB_KEY, JSON.stringify(importedState));
+
+                showToast('导入成功！应用即将刷新...', 'info');
+                setTimeout(() => window.location.reload(), 1500);
+
+            } catch (error) {
+                showToast(`导入失败: ${error.message}`, 'error');
+                console.error("Full import failed:", error);
+            }
         }
-        importFileInput.value = ''; // Reset for next import
+        importFileInput.value = ''; // 重置文件输入，以便下次使用
     };
     importFileInput.click();
 });
@@ -5071,12 +4948,12 @@ for (const [key, scopeSelector] of Object.entries(modules)) {
         const finalFontFamily = fontName.toLowerCase() === 'default' 
             ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
             : `"${fontName}"`;
-        generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { font-family: ${finalFontFamily} !important; }\n`;
+        generatedRules += `${scopeSelector}, ${scopeSelector} *:not(i), ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { font-family: ${finalFontFamily} !important; }\n`;
     }
     
     const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
     if (colorMatch) {
-        generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { color: ${colorMatch[1].trim()} !important; }\n`;
+        generatedRules += `${scopeSelector}, ${scopeSelector} *:not(i), ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { color: ${colorMatch[1].trim()} !important; }\n`;
     }
     
     const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
@@ -5249,12 +5126,12 @@ function updateThemeCssPreview(id) {
         if (fontFamilyMatch) {
             const fontName = fontFamilyMatch[1].trim();
 const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : `"${fontName}"`;
-            generatedRules += `${module.scope}, ${module.scope} * { font-family: ${finalFontFamily} !important; }\n`;
+            generatedRules += `${module.scope}, ${module.scope} *:not(i) { font-family: ${finalFontFamily} !important; }\n`;
         }
 
         const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
         if (colorMatch) {
-             generatedRules += `${module.scope}, ${module.scope} *, ${module.scope} .title, ${module.scope} .text, ${module.scope} .label, ${module.scope} span, ${module.scope} div { color: ${colorMatch[1].trim()} !important; }\n`;
+             generatedRules += `${module.scope}, ${module.scope} *:not(i), ${module.scope} .title, ${module.scope} .text, ${module.scope} .label, ${module.scope} span, ${module.scope} div { color: ${colorMatch[1].trim()} !important; }\n`;
         }
         
         const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
