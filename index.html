@@ -298,7 +298,7 @@
     border-radius: 3px;
 }
 .styles-row-scroll .style-preview-card {
-    width: 150px;
+    width: 200px;
     min-height: 180px; /* 确保卡片有最小高度 */
     flex-shrink: 0;
 }
@@ -1174,7 +1174,7 @@ align-content: start;
 .love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
-.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; align-items: start; }
+.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; align-items: start; }
 .love-letter-preview-card {
     background: var(--love-letter-texture), linear-gradient(to bottom right, #fdfbf7, #f4f0e8);
     border: 1px solid #e0d8cc;
@@ -3054,7 +3054,17 @@ const getMiniPreviewHTML = (moduleKey) => {
         listItem: '<div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>',
         momentsPost: '<div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>',
         bottomTabs: '<div class="mini-tabs"><span>标签1</span><span>标签2</span></div>',
-        loveLetter: '<div class="mini-letter" style="font-family: KaiTi, serif; font-size: 8px; line-height: 1.4; color: #333; background: #f4f0e8; padding: 4px; text-align: center;">信纸预览</div>',
+        loveLetter: `<div class="mini-letter" style="font-family: KaiTi, serif; font-size: 8px; line-height: 1.3; color: #333; background: #fdfbf7; border: 1px solid #e0d8cc; padding: 5px; text-align: left;">
+                    <div style="display: flex; align-items: center; gap: 5px; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px dashed #dcd3c5;">
+                        <div style="width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
+                        <div>
+                            <div style="font-weight: bold;">称呼</div>
+                            <div style="font-size: 7px; color: #999;">时间戳</div>
+                        </div>
+                    </div>
+                    <div>正文预览...</div>
+                    <div style="text-align: right; margin-top: 5px; font-style: italic;">落款</div>
+                </div>`,
 chatInput: '<div class="mini-chat-input" style="font-size: 10px; padding: 4px; border-top: 1px solid #ccc; background: #f7f7f7; text-align: center; display: flex; justify-content: space-around; align-items: center;"><span>[...]</span><i class="fa-solid fa-face-smile"></i><i class="fa-solid fa-microphone"></i><i class="fa-solid fa-images"></i></div>'
     };
     return previews[moduleKey] || '';
@@ -3593,6 +3603,7 @@ meta: {
         return {
             originalIconContent: {},
             originalBubbleContent: {},
+                    exportProgress: { filesProcessed: 0, currentPart: 1 },
             beautify: { wallpaperDisplayCount: 0, fontDisplayCount: 0 },
             isDetailsAnimatingIn: false,
             currentChatId: null,
@@ -3814,103 +3825,112 @@ try {
     });
 
     getEl('export-media-btn').addEventListener('click', () => {
-    const startChunkedExport = () => {
-        if (!db) {
-            showToast("数据库未初始化，请稍后再试。", 'error');
+const CHUNK_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
+
+const processNextChunk = () => {
+    if (!db) return showToast("数据库未初始化", 'error');
+    const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
+    const store = transaction.objectStore(IDB_STORE_NAME);
+    
+    let zip = new JSZip();
+    let currentChunkSize = 0;
+    let filesInThisChunk = 0;
+
+    const cursorRequest = store.openCursor();
+    let isAdvancing = runtimeState.exportProgress.filesProcessed > 0;
+    showToast(`准备导出第 ${runtimeState.exportProgress.currentPart} 部分...`, 'info');
+
+    cursorRequest.onsuccess = (event) => {
+        const cursor = event.target.result;
+
+        if (isAdvancing && cursor) {
+            isAdvancing = false;
+            cursor.advance(runtimeState.exportProgress.filesProcessed);
             return;
         }
 
-        const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
-        const store = transaction.objectStore(IDB_STORE_NAME);
-        const countRequest = store.count();
+        if (cursor) {
+            const item = cursor.value;
+            const itemSize = item.data.size || item.data.byteLength || 0;
 
-        countRequest.onsuccess = () => {
-            const totalFiles = countRequest.result;
-            if (totalFiles === 0) {
-                showToast("媒体库为空，无需导出。");
-                return;
+            if (filesInThisChunk > 0 && currentChunkSize + itemSize > CHUNK_SIZE_BYTES) {
+                finalizeAndDownload();
+                return; 
             }
 
-            if (!confirm(`您的媒体库包含 ${totalFiles} 个文件。\n\n为防止因文件过大导致闪退，导出将被自动分割成多个压缩包。\n\n是否开始导出？`)) {
-                showToast("导出已取消");
-                return;
+            zip.file(item.id, item.data);
+            currentChunkSize += itemSize;
+            filesInThisChunk++;
+            cursor.continue();
+        } else {
+            if (filesInThisChunk > 0) {
+                finalizeAndDownload(true);
             }
+        }
+    };
+
+    cursorRequest.onerror = (event) => {
+        showToast('导出媒体时发生错误', 'error');
+        console.error("Cursor error:", event.target.error);
+    };
+
+    const finalizeAndDownload = async (isLastChunk = false) => {
+        const partNum = runtimeState.exportProgress.currentPart;
+        showToast(`正在生成第 ${partNum} 部分...`, 'info');
+        try {
+            const content = await zip.generateAsync({ type: "blob" });
+            downloadFile(content, `EmperorPhone-MediaBackup-part${partNum}-${new Date().toISOString().slice(0, 10)}.zip`);
             
-            processMediaInChunks(store, totalFiles);
-        };
-        
-        countRequest.onerror = (e) => {
-            showToast("无法读取媒体库大小", 'error');
-            console.error("Could not count DB items:", e.target.error);
-        };
-    };
+            runtimeState.exportProgress.filesProcessed += filesInThisChunk;
+            runtimeState.exportProgress.currentPart++;
 
-    const processMediaInChunks = (store, totalFiles) => {
-        const CHUNK_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB chunks
-        let zip = new JSZip();
-        let currentChunkSize = 0;
-        let partNumber = 1;
-        let filesInCurrentChunk = 0;
-        let filesProcessed = 0;
-
-        const cursorRequest = store.openCursor();
-        showToast('开始打包媒体库...', 'info');
-
-        cursorRequest.onsuccess = async (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                const item = cursor.value;
-                const itemSize = item.data.size || item.data.byteLength || 0;
-                filesProcessed++;
-
-                if (filesInCurrentChunk > 0 && currentChunkSize + itemSize > CHUNK_SIZE_BYTES) {
-                    showToast(`正在生成第 ${partNumber} 部分... (${filesProcessed-1}/${totalFiles})`, 'info');
-                    try {
-                        const content = await zip.generateAsync({ type: "blob" });
-                        downloadFile(content, `EmperorPhone-MediaBackup-part${partNumber}-${new Date().toISOString().slice(0, 10)}.zip`);
-                        partNumber++;
-                    } catch(e) {
-                        showToast(`生成第 ${partNumber} 部分失败`, 'error');
-                        console.error(e);
-                        return; // Stop on failure
-                    }
-                    
-                    zip = new JSZip();
-                    currentChunkSize = 0;
-                    filesInCurrentChunk = 0;
-                }
-                
-                zip.file(item.id, item.data);
-                currentChunkSize += itemSize;
-                filesInCurrentChunk++;
-                
-                cursor.continue();
+            if (isLastChunk) {
+                showToast("媒体库导出完成！", 'info');
+                runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
             } else {
-                // Cursor finished
-                if (filesInCurrentChunk > 0) {
-                    showToast(`正在生成最后一部分 (第 ${partNumber} 部分)...`, 'info');
-                     try {
-                        const content = await zip.generateAsync({ type: "blob" });
-                        downloadFile(content, `EmperorPhone-MediaBackup-part${partNumber}-${new Date().toISOString().slice(0, 10)}.zip`);
-                        showToast("媒体库导出完成！", 'info');
-                    } catch(e) {
-                        showToast(`生成最后一部分失败`, 'error');
-                        console.error(e);
-                    }
-                } else if (totalFiles > 0) {
-                    // This case might happen if all items were processed in previous chunks
-                    showToast("媒体库导出完成！", 'info');
-                }
+                showToast(`第 ${partNum} 部分导出成功！请再次点击按钮继续。`, 'info');
             }
-        };
-
-        cursorRequest.onerror = (event) => {
-            showToast('导出媒体时发生错误', 'error');
-            console.error("Cursor error:", event.target.error);
-        };
+        } catch (e) {
+            showToast(`生成第 ${partNum} 部分失败`, 'error');
+            console.error(e);
+        }
     };
+};
 
-    startChunkedExport();
+if (!db) return showToast("数据库未初始化", 'error');
+const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
+const store = transaction.objectStore(IDB_STORE_NAME);
+store.count().onsuccess = async (e) => {
+    const totalFiles = e.target.result;
+    if (totalFiles === 0) return showToast("媒体库为空");
+
+    if (runtimeState.exportProgress.filesProcessed >= totalFiles) {
+         runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
+    }
+
+    const currentPart = runtimeState.exportProgress.currentPart;
+    if (currentPart === 1) {
+        showToast('正在计算文件大小...', 'info');
+        const allItems = await getAllMediaFromDB();
+        let totalSize = 0;
+        allItems.forEach(item => {
+            totalSize += item.data.size || item.data.byteLength || 0;
+        });
+        const totalParts = Math.ceil(totalSize / CHUNK_SIZE_BYTES) || 1;
+
+        if (confirm(`您的媒体库(${totalFiles}个文件)将被拆分为 ${totalParts} 个压缩包。\n\n是否开始导出第 1 部分？`)) {
+            processNextChunk();
+        } else {
+            showToast("导出已取消");
+        }
+    } else {
+        if (confirm(`导出未完成。是否继续导出第 ${currentPart} 部分？`)) {
+            processNextChunk();
+        } else {
+            showToast("导出已暂停");
+        }
+    }
+};
 });
     
     getEl('import-media-btn').addEventListener('click', () => {
@@ -5026,7 +5046,17 @@ function updateThemeCssPreview(id) {
         const previewHTML = {
             moments: `<div class="moments-post-item"><div class="post-item-content"><div class="post-header"><div class="post-avatar" style="background-color:#ccc"></div><div class="post-author-info"><div class="post-author-name">预览用户</div><div class="post-timestamp">刚刚</div></div></div><div class="post-content-text">这是一个预览动态...</div></div></div>`,
             header: `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`,
-                    letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 10px; font-size: 10px; line-height: 1.5; color: #333; background-color: #f4f0e8;"><p>亲爱的...</p><p>这是信件内容预览...</p><div class="letter-signature" style="text-align: right; margin-top: 1em;"><span>签名</span></div></div>`,
+                    letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 12px; font-size: 11px; line-height: 1.5; color: #333; background: var(--love-letter-texture), linear-gradient(to bottom right, #f4f0e8, #fdfbf7); border: 1px solid #e0d8cc;">
+                <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #dcd3c5;">
+                    <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; border: 1px solid white;"></div>
+                    <div>
+                        <div style="font-weight: bold; font-size: 12px;">亲爱的预览用户：</div>
+                        <div style="font-size: 10px; color: #888;">2025/9/6 上午9:41:00</div>
+                    </div>
+                </div>
+                <p style="margin:0 0 1em 0;">这是信件正文的预览内容，它展示了信件的大致样式和感觉，以便您可以更好地自定义CSS...</p>
+                <div class="letter-signature" style="text-align: right; margin-top: 1em; font-style: italic;"><span>爱你的，预览签名</span></div>
+            </div>`,
             tabs: `<div class="app-bottom-tabs"><div class="tab-link active">标签1</div><div class="tab-link">标签2</div><div class="tab-link">标签3</div></div>`,
             'list-item': `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`,
             'chat-input': `<div id="chat-footer-preview" class="chat-footer"><div class="chat-input-area"><textarea class="chat-input" rows="1" placeholder="输入..."></textarea><div class="chat-input-buttons"><button class="icon-btn"><i class="fa-solid fa-face-smile"></i></button></div></div><div class="chat-toolbar"><button class="icon-btn"><i class="fa-solid fa-microphone"></i></button><button class="icon-btn"><i class="fa-solid fa-images"></i></button><button class="icon-btn"><i class="fa-solid fa-camera"></i></button><button class="icon-btn"><i class="fa-solid fa-video"></i></button></div></div>`
