@@ -257,11 +257,12 @@
         gap: 15px;
     }
     .styles-column {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* 允许垂直滚动 */
+    overflow-x: hidden; /* 禁止水平滚动 */
+}
     .styles-column h3 {
         text-align: center;
         margin-top: 0;
@@ -1126,7 +1127,7 @@ align-content: start;
 .love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
-.love-letter-collection-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
 .collected-letter-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; }
 .collected-letter-item .title { font-size: 11px; font-weight: bold; width: 100%; white-space: normal; word-break: break-all; text-align: center; margin-bottom: 5px; }
 .collected-letter-item .icon { font-size: 36px; color: #a38c6d; margin-bottom: 5px; }
@@ -1788,11 +1789,11 @@ align-content: start;
                     <div class="styles-container">
                         <div class="styles-column">
                             <h3>寄出的信</h3>
-                            <div id="sent-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; overflow-y: auto; padding: 10px; align-content: flex-start;"></div>
+                            <div id="sent-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; padding: 10px; align-content: flex-start;"></div>
                         </div>
                         <div class="styles-column">
                             <h3>收到的信</h3>
-                            <div id="received-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; overflow-y: auto; padding: 10px; align-content: flex-start;"></div>
+                            <div id="received-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; padding: 10px; align-content: flex-start;"></div>
                         </div>
                     </div>
                 </div>
@@ -3508,6 +3509,11 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
             let generatedRules = '';
             const baseSelector = `#single-chat-screen[data-contact-id="${contact.id}"] .message-bubble`;
 
+            const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+            if (bgImageMatch) {
+                generatedRules += `${baseSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; border: none !important; }\n`;
+            }
+
             const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
             if (fontFamilyMatch) {
                 const fontName = fontFamilyMatch[1].trim();
@@ -4224,10 +4230,10 @@ cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.re
 saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImageId: settingsGroup.backgroundImageId }; const cleanedStyles = Object.fromEntries(Object.entries(newStyles).filter(([_, v]) => v !== '' && v !== '0px')); if (isGlobal) { appState.beautify.bubbleSettings.global = cleanedStyles; } else { appState.beautify.bubbleSettings.specific[bubbleId] = cleanedStyles; } debouncedSaveState(); if (isGlobal) { Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, true)); } else { applyBubbleChange(bubbleId, true); } editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
 restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的样式吗？`)) { const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : appState.beautify.bubbleSettings.specific[bubbleId]; if (settingsGroup?.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } if (isGlobal) { appState.beautify.bubbleSettings.global = {}; Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, false, true)); } else { delete appState.beautify.bubbleSettings.specific[bubbleId]; applyBubbleChange(bubbleId, false, true); } debouncedSaveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
     const defaultThemeStyles = {
-    momentsPost: '/* @属性值示例 */\n@background-color: #ffffff;\n@font-family: default;\n@font-size: 15px;\n@color: #000000;\n\n/* 在下方输入自定义CSS */\n.post-header {\n  padding-bottom: 5px;\n}',
-    appHeader: '/* @属性值示例 */\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
-    bottomTabs: '/* @属性值示例 */\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
-    listItem: '/* @属性值示例 */\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}'
+    momentsPost: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #ffffff;\n@font-family: default;\n@font-size: 15px;\n@color: #000000;\n\n/* 在下方输入自定义CSS */\n.post-header {\n  padding-bottom: 5px;\n}',
+    appHeader: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
+    bottomTabs: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
+    listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}'
     };
 
     function applyCustomThemes() {
@@ -4246,10 +4252,15 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     for (const [key, scopeSelector] of Object.entries(modules)) {
         let rawCss = customThemes[key] || '';
         let generatedRules = '';
-
-        const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
-        if (bgColorMatch) generatedRules += `${scopeSelector} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
         
+        const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+        if (bgImageMatch) {
+            generatedRules += `${scopeSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
+        } else {
+            const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
+            if (bgColorMatch) generatedRules += `${scopeSelector} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
+        }
+
         const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
         if (fontFamilyMatch) {
             const fontName = fontFamilyMatch[1].trim();
@@ -4282,6 +4293,7 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
 }
 
     const defaultBubbleCssText = `/* @属性值示例 */
+    @background-image: url(图片链接);
 @font-family: default;
 @font-size: 15px;
 @color: unset; /* unset:继承默认颜色, #000000:统一颜色 */
@@ -4298,13 +4310,18 @@ border-bottom-left-radius: 4px;
 }`;
 
     function updateBubbleCssPreview(context, settings) {
-        const editor = getEl(`${context}-bubble-css`);
-        const previewArea = getEl(`${context}-bubble-preview`);
-        const previewStyleTag = getEl('bubble-preview-styles');
+    const editor = getEl(`${context}-bubble-css`);
+    const previewArea = getEl(`${context}-bubble-preview`);
+    const previewStyleTag = getEl('bubble-preview-styles');
 
-        let rawCss = editor.value;
+    let rawCss = editor.value;
     let generatedRules = '';
     const baseSelector = `#${context}-bubble-preview .message-bubble`;
+
+    const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+    if (bgImageMatch) {
+        generatedRules += `${baseSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; border: none !important; }\n`;
+    }
     
     const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
     if (fontFamilyMatch) {
@@ -4330,28 +4347,28 @@ border-bottom-left-radius: 4px;
 
     previewStyleTag.textContent = generatedRules + scopedUserCss;
 
-        const userAvatarId = settings.userSettings.avatarId;
-        const userFrameId = settings.userSettings.avatarFrameId;
-        const charAvatarId = settings.charSettings ? settings.charSettings.avatarId : settings.groupSettings.avatarId;
-        const charFrameId = settings.charSettings ? settings.charSettings.avatarFrameId : '';
+    const userAvatarId = settings.userSettings.avatarId;
+    const userFrameId = settings.userSettings.avatarFrameId;
+    const charAvatarId = settings.charSettings ? settings.charSettings.avatarId : settings.groupSettings.avatarId;
+    const charFrameId = settings.charSettings ? settings.charSettings.avatarFrameId : '';
 
-        previewArea.innerHTML = `
-            <div class="message-item contact">
-                <div class="avatar" data-avatar-id="${charAvatarId}">
-                    <div class="avatar-frame" data-avatar-frame-id="${charFrameId}"></div>
-                </div>
-                <div class="message-content-wrapper"><div class="message-bubble">你好呀</div></div>
+    previewArea.innerHTML = `
+        <div class="message-item contact">
+            <div class="avatar" data-avatar-id="${charAvatarId}">
+                <div class="avatar-frame" data-avatar-frame-id="${charFrameId}"></div>
             </div>
-            <div class="message-item user">
-                <div class="message-content-wrapper"><div class="message-bubble">嗯，你好</div></div>
-                <div class="avatar" data-avatar-id="${userAvatarId}">
-                     <div class="avatar-frame" data-avatar-frame-id="${userFrameId}"></div>
-                </div>
+            <div class="message-content-wrapper"><div class="message-bubble">你好呀</div></div>
+        </div>
+        <div class="message-item user">
+            <div class="message-content-wrapper"><div class="message-bubble">嗯，你好</div></div>
+            <div class="avatar" data-avatar-id="${userAvatarId}">
+                 <div class="avatar-frame" data-avatar-frame-id="${userFrameId}"></div>
             </div>
-        `;
-        previewArea.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
-        previewArea.querySelectorAll('.avatar-frame').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
-    }
+        </div>
+    `;
+    previewArea.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
+    previewArea.querySelectorAll('.avatar-frame').forEach(el => setElementImage(el, el.dataset.avatarFrameId));
+}
     function renderThemeEditor() {
     const themes = appState.beautify.customThemes;
     // If a custom theme for a module exists, use it. Otherwise, use the default style text as the initial content.
@@ -4387,8 +4404,13 @@ function updateThemeCssPreview(id) {
         let rawCss = module.editor.value;
         let generatedRules = '';
         
-        const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
-        if (bgColorMatch) generatedRules += `${module.scope} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
+        const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+        if (bgImageMatch) {
+            generatedRules += `${module.scope} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
+        } else {
+            const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
+            if (bgColorMatch) generatedRules += `${module.scope} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
+        }
 
         const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
         if (fontFamilyMatch) {
