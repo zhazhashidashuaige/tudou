@@ -2317,6 +2317,7 @@ align-content: start;
         </div>
     </div>
 </div>
+<input type="file" id="import-style-file-input" style="display: none;" accept=".json">
     <div id="toast"></div>
 
 <script>
@@ -2848,10 +2849,12 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
                 <div class="style-preview-card" data-id="${theme.id}" data-type="theme">
                     <div class="style-preview-header">
                         <div class="style-preview-name">${escapeHTML(theme.name)}</div>
-                        <div class="style-preview-actions">
-                            <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
+                                            <div class="style-preview-actions">
+                        <button class="icon-btn import-style-btn" title="导入"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                        <button class="icon-btn export-style-btn" title="导出"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                        <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
                     </div>
                     <div class="theme-preview-wrapper" data-theme-id="${theme.id}">
                         <div class="mini-header">&lt; <span>标题</span> +</div>
@@ -2877,10 +2880,12 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
                 <div class="style-preview-card" data-id="${bubble.id}" data-type="bubble">
                     <div class="style-preview-header">
                         <div class="style-preview-name">${escapeHTML(bubble.name)}</div>
-                        <div class="style-preview-actions">
-                            <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
+                                            <div class="style-preview-actions">
+                        <button class="icon-btn import-style-btn" title="导入"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                        <button class="icon-btn export-style-btn" title="导出"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                        <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
                     </div>
                     <div class="bubble-preview-wrapper" data-bubble-id="${bubble.id}">
                         <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
@@ -2900,6 +2905,17 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
     if (!card) return;
 
     const styleId = card.dataset.id;
+        if (e.target.closest('.export-style-btn')) {
+        e.stopPropagation();
+        exportSingleStyle(styleId, card.dataset.type);
+        return;
+    }
+
+    if (e.target.closest('.import-style-btn')) {
+        e.stopPropagation();
+        getEl('import-style-file-input').click();
+        return;
+    }
     const styleType = card.dataset.type;
 
     // Handle Edit Button Click
@@ -3037,6 +3053,72 @@ getEl('save-edit-style-btn').addEventListener('click', () => {
     showToast('样式已更新！');
 });
 
+function exportSingleStyle(styleId, styleType) {
+    let styleObject;
+    let fileNamePrefix;
+    if (styleType === 'theme') {
+        styleObject = appState.data.savedThemes.find(t => t.id === styleId);
+        fileNamePrefix = 'Theme-Style';
+    } else { // bubble
+        styleObject = appState.data.savedBubbles.find(b => b.id === styleId);
+        fileNamePrefix = 'Bubble-Style';
+    }
+
+    if (styleObject) {
+        const { id, ...exportData } = styleObject;
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        downloadFile(blob, `${fileNamePrefix}-${exportData.name}.json`);
+    }
+}
+
+getEl('import-style-file-input').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            if (!importedData.name || (!importedData.styles && !importedData.css)) {
+                throw new Error('无效的样式文件格式。');
+            }
+
+            let finalName = importedData.name.trim();
+            const isTheme = !!importedData.styles;
+            const existingStyles = isTheme ? appState.data.savedThemes : appState.data.savedBubbles;
+
+            if (existingStyles.some(s => s.name === finalName)) {
+                if (!confirm(`已存在名为 "${finalName}" 的样式。要覆盖它吗？`)) {
+                    event.target.value = '';
+                    return;
+                }
+                const existingIndex = existingStyles.findIndex(s => s.name === finalName);
+                if (existingIndex > -1) {
+                    existingStyles.splice(existingIndex, 1);
+                }
+            }
+            
+            const newStyle = { id: newId(isTheme ? 'theme_style' : 'bubble_style'), ...importedData };
+
+            if (isTheme) {
+                appState.data.savedThemes.push(newStyle);
+            } else {
+                appState.data.savedBubbles.push(newStyle);
+            }
+            
+            debouncedSaveState();
+            renderStylesTab();
+            showToast('样式导入成功！');
+
+        } catch (error) {
+            showToast(`导入失败: ${error.message}`, 'error');
+            console.error("Style import error:", error);
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsText(file);
+});
     function openLoadStyleModal(type, context) {
         runtimeState.styleLoadContext = { type, context };
         const dataArray = (type === 'theme') ? appState.data.savedThemes : appState.data.savedBubbles;
@@ -4288,7 +4370,7 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
             const finalFontFamily = fontName.toLowerCase() === 'default' 
                 ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
                 : `"${fontName}"`;
-            generatedRules += `${scopeSelector} { font-family: ${finalFontFamily} !important; }\n`;
+            generatedRules += `${scopeSelector}, ${scopeSelector} * { font-family: ${finalFontFamily} !important; }\n`;
         }
         
         const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
@@ -4439,8 +4521,8 @@ function updateThemeCssPreview(id) {
         const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
         if (fontFamilyMatch) {
             const fontName = fontFamilyMatch[1].trim();
-            const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : `"${fontName}"`;
-            generatedRules += `${module.scope} { font-family: ${finalFontFamily} !important; }\n`;
+const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : `"${fontName}"`;
+            generatedRules += `${module.scope}, ${module.scope} * { font-family: ${finalFontFamily} !important; }\n`;
         }
 
         const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
@@ -4480,6 +4562,7 @@ function updateThemeCssPreview(id) {
         if (confirm('确定要还原所有模块的默认样式吗？此操作不可撤销。')) {
             appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '', loveLetter: '' };
             debouncedSaveState();
+                    renderThemeEditor();
             applyCustomThemes();
             renderThemeEditor();
             showToast('已还原为默认样式！');
