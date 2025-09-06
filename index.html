@@ -302,7 +302,7 @@
     min-height: 180px; /* 确保卡片有最小高度 */
     flex-shrink: 0;
 }
-    .styles-column {
+        .styles-column {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -315,15 +315,10 @@
         margin-bottom: 10px;
         flex-shrink: 0;
     }
-    .styles-list {
+    #sent-letters-list, #received-letters-list {
         flex-grow: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 5px;
-        background-color: var(--bg-color);
-        border-radius: 8px;
+        padding: 0; /* Fix: Removed unnecessary padding */
+        align-content: flex-start;
     }
     .style-preview-item {
         padding: 10px;
@@ -1174,7 +1169,7 @@ align-content: start;
 .love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
-.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; align-items: start; }
+.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; align-items: start; }
 .love-letter-preview-card {
     background: var(--love-letter-texture), linear-gradient(to bottom right, #fdfbf7, #f4f0e8);
     border: 1px solid #e0d8cc;
@@ -1498,7 +1493,7 @@ padding: 0 10px;
                         <button id="export-media-btn" class="settings-button" data-bubble-id="settings-export-media">导出媒体库</button>
                         <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
                     </div>
-                    <input type="file" id="import-file-input" style="display: none;">
+                    <input type="file" id="import-file-input" style="display: none;" multiple accept=".zip">
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
     <button id="optimize-media-btn" class="settings-button secondary">优化媒体存储</button>
     <button id="recache-media-btn" class="settings-button secondary">重新缓存链接媒体</button>
@@ -3934,32 +3929,67 @@ store.count().onsuccess = async (e) => {
 });
     
     getEl('import-media-btn').addEventListener('click', () => {
-        importFileInput.accept = '.zip';
-        importFileInput.onchange = (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (confirm("这将导入ZIP包中的所有媒体文件，如果存在同名文件，旧文件将被覆盖。确定吗？")) {
-                showToast("正在解压并导入媒体...", 'info');
-                JSZip.loadAsync(file).then(async (zip) => {
+    importFileInput.accept = '.zip';
+    importFileInput.onchange = async (event) => {
+        const files = event.target.files;
+        if (files.length === 0) return;
+
+        if (confirm(`即将导入 ${files.length} 个压缩包。这将把所有文件添加到您现有的媒体库中。确定吗？`)) {
+            showToast(`准备导入 ${files.length} 个压缩包...`, 'info');
+            let totalImportedCount = 0;
+
+            for (const file of files) {
+                showToast(`正在处理 ${file.name}...`, 'info');
+                try {
+                    const zip = await JSZip.loadAsync(file);
                     const promises = [];
+                    let filesInThisZip = 0;
+
                     zip.forEach((relativePath, zipEntry) => {
-                        const promise = zipEntry.async("blob").then(blobData => {
-                            return addMediaToDB(zipEntry.name, blobData);
+                        if (zipEntry.dir) return;
+                        filesInThisZip++;
+
+                        const promise = zipEntry.async("blob").then(async (blobData) => {
+                            const id = zipEntry.name;
+                            await addMediaToDB(id, blobData);
+
+                            if (id.startsWith('wp_')) {
+                                if (!appState.beautify.wallpapers.some(wp => wp.id === id)) {
+                                    appState.beautify.wallpapers.push({ id });
+                                }
+                            } else if (id.startsWith('font_')) {
+                                if (!appState.beautify.fonts.some(f => f.id === id)) {
+                                    const name = id.replace(/\.[^/.]+$/, '').replace(/^font_/, '');
+                                    appState.beautify.fonts.push({ id, name });
+                                }
+                            } else if (id.startsWith('song_')) {
+                                 if (!appState.music.playlist.some(s => s.id === id)) {
+                                    const title = id.replace(/\.[^/.]+$/, '').replace(/^song_/, '');
+                                    appState.music.playlist.push({ id, title, artist: '未知艺术家', url: id, duration: NaN, isLocal: true });
+                                 }
+                            }
                         });
                         promises.push(promise);
                     });
+                    
                     await Promise.all(promises);
-                    showToast(`媒体库导入成功！共 ${promises.length} 个文件。正在刷新...`, 'info');
-                    setTimeout(() => window.location.reload(), 1500);
-                }).catch(error => {
-                    showToast('解压或导入失败，请检查文件格式。', 'error');
-                    console.error(error);
-                });
+                    totalImportedCount += filesInThisZip;
+
+                } catch (error) {
+                    showToast(`处理文件 ${file.name} 失败`, 'error');
+                    console.error(`Error processing ${file.name}:`, error);
+                }
             }
-            importFileInput.value = ''; // Reset
-        };
-        importFileInput.click();
-    });
+
+            saveState(); // 在处理完所有文件后，进行一次性保存
+            
+            showToast(`导入完成！共处理了 ${totalImportedCount} 个文件。正在刷新...`, 'info');
+            setTimeout(() => window.location.reload(), 1500);
+        }
+        importFileInput.value = ''; // Reset for next import
+    };
+    importFileInput.click();
+});
 
     // ===================================================================
     // --- 基础 UI & 系统功能 ---
@@ -4663,7 +4693,39 @@ function handleMailTabChange(tabId) {
     
     debouncedSaveState(); // Save the new timestamp to localStorage
 }
-async function loadAllCustomFonts() { const existingStyle = document.getElementById('all-custom-fonts-style'); if (existingStyle) existingStyle.remove(); const style = document.createElement('style'); style.id = 'all-custom-fonts-style'; let fontFaceRules = ''; for (const font of appState.beautify.fonts) { const url = await getMediaURL(font.id); if (url) { fontFaceRules += `@font-face { font-family: "${font.name}"; src: url("${url}"); }\n`; } } style.textContent = fontFaceRules; document.head.appendChild(style); }
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+async function loadAllCustomFonts() {
+    const existingStyle = document.getElementById('all-custom-fonts-style');
+    if (existingStyle) existingStyle.remove();
+    const style = document.createElement('style');
+    style.id = 'all-custom-fonts-style';
+    let fontFaceRules = '';
+    for (const font of appState.beautify.fonts) {
+        try {
+            // Check if font.id is a URL (from optimization) or a local ID
+            if (font.id.startsWith('http')) {
+                fontFaceRules += `@font-face { font-family: "${font.name}"; src: url("${font.id}"); }\n`;
+            } else {
+                const fontData = await getMediaFromDB(font.id);
+                if (fontData) {
+                    const base64Url = await blobToBase64(fontData);
+                    fontFaceRules += `@font-face { font-family: "${font.name}"; src: url('${base64Url}'); }\n`;
+                }
+            }
+        } catch (error) {
+            console.error(`Failed to load font "${font.name}":`, error);
+        }
+    }
+    style.textContent = fontFaceRules;
+    document.head.appendChild(style);
+}
 function renderFonts(isAppending = false) {
 const BATCH_SIZE = 50;
 const container = getEl('font-tab-content');
@@ -4722,8 +4784,73 @@ function applyFont(fontName, isInitialLoad = false) { document.documentElement.s
 cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
 uploadFontBtn.addEventListener('click', () => fontFileInput.click());
 fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { for (const file of files) { const newFontId = newId('font'); const name = file.name.replace(/\.[^/.]+$/, ""); await addMediaToDB(newFontId, file); appState.beautify.fonts.push({ id: newFontId, name }); } await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
-confirmAddFontUrlBtn.addEventListener('click', async () => { const btn = confirmAddFontUrlBtn; if (btn.disabled) return; btn.disabled = true; btn.textContent = '处理中...'; try { const lines = fontUrlInput.value.trim().split('\n'); let addedCount = 0; for (const line of lines) { if (!line.trim()) continue; let name, url; const separatorIndex = line.search(/:|：/); if (separatorIndex > -1) { name = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } else { url = line.trim(); name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, ""); } if (name && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newFontId = newId('font');             await addMediaToDB(newFontId, blob);
-            appState.beautify.fonts.push({ id: newFontId, name, sourceUrl: url }); appState.beautify.fonts.push({ id: newFontId, name }); addedCount++; } } if (addedCount > 0) { await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${addedCount} 个字体`); } addFontModal.classList.remove('visible'); fontUrlInput.value = ''; } catch (error) { console.error("Error adding font from URL:", error); showToast("添加字体失败", "error"); } finally { btn.disabled = false; btn.textContent = '添加URL'; } });
+confirmAddFontUrlBtn.addEventListener('click', async () => {
+        const btn = confirmAddFontUrlBtn;
+        if (btn.disabled) return;
+        btn.disabled = true;
+        btn.textContent = '处理中...';
+
+        try {
+            const lines = fontUrlInput.value.trim().split('\n');
+            let addedCount = 0;
+            const promises = [];
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
+
+                let name, url;
+                const separatorIndex = line.search(/:|：/);
+                if (separatorIndex > -1) {
+                    name = line.substring(0, separatorIndex).trim();
+                    url = line.substring(separatorIndex + 1).trim();
+                } else {
+                    url = line.trim();
+                    name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
+                }
+
+                if (name && url.startsWith('http')) {
+                    const promise = (async () => {
+                        try {
+                            const response = await fetch(url); // 直接请求URL，移除代理
+                            if (!response.ok) {
+                                console.error(`Failed to fetch font ${url}: ${response.statusText}`);
+                                return; // 如果此链接失败，则跳过
+                            }
+                            const blob = await response.blob();
+                            const newFontId = newId('font');
+                            await addMediaToDB(newFontId, blob);
+                            appState.beautify.fonts.push({ id: newFontId, name, sourceUrl: url });
+                            addedCount++;
+                        } catch (e) {
+                            console.error(`Error processing font URL ${url}:`, e);
+                        }
+                    })();
+                    promises.push(promise);
+                }
+            }
+
+            await Promise.all(promises);
+
+            if (addedCount > 0) {
+                await loadAllCustomFonts();
+                debouncedSaveState();
+                renderFonts();
+                showToast(`成功添加 ${addedCount} 个字体`);
+            } else if (lines.some(l => l.trim())) {
+                showToast('未添加任何字体，请检查格式或链接', 'error');
+            }
+            
+            addFontModal.classList.remove('visible');
+            fontUrlInput.value = '';
+
+        } catch (error) {
+            console.error("Error adding fonts from URL:", error);
+            showToast(`添加字体时发生错误: ${error.message}`, "error");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '添加URL';
+        }
+    });
 const iconNameMap = {
         // System & Apps
         'status-battery-default': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料',
@@ -11976,7 +12103,7 @@ authorSelector.addEventListener('click', e => {
                 });
                 // --- Love Letter Listeners ---
                 getEl('love-letter-tab-content').addEventListener('click', e => {
-            const item = e.target.closest('.love-letter-item, .collected-letter-item');
+                    const item = e.target.closest('.love-letter-preview-card');
             if (!item) return;
             
             const letterId = item.dataset.letterId;
