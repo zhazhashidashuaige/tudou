@@ -12441,40 +12441,68 @@ getEl('optimize-media-btn').addEventListener('click', async () => {
     showToast('正在扫描和优化媒体库...', 'info');
     let optimizedCount = 0;
     const tasks = [];
+    const idToUrlMap = new Map();
 
+    // 1. 收集所有可优化的媒体
     // 优化音乐
     appState.music.playlist.forEach(song => {
         if (song.sourceUrl && song.url.startsWith('song_')) {
-            tasks.push(deleteMediaFromDB(song.url).then(() => {
-                song.url = song.sourceUrl;
-                optimizedCount++;
-            }));
+            idToUrlMap.set(song.url, song.sourceUrl);
         }
     });
     
     // 优化字体
     appState.beautify.fonts.forEach(font => {
         if (font.sourceUrl && font.id.startsWith('font_')) {
-            tasks.push(deleteMediaFromDB(font.id).then(() => {
-                font.id = font.sourceUrl;
-                optimizedCount++;
-            }));
+            idToUrlMap.set(font.id, font.sourceUrl);
         }
     });
 
-    // 优化通用媒体库
-    for(const [id, url] of Object.entries(appState.beautify.mediaSources || {})) {
+    // 优化所有其他媒体源
+    const allSources = {
+        ...(appState.beautify.mediaSources || {}),
+        ...(appState.beautify.iconSources || {}),
+        ...(appState.data.mediaSources || {})
+    };
+    for (const [id, url] of Object.entries(allSources)) {
+        idToUrlMap.set(id, url);
+    }
+
+    if (idToUrlMap.size === 0) {
+        showToast('未找到可优化的媒体文件。', 'info');
+        return;
+    }
+    
+    // 2. 执行优化操作
+    for (const [id, url] of idToUrlMap.entries()) {
         tasks.push(deleteMediaFromDB(id));
-        // 查找并替换所有使用此ID的地方
-        appState.chat.userProfile.avatarLibrary = appState.chat.userProfile.avatarLibrary.map(i => i === id ? url : i);
-        appState.chat.userProfile.avatarFrameLibrary = appState.chat.userProfile.avatarFrameLibrary.map(i => i === id ? url : i);
-        appState.chat.contacts.forEach(c => {
-             if (c.userSettings && c.userSettings.avatarLibrary) c.userSettings.avatarLibrary = c.userSettings.avatarLibrary.map(i => i === id ? url : i);
-             if (c.charSettings && c.charSettings.avatarLibrary) c.charSettings.avatarLibrary = c.charSettings.avatarLibrary.map(i => i === id ? url : i);
-        });
+        
+        // 递归替换整个 appState 中的 ID
+        const replaceIdInObject = (obj) => {
+            for (const key in obj) {
+                if (typeof obj[key] === 'string' && obj[key] === id) {
+                    obj[key] = url;
+                } else if (Array.isArray(obj[key])) {
+                    obj[key] = obj[key].map(item => (item === id ? url : item));
+                    obj[key].forEach(item => {
+                        if (typeof item === 'object' && item !== null) {
+                            replaceIdInObject(item);
+                        }
+                    });
+                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    replaceIdInObject(obj[key]);
+                }
+            }
+        };
+        replaceIdInObject(appState);
+
         optimizedCount++;
     }
-    appState.beautify.mediaSources = {}; // 清空源
+
+    // 3. 清理源映射
+    appState.beautify.mediaSources = {};
+    appState.beautify.iconSources = {};
+    appState.data.mediaSources = {};
 
     await Promise.all(tasks);
     debouncedSaveState();
@@ -12490,33 +12518,76 @@ getEl('recache-media-btn').addEventListener('click', async () => {
     showToast('开始重新缓存，请保持网络通畅...', 'info');
     let recachedCount = 0;
     const tasks = [];
+    const urlToNewIdMap = new Map();
 
-    const processItem = async (item, idField, urlField, prefix) => {
-        if (item[urlField] && item[urlField].startsWith('http')) {
-            try {
-                const response = await fetch(item[urlField]);
-                const blob = await response.blob();
-                const newId = newId(prefix);
-                await addMediaToDB(newId, blob);
-                item[idField] = newId;
-                item[urlField] = newId; // 确保所有相关字段都更新
-                recachedCount++;
-            } catch (e) { console.error(`Failed to recache ${item[urlField]}:`, e); }
+    // 1. 递归扫描整个 appState 寻找所有 http 链接
+    const findUrlsInObject = (obj, pathPrefix = '') => {
+        for (const key in obj) {
+            if (typeof obj[key] === 'string' && obj[key].startsWith('http')) {
+                const url = obj[key];
+                if (!urlToNewIdMap.has(url)) {
+                    // 根据路径猜测媒体类型前缀
+                    const path = `${pathPrefix}.${key}`.toLowerCase();
+                    let prefix = 'media';
+                    if (path.includes('font')) prefix = 'font';
+                    else if (path.includes('song') || path.includes('music')) prefix = 'song';
+                    else if (path.includes('icon')) prefix = 'icon';
+                    else if (path.includes('avatar')) prefix = 'avatar';
+                    else if (path.includes('cover')) prefix = 'cover';
+                    
+                    const newId = newId(prefix);
+                    urlToNewIdMap.set(url, newId);
+                    
+                    tasks.push((async () => {
+                        try {
+                            const response = await fetch(url);
+                            const blob = await response.blob();
+                            await addMediaToDB(newId, blob);
+                            recachedCount++;
+                        } catch (e) {
+                            console.error(`Failed to recache ${url}:`, e);
+                            urlToNewIdMap.delete(url); // 如果下载失败，则不替换
+                        }
+                    })());
+                }
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                findUrlsInObject(obj[key], `${pathPrefix}.${key}`);
+            }
         }
     };
+
+    findUrlsInObject(appState, 'appState');
     
-    for (const song of appState.music.playlist) {
-        if(song.sourceUrl && song.url.startsWith('http')) {
-            tasks.push(processItem(song, 'url', 'url', 'song'));
-        }
-    }
-    for (const font of appState.beautify.fonts) {
-        if(font.sourceUrl && font.id.startsWith('http')) {
-            tasks.push(processItem(font, 'id', 'id', 'font'));
-        }
+    if (tasks.length === 0) {
+        showToast('未找到可重新缓存的链接媒体。', 'info');
+        return;
     }
     
+    // 2. 等待所有下载完成
     await Promise.all(tasks);
+
+    // 3. 替换所有URL为新的本地ID
+    const replaceUrlInObject = (obj) => {
+        for (const key in obj) {
+            if (typeof obj[key] === 'string' && obj[key].startsWith('http')) {
+                if (urlToNewIdMap.has(obj[key])) {
+                    const originalUrl = obj[key];
+                    obj[key] = urlToNewIdMap.get(originalUrl);
+                    // 恢复 sourceUrl 字段以便再次优化
+                    if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+                        if (('url' in obj && 'sourceUrl' in obj) || ('id' in obj && 'sourceUrl' in obj)) {
+                            obj.sourceUrl = originalUrl;
+                        }
+                    }
+                }
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                replaceUrlInObject(obj[key]);
+            }
+        }
+    };
+
+    replaceUrlInObject(appState);
+
     debouncedSaveState();
     showToast(`重新缓存完成！共处理了 ${recachedCount} 个文件。`, 'info');
     setTimeout(() => window.location.reload(), 1500);
