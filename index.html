@@ -1494,10 +1494,7 @@ padding: 0 10px;
                         <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
                     </div>
                     <input type="file" id="import-file-input" style="display: none;" multiple accept=".zip">
-                    <div style="display: flex; gap: 10px; margin-top: 10px;">
-    <button id="optimize-media-btn" class="settings-button secondary">优化媒体存储</button>
-    <button id="recache-media-btn" class="settings-button secondary">重新缓存链接媒体</button>
-</div>
+                    
                 </div>
             </div>
             <div class="settings-group">
@@ -4056,53 +4053,53 @@ if (!contact.userSettings.videoBackgroundLibrary) {
      } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } if (!contact.charSettings.videoBackgroundLibrary) { contact.charSettings.videoBackgroundLibrary = []; } if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) contact.charSettings.chatBackgroundId = 'default'; if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
     function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); });applyCustomThemes(); applyAllCustomBubbleStyles();}
-    function applyAllCustomBubbleStyles() {
-    const existingStyle = document.getElementById('custom-bubble-styles');
-    if (existingStyle) existingStyle.remove();
-    let finalCss = '';
-    appState.chat.contacts.forEach(contact => {
-        const rawCss = contact.userSettings.bubbleCss;
-        if (rawCss) {
-            let generatedRules = '';
-            const baseSelector = `#single-chat-screen[data-contact-id="${contact.id}"] .message-bubble`;
+function applyAllCustomBubbleStyles() {
+const existingStyle = document.getElementById('custom-bubble-styles');
+if (existingStyle) existingStyle.remove();
+let finalCss = '';
+appState.chat.contacts.forEach(contact => {
+    const rawCss = contact.userSettings.bubbleCss;
+    if (rawCss) {
+        let generatedRules = '';
+        const baseSelector = `#single-chat-screen[data-contact-id="${contact.id}"] .message-bubble`;
 
-            const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
-            if (bgImageMatch) {
-                generatedRules += `${baseSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; border: none !important; }\n`;
-            }
-
-            const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
-        if (fontFamilyMatch) {
-            const fontName = fontFamilyMatch[1].trim();
-            const finalFontFamily = fontName.toLowerCase() === 'default' 
-                ? 'var(--system-font-family)'
-                : `"${fontName}"`;
-            generatedRules += `${baseSelector}, ${baseSelector} * { font-family: ${finalFontFamily} !important; }\n`;
+        const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+        if (bgImageMatch) {
+            generatedRules += `${baseSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; border: none !important; }\n`;
         }
 
-            const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
-            if (fontSizeMatch) {
-                generatedRules += `${baseSelector} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
-            }
-            
-            const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
-            if (colorMatch && colorMatch[1].trim().toLowerCase() !== 'unset') {
-                generatedRules += `${baseSelector} { color: ${colorMatch[1].trim()} !important; }\n`;
-            }
-            
-            const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
-            const scopedUserCss = processAndScopeCss(userCss, `#single-chat-screen[data-contact-id="${contact.id}"]`);
-
-            finalCss += generatedRules + scopedUserCss + '\n';
-        }
-    });
-
-    if (finalCss) {
-        const style = document.createElement('style');
-        style.id = 'custom-bubble-styles';
-        style.textContent = finalCss;
-        document.head.appendChild(style);
+        const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
+    if (fontFamilyMatch) {
+        const fontName = fontFamilyMatch[1].trim();
+        const finalFontFamily = fontName.toLowerCase() === 'default' 
+            ? 'var(--system-font-family)'
+            : `"${fontName}"`;
+        generatedRules += `${baseSelector}, ${baseSelector} * { font-family: ${finalFontFamily} !important; }\n`;
     }
+
+        const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
+        if (fontSizeMatch) {
+            generatedRules += `${baseSelector} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
+        }
+        
+        const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
+        if (colorMatch && colorMatch[1].trim().toLowerCase() !== 'unset') {
+            generatedRules += `${baseSelector} { color: ${colorMatch[1].trim()} !important; }\n`;
+        }
+        
+        const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
+        const scopedUserCss = processAndScopeCss(userCss, `#single-chat-screen[data-contact-id="${contact.id}"]`);
+
+        finalCss += generatedRules + scopedUserCss + '\n';
+    }
+});
+
+if (finalCss) {
+    const style = document.createElement('style');
+    style.id = 'custom-bubble-styles';
+    style.textContent = finalCss;
+    document.head.appendChild(style);
+}
 }
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); debouncedSaveState(); });
     getEl('api-key').addEventListener('input', () => { appState.settings.apiKey = getEl('api-key').value.trim(); debouncedSaveState(); });
@@ -4328,8 +4325,62 @@ if (!contact.userSettings.videoBackgroundLibrary) {
     cancelAddMusicBtn.addEventListener('click', () => addMusicModal.classList.remove('visible'));
     uploadMusicBtn.addEventListener('click', () => musicFileInput.click());
     musicFileInput.addEventListener('change', (e) => { const files = e.target.files; if (files.length > 0) { processFiles(files); addMusicModal.classList.remove('visible'); musicFileInput.value = ''; } });
-    confirmAddUrlBtn.addEventListener('click', async () => { const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim()); musicUrlInput.value = ''; addMusicModal.classList.remove('visible'); let audioUrls = [], lrcUrls = []; lines.forEach(line => { const separatorIndex = line.search(/\s*[:：]\s*/); let meta, url; if (separatorIndex === -1) { url = line.trim(); meta = url.substring(url.lastIndexOf('/') + 1); } else { meta = line.substring(0, separatorIndex).trim(); url = line.substring(separatorIndex + 1).trim(); } if (!url.startsWith('http')) return; if (url.toLowerCase().endsWith('.lrc')) { lrcUrls.push({ meta, url }); } else { audioUrls.push({ meta, url }); } }); let addedCount = 0; audioUrls.forEach(({ meta, url }) => { const parts = meta.replace(/\.[^/.]+$/, "").split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';             const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta;
-            const newSong = { id: newId('song'), title, artist, url, duration: NaN, isLocal: false, sourceUrl: url }; appState.music.playlist.push(newSong); addedCount++; }); if (addedCount > 0) { showToast(`正在添加 ${addedCount} 首歌曲...`); renderMusicList(); debouncedSaveState(); } for (const { meta, url } of lrcUrls) { try { const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`; const response = await fetch(proxyUrl); if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`); const lrcContent = await response.text(); matchAndApplyLyrics(lrcContent, meta); } catch (e) { console.error(`加载歌词失败: ${meta}`, e); showToast(`无法加载歌词: ${meta}`, 'error'); } } });
+confirmAddUrlBtn.addEventListener('click', async () => {
+    const lines = musicUrlInput.value.trim().split('\n').filter(line => line.trim());
+    musicUrlInput.value = '';
+    addMusicModal.classList.remove('visible');
+
+    let audioUrls = [], lrcUrls = [];
+    lines.forEach(line => {
+        const separatorIndex = line.search(/\s*[:：]\s*/);
+        let meta, url;
+        if (separatorIndex === -1) {
+            url = line.trim();
+            meta = url.substring(url.lastIndexOf('/') + 1);
+        } else {
+            meta = line.substring(0, separatorIndex).trim();
+            url = line.substring(separatorIndex + 1).trim();
+        }
+        if (!url.startsWith('http')) return;
+
+        if (url.toLowerCase().endsWith('.lrc')) {
+            lrcUrls.push({ meta, url });
+        } else {
+            audioUrls.push({ meta, url });
+        }
+    });
+
+    let addedCount = 0;
+    audioUrls.forEach(({ meta, url }) => {
+        const parts = meta.replace(/\.[^/.]+$/, "").split(' - ');
+        const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家';
+        const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : meta;
+        // 直接使用URL，不下载
+        const newSong = { id: newId('song'), title, artist, url: url, duration: NaN, isLocal: false, sourceUrl: url };
+        appState.music.playlist.push(newSong);
+        addedCount++;
+    });
+
+    if (addedCount > 0) {
+        showToast(`成功添加 ${addedCount} 首歌曲链接`);
+        renderMusicList();
+        debouncedSaveState();
+    }
+
+    for (const { meta, url } of lrcUrls) {
+        try {
+            // LRC歌词因为浏览器CORS策略，通常仍需要代理下载
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const lrcContent = await response.text();
+            matchAndApplyLyrics(lrcContent, meta);
+        } catch (e) {
+            console.error(`加载歌词失败: ${meta}`, e);
+            showToast(`无法加载歌词: ${meta}`, 'error');
+        }
+    }
+});
     function processFiles(files) { let audioFiles = [], lrcFiles = []; Array.from(files).forEach(file => { if (file.name.toLowerCase().endsWith('.lrc')) { lrcFiles.push(file); } else { audioFiles.push(file); } }); let addedCount = 0; audioFiles.forEach(file => { const reader = new FileReader(); reader.onload = (event) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); const parts = baseName.split(' - '); const artist = parts.length > 1 ? parts[0].trim() : '未知艺术家'; const title = parts.length > 1 ? parts.slice(1).join(' - ').trim() : baseName; const newSong = { id: newId('song'), title, artist, url: event.target.result, duration: NaN, isLocal: true }; appState.music.playlist.push(newSong); addedCount++; if (addedCount === audioFiles.length) { showToast(`成功添加 ${addedCount} 首歌曲`); renderMusicList(); debouncedSaveState(); } }; reader.readAsDataURL(file); }); lrcFiles.forEach(file => { const reader = new FileReader(); reader.onload = (e) => { const baseName = file.name.replace(/\.[^/.]+$/, ""); matchAndApplyLyrics(e.target.result, baseName); }; reader.readAsText(file); }); }
     function normalizeStringForMatching(str) { if (!str) return ''; return decodeURIComponent(str).toLowerCase().replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ').replace(/['".,]/g, '').replace(/\s+/g, ' ').trim(); }
     function matchAndApplyLyrics(lrcContent, baseName) { const lrcData = parseLRC(lrcContent); if (lrcData.length === 0) return; const normalizedBaseName = normalizeStringForMatching(baseName); const songMap = new Map(); appState.music.playlist.forEach(s => { const songBaseName = normalizeStringForMatching(`${s.artist} - ${s.title}`); songMap.set(songBaseName, s.id); }); const matchingSongId = songMap.get(normalizedBaseName); if (matchingSongId) { appState.music.lyrics[matchingSongId] = lrcData; showToast(`歌词已匹配到: ${appState.music.playlist.find(s=>s.id === matchingSongId).title}`); debouncedSaveState(); } else { showToast(`未找到歌曲以匹配歌词: ${baseName}`, 'error'); console.log("Failed to match lyrics. Base name:", normalizedBaseName, "Available songs:", [...songMap.keys()]); } }
@@ -4455,8 +4506,7 @@ cancelBubbleIoBtn.addEventListener('click', () => bubbleIoModal.classList.remove
 exportBubblesBtn.addEventListener('click', async () => { showToast("正在导出气泡设置...", 'info'); try { const bubbleSettings = appState.beautify.bubbleSettings; const mediaIds = new Set(); Object.values(bubbleSettings.global).forEach(style => { if (style.backgroundImageId) mediaIds.add(style.backgroundImageId); }); Object.values(bubbleSettings.specific).forEach(bubble => { Object.values(bubble).forEach(style => { if (style.backgroundImageId) mediaIds.add(style.backgroundImageId); }); }); const mediaData = {}; for (const id of mediaIds) { const data = await getMediaFromDB(id); if (data) mediaData[id] = await blobToBase64(data); } const backup = { bubbleSettings, mediaData }; const dataStr = JSON.stringify(backup); const blob = new Blob([dataStr], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `EmperorPhone-BubblesBackup-${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(url); a.remove(); showToast("气泡设置已导出！"); } catch (error) { console.error("导出气泡失败:", error); showToast("导出气泡失败", 'error'); } });
 importBubblesBtn.addEventListener('click', () => importBubblesInput.click());
 importBubblesInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (event) => { showToast("正在导入气泡设置...", 'info'); try { const backup = JSON.parse(event.target.result); if (!backup.bubbleSettings || !backup.mediaData) throw new Error("备份文件格式无效"); if (confirm("这将覆盖所有当前的气泡设置，确定吗？")) { for (const [id, base64] of Object.entries(backup.mediaData)) { await addMediaToDB(id, base64ToBlob(base64)); } appState.beautify.bubbleSettings = backup.bubbleSettings; debouncedSaveState(); await applyAllCustomizations(); renderBubbles(); showToast("气泡设置导入成功！"); bubbleIoModal.classList.remove('visible'); } } catch (error) { showToast(`导入失败: ${error.message}`, 'error'); } finally { importBubblesInput.value = ''; } }; reader.readAsText(file); });
-wallpaperFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { showToast(`正在添加 ${files.length} 张壁纸...`); for (const file of files) { const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); } debouncedSaveState(); await renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } wallpaperFileInput.value = ''; });
-async function renderWallpapers(isAppending = false) {
+wallpaperFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { showToast(`正在添加 ${files.length} 张壁纸...`); for (const file of files) { const compressedFile = await compressImageBeforeSaving(file, { maxWidth: 720, maxHeight: 1280 }); const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, compressedFile); appState.beautify.wallpapers.push({ id: newWallpaperId }); } debouncedSaveState(); await renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } wallpaperFileInput.value = ''; });async function renderWallpapers(isAppending = false) {
 const BATCH_SIZE = 48;
 const container = getEl('wallpaper-tab-content');
 
@@ -4785,72 +4835,49 @@ cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('
 uploadFontBtn.addEventListener('click', () => fontFileInput.click());
 fontFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { for (const file of files) { const newFontId = newId('font'); const name = file.name.replace(/\.[^/.]+$/, ""); await addMediaToDB(newFontId, file); appState.beautify.fonts.push({ id: newFontId, name }); } await loadAllCustomFonts(); debouncedSaveState(); renderFonts(); showToast(`成功添加 ${files.length} 个字体`); addFontModal.classList.remove('visible'); fontFileInput.value = ''; } });
 confirmAddFontUrlBtn.addEventListener('click', async () => {
-        const btn = confirmAddFontUrlBtn;
-        if (btn.disabled) return;
-        btn.disabled = true;
-        btn.textContent = '处理中...';
+    const btn = confirmAddFontUrlBtn;
+    if (btn.disabled) return;
+    
+    try {
+        const lines = fontUrlInput.value.trim().split('\n').filter(Boolean);
+        if (lines.length === 0) return;
 
-        try {
-            const lines = fontUrlInput.value.trim().split('\n');
-            let addedCount = 0;
-            const promises = [];
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-
-                let name, url;
-                const separatorIndex = line.search(/:|：/);
-                if (separatorIndex > -1) {
-                    name = line.substring(0, separatorIndex).trim();
-                    url = line.substring(separatorIndex + 1).trim();
-                } else {
-                    url = line.trim();
-                    name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
-                }
-
-                if (name && url.startsWith('http')) {
-                    const promise = (async () => {
-                        try {
-                            const response = await fetch(url); // 直接请求URL，移除代理
-                            if (!response.ok) {
-                                console.error(`Failed to fetch font ${url}: ${response.statusText}`);
-                                return; // 如果此链接失败，则跳过
-                            }
-                            const blob = await response.blob();
-                            const newFontId = newId('font');
-                            await addMediaToDB(newFontId, blob);
-                            appState.beautify.fonts.push({ id: newFontId, name, sourceUrl: url });
-                            addedCount++;
-                        } catch (e) {
-                            console.error(`Error processing font URL ${url}:`, e);
-                        }
-                    })();
-                    promises.push(promise);
-                }
+        let addedCount = 0;
+        for (const line of lines) {
+            let name, url;
+            const separatorIndex = line.search(/:|：/);
+            if (separatorIndex > -1) {
+                name = line.substring(0, separatorIndex).trim();
+                url = line.substring(separatorIndex + 1).trim();
+            } else {
+                url = line.trim();
+                name = url.substring(url.lastIndexOf('/') + 1).replace(/\.[^/.]+$/, "");
             }
 
-            await Promise.all(promises);
-
-            if (addedCount > 0) {
-                await loadAllCustomFonts();
-                debouncedSaveState();
-                renderFonts();
-                showToast(`成功添加 ${addedCount} 个字体`);
-            } else if (lines.some(l => l.trim())) {
-                showToast('未添加任何字体，请检查格式或链接', 'error');
+            if (name && url.startsWith('http')) {
+                // 直接存储URL作为ID
+                appState.beautify.fonts.push({ id: url, name, sourceUrl: url });
+                addedCount++;
             }
-            
-            addFontModal.classList.remove('visible');
-            fontUrlInput.value = '';
-
-        } catch (error) {
-            console.error("Error adding fonts from URL:", error);
-            showToast(`添加字体时发生错误: ${error.message}`, "error");
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '添加URL';
         }
-    });
+
+        if (addedCount > 0) {
+            await loadAllCustomFonts();
+            debouncedSaveState();
+            renderFonts();
+            showToast(`成功添加 ${addedCount} 个字体`);
+        } else {
+            showToast('未添加任何有效字体，请检查格式或链接', 'error');
+        }
+        
+        addFontModal.classList.remove('visible');
+        fontUrlInput.value = '';
+
+    } catch (error) {
+        console.error("Error adding fonts from URL:", error);
+        showToast(`添加字体时发生错误: ${error.message}`, "error");
+    }
+});
 const iconNameMap = {
         // System & Apps
         'status-battery-default': '状态栏 电量', 'status-battery-charging': '状态栏 充电', 'app-chat': '应用 聊天', 'app-music': '应用 音乐', 'app-shop': '应用 购物', 'app-diary': '应用 手账', 'app-mail': '应用 信箱', 'dock-settings': 'Dock 设置', 'dock-beautify': 'Dock 美化', 'dock-data': 'Dock 资料',
@@ -4941,11 +4968,17 @@ function renderIcons() { iconGrid.innerHTML = '';
 iconGrid.addEventListener('click', (e) => { const item = e.target.closest('.icon-item'); if (item) { replaceIconIdInput.value = item.dataset.id; replaceIconModal.classList.add('visible'); } });
 cancelReplaceIconBtn.addEventListener('click', () => replaceIconModal.classList.remove('visible'));
 uploadIconBtn.addEventListener('click', () => iconFileInput.click());
-iconFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const newIconId = newId('icon'); await addMediaToDB(newIconId, file); applyIconChange(replaceIconIdInput.value, newIconId); iconFileInput.value = ''; } });
-confirmReplaceIconUrlBtn.addEventListener('click', async () => { const url = iconUrlInput.value.trim(); if (url) { const response = await fetch(url); const blob = await response.blob(); const newIconId = newId('icon');        await addMediaToDB(newIconId, blob);
-        // 附加sourceUrl到appState.beautify.icons的一个隐藏属性中
-        if(!appState.beautify.iconSources) appState.beautify.iconSources = {};
-        appState.beautify.iconSources[newIconId] = url; applyIconChange(replaceIconIdInput.value, newIconId); iconUrlInput.value = ''; } });
+iconFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const compressedFile = await compressImageBeforeSaving(file, { maxWidth: 128, maxHeight: 128, quality: 0.9 }); const newIconId = newId('icon'); await addMediaToDB(newIconId, compressedFile); applyIconChange(replaceIconIdInput.value, newIconId); iconFileInput.value = ''; } });
+confirmReplaceIconUrlBtn.addEventListener('click', async () => {
+    const url = iconUrlInput.value.trim();
+    if (url && url.startsWith('http')) {
+        // 直接使用URL作为mediaId
+        applyIconChange(replaceIconIdInput.value, url);
+        iconUrlInput.value = '';
+    } else if (url) {
+        showToast('请输入一个有效的URL', 'error');
+    }
+});
 restoreIconBtn.addEventListener('click', async () => { const iconId = replaceIconIdInput.value; if (confirm(`确定要还原 "${iconNameMap[iconId] || iconId}" 的默认图标吗？`)) { const oldMediaId = appState.beautify.icons[iconId]; if (oldMediaId) await deleteMediaFromDB(oldMediaId); delete appState.beautify.icons[iconId]; applyIconChange(iconId, null, false, true); debouncedSaveState(); renderIcons(); showToast('图标已还原'); replaceIconModal.classList.remove('visible'); } });
 async function applyIconChange(iconId, mediaId, isInitialLoad = false, isRestoring = false) { if (!isRestoring) { appState.beautify.icons[iconId] = mediaId; } queryAll(`[data-icon-id="${iconId}"]`).forEach(async targetEl => { if (targetEl) { if (isRestoring) { targetEl.innerHTML = runtimeState.originalIconContent[iconId]; } else { const img = targetEl.querySelector('img') || document.createElement('img'); if (!targetEl.querySelector('img')) { targetEl.innerHTML = ''; targetEl.appendChild(img); } await setElementImage(img, mediaId, 'src'); } } }); if (!isInitialLoad) { if (!isRestoring) { debouncedSaveState(); renderIcons(); replaceIconModal.classList.remove('visible'); showToast('图标已替换'); } } }
 const bubbleNameMap = { 'global_bubble': '全局气泡', 'settings-load-model': '设置 加载模型', 'settings-save-preset': '设置 保存预设', 'settings-manage-presets': '设置 管理预设', 'settings-export': '设置 导出', 'settings-import': '设置 导入', 'player-restore-playlist': '播放器 还原列表', 'modal-close-preset': '弹窗 关闭预设', 'modal-cancel': '弹窗 取消', 'modal-save': '弹窗 保存', 'modal-select-file': '弹窗 选择文件', 'modal-add-url': '弹窗 添加URL', 'modal-cancel-music': '弹窗 取消音乐', 'modal-cancel-song': '弹窗 取消歌曲', 'modal-save-song': '弹窗 保存歌曲', 'modal-upload-font': '弹窗 上传字体', 'modal-add-font-url': '弹窗 添加字体URL', 'modal-cancel-font': '弹窗 取消字体', 'modal-upload-icon': '弹窗 上传图标', 'modal-confirm-icon-url': '弹窗 确认图标URL', 'modal-restore-icon': '弹窗 还原图标', 'modal-cancel-icon': '弹窗 取消图标', 'font-color-btn': '字体 颜色按钮', 'comment-send-btn': '评论 发送', 'comment-reply-send': '评论 回复发送', 'emoji-close': '表情 关闭', 'emoji-add': '表情 添加', 'cs-avatar-lib': '设置 Char头像库', 'cs-frame-lib': '设置 Char头像框库', 'cs-chat-bg': '设置 Char聊天背景', 'cs-save-persona': '设置 Char保存资料', 'cs-load-persona': '设置 Char读取资料', 'cs-clear-history': '设置 Char清空记录', 'cs-delete-friend': '设置 Char删除好友', 'cs-restore': '设置 Char还原更改', 'us-avatar-lib': '设置 User头像库', 'us-frame-lib': '设置 User头像框库', 'us-video-bg': '设置 User视频背景', 'us-save-persona': '设置 User保存资料', 'us-load-persona': '设置 User读取资料', 'bubble-upload-img': '气泡 上传图片', 'bubble-save': '气泡 保存', 'bubble-restore': '气泡 还原', 'bubble-cancel': '气泡 取消', 'data-upload-avatar': '资料 上传头像', 'data-add-avatar-url': '资料 添加头像URL', 'data-cancel': '资料 取消', 'data-save': '资料 保存', 'contact-add-cancel': '联系人 添加取消', 'contact-add-confirm': '联系人 添加确认', 'emoji-upload-file': '表情 上传文件', 'emoji-add-url': '表情 添加URL', 'emoji-add-cancel': '表情 添加取消', 'pat-cancel': '拍一拍 取消', 'pat-confirm': '拍一拍 确认', 'status-edit-cancel': '状态编辑 取消', 'status-edit-confirm': '状态编辑 确认', 'voice-cancel': '语音 取消', 'voice-confirm': '语音 确认', 'camera-cancel': '拍照 取消', 'camera-confirm': '拍照 确认', 'link-cancel': '链接 取消', 'link-confirm': '链接 确认', 'rp-cancel': '红包 取消', 'rp-confirm': '红包 确认', 'grp-cancel': '群红包 取消', 'grp-confirm': '群红包 确认', 'comment-edit-cancel': '评论编辑 取消', 'comment-edit-save': '评论编辑 保存', 'view-content-close': '查看内容 关闭', 'msg-edit-cancel': '消息编辑 取消', 'msg-edit-save': '消息编辑 保存', 'lib-upload': '库 上传', 'lib-add-url': '库 添加URL', 'lib-delete': '库 删除', 'lib-close': '库 关闭', 'persona-load-cancel': '资料读取 取消', 'gcs-avatar-lib': '群设置 头像库', 'gcs-chat-bg': '群设置 背景', 'gcs-clear-history': '群设置 清空记录', 'gcs-mute-all': '群设置 全体禁言', 'gcs-disband': '群设置 解散群聊', 'gcs-us-avatar-lib': '群我的设置 头像库', 'gcs-us-frame-lib': '群我的设置 头像框', 'gcs-us-video-bg': '群我的设置 视频背景', 'gcs-us-save-persona': '群我的设置 保存资料', 'gcs-us-load-persona': '群我的设置 读取资料', 'gcs-member-avatar-lib': '群成员设置 头像库', 'gcs-member-frame-lib': '群成员设置 头像框', 'gcs-member-save-persona': '群成员设置 保存资料', 'gcs-member-load-persona': '群成员设置 读取资料', 'gcs-member-cancel': '群成员设置 取消', 'gcs-member-save': '群成员设置 保存', 'gcs-manage-cancel': '群管理 取消', 'gcs-manage-confirm': '群管理 确认', 'gcs-member-action-cancel': '群成员操作 取消' };
@@ -4997,7 +5030,7 @@ cancelEditBubbleBtn.addEventListener('click', () => editBubbleModal.classList.re
 saveBubbleBtn.addEventListener('click', () => { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); const newStyles = { width: bubbleWidthInput.value, height: bubbleHeightInput.value, transform: `translateX(${bubblePosXInput.value}) translateY(${bubblePosYInput.value})`, color: bubbleColorInput.value, backgroundColor: bubbleBgColorInput.value, borderColor: bubbleBorderColorInput.value, replaceBgOnly: replaceBgOnlyCheckbox.checked, backgroundImageId: settingsGroup.backgroundImageId }; const cleanedStyles = Object.fromEntries(Object.entries(newStyles).filter(([_, v]) => v !== '' && v !== '0px')); if (isGlobal) { appState.beautify.bubbleSettings.global = cleanedStyles; } else { appState.beautify.bubbleSettings.specific[bubbleId] = cleanedStyles; } debouncedSaveState(); if (isGlobal) { Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, true)); } else { applyBubbleChange(bubbleId, true); } editBubbleModal.classList.remove('visible'); showToast('气泡样式已保存'); });
 restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBubbleIdInput.value; if (confirm(`确定要还原 "${bubbleNameMap[bubbleId] || bubbleId}" 的样式吗？`)) { const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : appState.beautify.bubbleSettings.specific[bubbleId]; if (settingsGroup?.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } if (isGlobal) { appState.beautify.bubbleSettings.global = {}; Object.keys(bubbleNameMap).forEach(id => applyBubbleChange(id, false, true)); } else { delete appState.beautify.bubbleSettings.specific[bubbleId]; applyBubbleChange(bubbleId, false, true); } debouncedSaveState(); renderBubbles(); showToast('气泡已还原'); editBubbleModal.classList.remove('visible'); } });
     const defaultThemeStyles = {
-    momentsPost: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #ffffff;\n@font-family: default;\n@font-size: 15px;\n@color: #000000;\n\n/* 在下方输入自定义CSS */\n.post-header {\n  padding-bottom: 5px;\n}',
+        momentsPost: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #ffffff;\n@font-family: default;\n@font-size: 15px;\n@color: #000000;\n\n/* 在下方输入自定义CSS */\n.post-header {\n  padding-bottom: 5px;\n}',
     appHeader: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
     bottomTabs: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
     listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}',
@@ -5006,76 +5039,75 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     };
 
     function applyCustomThemes() {
-    const existingStyle = document.getElementById('custom-theme-styles');
-    if (existingStyle) existingStyle.remove();
+const existingStyle = document.getElementById('custom-theme-styles');
+if (existingStyle) existingStyle.remove();
 
-    const customThemes = appState.beautify.customThemes;
-    let finalCss = '';
-    const modules = {
-        momentsPost: '.moments-post-item .post-item-content',
-        appHeader: '.app-header',
-        bottomTabs: '.app-bottom-tabs',
-                loveLetter: '#love-letter-viewer',
-        listItem: '.swipe-content',
-    chatInput: '#chat-footer'
-    };
+const customThemes = appState.beautify.customThemes;
+let finalCss = '';
+const modules = {
+    momentsPost: '.moments-post-item .post-item-content',
+    appHeader: '.app-header',
+    bottomTabs: '.app-bottom-tabs',
+            loveLetter: '#love-letter-viewer',
+    listItem: '.swipe-content',
+chatInput: '#chat-footer'
+};
 
-    for (const [key, scopeSelector] of Object.entries(modules)) {
-        let rawCss = customThemes[key] || '';
-        let generatedRules = '';
-        
-                const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
-        if (bgImageMatch && bgImageMatch[1].trim() !== '图片链接') {
-            generatedRules += `${scopeSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
-        } else {
-            const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
-            if (bgColorMatch) generatedRules += `${scopeSelector} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
-        }
-
-                const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
-        if (fontFamilyMatch) {
-            const fontName = fontFamilyMatch[1].trim();
-            const finalFontFamily = fontName.toLowerCase() === 'default' 
-                ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
-                : `"${fontName}"`;
-            generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { font-family: ${finalFontFamily} !important; }\n`;
-        }
-        
-        const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
-        if (colorMatch) {
-            generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { color: ${colorMatch[1].trim()} !important; }\n`;
-        }
-        
-        const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
-        if (fontSizeMatch) generatedRules += `${scopeSelector} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
-                if (key === 'chatInput') {
-            const textareaHeightMatch = rawCss.match(/@textarea-height:\s*([^;]+);/);
-            if (textareaHeightMatch) {
-                generatedRules += `${scopeSelector} .chat-input { height: ${textareaHeightMatch[1].trim()} !important; }\n`;
-            }
-                        const textareaWidthMatch = rawCss.match(/@textarea-width:\s*([^;]+);/);
-            if (textareaWidthMatch) {
-                const widthValue = textareaWidthMatch[1].trim();
-                if (widthValue.toLowerCase() === 'auto') {
-                    generatedRules += `${scopeSelector} .chat-input { width: auto !important; flex-grow: 1 !important; }\n`;
-                } else {
-                    generatedRules += `${scopeSelector} .chat-input { width: ${widthValue} !important; flex-grow: 0 !important; }\n`;
-                }
-            }
-        }
-        const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
-        const scopedUserCss = processAndScopeCss(userCss, scopeSelector);
-
-        finalCss += generatedRules + scopedUserCss + '\n';
+for (const [key, scopeSelector] of Object.entries(modules)) {
+    let rawCss = customThemes[key] || '';
+    let generatedRules = '';
+    
+            const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+    if (bgImageMatch && bgImageMatch[1].trim() !== '图片链接') {
+        generatedRules += `${scopeSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
+    } else {
+        const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
+        if (bgColorMatch) generatedRules += `${scopeSelector} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
     }
 
-    if (finalCss) {
-        const style = document.createElement('style');
-        style.id = 'custom-theme-styles';
-        style.textContent = finalCss;
-        document.head.appendChild(style);
+            const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
+    if (fontFamilyMatch) {
+        const fontName = fontFamilyMatch[1].trim();
+        const finalFontFamily = fontName.toLowerCase() === 'default' 
+            ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
+            : `"${fontName}"`;
+        generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { font-family: ${finalFontFamily} !important; }\n`;
     }
+    
+    const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
+    if (colorMatch) {
+        generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { color: ${colorMatch[1].trim()} !important; }\n`;
+    }
+    
+    const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
+    if (fontSizeMatch) generatedRules += `${scopeSelector} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
+            if (key === 'chatInput') {
+        const textareaHeightMatch = rawCss.match(/@textarea-height:\s*([^;]+);/);
+        if (textareaHeightMatch) {
+            generatedRules += `${scopeSelector} .chat-input { height: ${textareaHeightMatch[1].trim()} !important; }\n`;
+        }
+                    const textareaWidthMatch = rawCss.match(/@textarea-width:\s*([^;]+);/);
+        if (textareaWidthMatch) {
+            const widthValue = textareaWidthMatch[1].trim();
+            if (widthValue.toLowerCase() === 'auto') {
+                generatedRules += `${scopeSelector} .chat-input { width: auto !important; flex-grow: 1 !important; }\n`;
+            } else {
+                generatedRules += `${scopeSelector} .chat-input { width: ${widthValue} !important; flex-grow: 0 !important; }\n`;
+            }
+        }
+    }
+    const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
+    const scopedUserCss = processAndScopeCss(userCss, scopeSelector);
+
+    finalCss += generatedRules + scopedUserCss + '\n';
 }
+
+if (finalCss) {
+    const style = document.createElement('style');
+    style.id = 'custom-theme-styles';
+    style.textContent = finalCss;
+    document.head.appendChild(style);
+}}
 
     const defaultBubbleCssText = `/* @属性值示例 */
     @background-image: url(图片链接);
@@ -5173,17 +5205,17 @@ function updateThemeCssPreview(id) {
         const previewHTML = {
             moments: `<div class="moments-post-item"><div class="post-item-content"><div class="post-header"><div class="post-avatar" style="background-color:#ccc"></div><div class="post-author-info"><div class="post-author-name">预览用户</div><div class="post-timestamp">刚刚</div></div></div><div class="post-content-text">这是一个预览动态...</div></div></div>`,
             header: `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`,
-                    letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 12px; font-size: 11px; line-height: 1.5; color: #333; background: var(--love-letter-texture), linear-gradient(to bottom right, #f4f0e8, #fdfbf7); border: 1px solid #e0d8cc;">
-                <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #dcd3c5;">
-                    <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; border: 1px solid white;"></div>
-                    <div>
-                        <div style="font-weight: bold; font-size: 12px;">亲爱的预览用户：</div>
-                        <div style="font-size: 10px; color: #888;">2025/9/6 上午9:41:00</div>
-                    </div>
+            letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 12px; font-size: 11px; line-height: 1.5; color: #333; background: var(--love-letter-texture), linear-gradient(to bottom right, #f4f0e8, #fdfbf7); border: 1px solid #e0d8cc;">
+            <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #dcd3c5;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; border: 1px solid white;"></div>
+                <div>
+                    <div style="font-weight: bold; font-size: 12px;">亲爱的预览用户：</div>
+                    <div style="font-size: 10px; color: #888;">2025/9/6 上午9:41:00</div>
                 </div>
-                <p style="margin:0 0 1em 0;">这是信件正文的预览内容，它展示了信件的大致样式和感觉，以便您可以更好地自定义CSS...</p>
-                <div class="letter-signature" style="text-align: right; margin-top: 1em; font-style: italic;"><span>爱你的，预览签名</span></div>
-            </div>`,
+            </div>
+            <p style="margin:0 0 1em 0;">这是信件正文的预览内容，它展示了信件的大致样式和感觉，以便您可以更好地自定义CSS...</p>
+            <div class="letter-signature" style="text-align: right; margin-top: 1em; font-style: italic;"><span>爱你的，预览签名</span></div>
+        </div>`,
             tabs: `<div class="app-bottom-tabs"><div class="tab-link active">标签1</div><div class="tab-link">标签2</div><div class="tab-link">标签3</div></div>`,
             'list-item': `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`,
             'chat-input': `<div id="chat-footer-preview" class="chat-footer"><div class="chat-input-area"><textarea class="chat-input" rows="1" placeholder="输入..."></textarea><div class="chat-input-buttons"><button class="icon-btn"><i class="fa-solid fa-face-smile"></i></button></div></div><div class="chat-toolbar"><button class="icon-btn"><i class="fa-solid fa-microphone"></i></button><button class="icon-btn"><i class="fa-solid fa-images"></i></button><button class="icon-btn"><i class="fa-solid fa-camera"></i></button><button class="icon-btn"><i class="fa-solid fa-video"></i></button></div></div>`
@@ -5194,10 +5226,10 @@ function updateThemeCssPreview(id) {
     const modules = {
         moments: { editor: themeCssMoments, scope: '#theme-preview-moments .moments-post-item .post-item-content' },
         header: { editor: themeCssHeader, scope: '#theme-preview-header .app-header' },
-            letter: { editor: getEl('theme-css-letter'), scope: '#theme-preview-letter #love-letter-viewer-preview' },
+        letter: { editor: getEl('theme-css-letter'), scope: '#theme-preview-letter #love-letter-viewer-preview' },
         tabs: { editor: themeCssTabs, scope: '#theme-preview-tabs .app-bottom-tabs' },
         'list-item': { editor: themeCssListItem, scope: '#theme-preview-list-item .swipe-content' },
-    'chat-input': { editor: getEl('theme-css-chat-input'), scope: '#theme-preview-chat-input #chat-footer-preview' }
+'chat-input': { editor: getEl('theme-css-chat-input'), scope: '#theme-preview-chat-input #chat-footer-preview' }
     };
 
     let finalPreviewCss = '';
@@ -5227,7 +5259,7 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
         
         const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
         if (fontSizeMatch) generatedRules += `${module.scope} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
-                if (key === 'chat-input') {
+            if (key === 'chat-input') {
             const textareaHeightMatch = rawCss.match(/@textarea-height:\s*([^;]+);/);
             if (textareaHeightMatch) {
                 generatedRules += `${module.scope} .chat-input { height: ${textareaHeightMatch[1].trim()} !important; }\n`;
@@ -5280,10 +5312,24 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
     });
 uploadBubbleBtn.addEventListener('click', () => bubbleFileInput.click());
 bubbleFileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) { handleBubbleImage(file); bubbleFileInput.value = ''; } });
-bubbleUrlInput.addEventListener('input', async () => { const url = bubbleUrlInput.value.trim(); if (url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); handleBubbleImage(blob); } });
+bubbleUrlInput.addEventListener('input', async () => {
+    const url = bubbleUrlInput.value.trim();
+    if (url.startsWith('http')) {
+        // 直接将URL作为背景ID，不再下载
+        const bubbleId = editBubbleIdInput.value;
+        const isGlobal = bubbleId === 'global_bubble';
+        const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {});
+
+        if (!isGlobal && !appState.beautify.bubbleSettings.specific[bubbleId]) {
+            appState.beautify.bubbleSettings.specific[bubbleId] = settingsGroup;
+        }
+        settingsGroup.backgroundImageId = url; // 直接赋值URL
+        toggleBubbleColorInputs(true);
+        updateBubblePreview();
+    }
+});
 function toggleBubbleColorInputs(hasImage) { queryAll('.bubble-color-group').forEach(el => el.classList.toggle('hidden-by-logic', !!hasImage)); }
-async function handleBubbleImage(fileOrBlob) { const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); if (!isGlobal && !appState.beautify.bubbleSettings.specific[bubbleId]) { appState.beautify.bubbleSettings.specific[bubbleId] = settingsGroup; } if (settingsGroup.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } const newBubbleId = newId('bubble'); await addMediaToDB(newBubbleId, fileOrBlob); settingsGroup.backgroundImageId = newBubbleId; toggleBubbleColorInputs(true); updateBubblePreview(); }
-async function applyBubbleChange(bubbleId, isInitialLoad = false, isRestoring = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; if (isRestoring) { targetEl.style.cssText = runtimeState.originalBubbleContent[bubbleId] || ''; } else { const globalStyles = appState.beautify.bubbleSettings.global || {}; const specificStyles = appState.beautify.bubbleSettings.specific[bubbleId] || {}; const finalStyles = { ...globalStyles, ...specificStyles }; targetEl.style.cssText = runtimeState.originalBubbleContent[bubbleId] || ''; for (const key in finalStyles) { if (key !== 'backgroundImageId' && key !== 'replaceBgOnly') { targetEl.style[key] = finalStyles[key]; } } if (finalStyles.backgroundImageId) { const url = await getMediaURL(finalStyles.backgroundImageId); if (url) { targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.backgroundImage = `url(${url})`; if (finalStyles.replaceBgOnly) { targetEl.style.color = finalStyles.color || ''; } else { targetEl.textContent = ''; } } } } }
+async function handleBubbleImage(fileOrBlob) { const compressedFile = await compressImageBeforeSaving(fileOrBlob, { maxWidth: 512, maxHeight: 512, quality: 0.7 }); const bubbleId = editBubbleIdInput.value; const isGlobal = bubbleId === 'global_bubble'; const settingsGroup = isGlobal ? appState.beautify.bubbleSettings.global : (appState.beautify.bubbleSettings.specific[bubbleId] || {}); if (!isGlobal && !appState.beautify.bubbleSettings.specific[bubbleId]) { appState.beautify.bubbleSettings.specific[bubbleId] = settingsGroup; } if (settingsGroup.backgroundImageId) { await deleteMediaFromDB(settingsGroup.backgroundImageId); } const newBubbleId = newId('bubble'); await addMediaToDB(newBubbleId, compressedFile); settingsGroup.backgroundImageId = newBubbleId; toggleBubbleColorInputs(true); updateBubblePreview(); }async function applyBubbleChange(bubbleId, isInitialLoad = false, isRestoring = false) { const targetEl = query(`[data-bubble-id="${bubbleId}"]`); if (!targetEl) return; if (!isInitialLoad) targetEl.style.transition = 'none'; if (isRestoring) { targetEl.style.cssText = runtimeState.originalBubbleContent[bubbleId] || ''; } else { const globalStyles = appState.beautify.bubbleSettings.global || {}; const specificStyles = appState.beautify.bubbleSettings.specific[bubbleId] || {}; const finalStyles = { ...globalStyles, ...specificStyles }; targetEl.style.cssText = runtimeState.originalBubbleContent[bubbleId] || ''; for (const key in finalStyles) { if (key !== 'backgroundImageId' && key !== 'replaceBgOnly') { targetEl.style[key] = finalStyles[key]; } } if (finalStyles.backgroundImageId) { const url = await getMediaURL(finalStyles.backgroundImageId); if (url) { targetEl.style.backgroundSize = 'cover'; targetEl.style.backgroundPosition = 'center'; targetEl.style.backgroundImage = `url(${url})`; if (finalStyles.replaceBgOnly) { targetEl.style.color = finalStyles.color || ''; } else { targetEl.textContent = ''; } } } } }
 
 // ===================================================================
 // --- 资料 APP ---
@@ -5413,10 +5459,17 @@ function renderWorldBookFilterDropdown() {
         }
     });
 dataUploadAvatarBtn.addEventListener('click', () => dataAvatarFileInput.click());
-dataAvatarFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, file); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); dataAvatarFileInput.value = ''; } });
-dataAddAvatarUrlBtn.addEventListener('click', async () => { const url = prompt('请输入图片URL:'); if (url && url.startsWith('http')) { const response = await fetch(url); const blob = await response.blob(); const newAvatarId = newId('data_avatar');         await addMediaToDB(newAvatarId, blob);
-        if(!appState.data.mediaSources) appState.data.mediaSources = {};
-        appState.data.mediaSources[newAvatarId] = url; dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); } else if (url) { showToast('无效的URL', 'error'); } });
+dataAvatarFileInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const compressedFile = await compressImageBeforeSaving(file, { maxWidth: 256, maxHeight: 256 }); const newAvatarId = newId('data_avatar'); await addMediaToDB(newAvatarId, compressedFile); dataAvatarPreview.dataset.avatarId = newAvatarId; setElementImage(dataAvatarPreview, newAvatarId); dataAvatarFileInput.value = ''; } });
+dataAddAvatarUrlBtn.addEventListener('click', async () => {
+    const url = prompt('请输入图片URL:');
+    if (url && url.startsWith('http')) {
+        // 直接使用URL作为avatarId
+        dataAvatarPreview.dataset.avatarId = url;
+        setElementImage(dataAvatarPreview, url);
+    } else if (url) {
+        showToast('无效的URL', 'error');
+    }
+});
 function escapeHTML(str) { 
     if (typeof str !== 'string') return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); 
@@ -6468,8 +6521,7 @@ function handleMusicShareClick() {
         getEl('lyrics-container').classList.add('visible'); // 在此添加
         playSongFromQueue(0, 'user');
     }
-chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const imageId = newId('image'); await addMediaToDB(imageId, file); addMessageToConversation({ id: newId('msg'), type: 'image', imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatImageInput.value = ''; } });
-cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
+chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const compressedFile = await compressImageBeforeSaving(file); const imageId = newId('image'); await addMediaToDB(imageId, compressedFile); addMessageToConversation({ id: newId('msg'), type: 'image', imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatImageInput.value = ''; } });cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
 confirmVoiceBtn.addEventListener('click', () => { const text = voiceTextInput.value.trim(); if (!text) return; const cleanText = text.replace(/\[.*?\]|（.*?）/g, ''); const duration = Math.ceil(cleanText.length / 2); addMessageToConversation({ id: newId('msg'), type: 'voice', content: text, duration: duration, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); voiceInputModal.classList.remove('visible'); voiceTextInput.value = ''; });
 cancelCameraBtn.addEventListener('click', () => cameraInputModal.classList.remove('visible'));
 confirmCameraBtn.addEventListener('click', async () => { const text = cameraTextInput.value.trim(); if (!text) return; const response = await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg'); const blob = await response.blob(); const imageId = newId('image'); await addMediaToDB(imageId, blob); addMessageToConversation({ id: newId('msg'), type: 'camera', content: text, imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); cameraInputModal.classList.remove('visible'); cameraTextInput.value = ''; });
@@ -7137,69 +7189,85 @@ libraryDeleteBtn.addEventListener('click', async () => {
         libraryFileInput.accept = 'image/*,.zip';
         libraryFileInput.click();
     });
-libraryAddUrlBtn.addEventListener('click', async () => { const urls = prompt('请输入图片URL，每行一个:'); if (urls) { const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http')); if (urlArray.length > 0) { const context = runtimeState.libraryContext; let lib; if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; } else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; } else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; } else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; } else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; } for (const url of urlArray) { const response = await fetch(url); const blob = await response.blob(); const newLibId = newId('lib');             await addMediaToDB(newLibId, blob);
-            if(!appState.beautify.mediaSources) appState.beautify.mediaSources = {};
-            appState.beautify.mediaSources[newLibId] = url; lib.push(newLibId); } debouncedSaveState(); renderLibraryGrid(); } } });
-libraryFileInput.addEventListener('change', async (e) => {
-        const files = e.target.files;
-        if (files.length === 0) return;
-
-        const context = runtimeState.libraryContext;
-        let lib;
-        if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; }
-        else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; }
-        else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; }
-        else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; }
-        else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; }
-
-        showToast(`正在处理 ${files.length} 个文件...`, 'info');
-        let addedCount = 0;
-        const processingPromises = [];
-
-        for (const file of files) {
-            if (file.type.startsWith('image/')) {
-                const promise = (async () => {
-                    const newLibId = newId('lib');
-                    await addMediaToDB(newLibId, file);
-                    lib.push(newLibId);
-                    addedCount++;
-                })();
-                processingPromises.push(promise);
-            } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
-                const promise = JSZip.loadAsync(file).then(zip => {
-                    const zipFilePromises = [];
-                    zip.forEach((relativePath, zipEntry) => {
-                        if (!zipEntry.dir && /\.(gif|png|jpg|jpeg|webp)$/i.test(zipEntry.name)) {
-                            const zipPromise = zipEntry.async("blob").then(blobData => {
-                                const newLibId = newId('lib');
-                                lib.push(newLibId);
-                                addedCount++;
-                                return addMediaToDB(newLibId, blobData);
-                            });
-                            zipFilePromises.push(zipPromise);
-                        }
-                    });
-                    return Promise.all(zipFilePromises);
-                }).catch(err => {
-                    console.error("解压ZIP失败:", err);
-                    showToast(`处理 ${file.name} 失败`, 'error');
-                });
-                processingPromises.push(promise);
+libraryAddUrlBtn.addEventListener('click', async () => {
+    const urls = prompt('请输入图片URL，每行一个:');
+    if (urls) {
+        const urlArray = urls.split('\n').filter(u => u.trim().startsWith('http'));
+        if (urlArray.length > 0) {
+            const context = runtimeState.libraryContext;
+            let lib;
+            if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; }
+            else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; }
+            else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; }
+            else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; }
+            else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; }
+            
+            for (const url of urlArray) {
+                // 直接将URL推入库中
+                lib.push(url);
             }
-        }
-
-        await Promise.all(processingPromises);
-
-        if (addedCount > 0) {
             debouncedSaveState();
             renderLibraryGrid();
-            showToast(`成功添加 ${addedCount} 个项目！`);
-        } else {
-            showToast('没有找到可添加的图片文件', 'error');
+            showToast(`成功添加 ${urlArray.length} 个链接`);
         }
+    }
+});
+libraryFileInput.addEventListener('change', async (e) => {
+    const files = e.target.files;
+    if (files.length === 0) return;
 
-        libraryFileInput.value = ''; // Reset for next use
-    });
+    const context = runtimeState.libraryContext;
+    let lib;
+    if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; }
+    else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; }
+    else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; }
+    else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; }
+    else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; }
+
+    showToast(`正在处理 ${files.length} 个文件...`, 'info');
+    let addedCount = 0;
+    const processingPromises = [];
+
+    const processImageFile = async (imageFile) => {
+        const compressedFile = await compressImageBeforeSaving(imageFile);
+        const newLibId = newId('lib');
+        await addMediaToDB(newLibId, compressedFile);
+        lib.push(newLibId);
+        addedCount++;
+    };
+
+    for (const file of files) {
+        if (file.type.startsWith('image/')) {
+            processingPromises.push(processImageFile(file));
+        } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
+            const promise = JSZip.loadAsync(file).then(zip => {
+                const zipFilePromises = [];
+                zip.forEach((relativePath, zipEntry) => {
+                    if (!zipEntry.dir && /\.(gif|png|jpg|jpeg|webp)$/i.test(zipEntry.name)) {
+                        zipFilePromises.push(zipEntry.async("blob").then(processImageFile));
+                    }
+                });
+                return Promise.all(zipFilePromises);
+            }).catch(err => {
+                console.error("解压ZIP失败:", err);
+                showToast(`处理 ${file.name} 失败`, 'error');
+            });
+            processingPromises.push(promise);
+        }
+    }
+
+    await Promise.all(processingPromises);
+
+    if (addedCount > 0) {
+        debouncedSaveState();
+        renderLibraryGrid();
+        showToast(`成功添加 ${addedCount} 个项目！`);
+    } else {
+        showToast('没有找到可添加的图片文件', 'error');
+    }
+
+    libraryFileInput.value = ''; // Reset for next use
+});
 async function handleChatBackgroundUpload(file, settingsObject) { if (!file) return; const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); settingsObject.chatBackgroundId = newWallpaperId; debouncedSaveState(); showToast('背景已设置并存入壁纸库'); await updateSingleChatUI(); }
     async function handleVideoBackgroundUpload(file, settingsObject) {
     if (!file) return;
@@ -9090,6 +9158,65 @@ function updateTypingIndicator() { if (!singleChatScreen.classList.contains('act
         renderMomentsFeed(profileId);
     }
     const newId = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    /**
+ * @param {File|Blob} file The image file to compress.
+ * @param {object} options Compression options.
+ * @param {number} [options.maxWidth=1280] The maximum width of the output image.
+ * @param {number} [options.maxHeight=1280] The maximum height of the output image.
+ * @param {number} [options.quality=0.8] The quality of the output JPEG image (0 to 1).
+ * @returns {Promise<Blob>} A promise that resolves with the compressed image Blob.
+ */
+function compressImageBeforeSaving(file, options = {}) {
+    const { maxWidth = 1280, maxHeight = 1280, quality = 0.8 } = options;
+
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) {
+                        reject(new Error('Canvas to Blob conversion failed'));
+                        return;
+                    }
+                    // For transparency, check if we should use PNG, otherwise JPEG is better for photos
+                    // For simplicity, we'll stick to JPEG here as it offers the best compression for photos.
+                    resolve(blob);
+                },
+                'image/jpeg',
+                quality
+            );
+        };
+        img.onerror = reject;
+    });
+}
 async function handleMomentsImageUpload(file, profileId, type) {
         if (!file) return;
 
@@ -10583,35 +10710,30 @@ areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked,
         
         getEl('post-moment-upload-btn').addEventListener('click', () => getEl('post-moment-image-input').click());
         getEl('post-moment-add-url-btn').addEventListener('click', async () => {
-            const url = prompt('请输入图片URL:');
-            if (url && url.startsWith('http')) {
-                showToast('正在添加图片...');
-                try {
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    const newImageId = newId('moment_img');
-                    await addMediaToDB(newImageId, blob);
-                    runtimeState.moments.postContext.images.push(newImageId);
-                    showToast('图片添加成功！');
-                } catch (error) {
-                    showToast('添加图片失败，请检查URL或网络', 'error');
-                }
-            }
-        });
+    const url = prompt('请输入图片URL:');
+    if (url && url.startsWith('http')) {
+        // 直接使用URL作为图片ID
+        runtimeState.moments.postContext.images.push(url);
+        showToast('图片链接添加成功！');
+    } else if (url) {
+        showToast('无效的URL', 'error');
+    }
+});
         
         getEl('post-moment-image-input').addEventListener('change', async (e) => {
-            const files = e.target.files;
-            if(files.length > 0){
-                showToast(`正在添加 ${files.length} 张图片...`);
-                for(const file of files) {
-                    const newImageId = newId('moment_img');
-                    await addMediaToDB(newImageId, file);
-                    runtimeState.moments.postContext.images.push(newImageId);
-                }
-                showToast('图片添加成功！');
-                e.target.value = ''; // Reset file input
-            }
-        });
+    const files = e.target.files;
+    if(files.length > 0){
+        showToast(`正在添加 ${files.length} 张图片...`);
+        for(const file of files) {
+            const compressedFile = await compressImageBeforeSaving(file);
+            const newImageId = newId('moment_img');
+            await addMediaToDB(newImageId, compressedFile);
+            runtimeState.moments.postContext.images.push(newImageId);
+        }
+        showToast('图片添加成功！');
+        e.target.value = ''; // Reset file input
+    }
+});
 
         // Listeners for the new comment edit modal
         const authorSelector = getEl('moment-comment-author-selector');
@@ -10975,27 +11097,27 @@ function setupBackgroundLibraryListeners() {
     });
 
     addUrlBtn.addEventListener('click', async () => {
-        const url = prompt('请输入图片URL:');
-        if (url && url.startsWith('http')) {
-            showToast('正在下载背景...');
-            const context = runtimeState.backgroundLibraryContext;
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                const newId = newId('bg');
-                await addMediaToDB(newId, blob);
-                 if (context.type === 'chat') {
-                    appState.beautify.wallpapers.push({ id: newId });
-                } else { // video
-                    context.settingsObject[context.libraryKey].push(newId);
-                }
-                debouncedSaveState();
-                renderBackgroundLibraryGrid();
-            } catch (error) {
-                showToast('下载失败', 'error');
+    const url = prompt('请输入图片URL:');
+    if (url && url.startsWith('http')) {
+        const context = runtimeState.backgroundLibraryContext;
+        try {
+            if (context.type === 'chat') {
+                // 直接将URL作为ID存入壁纸列表
+                appState.beautify.wallpapers.push({ id: url });
+            } else { // video
+                // 直接将URL存入视频背景库
+                context.settingsObject[context.libraryKey].push(url);
             }
+            debouncedSaveState();
+            renderBackgroundLibraryGrid();
+            showToast('背景链接已添加');
+        } catch (error) {
+            showToast('添加失败', 'error');
         }
-    });
+    } else if (url) {
+        showToast('无效的URL', 'error');
+    }
+});
 
     closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
     modeToggleBtn.addEventListener('click', () => {
@@ -12433,165 +12555,7 @@ function showIncomingCallUI(contactId) {
     // --- END ADDED ---
 init();
 
-// --- 新增：媒体优化功能 ---
-getEl('optimize-media-btn').addEventListener('click', async () => {
-    if (!confirm('【警告】此操作会将所有通过URL添加的媒体文件从本地删除，并直接引用原始链接。\n\n优点：极大节省本地存储空间。\n缺点：需要网络才能显示，且若原始链接失效则媒体丢失。\n\n确定要继续吗？')) {
-        return;
-    }
-    showToast('正在扫描和优化媒体库...', 'info');
-    let optimizedCount = 0;
-    const tasks = [];
-    const idToUrlMap = new Map();
 
-    // 1. 收集所有可优化的媒体
-    // 优化音乐
-    appState.music.playlist.forEach(song => {
-        if (song.sourceUrl && song.url.startsWith('song_')) {
-            idToUrlMap.set(song.url, song.sourceUrl);
-        }
-    });
-    
-    // 优化字体
-    appState.beautify.fonts.forEach(font => {
-        if (font.sourceUrl && font.id.startsWith('font_')) {
-            idToUrlMap.set(font.id, font.sourceUrl);
-        }
-    });
-
-    // 优化所有其他媒体源
-    const allSources = {
-        ...(appState.beautify.mediaSources || {}),
-        ...(appState.beautify.iconSources || {}),
-        ...(appState.data.mediaSources || {})
-    };
-    for (const [id, url] of Object.entries(allSources)) {
-        idToUrlMap.set(id, url);
-    }
-
-    if (idToUrlMap.size === 0) {
-        showToast('未找到可优化的媒体文件。', 'info');
-        return;
-    }
-    
-    // 2. 执行优化操作
-    for (const [id, url] of idToUrlMap.entries()) {
-        tasks.push(deleteMediaFromDB(id));
-        
-        // 递归替换整个 appState 中的 ID
-        const replaceIdInObject = (obj) => {
-            for (const key in obj) {
-                if (typeof obj[key] === 'string' && obj[key] === id) {
-                    obj[key] = url;
-                } else if (Array.isArray(obj[key])) {
-                    obj[key] = obj[key].map(item => (item === id ? url : item));
-                    obj[key].forEach(item => {
-                        if (typeof item === 'object' && item !== null) {
-                            replaceIdInObject(item);
-                        }
-                    });
-                } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                    replaceIdInObject(obj[key]);
-                }
-            }
-        };
-        replaceIdInObject(appState);
-
-        optimizedCount++;
-    }
-
-    // 3. 清理源映射
-    appState.beautify.mediaSources = {};
-    appState.beautify.iconSources = {};
-    appState.data.mediaSources = {};
-
-    await Promise.all(tasks);
-    debouncedSaveState();
-    showToast(`优化完成！共处理了 ${optimizedCount} 个媒体文件。`, 'info');
-    // 刷新应用以应用更改
-    setTimeout(() => window.location.reload(), 1500);
-});
-
-getEl('recache-media-btn').addEventListener('click', async () => {
-    if (!confirm('此操作将重新下载所有已优化的链接媒体到本地，会增加存储占用，但能确保离线可用性。确定吗？')) {
-        return;
-    }
-    showToast('开始重新缓存，请保持网络通畅...', 'info');
-    let recachedCount = 0;
-    const tasks = [];
-    const urlToNewIdMap = new Map();
-
-    // 1. 递归扫描整个 appState 寻找所有 http 链接
-    const findUrlsInObject = (obj, pathPrefix = '') => {
-        for (const key in obj) {
-            if (typeof obj[key] === 'string' && obj[key].startsWith('http')) {
-                const url = obj[key];
-                if (!urlToNewIdMap.has(url)) {
-                    // 根据路径猜测媒体类型前缀
-                    const path = `${pathPrefix}.${key}`.toLowerCase();
-                    let prefix = 'media';
-                    if (path.includes('font')) prefix = 'font';
-                    else if (path.includes('song') || path.includes('music')) prefix = 'song';
-                    else if (path.includes('icon')) prefix = 'icon';
-                    else if (path.includes('avatar')) prefix = 'avatar';
-                    else if (path.includes('cover')) prefix = 'cover';
-                    
-                    const newId = newId(prefix);
-                    urlToNewIdMap.set(url, newId);
-                    
-                    tasks.push((async () => {
-                        try {
-                            const response = await fetch(url);
-                            const blob = await response.blob();
-                            await addMediaToDB(newId, blob);
-                            recachedCount++;
-                        } catch (e) {
-                            console.error(`Failed to recache ${url}:`, e);
-                            urlToNewIdMap.delete(url); // 如果下载失败，则不替换
-                        }
-                    })());
-                }
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                findUrlsInObject(obj[key], `${pathPrefix}.${key}`);
-            }
-        }
-    };
-
-    findUrlsInObject(appState, 'appState');
-    
-    if (tasks.length === 0) {
-        showToast('未找到可重新缓存的链接媒体。', 'info');
-        return;
-    }
-    
-    // 2. 等待所有下载完成
-    await Promise.all(tasks);
-
-    // 3. 替换所有URL为新的本地ID
-    const replaceUrlInObject = (obj) => {
-        for (const key in obj) {
-            if (typeof obj[key] === 'string' && obj[key].startsWith('http')) {
-                if (urlToNewIdMap.has(obj[key])) {
-                    const originalUrl = obj[key];
-                    obj[key] = urlToNewIdMap.get(originalUrl);
-                    // 恢复 sourceUrl 字段以便再次优化
-                    if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
-                        if (('url' in obj && 'sourceUrl' in obj) || ('id' in obj && 'sourceUrl' in obj)) {
-                            obj.sourceUrl = originalUrl;
-                        }
-                    }
-                }
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                replaceUrlInObject(obj[key]);
-            }
-        }
-    };
-
-    replaceUrlInObject(appState);
-
-    debouncedSaveState();
-    showToast(`重新缓存完成！共处理了 ${recachedCount} 个文件。`, 'info');
-    setTimeout(() => window.location.reload(), 1500);
-});
 });
 
 </script>
