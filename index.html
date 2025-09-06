@@ -7229,9 +7229,13 @@ libraryFileInput.addEventListener('change', async (e) => {
     const processingPromises = [];
 
     const processImageFile = async (imageFile) => {
-        const compressedFile = await compressImageBeforeSaving(imageFile);
+        // 检查上下文，如果正在上传的是头像框(isFrame为true)，则不压缩；否则，压缩。
+        const fileToSave = context.isFrame
+            ? imageFile
+            : await compressImageBeforeSaving(imageFile);
+
         const newLibId = newId('lib');
-        await addMediaToDB(newLibId, compressedFile);
+        await addMediaToDB(newLibId, fileToSave);
         lib.push(newLibId);
         addedCount++;
     };
@@ -8000,6 +8004,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `4. **【可见性规则】**: 当动态或留言信息中标注了 \`(仅对 ... 可见)\` 时，你扮演的角色【只有在自己的名字出现在可见列表中时】才能看到并对其进行互动（如点赞、评论、回复）。严禁扮演 A 角色去评论一条只对 B 角色可见的内容。\n\n`;
         prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
         prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
+        
         // --- 通用聊天规则模块 (重构后) ---
         prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前【必须】加上发言人信息，格式为 \`[昵称 (ID: char_id)]: 内容\`。你【必须】从上文的成员列表中获取准确的昵称和ID，例如: \`[小明(ID: char_123)]: user今天有空吗？<MSG_SPLIT>[小明(ID: char_123)]: 和我一起出去玩吧？<MSG_SPLIT>[小红(ID: char_456)]: user之前就和我约好了呀！<MSG_SPLIT>[小明(ID: char_123)]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
