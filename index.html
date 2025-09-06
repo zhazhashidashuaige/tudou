@@ -169,7 +169,11 @@
 
         /* --- 设置 APP 特定样式 --- */
         .settings-group { margin-bottom: 25px; padding: 0 20px; }
-        .settings-group .group-title { font-size: 14px; color: var(--secondary-text-color); margin-bottom: 8px; padding-left: 15px; text-transform: uppercase; }
+        .settings-group .group-title { font-size: 14px; color: var(--secondary-text-color); padding-left: 15px; text-transform: uppercase; }
+.group-title-wrapper { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.style-actions { display: flex; gap: 15px; padding-right: 15px; }
+.style-actions .icon-btn { background: none; border: none; cursor: pointer; color: var(--secondary-text-color); font-size: 16px; padding: 5px; }
+.style-actions .icon-btn:hover { color: var(--accent-color); }
         .settings-group .group-content { background-color: var(--item-bg); border-radius: 10px; overflow: hidden; }
         .settings-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; }
         .settings-item:last-child { border-bottom: none; }
@@ -250,12 +254,54 @@
         height: 100%;
         padding: 15px;
     }
-    .styles-container {
-        display: flex;
-        width: 100%;
-        height: 100%;
-        gap: 15px;
-    }
+    .love-letter-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    gap: 15px;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.styles-container {
+    display: block;
+    height: 100%;
+    padding: 0;
+}
+.styles-rows-container {
+    height: 100%;
+    overflow-y: auto;
+    padding: 15px;
+    box-sizing: border-box;
+}
+.style-row-group {
+    margin-bottom: 25px;
+}
+.style-row-group h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    padding-left: 5px;
+}
+.styles-row-scroll {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 5px;
+    padding-bottom: 15px; /* Space for scrollbar */
+    scrollbar-width: thin;
+}
+.styles-row-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+.styles-row-scroll::-webkit-scrollbar-thumb {
+    background-color: #ccc;
+    border-radius: 3px;
+}
+.styles-row-scroll .style-preview-card {
+    width: 150px;
+    min-height: 180px; /* 确保卡片有最小高度 */
+    flex-shrink: 0;
+}
     .styles-column {
     flex: 1;
     display: flex;
@@ -318,7 +364,6 @@ align-content: start;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    aspect-ratio: 1 / 1.2;
     overflow: hidden;
 }
     .style-preview-card:hover {
@@ -326,6 +371,8 @@ align-content: start;
     }
     .style-preview-card .style-preview-name {
     font-weight: bold;
+    white-space: normal; /* 允许换行 */
+    word-break: break-all; /* 确保长单词也能换行 */
     font-size: 14px;
     text-align: left;
     border-bottom: none;
@@ -1127,7 +1174,77 @@ align-content: start;
 .love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
-.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+.love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; align-items: start; }
+.love-letter-preview-card {
+    background: var(--love-letter-texture), linear-gradient(to bottom right, #fdfbf7, #f4f0e8);
+    border: 1px solid #e0d8cc;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'KaiTi', 'STKaiti', serif;
+    color: #5c5245;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.love-letter-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px dashed #dcd3c5;
+    padding-bottom: 8px;
+}
+.love-letter-preview-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid white;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+.love-letter-preview-meta {
+    overflow: hidden;
+}
+.love-letter-preview-meta .subject {
+    font-weight: bold;
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.love-letter-preview-meta .subject.unread-subject {
+    color: var(--accent-color);
+}
+.love-letter-preview-meta .timestamp {
+    font-size: 11px;
+    color: #a09383;
+}
+.love-letter-preview-content {
+    font-size: 13px;
+    line-height: 1.6;
+}
+.love-letter-preview-content .body-preview {
+    max-height: 6.4em; /* Approx 4 lines */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+.love-letter-preview-content .signature {
+    text-align: right;
+    font-style: italic;
+    margin-top: 8px;
+}
+.love-letter-preview-card .love-letter-actions {
+    justify-content: flex-end;
+    border-top: 1px dashed #dcd3c5;
+    padding-top: 8px;
+    margin-left: 0; /* Override old style */
+}
 .collected-letter-item { display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; }
 .collected-letter-item .title { font-size: 11px; font-weight: bold; width: 100%; white-space: normal; word-break: break-all; text-align: center; margin-bottom: 5px; }
 .collected-letter-item .icon { font-size: 36px; color: #a38c6d; margin-bottom: 5px; }
@@ -1267,8 +1384,39 @@ align-content: start;
             min-height: 0;
         }
         #theme-preview-list-item .contact-list-item {
-            border-bottom: none; /* Remove border for single item preview */
-        }
+border-bottom: none; /* Remove border for single item preview */
+}
+/* New styles for chat input preview */
+#theme-preview-chat-input .chat-footer {
+padding: 5px 8px;
+display: flex;
+flex-direction: column;
+border-top: 1px solid #ccc;
+}
+#theme-preview-chat-input .chat-input-area {
+display: flex;
+align-items: center;
+gap: 5px;
+}
+#theme-preview-chat-input .chat-input {
+flex-grow: 1;
+border: none;
+background-color: white;
+border-radius: 18px;
+padding: 8px 15px;
+font-size: 14px;
+resize: none;
+}
+#theme-preview-chat-input .chat-toolbar {
+display: flex;
+justify-content: space-around;
+padding-top: 5px;
+}
+#theme-preview-chat-input .icon-btn i {
+font-size: 22px;
+color: #555;
+padding: 0 10px;
+}
 </style>
 <style id="theme-preview-styles"></style>
 <style id="saved-styles-preview-style"></style>
@@ -1427,40 +1575,83 @@ align-content: start;
                 <div id="bubble-tab-content" class="tab-content"><div id="bubble-grid"></div></div>
                                 <div id="theme-tab-content" class="tab-content">
                     <div class="settings-group">
+                        <div class="group-title-wrapper">
                         <div class="group-title">空间卡片</div>
+                        <div class="style-actions">
+                            <button class="icon-btn save-single-style-btn" data-module="momentsPost" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                            <button class="icon-btn load-single-style-btn" data-module="momentsPost" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                        </div>
+                    </div>
                         <div class="group-content">
                         <textarea id="theme-css-moments" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-moments"></div>
                     </div>
                     <div class="settings-group">
+                        <div class="group-title-wrapper">
                         <div class="group-title">顶部状态栏</div>
+                        <div class="style-actions">
+                            <button class="icon-btn save-single-style-btn" data-module="appHeader" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                            <button class="icon-btn load-single-style-btn" data-module="appHeader" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                        </div>
+                    </div>
                         <div class="group-content">
                         <textarea id="theme-css-header" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-header"></div>
                     </div>
                     <div class="settings-group">
+                        <div class="group-title">                    <div class="group-title-wrapper">
                         <div class="group-title">底部标签栏</div>
+                        <div class="style-actions">
+                            <button class="icon-btn save-single-style-btn" data-module="bottomTabs" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                            <button class="icon-btn load-single-style-btn" data-module="bottomTabs" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                        </div>
+                    </div>底部标签栏</div>
                         <div class="group-content">
                         <textarea id="theme-css-tabs" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-tabs"></div>
                     </div>
                     <div class="settings-group">
+                        <div class="group-title-wrapper">
                         <div class="group-title">通用列表卡片</div>
+                        <div class="style-actions">
+                            <button class="icon-btn save-single-style-btn" data-module="listItem" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                            <button class="icon-btn load-single-style-btn" data-module="listItem" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                        </div>
+                    </div>
                         <div class="group-content">
                         <textarea id="theme-css-list-item" class="theme-css-editor" rows="6"></textarea>
                         </div>
                         <div class="theme-css-preview" id="theme-preview-list-item"></div>
                         
                     </div>                <div class="settings-group">
-                    <div class="group-title">情书信纸</div>
+                    <div class="group-title-wrapper">
+                        <div class="group-title">情书信纸</div>
+                        <div class="style-actions">
+                            <button class="icon-btn save-single-style-btn" data-module="loveLetter" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                            <button class="icon-btn load-single-style-btn" data-module="loveLetter" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                        </div>
+                    </div>
                     <div class="group-content">
                     <textarea id="theme-css-letter" class="theme-css-editor" rows="6"></textarea>
                     </div>
                     <div class="theme-css-preview" id="theme-preview-letter"></div>
                 </div>
+                            <div class="settings-group">
+                <div class="group-title-wrapper">
+                    <div class="group-title">聊天输入栏</div>
+                    <div class="style-actions">
+                        <button class="icon-btn save-single-style-btn" data-module="chatInput" title="保存此样式"><i class="fa-solid fa-folder"></i></button>
+                        <button class="icon-btn load-single-style-btn" data-module="chatInput" title="读取样式"><i class="fa-solid fa-folder-open"></i></button>
+                    </div>
+                </div>
+                <div class="group-content">
+                <textarea id="theme-css-chat-input" class="theme-css-editor" rows="6"></textarea>
+                </div>
+                <div class="theme-css-preview" id="theme-preview-chat-input"></div>
+            </div>
                     <div class="settings-group">
                                         <div class="button-group">
                     <button id="theme-restore-btn" class="settings-button danger-btn">还原默认</button>
@@ -1494,18 +1685,38 @@ align-content: start;
                 <div id="world-book-tab-content" class="tab-content active"><ul id="world-book-list" class="preset-data-list"></ul></div>
                         <div id="archive-tab-content" class="tab-content"><ul id="archive-list" class="preset-data-list"></ul></div>
         <div id="info-tab-content" class="tab-content"><ul id="info-list" class="preset-data-list"></ul></div>
-        <div id="styles-tab-content" class="tab-content">
-            <div class="styles-container">
-                <div class="styles-column">
-                    <h3>主题样式</h3>
-                    <div id="saved-themes-list" class="styles-list"></div>
-                </div>
-                <div class="styles-column">
-                    <h3>气泡样式</h3>
-                    <div id="saved-bubbles-list" class="styles-list"></div>
-                </div>
+            <div id="styles-tab-content" class="tab-content">
+        <div class="styles-rows-container">
+            <div class="style-row-group">
+                <h3>气泡样式</h3>
+                <div class="styles-row-scroll" id="saved-bubbles-row"></div>
+            </div>
+            <div class="style-row-group">
+                <h3>空间卡片样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-momentsPost-row"></div>
+            </div>
+            <div class="style-row-group">
+                <h3>顶部状态栏样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-appHeader-row"></div>
+            </div>
+            <div class="style-row-group">
+                <h3>底部标签栏样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-bottomTabs-row"></div>
+            </div>
+            <div class="style-row-group">
+                <h3>通用列表卡片样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-listItem-row"></div>
+            </div>
+            <div class="style-row-group">
+                <h3>情书信纸样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-loveLetter-row"></div>
+            </div>
+                        <div class="style-row-group">
+                <h3>聊天输入栏样式</h3>
+                <div class="styles-row-scroll" id="saved-themes-chatInput-row"></div>
             </div>
         </div>
+    </div>
             </div>
             <div class="app-bottom-tabs">
                 <div class="tab-link active" data-tab="world-book">世界书</div><div class="tab-link" data-tab="archive">档案</div><div class="tab-link" data-tab="info">信息</div><div class="tab-link" data-tab="styles">样式</div>
@@ -1798,7 +2009,7 @@ align-content: start;
             </div>
             <div class="app-content tab-content-wrapper">
                 <div id="love-letter-tab-content" class="tab-content active">
-                    <div class="styles-container">
+                    <div class="love-letter-container">
                         <div class="styles-column">
                             <h3>寄出的信</h3>
                             <div id="sent-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; padding: 10px; align-content: flex-start;"></div>
@@ -2834,93 +3045,114 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
     });
     // --- 新增：样式保存与读取核心逻辑 ---
     function renderStylesTab() {
-    const themesList = getEl('saved-themes-list');
-    const bubblesList = getEl('saved-bubbles-list');
-    const previewStyleTag = getEl('saved-styles-preview-style');
-    let previewCss = '';
+const previewStyleTag = getEl('saved-styles-preview-style');
+let previewCss = '';
 
-    // Render Theme Previews
-    if (appState.data.savedThemes.length > 0) {
-        themesList.innerHTML = appState.data.savedThemes.map(theme => {
-            const styles = theme.styles;
-            previewCss += `
-                [data-theme-id="${theme.id}"] .mini-header { ${styles.appHeader || ''} }
-                [data-theme-id="${theme.id}"] .mini-list-item .swipe-content { ${styles.listItem || ''} }
-                [data-theme-id="${theme.id}"] .mini-moments-card .post-item-content { ${styles.momentsPost || ''} }
-                [data-theme-id="${theme.id}"] .mini-tabs { ${styles.bottomTabs || ''} }
-            `;
-            return `
-                <div class="style-preview-card" data-id="${theme.id}" data-type="theme">
-                    <div class="style-preview-header">
-                        <div class="style-preview-name">${escapeHTML(theme.name)}</div>
-                                            <div class="style-preview-actions">
-                        <button class="icon-btn import-style-btn" title="导入"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
-                        <button class="icon-btn export-style-btn" title="导出"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                        <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    </div>
-                    <div class="theme-preview-wrapper" data-theme-id="${theme.id}">
-                        <div class="mini-header">&lt; <span>标题</span> +</div>
-                        <div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>
-                        <div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>
-                        <div class="mini-tabs"><span>标签1</span><span>标签2</span></div>
-                    </div>
-                </div>`;
-        }).join('');
-    } else {
-        themesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的主题</p>';
+const getMiniPreviewHTML = (moduleKey) => {
+    const previews = {
+        appHeader: '<div class="mini-header">&lt; <span>标题</span> +</div>',
+        listItem: '<div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>',
+        momentsPost: '<div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>',
+        bottomTabs: '<div class="mini-tabs"><span>标签1</span><span>标签2</span></div>',
+        loveLetter: '<div class="mini-letter" style="font-family: KaiTi, serif; font-size: 8px; line-height: 1.4; color: #333; background: #f4f0e8; padding: 4px; text-align: center;">信纸预览</div>',
+chatInput: '<div class="mini-chat-input" style="font-size: 10px; padding: 4px; border-top: 1px solid #ccc; background: #f7f7f7; text-align: center; display: flex; justify-content: space-around; align-items: center;"><span>[...]</span><i class="fa-solid fa-face-smile"></i><i class="fa-solid fa-microphone"></i><i class="fa-solid fa-images"></i></div>'
+    };
+    return previews[moduleKey] || '';
+};
+
+const createCardHTML = (item, type, moduleKey = null) => {
+    const actionsHTML = `
+        <div class="style-preview-actions">
+            <button class="icon-btn import-style-btn" title="导入"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+            <button class="icon-btn export-style-btn" title="导出"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+            <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+        </div>`;
+
+    let previewContentHTML = '';
+    if (type === 'bubble') {
+        const scopedCss = (item.css || '').replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
+            const scopedSelector = selector.split(',').map(s => `[data-bubble-id="${item.id}"] ${s.trim()}`).join(', ');
+            return `${scopedSelector} ${body}`;
+        });
+        previewCss += scopedCss;
+        previewContentHTML = `
+            <div class="bubble-preview-wrapper" data-bubble-id="${item.id}">
+                <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
+                <div class="message-item user"><div class="message-bubble">你好呀</div><div class="avatar"></div></div>
+            </div>`;
+    } else { // theme
+        const styles = item.styles;
+        const styleString = styles[moduleKey] || '';
+        const scopeSelector = {
+            appHeader: `[data-theme-id="${item.id}"] .mini-header`,
+            listItem: `[data-theme-id="${item.id}"] .mini-list-item .swipe-content`,
+            momentsPost: `[data-theme-id="${item.id}"] .mini-moments-card .post-item-content`,
+            bottomTabs: `[data-theme-id="${item.id}"] .mini-tabs`,
+            loveLetter: `[data-theme-id="${item.id}"] .mini-letter`,
+            chatInput: `[data-theme-id="${item.id}"] .mini-chat-input`
+        };
+        previewCss += processAndScopeCss(styleString, scopeSelector[moduleKey]);
+        previewContentHTML = `<div class="theme-preview-wrapper" data-theme-id="${item.id}">${getMiniPreviewHTML(moduleKey)}</div>`;
     }
 
-    // Render Bubble Previews
-    if (appState.data.savedBubbles.length > 0) {
-        bubblesList.innerHTML = appState.data.savedBubbles.map(bubble => {
-            const scopedCss = (bubble.css || '').replace(/([^{]+)({[^{}]*})/g, (match, selector, body) => {
-                const scopedSelector = selector.split(',').map(s => `[data-bubble-id="${bubble.id}"] ${s.trim()}`).join(', ');
-                return `${scopedSelector} ${body}`;
-            });
-            previewCss += scopedCss;
-            return `
-                <div class="style-preview-card" data-id="${bubble.id}" data-type="bubble">
-                    <div class="style-preview-header">
-                        <div class="style-preview-name">${escapeHTML(bubble.name)}</div>
-                                            <div class="style-preview-actions">
-                        <button class="icon-btn import-style-btn" title="导入"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>
-                        <button class="icon-btn export-style-btn" title="导出"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-                        <button class="icon-btn edit-style-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                        <button class="icon-btn delete-style-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
-                    </div>
-                    <div class="bubble-preview-wrapper" data-bubble-id="${bubble.id}">
-                        <div class="message-item contact"><div class="avatar"></div><div class="message-bubble">你好</div></div>
-                        <div class="message-item user"><div class="message-bubble">你好呀</div><div class="avatar"></div></div>
-                    </div>
-                </div>`;
-        }).join('');
-    } else {
-        bubblesList.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">暂无已保存的气泡</p>';
-    }
+    return `
+        <div class="style-preview-card" data-id="${item.id}" data-type="${type}">
+            <div class="style-preview-header">
+                <div class="style-preview-name">${escapeHTML(item.name)}</div>
+                ${actionsHTML}
+            </div>
+            ${previewContentHTML}
+        </div>`;
+};
 
-    previewStyleTag.textContent = previewCss;
+// Render Bubbles
+const bubblesRow = getEl('saved-bubbles-row');
+const savedBubbles = appState.data.savedBubbles;
+if (savedBubbles.length > 0) {
+    bubblesRow.innerHTML = savedBubbles.map(bubble => createCardHTML(bubble, 'bubble')).join('');
+} else {
+    bubblesRow.innerHTML = '<p style="text-align:center; color:#888; width: 100%;">暂无已保存的气泡</p>';
 }
+
+// Render Themes, categorized by module
+const themeModules = [
+    { key: 'momentsPost', rowId: 'saved-themes-momentsPost-row' },
+    { key: 'appHeader', rowId: 'saved-themes-appHeader-row' },
+    { key: 'bottomTabs', rowId: 'saved-themes-bottomTabs-row' },
+    { key: 'listItem', rowId: 'saved-themes-listItem-row' },
+    { key: 'loveLetter', rowId: 'saved-themes-loveLetter-row' },
+    { key: 'chatInput', rowId: 'saved-themes-chatInput-row' }
+];
+
+themeModules.forEach(module => {
+    const rowEl = getEl(module.rowId);
+    const relevantThemes = appState.data.savedThemes.filter(theme => theme.styles && theme.styles[module.key]);
+    if (relevantThemes.length > 0) {
+        rowEl.innerHTML = relevantThemes.map(theme => createCardHTML(theme, 'theme', module.key)).join('');
+    } else {
+        rowEl.innerHTML = '<p style="text-align:center; color:#888; width: 100%;">暂无已保存的此模块样式</p>';
+    }
+});
+
+previewStyleTag.textContent = previewCss;}
 
     getEl('styles-tab-content').addEventListener('click', e => {
     const card = e.target.closest('.style-preview-card');
     if (!card) return;
 
-    const styleId = card.dataset.id;
-        if (e.target.closest('.export-style-btn')) {
-        e.stopPropagation();
-        exportSingleStyle(styleId, card.dataset.type);
-        return;
-    }
+            const styleId = card.dataset.id;
+    const styleType = card.dataset.type;
 
+    // Handle Import Button Click
     if (e.target.closest('.import-style-btn')) {
         e.stopPropagation();
         getEl('import-style-file-input').click();
         return;
     }
-    const styleType = card.dataset.type;
+
+    // Handle Export Button Click
+        
 
     // Handle Edit Button Click
     if (e.target.closest('.edit-style-btn')) {
@@ -3004,6 +3236,10 @@ function openEditStyleModal(styleId, styleType) {
             <label>情书信纸</label>
             <textarea id="edit-theme-css-letter" class="theme-css-editor" rows="4">${theme.styles.loveLetter || ''}</textarea>
         </div>
+                <div class="form-group">
+            <label>聊天输入栏</label>
+            <textarea id="edit-theme-css-chat-input" class="theme-css-editor" rows="4">${theme.styles.chatInput || ''}</textarea>
+        </div>
         `;
     } else { // bubble
         const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
@@ -3042,6 +3278,7 @@ getEl('save-edit-style-btn').addEventListener('click', () => {
                 theme.styles.loveLetter = getEl('edit-theme-css-letter').value;
             theme.styles.bottomTabs = getEl('edit-theme-css-tabs').value;
             theme.styles.listItem = getEl('edit-theme-css-list-item').value;
+        theme.styles.chatInput = getEl('edit-theme-css-chat-input').value;
         }
     } else { // bubble
         const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
@@ -3142,77 +3379,138 @@ getEl('import-style-file-input').addEventListener('change', (event) => {
     }
 
     loadStyleList.addEventListener('click', e => {
-        const item = e.target.closest('.style-preview-item');
-        if (!item) return;
+    const item = e.target.closest('.style-preview-item');
+    if (!item) return;
 
-        const styleId = item.dataset.id;
-        const { type, context } = runtimeState.styleLoadContext;
-        
-        if (type === 'theme') {
-            const theme = appState.data.savedThemes.find(t => t.id === styleId);
-            if (theme) {
-                themeCssMoments.value = theme.styles.momentsPost || '';
-                themeCssHeader.value = theme.styles.appHeader || '';
-                        getEl('theme-css-letter').value = theme.styles.loveLetter || '';
-                themeCssTabs.value = theme.styles.bottomTabs || '';
-                themeCssListItem.value = theme.styles.listItem || '';
-                ['moments', 'header', 'tabs', 'list-item'].forEach(id => updateThemeCssPreview(id));
+    const styleId = item.dataset.id;
+    const { type, context } = runtimeState.styleLoadContext;
+    const moduleKeyMap = {
+        momentsPost: 'moments', appHeader: 'header', bottomTabs: 'tabs',
+        listItem: 'list-item', loveLetter: 'letter'
+    };
+
+    if (type === 'theme') {
+        const theme = appState.data.savedThemes.find(t => t.id === styleId);
+        if (!theme || !theme.styles) return;
+
+        // Single module load logic
+        if (context && context.singleModule) {
+            const module = context.singleModule;
+            const css = theme.styles[module];
+            if (css !== undefined) {
+                const key = moduleKeyMap[module];
+                getEl(`theme-css-${key}`).value = css;
+                updateThemeCssPreview(key);
+                showToast(`样式 '${theme.name}' 中的模块已加载`);
+            } else {
+                showToast(`样式 '${theme.name}' 中不包含此模块`, 'error');
             }
-            } else if (type === 'bubble') {
+        } else { // Global load logic
+            themeCssMoments.value = theme.styles.momentsPost || '';
+            themeCssHeader.value = theme.styles.appHeader || '';
+            getEl('theme-css-letter').value = theme.styles.loveLetter || '';
+            themeCssTabs.value = theme.styles.bottomTabs || '';
+            themeCssListItem.value = theme.styles.listItem || '';
+            getEl('theme-css-chat-input').value = theme.styles.chatInput || '';
+            Object.values(moduleKeyMap).forEach(id => updateThemeCssPreview(id));
+        }
+
+    } else if (type === 'bubble') {
         const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
         if (bubble) {
-            const editor = getEl(`${context}-css`); // Bug Fix: Correctly construct the editor ID
+            const editor = getEl(`${context}-bubble-css`);
             editor.value = bubble.css;
-            updateBubbleCssPreview(context.replace('-bubble', ''), runtimeState.tempChatSettings);
+            updateBubbleCssPreview(context, runtimeState.tempChatSettings);
         }
     }
-        loadStyleModal.classList.remove('visible');
-    });
+    loadStyleModal.classList.remove('visible');
+});
 
     loadStyleCancelBtn.addEventListener('click', () => loadStyleModal.classList.remove('visible'));
 
     function setupStyleSaver(context, type) {
-        const saveBtn = getEl(`${context}-save-style-btn`);
-        const loadBtn = getEl(`${context}-load-style-btn`);
+    const saveBtn = getEl(`${context}-save-style-btn`);
+    const loadBtn = getEl(`${context}-load-style-btn`);
 
-        saveBtn.addEventListener('click', () => {
-            const name = prompt('请输入样式名称:');
+    saveBtn.addEventListener('click', () => {
+        const name = prompt('请输入样式名称:');
+        if (!name || !name.trim()) return;
+
+        if (type === 'theme') {
+            const newTheme = {
+                id: newId('theme_style'),
+                name: name.trim(),
+                styles: {
+                    momentsPost: themeCssMoments.value,
+                    appHeader: themeCssHeader.value,
+                    loveLetter: getEl('theme-css-letter').value,
+                    bottomTabs: themeCssTabs.value,
+                    listItem: themeCssListItem.value,
+                    chatInput: getEl('theme-css-chat-input').value
+                }
+            };
+            appState.data.savedThemes.push(newTheme);
+        } else { // bubble
+            const editor = getEl(`${context}-css`);
+            const newBubble = { id: newId('bubble_style'), name: name.trim(), css: editor.value };
+            appState.data.savedBubbles.push(newBubble);
+        }
+        debouncedSaveState();
+        showToast('样式已保存！');
+    });
+
+    loadBtn.addEventListener('click', () => {
+        openLoadStyleModal(type, context);
+    });
+}
+
+// --- 新增：为主题编辑器中的单个模块按钮设置监听 ---
+function setupSingleThemeSavers() {
+    const moduleKeyMap = {
+    momentsPost: 'moments', appHeader: 'header', bottomTabs: 'tabs',
+    listItem: 'list-item', loveLetter: 'letter', chatInput: 'chat-input'
+};
+    
+    getEl('theme-tab-content').addEventListener('click', e => {
+        const saveBtn = e.target.closest('.save-single-style-btn');
+        const loadBtn = e.target.closest('.load-single-style-btn');
+
+        if (saveBtn) {
+            const module = saveBtn.dataset.module;
+            const css = getEl(`theme-css-${moduleKeyMap[module]}`).value;
+            const name = prompt('请输入样式名称 (如果名称已存在, 将更新该样式):');
             if (!name || !name.trim()) return;
 
-            if (type === 'theme') {
+            let theme = appState.data.savedThemes.find(t => t.name === name.trim());
+            if (theme) {
+                if (!theme.styles) theme.styles = {};
+                theme.styles[module] = css;
+                showToast(`样式 "${name.trim()}" 已更新！`);
+            } else {
                 const newTheme = {
                     id: newId('theme_style'),
                     name: name.trim(),
-                    styles: {
-                        momentsPost: themeCssMoments.value,
-                        appHeader: themeCssHeader.value,
-                                        loveLetter: getEl('theme-css-letter').value,
-                        bottomTabs: themeCssTabs.value,
-                        listItem: themeCssListItem.value
-                    }
+                    styles: { [module]: css }
                 };
                 appState.data.savedThemes.push(newTheme);
-            } else { // bubble
-        const editor = getEl(`${context}-css`);
-        const newBubble = {
-            id: newId('bubble_style'),
-            name: name.trim(),
-            css: editor.value
-        };
-        appState.data.savedBubbles.push(newBubble);
-    }
+                showToast('新样式已保存！');
+            }
             debouncedSaveState();
-            showToast('样式已保存！');
-        });
+            return;
+        }
 
-        loadBtn.addEventListener('click', () => {
-            openLoadStyleModal(type, context);
-        });
-    }
+        if (loadBtn) {
+            const module = loadBtn.dataset.module;
+            openLoadStyleModal('theme', { singleModule: module });
+            return;
+        }
+    });
+}
     
     setupStyleSaver('us-bubble', 'bubble');
     setupStyleSaver('gcs-us-bubble', 'bubble');
     setupStyleSaver('theme', 'theme');
+    setupSingleThemeSavers();
     // --- 全局状态管理 (可序列化) ---
     const DB_KEY = 'EmperorPhoneData_v2';
     const DEFAULT_WALLPAPER_URL = 'https://img.xjh.me/random_img.php?type=bg&ctype=nature&return=302';
@@ -3515,41 +3813,105 @@ try {
         importFileInput.click();
     });
 
-    getEl('export-media-btn').addEventListener('click', async () => {
-        showToast("正在准备导出...", 'info');
-        try {
-                    const mediaItems = await getAllMediaFromDB();
-        if (mediaItems.length === 0) {
-            showToast("媒体库为空，无需导出。");
+    getEl('export-media-btn').addEventListener('click', () => {
+    const startChunkedExport = () => {
+        if (!db) {
+            showToast("数据库未初始化，请稍后再试。", 'error');
             return;
         }
 
-        const EXPORT_WARNING_THRESHOLD = 500;
-        if (mediaItems.length > EXPORT_WARNING_THRESHOLD) {
-            if (!confirm(`警告：您的媒体库包含 ${mediaItems.length} 个文件，数量较多。\n\n在内存较小的设备（尤其是手机）上，导出过程可能会导致应用无响应或闪退。\n\n是否仍要继续尝试导出？`)) {
-                showToast("导出已取消");
-                return;
-            }
-        }
-        
-        showToast(`正在打包 ${mediaItems.length} 个文件，请稍候...`, 'info');
-        const zip = new JSZip();
-            
-            if (mediaItems.length === 0) {
+        const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(IDB_STORE_NAME);
+        const countRequest = store.count();
+
+        countRequest.onsuccess = () => {
+            const totalFiles = countRequest.result;
+            if (totalFiles === 0) {
                 showToast("媒体库为空，无需导出。");
                 return;
             }
-            mediaItems.forEach(item => {
+
+            if (!confirm(`您的媒体库包含 ${totalFiles} 个文件。\n\n为防止因文件过大导致闪退，导出将被自动分割成多个压缩包。\n\n是否开始导出？`)) {
+                showToast("导出已取消");
+                return;
+            }
+            
+            processMediaInChunks(store, totalFiles);
+        };
+        
+        countRequest.onerror = (e) => {
+            showToast("无法读取媒体库大小", 'error');
+            console.error("Could not count DB items:", e.target.error);
+        };
+    };
+
+    const processMediaInChunks = (store, totalFiles) => {
+        const CHUNK_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB chunks
+        let zip = new JSZip();
+        let currentChunkSize = 0;
+        let partNumber = 1;
+        let filesInCurrentChunk = 0;
+        let filesProcessed = 0;
+
+        const cursorRequest = store.openCursor();
+        showToast('开始打包媒体库...', 'info');
+
+        cursorRequest.onsuccess = async (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                const item = cursor.value;
+                const itemSize = item.data.size || item.data.byteLength || 0;
+                filesProcessed++;
+
+                if (filesInCurrentChunk > 0 && currentChunkSize + itemSize > CHUNK_SIZE_BYTES) {
+                    showToast(`正在生成第 ${partNumber} 部分... (${filesProcessed-1}/${totalFiles})`, 'info');
+                    try {
+                        const content = await zip.generateAsync({ type: "blob" });
+                        downloadFile(content, `EmperorPhone-MediaBackup-part${partNumber}-${new Date().toISOString().slice(0, 10)}.zip`);
+                        partNumber++;
+                    } catch(e) {
+                        showToast(`生成第 ${partNumber} 部分失败`, 'error');
+                        console.error(e);
+                        return; // Stop on failure
+                    }
+                    
+                    zip = new JSZip();
+                    currentChunkSize = 0;
+                    filesInCurrentChunk = 0;
+                }
+                
                 zip.file(item.id, item.data);
-            });
-            const content = await zip.generateAsync({ type: "blob" });
-            downloadFile(content, `EmperorPhone-MediaBackup-${new Date().toISOString().slice(0, 10)}.zip`);
-            showToast("媒体库已导出为ZIP！");
-        } catch (error) {
-            showToast("导出媒体库失败", 'error');
-            console.error(error);
-        }
-    });
+                currentChunkSize += itemSize;
+                filesInCurrentChunk++;
+                
+                cursor.continue();
+            } else {
+                // Cursor finished
+                if (filesInCurrentChunk > 0) {
+                    showToast(`正在生成最后一部分 (第 ${partNumber} 部分)...`, 'info');
+                     try {
+                        const content = await zip.generateAsync({ type: "blob" });
+                        downloadFile(content, `EmperorPhone-MediaBackup-part${partNumber}-${new Date().toISOString().slice(0, 10)}.zip`);
+                        showToast("媒体库导出完成！", 'info');
+                    } catch(e) {
+                        showToast(`生成最后一部分失败`, 'error');
+                        console.error(e);
+                    }
+                } else if (totalFiles > 0) {
+                    // This case might happen if all items were processed in previous chunks
+                    showToast("媒体库导出完成！", 'info');
+                }
+            }
+        };
+
+        cursorRequest.onerror = (event) => {
+            showToast('导出媒体时发生错误', 'error');
+            console.error("Cursor error:", event.target.error);
+        };
+    };
+
+    startChunkedExport();
+});
     
     getEl('import-media-btn').addEventListener('click', () => {
         importFileInput.accept = '.zip';
@@ -3660,13 +4022,13 @@ if (!contact.userSettings.videoBackgroundLibrary) {
             }
 
             const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
-            if (fontFamilyMatch) {
-                const fontName = fontFamilyMatch[1].trim();
-                const finalFontFamily = fontName.toLowerCase() === 'default' 
-                    ? 'var(--system-font-family)'
-                    : `"${fontName}"`;
-                generatedRules += `${baseSelector} { font-family: ${finalFontFamily} !important; }\n`;
-            }
+        if (fontFamilyMatch) {
+            const fontName = fontFamilyMatch[1].trim();
+            const finalFontFamily = fontName.toLowerCase() === 'default' 
+                ? 'var(--system-font-family)'
+                : `"${fontName}"`;
+            generatedRules += `${baseSelector}, ${baseSelector} * { font-family: ${finalFontFamily} !important; }\n`;
+        }
 
             const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
             if (fontSizeMatch) {
@@ -4034,7 +4396,7 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
 function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none';    if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(false); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(false); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } else if (tabId === 'theme') { 
     titleEl.textContent = '主题'; 
     renderThemeEditor(); 
-    ['moments', 'header', 'tabs', 'list-item', 'letter'].forEach(id => updateThemeCssPreview(id));
+    ['moments', 'header', 'tabs', 'list-item', 'letter', 'chat-input'].forEach(id => updateThemeCssPreview(id));
 } }
 beautifyTabs.addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#beautify-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#beautify-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); handleBeautifyTabChange(tabId); } });
 beautifyActionBtn.addEventListener('click', () => { const activeTab = query('#beautify-app-screen .tab-link.active').dataset.tab; if (activeTab === 'wallpaper') { wallpaperFileInput.click(); } else if (activeTab === 'font') { addFontModal.classList.add('visible'); } });
@@ -4108,29 +4470,40 @@ function renderLoveLetterTab() {
     const receivedListEl = getEl('received-letters-list');
     const unreadPrompt = getEl('unread-letter-prompt');
 
-    const allLetters = [...appState.mailbox.loveLetters].sort((a, b) => b.timestamp - a.timestamp);
-    const sentLetters = allLetters.filter(l => l.senderId === 'user');
-    const receivedLetters = allLetters.filter(l => l.senderId !== 'user');
+const allLetters = [...appState.mailbox.loveLetters].sort((a, b) => b.timestamp - a.timestamp);
+const sentLetters = allLetters.filter(l => l.senderId === 'user');
+const receivedLetters = allLetters.filter(l => l.senderId !== 'user');
 
-    const createLetterHTML = (letter, displayName) => `
-        <div class="collected-letter-item" data-letter-id="${letter.id}">
-            <div class="title">${escapeHTML(letter.subject || '无题')}</div>
-            <div class="icon"><i class="fa-solid ${!letter.isRead && letter.senderId !== 'user' ? 'fa-envelope' : 'fa-scroll'}"></i></div>
-            <div class="sender">${escapeHTML(displayName)}</div>
-            <div class="date">${new Date(letter.timestamp).toLocaleDateString()}</div>
-            <div class="love-letter-actions" style="margin-top: 5px;">
+const createLetterHTML = (letter, otherParty) => {
+    const isUnread = !letter.isRead && letter.senderId !== 'user';
+    return `
+        <div class="love-letter-preview-card" data-letter-id="${letter.id}">
+            <div class="love-letter-preview-header">
+                <div class="love-letter-preview-avatar" data-avatar-id="${otherParty.avatarId}"></div>
+                <div class="love-letter-preview-meta">
+                    <div class="subject ${isUnread ? 'unread-subject' : ''}">${escapeHTML(letter.subject || '无题')}</div>
+                    <div class="timestamp">${new Date(letter.timestamp).toLocaleString()}</div>
+                </div>
+            </div>
+            <div class="love-letter-preview-content">
+                <div class="salutation">${escapeHTML(letter.salutation || '')}</div>
+                <div class="body-preview">${escapeHTML(truncateText(letter.body || '', 50))}</div>
+                <div class="signature">${escapeHTML(letter.signature || '')}</div>
+            </div>
+            <div class="love-letter-actions">
                 <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
                 <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
             </div>
         </div>
     `;
+};
 
     // Render Sent Letters
     if (sentLetters.length > 0) {
         sentListEl.innerHTML = sentLetters.map(letter => {
-            const recipient = findUserById(letter.recipientId);
-            return createLetterHTML(letter, recipient.name);
-        }).join('');
+        const recipient = findUserById(letter.recipientId);
+        return createLetterHTML(letter, recipient);
+    }).join('');
     } else {
         sentListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有寄出过情书...</p>';
     }
@@ -4138,9 +4511,9 @@ function renderLoveLetterTab() {
     // Render Received Letters
     if (receivedLetters.length > 0) {
         receivedListEl.innerHTML = receivedLetters.map(letter => {
-            const sender = findUserById(letter.senderId);
-            return createLetterHTML(letter, sender.name);
-        }).join('');
+        const sender = findUserById(letter.senderId);
+        return createLetterHTML(letter, sender);
+    }).join('');
     } else {
         receivedListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有收到过情书...</p>';
     }
@@ -4481,7 +4854,8 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     appHeader: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
     bottomTabs: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
     listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}',
-    loveLetter: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f4f0e8;\n@font-family: KaiTi;\n@font-size: 17px;\n@color: #333333;\n\n/* 在下方输入自定义CSS */\n.letter-signature {\n  text-align: right;\n}'
+    loveLetter: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f4f0e8;\n@font-family: KaiTi;\n@font-size: 17px;\n@color: #333333;\n\n/* 在下方输入自定义CSS */\n.letter-signature {\n  text-align: right;\n}',
+    chatInput: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f7f7f7;\n@font-family: default;\n@font-size: 16px;\n@color: #000000;\n@textarea-height: 40px;\n@textarea-width: auto; /* auto: 自动填充, 200px: 固定宽度 */\n\n/* 在下方输入自定义CSS */\n.icon-btn i {\n  color: #555;\n}'
     };
 
     function applyCustomThemes() {
@@ -4495,28 +4869,29 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         appHeader: '.app-header',
         bottomTabs: '.app-bottom-tabs',
                 loveLetter: '#love-letter-viewer',
-        listItem: '.swipe-content'
+        listItem: '.swipe-content',
+    chatInput: '#chat-footer'
     };
 
     for (const [key, scopeSelector] of Object.entries(modules)) {
         let rawCss = customThemes[key] || '';
         let generatedRules = '';
         
-        const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
-        if (bgImageMatch) {
+                const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
+        if (bgImageMatch && bgImageMatch[1].trim() !== '图片链接') {
             generatedRules += `${scopeSelector} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
         } else {
             const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
             if (bgColorMatch) generatedRules += `${scopeSelector} { background-color: ${bgColorMatch[1].trim()} !important; }\n`;
         }
 
-        const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
+                const fontFamilyMatch = rawCss.match(/@font-family:\s*([^;]+);/);
         if (fontFamilyMatch) {
             const fontName = fontFamilyMatch[1].trim();
             const finalFontFamily = fontName.toLowerCase() === 'default' 
                 ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' 
                 : `"${fontName}"`;
-            generatedRules += `${scopeSelector}, ${scopeSelector} * { font-family: ${finalFontFamily} !important; }\n`;
+            generatedRules += `${scopeSelector}, ${scopeSelector} *, ${scopeSelector} .title, ${scopeSelector} .text, ${scopeSelector} .label, ${scopeSelector} span, ${scopeSelector} div { font-family: ${finalFontFamily} !important; }\n`;
         }
         
         const colorMatch = rawCss.match(/@color:\s*([^;]+);/);
@@ -4526,7 +4901,21 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
         
         const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
         if (fontSizeMatch) generatedRules += `${scopeSelector} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
-        
+                if (key === 'chatInput') {
+            const textareaHeightMatch = rawCss.match(/@textarea-height:\s*([^;]+);/);
+            if (textareaHeightMatch) {
+                generatedRules += `${scopeSelector} .chat-input { height: ${textareaHeightMatch[1].trim()} !important; }\n`;
+            }
+                        const textareaWidthMatch = rawCss.match(/@textarea-width:\s*([^;]+);/);
+            if (textareaWidthMatch) {
+                const widthValue = textareaWidthMatch[1].trim();
+                if (widthValue.toLowerCase() === 'auto') {
+                    generatedRules += `${scopeSelector} .chat-input { width: auto !important; flex-grow: 1 !important; }\n`;
+                } else {
+                    generatedRules += `${scopeSelector} .chat-input { width: ${widthValue} !important; flex-grow: 0 !important; }\n`;
+                }
+            }
+        }
         const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
         const scopedUserCss = processAndScopeCss(userCss, scopeSelector);
 
@@ -4578,7 +4967,7 @@ border-bottom-left-radius: 4px;
         const finalFontFamily = fontName.toLowerCase() === 'default' 
             ? 'var(--system-font-family)' 
             : `"${fontName}"`;
-        generatedRules += `${baseSelector} { font-family: ${finalFontFamily} !important; }\n`;
+        generatedRules += `${baseSelector}, ${baseSelector} * { font-family: ${finalFontFamily} !important; }\n`;
     }
 
     const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
@@ -4626,6 +5015,7 @@ border-bottom-left-radius: 4px;
     themeCssTabs.value = themes.bottomTabs || defaultThemeStyles.bottomTabs;
         getEl('theme-css-letter').value = themes.loveLetter || defaultThemeStyles.loveLetter;
     themeCssListItem.value = themes.listItem || defaultThemeStyles.listItem;
+getEl('theme-css-chat-input').value = themes.chatInput || defaultThemeStyles.chatInput;
 }
 function updateThemeCssPreview(id) {
     const editor = getEl(`theme-css-${id}`);
@@ -4638,7 +5028,8 @@ function updateThemeCssPreview(id) {
             header: `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`,
                     letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 10px; font-size: 10px; line-height: 1.5; color: #333; background-color: #f4f0e8;"><p>亲爱的...</p><p>这是信件内容预览...</p><div class="letter-signature" style="text-align: right; margin-top: 1em;"><span>签名</span></div></div>`,
             tabs: `<div class="app-bottom-tabs"><div class="tab-link active">标签1</div><div class="tab-link">标签2</div><div class="tab-link">标签3</div></div>`,
-            'list-item': `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`
+            'list-item': `<div class="contact-list-item"><div class="contact-item-content swipe-content"><div class="contact-avatar" style="background-color:#ccc"></div><div class="contact-info"><div class="contact-name">预览联系人</div><div class="contact-last-msg">这是一条预览消息...</div></div></div></div>`,
+            'chat-input': `<div id="chat-footer-preview" class="chat-footer"><div class="chat-input-area"><textarea class="chat-input" rows="1" placeholder="输入..."></textarea><div class="chat-input-buttons"><button class="icon-btn"><i class="fa-solid fa-face-smile"></i></button></div></div><div class="chat-toolbar"><button class="icon-btn"><i class="fa-solid fa-microphone"></i></button><button class="icon-btn"><i class="fa-solid fa-images"></i></button><button class="icon-btn"><i class="fa-solid fa-camera"></i></button><button class="icon-btn"><i class="fa-solid fa-video"></i></button></div></div>`
         };
         if(previewHTML[id]) previewArea.innerHTML = previewHTML[id];
     }
@@ -4648,7 +5039,8 @@ function updateThemeCssPreview(id) {
         header: { editor: themeCssHeader, scope: '#theme-preview-header .app-header' },
             letter: { editor: getEl('theme-css-letter'), scope: '#theme-preview-letter #love-letter-viewer-preview' },
         tabs: { editor: themeCssTabs, scope: '#theme-preview-tabs .app-bottom-tabs' },
-        'list-item': { editor: themeCssListItem, scope: '#theme-preview-list-item .swipe-content' }
+        'list-item': { editor: themeCssListItem, scope: '#theme-preview-list-item .swipe-content' },
+    'chat-input': { editor: getEl('theme-css-chat-input'), scope: '#theme-preview-chat-input #chat-footer-preview' }
     };
 
     let finalPreviewCss = '';
@@ -4657,7 +5049,7 @@ function updateThemeCssPreview(id) {
         let generatedRules = '';
         
         const bgImageMatch = rawCss.match(/@background-image:\s*url\(([^)]+)\);/);
-        if (bgImageMatch) {
+        if (bgImageMatch && bgImageMatch[1].trim() !== '图片链接') {
             generatedRules += `${module.scope} { background-image: url(${bgImageMatch[1].trim()}) !important; background-size: cover !important; background-position: center !important; }\n`;
         } else {
             const bgColorMatch = rawCss.match(/@background-color:\s*([^;]+);/);
@@ -4678,7 +5070,21 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
         
         const fontSizeMatch = rawCss.match(/@font-size:\s*([^;]+);/);
         if (fontSizeMatch) generatedRules += `${module.scope} { font-size: ${fontSizeMatch[1].trim()} !important; }\n`;
-        
+                if (key === 'chat-input') {
+            const textareaHeightMatch = rawCss.match(/@textarea-height:\s*([^;]+);/);
+            if (textareaHeightMatch) {
+                generatedRules += `${module.scope} .chat-input { height: ${textareaHeightMatch[1].trim()} !important; }\n`;
+            }
+        }
+        const textareaWidthMatch = rawCss.match(/@textarea-width:\s*([^;]+);/);
+            if (textareaWidthMatch) {
+                const widthValue = textareaWidthMatch[1].trim();
+                if (widthValue.toLowerCase() === 'auto') {
+                    generatedRules += `${module.scope} .chat-input { width: auto !important; flex-grow: 1 !important; }\n`;
+                } else {
+                    generatedRules += `${module.scope} .chat-input { width: ${widthValue} !important; flex-grow: 0 !important; }\n`;
+                }
+            }
         const userCss = rawCss.replace(/@[\w-]+\s*:[^;]+;/g, '').trim();
         const scopedUserCss = processAndScopeCss(userCss, module.scope);
 
@@ -4688,7 +5094,7 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
     styleTag.textContent = finalPreviewCss;
 }
 
-    ['moments', 'header', 'tabs', 'list-item', 'letter'].forEach(id => {
+    ['moments', 'header', 'tabs', 'list-item', 'letter', 'chat-input'].forEach(id => {
         getEl(`theme-css-${id}`).addEventListener('input', () => updateThemeCssPreview(id));
     });
     themeApplyBtn.addEventListener('click', () => {
@@ -4698,6 +5104,7 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
                 appState.beautify.customThemes.loveLetter = getEl('theme-css-letter').value;
             appState.beautify.customThemes.bottomTabs = themeCssTabs.value;
             appState.beautify.customThemes.listItem = themeCssListItem.value;
+                    appState.beautify.customThemes.chatInput = getEl('theme-css-chat-input').value;
             debouncedSaveState();
             applyCustomThemes();
             showToast('主题样式已应用！');
@@ -4706,7 +5113,7 @@ const finalFontFamily = fontName.toLowerCase() === 'default' ? '-apple-system, B
 
     themeRestoreBtn.addEventListener('click', () => {
         if (confirm('确定要还原所有模块的默认样式吗？此操作不可撤销。')) {
-            appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '', loveLetter: '' };
+            appState.beautify.customThemes = { momentsPost: '', appHeader: '', bottomTabs: '', listItem: '', loveLetter: '', chatInput: '' };
             debouncedSaveState();
                     renderThemeEditor();
             applyCustomThemes();
@@ -6775,7 +7182,47 @@ gcsManageMembersCancelBtn.addEventListener('click', () => gcsManageMembersModal.
 gcsManageMembersConfirmBtn.addEventListener('click', () => { const { type, selection } = runtimeState.gcsManageContext; if (selection.length === 0) return; if (type === 'add') { const addedNames = []; selection.forEach(id => { const char = appState.chat.contacts.find(c => c.id === id); if (char) { runtimeState.tempChatSettings.groupSettings.members[id] = { ...JSON.parse(JSON.stringify(char.charSettings)), nickname: char.name, title: '成员', isMuted: false }; addedNames.push(`'${char.name}'`); } }); addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 邀请 ${addedNames.join(', ')} 加入群聊`, true); } else { const removedNames = []; selection.forEach(id => { removedNames.push(`'${runtimeState.tempChatSettings.groupSettings.members[id].nickname}'`); delete runtimeState.tempChatSettings.groupSettings.members[id]; runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(adminId => adminId !== id); }); addSystemNotification(runtimeState.currentChatId, `${removedNames.join(', ')} 已被移出群聊`, true); } renderGroupMemberList(); gcsManageMembersModal.classList.remove('visible'); });
 function handleGcsMemberLongPress(memberId) { const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = runtimeState.tempChatSettings.groupSettings.owner === 'user'; if (memberId === 'user') return; runtimeState.gcsMemberActionContext.memberId = memberId; const memberName = runtimeState.tempChatSettings.groupSettings.members[memberId].nickname; gcsMemberActionTitle.textContent = `管理成员: ${memberName}`; let options = []; if (userIsOwner) { if (memberId !== owner) { options.push({ text: '转让群主', value: 'transfer' }); if (admins.includes(memberId)) { options.push({ text: '撤销管理员', value: 'demote' }); } else { options.push({ text: '设为管理员', value: 'promote' }); } } } else { if (memberId === owner) { options.push({ text: '夺回群主', value: 'reclaim', isDanger: true }); } } if (options.length === 0) { showToast('无可用操作', 'info'); return; } gcsMemberActionBody.innerHTML = options.map(opt => `<button class="settings-button ${opt.isDanger ? 'danger-btn' : 'secondary'}" data-action="${opt.value}">${opt.text}</button>`).join(''); gcsMemberActionModal.classList.add('visible'); }
 gcsMemberActionCancelBtn.addEventListener('click', () => gcsMemberActionModal.classList.remove('visible'));
-gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.closest('button'); if (!btn) return; const action = btn.dataset.action; const memberId = runtimeState.gcsMemberActionContext.memberId; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; const memberName = memberSettings.nickname; const userName = runtimeState.tempChatSettings.userSettings.name; switch (action) { case 'transfer': if (confirm(`确定要将群主转让给 ${memberName} 吗？你将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = memberId; runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== 'user'); addSystemNotification(runtimeState.currentChatId, `'${userName}' 将群主转让给了 '${memberName}'`, false); } break; case 'reclaim': if (confirm(`确定要从 ${memberName} 处夺回群主身份吗？对方将成为普通成员。`)) { runtimeState.tempChatSettings.groupSettings.owner = 'user'; if (memberId) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); } addSystemNotification(runtimeState.currentChatId, `'${userName}' 从 '${memberName}' 处夺回了群主身份`, false); } break; case 'promote': if (confirm(`确定要将 ${memberName} 设为管理员吗？`)) { if (!runtimeState.tempChatSettings.groupSettings.admins.includes(memberId)) { runtimeState.tempChatSettings.groupSettings.admins.push(memberId); } addSystemNotification(runtimeState.currentChatId, `'${memberName}' 已被设为管理员`, false); } break; case 'demote': if (confirm(`确定要撤销 ${memberName} 的管理员身份吗？`)) { runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId); addSystemNotification(runtimeState.currentChatId, `'${memberName}' 的管理员身份已被撤销`, false); } break; } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
+gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.closest('button'); if (!btn) return; const action = btn.dataset.action; const memberId = runtimeState.gcsMemberActionContext.memberId; const memberSettings = runtimeState.tempChatSettings.groupSettings.members[memberId]; if (!memberSettings) return; const memberName = memberSettings.nickname; const userName = runtimeState.tempChatSettings.userSettings.name;
+             switch (action) {
+                case 'transfer':
+                    if (confirm(`确定要将群主转让给 ${memberName} 吗？你将成为普通成员。`)) {
+                        runtimeState.tempChatSettings.groupSettings.owner = memberId;
+                        runtimeState.tempChatSettings.groupSettings.members[memberId].title = '群主';
+                        runtimeState.tempChatSettings.groupSettings.members['user'].title = '成员';
+                        runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== 'user');
+                        addSystemNotification(runtimeState.currentChatId, `'${userName}' 将群主转让给了 '${memberName}'`, false);
+                    }
+                    break;
+                case 'reclaim':
+                    if (confirm(`确定要从 ${memberName} 处夺回群主身份吗？对方将成为普通成员。`)) {
+                        runtimeState.tempChatSettings.groupSettings.owner = 'user';
+                        runtimeState.tempChatSettings.groupSettings.members['user'].title = '群主';
+                        if (memberId && runtimeState.tempChatSettings.groupSettings.members[memberId]) {
+                             runtimeState.tempChatSettings.groupSettings.members[memberId].title = '成员';
+                        }
+                        if (memberId) {
+                            runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId);
+                        }
+                        addSystemNotification(runtimeState.currentChatId, `'${userName}' 从 '${memberName}' 处夺回了群主身份`, false);
+                    }
+                    break;
+                case 'promote':
+                    if (confirm(`确定要将 ${memberName} 设为管理员吗？`)) {
+                        if (!runtimeState.tempChatSettings.groupSettings.admins.includes(memberId)) {
+                            runtimeState.tempChatSettings.groupSettings.admins.push(memberId);
+                        }
+                        memberSettings.title = '管理员';
+                        addSystemNotification(runtimeState.currentChatId, `'${memberName}' 已被设为管理员`, false);
+                    }
+                    break;
+                case 'demote':
+                    if (confirm(`确定要撤销 ${memberName} 的管理员身份吗？`)) {
+                        runtimeState.tempChatSettings.groupSettings.admins = runtimeState.tempChatSettings.groupSettings.admins.filter(id => id !== memberId);
+                        memberSettings.title = '成员';
+                        addSystemNotification(runtimeState.currentChatId, `'${memberName}' 的管理员身份已被撤销`, false);
+                    }
+                    break;
+            } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
 function processAndScopeCss(cssString, scopeSelector) {
     if (!cssString || !scopeSelector) {
         return cssString || '';
