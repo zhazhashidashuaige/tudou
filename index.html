@@ -3218,11 +3218,11 @@ getEl('import-style-file-input').addEventListener('change', (event) => {
     let runtimeState = {};
     let islandVideoCallTimer = null;
     let conversationLoadMoreHandler = null;
-    
 
-    // ===================================================================
-    // --- 状态管理重构 ---
-    // ===================================================================
+
+// ===================================================================
+// --- 状态管理重构 ---
+// ===================================================================
     function getInitialState() {
 return {
     settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [], globalRealtimeActivity: { interval: 30 } },
@@ -3289,6 +3289,7 @@ meta: {
         return {
             originalIconContent: {},
             originalBubbleContent: {},
+            beautify: { wallpaperDisplayCount: 0, fontDisplayCount: 0 },
             isDetailsAnimatingIn: false,
             currentChatId: null,
             contactSelection: [],
@@ -3487,10 +3488,25 @@ meta: { ...defaultState.meta, ...(savedState.meta || {}) }
     });
 
     getEl('export-media-btn').addEventListener('click', async () => {
-        showToast("正在打包媒体库...", 'info');
+        showToast("正在准备导出...", 'info');
         try {
-            const zip = new JSZip();
-            const mediaItems = await getAllMediaFromDB();
+                    const mediaItems = await getAllMediaFromDB();
+        if (mediaItems.length === 0) {
+            showToast("媒体库为空，无需导出。");
+            return;
+        }
+
+        const EXPORT_WARNING_THRESHOLD = 500;
+        if (mediaItems.length > EXPORT_WARNING_THRESHOLD) {
+            if (!confirm(`警告：您的媒体库包含 ${mediaItems.length} 个文件，数量较多。\n\n在内存较小的设备（尤其是手机）上，导出过程可能会导致应用无响应或闪退。\n\n是否仍要继续尝试导出？`)) {
+                showToast("导出已取消");
+                return;
+            }
+        }
+        
+        showToast(`正在打包 ${mediaItems.length} 个文件，请稍候...`, 'info');
+        const zip = new JSZip();
+            
             if (mediaItems.length === 0) {
                 showToast("媒体库为空，无需导出。");
                 return;
@@ -3986,7 +4002,7 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
 // ===================================================================
 // --- 美化 APP (优化) ---
 // ===================================================================
-function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none';    if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } else if (tabId === 'theme') { 
+function handleBeautifyTabChange(tabId) { const titleEl = beautifyAppScreen.querySelector('.title'); beautifyActionBtn.style.display = ['wallpaper', 'font'].includes(tabId) ? 'block' : 'none'; bubbleActionBtn.style.display = tabId === 'bubble' ? 'block' : 'none';    if (tabId === 'wallpaper') { titleEl.textContent = '壁纸'; renderWallpapers(false); } else if (tabId === 'font') { titleEl.textContent = '字体'; renderFonts(false); } else if (tabId === 'icon') { titleEl.textContent = '图标'; renderIcons(); } else if (tabId === 'bubble') { titleEl.textContent = '气泡'; renderBubbles(); } else if (tabId === 'theme') { 
     titleEl.textContent = '主题'; 
     renderThemeEditor(); 
     ['moments', 'header', 'tabs', 'list-item', 'letter'].forEach(id => updateThemeCssPreview(id));
@@ -3999,7 +4015,52 @@ exportBubblesBtn.addEventListener('click', async () => { showToast("正在导出
 importBubblesBtn.addEventListener('click', () => importBubblesInput.click());
 importBubblesInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = async (event) => { showToast("正在导入气泡设置...", 'info'); try { const backup = JSON.parse(event.target.result); if (!backup.bubbleSettings || !backup.mediaData) throw new Error("备份文件格式无效"); if (confirm("这将覆盖所有当前的气泡设置，确定吗？")) { for (const [id, base64] of Object.entries(backup.mediaData)) { await addMediaToDB(id, base64ToBlob(base64)); } appState.beautify.bubbleSettings = backup.bubbleSettings; debouncedSaveState(); await applyAllCustomizations(); renderBubbles(); showToast("气泡设置导入成功！"); bubbleIoModal.classList.remove('visible'); } } catch (error) { showToast(`导入失败: ${error.message}`, 'error'); } finally { importBubblesInput.value = ''; } }; reader.readAsText(file); });
 wallpaperFileInput.addEventListener('change', async (e) => { const files = e.target.files; if (files.length > 0) { showToast(`正在添加 ${files.length} 张壁纸...`); for (const file of files) { const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); } debouncedSaveState(); await renderWallpapers(); showToast(`成功添加 ${files.length} 张壁纸`); } wallpaperFileInput.value = ''; });
-async function renderWallpapers() { wallpaperGrid.innerHTML = ''; for (const wp of appState.beautify.wallpapers) { const item = document.createElement('div'); item.className = 'wallpaper-item'; item.dataset.id = wp.id; const img = document.createElement('img'); img.alt = '壁纸预览'; item.appendChild(img); if (wp.id === appState.beautify.currentWallpaperId) item.classList.add('is-wallpaper'); if (wp.id === appState.beautify.currentChatBgId) item.classList.add('is-chat-bg'); wallpaperGrid.appendChild(item); setElementImage(img, wp.id, 'src'); } }
+async function renderWallpapers(isAppending = false) {
+const BATCH_SIZE = 48;
+const container = getEl('wallpaper-tab-content');
+
+if (!isAppending) {
+    wallpaperGrid.innerHTML = '';
+    runtimeState.beautify.wallpaperDisplayCount = 0;
+}
+
+// Remove old 'load more' button before adding new content
+const existingBtnContainer = container.querySelector('.load-more-container');
+if (existingBtnContainer) {
+    existingBtnContainer.remove();
+}
+
+const start = runtimeState.beautify.wallpaperDisplayCount;
+const end = start + BATCH_SIZE;
+const wallpapersToRender = appState.beautify.wallpapers.slice(start, end);
+
+for (const wp of wallpapersToRender) {
+    const item = document.createElement('div');
+    item.className = 'wallpaper-item';
+    item.dataset.id = wp.id;
+    const img = document.createElement('img');
+    img.alt = '壁纸预览';
+    item.appendChild(img);
+    if (wp.id === appState.beautify.currentWallpaperId) item.classList.add('is-wallpaper');
+    if (wp.id === appState.beautify.currentChatBgId) item.classList.add('is-chat-bg');
+    wallpaperGrid.appendChild(item);
+    setElementImage(img, wp.id, 'src');
+}
+
+runtimeState.beautify.wallpaperDisplayCount = end;
+
+if (end < appState.beautify.wallpapers.length) {
+    const loadMoreContainer = document.createElement('div');
+    loadMoreContainer.className = 'load-more-container';
+    loadMoreContainer.style.padding = '15px';
+    loadMoreContainer.innerHTML = `<button class="settings-button secondary" style="width: 100%;">加载更多 (${end}/${appState.beautify.wallpapers.length})</button>`;
+    // Insert after the grid, within the tab content
+    container.appendChild(loadMoreContainer);
+
+    loadMoreContainer.querySelector('button').addEventListener('click', () => {
+        renderWallpapers(true);
+    }, { once: true });
+}}
 function showWallpaperContextMenu(targetElement, event) { event.preventDefault(); runtimeState.wallpaperContextMenuTarget = targetElement; const screenRect = phoneScreen.getBoundingClientRect(); let x = event.clientX; let y = event.clientY; if (event.touches) { x = event.touches[0].clientX; y = event.touches[0].clientY; } wallpaperContextMenu.style.display = 'flex'; const menuRect = wallpaperContextMenu.getBoundingClientRect(); let top = y - screenRect.top; let left = x - screenRect.left; if (left + menuRect.width > screenRect.width - 10) { left = screenRect.width - menuRect.width - 10; } if (top + menuRect.height > screenRect.height - 10) { top = screenRect.height - menuRect.height - 10; } wallpaperContextMenu.style.top = `${top}px`; wallpaperContextMenu.style.left = `${left}px`; }
 function hideWallpaperContextMenu() { if (wallpaperContextMenu) wallpaperContextMenu.style.display = 'none'; runtimeState.wallpaperContextMenuTarget = null; }
 wallpaperGrid.addEventListener('click', (e) => {
@@ -4181,7 +4242,59 @@ function handleMailTabChange(tabId) {
     debouncedSaveState(); // Save the new timestamp to localStorage
 }
 async function loadAllCustomFonts() { const existingStyle = document.getElementById('all-custom-fonts-style'); if (existingStyle) existingStyle.remove(); const style = document.createElement('style'); style.id = 'all-custom-fonts-style'; let fontFaceRules = ''; for (const font of appState.beautify.fonts) { const url = await getMediaURL(font.id); if (url) { fontFaceRules += `@font-face { font-family: "${font.name}"; src: url("${url}"); }\n`; } } style.textContent = fontFaceRules; document.head.appendChild(style); }
-function renderFonts() { fontListEl.innerHTML = ''; const createFontItem = (fontName, isDefault = false, font) => { const li = document.createElement('li'); li.className = 'font-list-item'; li.dataset.name = fontName; const isActive = fontName === appState.beautify.currentFont; const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : ''; const fontStyle = isDefault ? '' : `style="font-family: '${fontName}'"`; li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span ${fontStyle}>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; fontListEl.appendChild(li); }; createFontItem('default', true); appState.beautify.fonts.forEach(font => createFontItem(font.name, false, font)); }
+function renderFonts(isAppending = false) {
+const BATCH_SIZE = 50;
+const container = getEl('font-tab-content');
+
+if (!isAppending) {
+    fontListEl.innerHTML = '';
+    runtimeState.beautify.fontDisplayCount = 0;
+    // Always render the default font first
+    const createFontItem = (fontName, isDefault = false) => {
+        const li = document.createElement('li');
+        li.className = 'font-list-item';
+        li.dataset.name = fontName;
+        const isActive = fontName === appState.beautify.currentFont;
+        const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : '';
+        const fontStyle = isDefault ? '' : `style="font-family: '${fontName}'"`;
+        li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span ${fontStyle}>${isDefault ? '默认系统字体' : fontName}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`;
+        fontListEl.appendChild(li);
+    };
+    createFontItem('default', true);
+}
+
+const existingBtnContainer = container.querySelector('.load-more-container');
+if (existingBtnContainer) {
+    existingBtnContainer.remove();
+}
+
+const start = runtimeState.beautify.fontDisplayCount;
+const end = start + BATCH_SIZE;
+const fontsToRender = appState.beautify.fonts.slice(start, end);
+
+fontsToRender.forEach(font => {
+    const li = document.createElement('li');
+    li.className = 'font-list-item';
+    li.dataset.name = font.name;
+    const isActive = font.name === appState.beautify.currentFont;
+    const colorBtnHTML = isActive ? `<button class="font-color-btn" data-bubble-id="font-color-btn">颜色</button>` : '';
+    li.innerHTML = `<div class="font-item-content ${isActive ? 'active' : ''}"><span style="font-family: '${font.name}'">${font.name}</span>${colorBtnHTML}</div><div class="font-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`;
+    fontListEl.appendChild(li);
+});
+
+runtimeState.beautify.fontDisplayCount = end;
+
+if (end < appState.beautify.fonts.length) {
+    const loadMoreContainer = document.createElement('div');
+    loadMoreContainer.className = 'load-more-container';
+    loadMoreContainer.style.padding = '15px';
+    loadMoreContainer.innerHTML = `<button class="settings-button secondary" style="width: 100%;">加载更多 (${end}/${appState.beautify.fonts.length})</button>`;
+    container.appendChild(loadMoreContainer);
+
+    loadMoreContainer.querySelector('button').addEventListener('click', () => {
+        renderFonts(true);
+    }, { once: true });
+}}
 function isValidColor(str) { return /^#([0-9A-F]{3}){1,2}$/i.test(str) || /^(rgb|rgba)\(/i.test(str); }
 function applyFont(fontName, isInitialLoad = false) { document.documentElement.style.setProperty('--system-font-family', fontName === 'default' ? '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' : `"${fontName}"`); appState.beautify.currentFont = fontName; if (!isInitialLoad) { debouncedSaveState(); showToast(`字体已应用: ${fontName}`); } renderFonts(); }
 cancelAddFontBtn.addEventListener('click', () => addFontModal.classList.remove('visible'));
