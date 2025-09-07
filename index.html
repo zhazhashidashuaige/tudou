@@ -1203,9 +1203,10 @@ display: none;
 .love-letter-preview-meta .subject {
 font-weight: bold;
 font-size: 15px;
-/* 优化：允许标题换行以完整显示 */
-white-space: normal;
-word-break: break-all;
+/* 新增：确保标题即使过长也不会换行，而是以省略号结尾 */
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
 }
 .love-letter-preview-meta .subject.unread-subject {
     color: var(--accent-color);
@@ -1230,6 +1231,10 @@ word-break: break-all;
     text-align: right;
     font-style: italic;
     margin-top: 8px;
+    /* 新增：确保签名即使过长也不会换行，而是以省略号结尾 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .love-letter-preview-card .love-letter-actions {
     justify-content: flex-end;
