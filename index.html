@@ -1357,6 +1357,41 @@ word-break: break-all;
     position: relative;
     aspect-ratio: 10 / 13; /* 接近照片墙的比例 */
 }
+.postcard-preview-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px;
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+.postcard-preview-card:hover .postcard-preview-actions {
+    opacity: 1;
+}
+.postcard-preview-actions .icon-btn {
+    background-color: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--primary-text-color);
+    cursor: pointer;
+    font-size: 14px;
+}
+.postcard-preview-actions .icon-btn:hover {
+    background-color: white;
+}
+.postcard-preview-actions .delete-postcard-btn:hover {
+    color: var(--danger-color);
+}
 .postcard-preview-card.unread::before {
     content: 'NEW';
     position: absolute;
@@ -1426,51 +1461,11 @@ word-break: break-all;
     background-color: rgba(0,0,0,0.5); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     opacity: 0; visibility: hidden; transition: opacity 0.4s ease;
 }
-#postcard-viewer.visible .postcard-card-full { transform: scale(1); }
-.postcard-image-section { flex: 1; background-color: #eee; }
-.postcard-image-section img { width: 100%; height: 100%; object-fit: cover; }
-.postcard-content-section { flex: 1.2; display: flex; flex-direction: column; padding: 20px; }
-.postcard-text-area { flex-grow: 1; overflow-y: auto; font-size: 15px; line-height: 1.7; }
-.postcard-salutation { font-weight: bold; margin-bottom: 1em; }
-.postcard-body { white-space: pre-wrap; }
-.postcard-signature-area { flex-shrink: 0; text-align: right; position: relative; padding-top: 15px; padding-right: 60px; }
-.postcard-signature { font-style: italic; }
-.postcard-location, .postcard-timestamp { font-size: 12px; color: var(--secondary-text-color); margin-top: 5px; }
-.postcard-stamp { position: absolute; bottom: 0; right: 0; width: 50px; height: 50px; border-radius: 50%; background-size: cover; background-position: center; border: 2px solid var(--border-color); }
-.postcard-close-btn { position: absolute; top: calc(env(safe-area-inset-top, 10px) + 5px); right: 10px; width: 40px; height: 40px; background: none; border: none; font-size: 32px; color: white; cursor: pointer; z-index: 10; text-shadow: 0 0 5px black; }
-
-.postcard-gift-area {
-    margin-top: 15px;
-    padding: 10px 15px;
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 20px;
-    color: var(--primary-text-color);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    animation: gift-appear 0.5s 0.4s backwards;
-}
-@keyframes gift-appear {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-.postcard-gift-area i { color: var(--owner-title-bg); }
-
-/* 适配移动端 */
-@media (max-width: 600px) {
-    .postcard-content-section {
-        flex-grow: 1;
-        flex-shrink: 1;
-        min-height: 0;
-    }
-    .postcard-signature-area { padding-right: 55px; }
-}
-#postcard-viewer.visible { display: flex; opacity: 1; visibility: visible; }
+#postcard-viewer.visible { display: flex; opacity: 1; visibility: visible; } /* 核心修复：添加此行 */
 .postcard-card-full {
     width: 100%;
-    max-width: 720px; /* PC端最大宽度 */
-    min-height: 240px; /* 新增：最小高度，替代固定的宽高比 */
+    max-width: 680px; /* 调整最大宽度 */
+    min-height: 300px; /* 设置最小高度 */
     background-color: var(--item-bg);
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.3);
@@ -1480,10 +1475,10 @@ word-break: break-all;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 #postcard-viewer.visible .postcard-card-full { transform: scale(1); }
-.postcard-image-section { flex: 1; background-color: #eee; }
-.postcard-image-section img { width: 100%; height: 100%; object-fit: cover; }
-.postcard-content-section { flex: 1.2; display: flex; flex-direction: column; padding: 20px; }
-.postcard-text-area { flex-grow: 1; overflow-y: hidden; /* 新增：确保不出现滚动条 */ font-size: 15px; line-height: 1.7; }
+.postcard-image-section { flex: 0 0 45%; background-color: #eee; } /* 恢复：图片区填充样式 */
+.postcard-image-section img { width: 100%; height: 100%; object-fit: cover; } /* 恢复：图片裁剪以填充，而非完整显示 */
+.postcard-content-section { flex: 1 1 55%; display: flex; flex-direction: column; padding: 20px; } /* 修改：让文字区自适应剩余空间 */
+.postcard-text-area { flex-grow: 1; overflow-y: hidden; font-size: 15px; line-height: 1.7; } /* 修改：移除滚动条 */
 .postcard-salutation { font-weight: bold; margin-bottom: 1em; }
 .postcard-body { white-space: pre-wrap; }
 .postcard-signature-area { flex-shrink: 0; text-align: right; position: relative; padding-top: 15px; padding-right: 60px; }
@@ -1509,7 +1504,30 @@ word-break: break-all;
     to { opacity: 1; transform: translateY(0); }
 }
 .postcard-gift-area i { color: var(--owner-title-bg); }
-
+.postcard-reply-btn {
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    width: 44px;
+    height: 44px;
+    background-color: #a38c6d;
+    color: white;
+    border-radius: 50%;
+    border: none;
+    font-size: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.postcard-reply-btn:hover {
+    background-color: #8a7358;
+}
+.postcard-reply-btn:active {
+    transform: scale(0.95);
+}
 /* 适配移动端 */
 @media (max-width: 600px) {
     .postcard-content-section {
@@ -1519,6 +1537,7 @@ word-break: break-all;
     }
     .postcard-signature-area { padding-right: 55px; }
 }
+
 /* --- 视频通话弹窗：新增样式 --- */
         #video-call-modal.minimized {
             display: none !important; /* 最小化时隐藏弹窗 */
@@ -2636,6 +2655,84 @@ padding: 0 10px;
             </div>
         </div>
     </div>
+        <!-- 新增：回信明信片弹窗 -->
+    <div id="reply-postcard-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">回信</h3>
+            <div class="modal-body">
+                <input type="hidden" id="reply-original-postcard-id">
+                <div class="form-group">
+                    <label>称呼</label>
+                    <input type="text" id="reply-postcard-salutation">
+                </div>
+                <div class="form-group" style="text-align: center;">
+                    <img id="reply-postcard-image-preview" src="" alt="明信片图片预览" style="max-width: 100%; height: auto; max-height: 150px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); object-fit: cover;">
+                    <div class="button-group">
+                        <button id="upload-reply-postcard-image-btn" class="settings-button secondary">上传</button>
+                        <button id="add-reply-postcard-image-url-btn" class="settings-button secondary">添加URL</button>
+                    </div>
+                    <input type="file" id="reply-postcard-image-file-input" accept="image/*" style="display:none;">
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="reply-postcard-body" class="wide-textarea" rows="4" placeholder="分享你的近况..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>落款</label>
+                    <input type="text" id="reply-postcard-signature">
+                </div>
+                <div class="form-group">
+                    <label>地点</label>
+                    <input type="text" id="reply-postcard-location" placeholder="你在哪里？">
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-reply-postcard-btn" class="cancel-btn">取消</button>
+                <button id="send-reply-postcard-btn" class="confirm-btn">发送</button>
+            </div>
+        </div>
+    </div>
+        <!-- 新增：明信片编辑弹窗 -->
+    <div id="edit-postcard-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">编辑明信片</h3>
+            <div class="modal-body">
+                <input type="hidden" id="editing-postcard-id">
+                <div class="form-group" style="text-align: center;">
+                    <img id="edit-postcard-image-preview" src="" alt="明信片图片预览" style="max-width: 100%; height: auto; max-height: 150px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color);">
+                    <div class="button-group">
+                        <button id="upload-postcard-image-btn" class="settings-button secondary">上传</button>
+                        <button id="add-postcard-image-url-btn" class="settings-button secondary">添加URL</button>
+                    </div>
+                    <input type="file" id="postcard-image-file-input" accept="image/*" style="display:none;">
+                </div>
+                 <div class="form-group">
+                    <label>称呼</label>
+                    <input type="text" id="edit-postcard-salutation">
+                </div>
+                <div class="form-group">
+                    <label>寄信人</label>
+                    <div id="postcard-author-selector" class="author-selector-grid"></div>
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="edit-postcard-body" class="wide-textarea" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>落款</label>
+                    <input type="text" id="edit-postcard-signature">
+                </div>
+                <div class="form-group">
+                    <label>地点</label>
+                    <input type="text" id="edit-postcard-location">
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-edit-postcard-btn" class="cancel-btn">取消</button>
+                <button id="save-postcard-btn" class="confirm-btn">保存</button>
+            </div>
+        </div>
+    </div>
         <!-- 新增：拆明信片与阅读器 -->
     <div id="unread-postcard-prompt">
         <div class="postcard-icon"><i class="fa-solid fa-camera-retro"></i></div>
@@ -2656,6 +2753,8 @@ padding: 0 10px;
                     <div class="postcard-location"></div>
                     <div class="postcard-timestamp"></div>
                     <div class="postcard-stamp"></div>
+                    <!-- 新增：回信按钮 -->
+                    <button class="postcard-reply-btn" title="回信"><i class="fa-solid fa-pen-nib"></i></button>
                 </div>
             </div>
         </div>
@@ -3846,46 +3945,43 @@ return {
     },
     data: { worldBooks: [], archives: [], infos: [], savedThemes: [], savedBubbles: [], mediaSources: {} },
     chat: {
-    contacts: [],
-    emojis: [],
-    videoCallState: { isActive: false, chatId: null, isGroup: false, participants: [], startTime: null, log: [], isMinimized: false, isCameraSwapped: false, initiator: null, lastRejectedCallTimestamp: null },
-    userProfile: {
-    name: '土皇帝',
-    avatarId: 'default_user_avatar',
-    avatarFrameId: '',
-    avatarLibrary: [],
-    avatarFrameLibrary: [],
-    persona: '全网唯一土皇帝',
-    signature: '全网唯一土皇帝'
-    , balance: 1000000.00
-    },
-    moments: {
-    profile: {
-    name: '土皇帝',
-    signature: '全网唯一土皇帝',
-    avatarId: 'default_moments_avatar',
-    coverId: 'default_moments_cover',
-    },
-    posts: [], // 动态
-    photos: [], // 照片库
-    albums: [], // 相册
-    messages: [], // 留言
-    notifications: [],
-    visitors: []
-    },
-    mailbox: { 
+                        contacts: [],
+                        emojis: [],
+                        videoCallState: { isActive: false, chatId: null, isGroup: false, participants: [], startTime: null, log: [], isMinimized: false, isCameraSwapped: false, initiator: null, lastRejectedCallTimestamp: null },
+                        userProfile: {
+                            name: '土皇帝',
+                            avatarId: 'default_user_avatar',
+                            avatarFrameId: '',
+                            avatarLibrary: [],
+                            avatarFrameLibrary: [],
+                            persona: '全网唯一土皇帝',
+                            signature: '全网唯一土皇帝',
+                            balance: 1000000.00
+                        },
+                        moments: {
+                            profile: {
+                                name: '土皇帝',
+                                signature: '全网唯一土皇帝',
+                                avatarId: 'default_moments_avatar',
+                                coverId: 'default_moments_cover',
+                            },
+                            posts: [],
+                            photos: [],
+                            albums: [],
+                            messages: [],
+                            notifications: [],
+                            visitors: []
+                        }
+                    },
+                    mailbox: { 
                         activeTab: 'love-letter',
-                        loveLetters: [] ,
+                        loveLetters: [],
                         postcards: []
                     },
-                    diary: { activeTab: 'secret-diary' }
-                    ,
-meta: {
-    lastUserActivityTimestamp: 0 // Tracks the timestamp of the last user interaction
-}
-                    }
-    };
-    }
+                    diary: { activeTab: 'secret-diary' },
+                    meta: {
+                        lastUserActivityTimestamp: 0 // Tracks the timestamp of the last user interaction
+                    }}}
 
     function getInitialRuntimeState() {
         return {
@@ -7839,8 +7935,26 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
         // --- Postcard Listeners ---
         getEl('postcard-wall').addEventListener('click', (e) => {
             const card = e.target.closest('.postcard-preview-card');
-            if (card) {
-                openPostcardViewer(card.dataset.postcardId);
+            if (!card) return;
+            
+            const postcardId = card.dataset.postcardId;
+
+            if (e.target.closest('.edit-postcard-btn')) {
+                e.stopPropagation();
+                openEditPostcardModal(postcardId);
+            } else if (e.target.closest('.delete-postcard-btn')) {
+                e.stopPropagation();
+                if (confirm('确定要永久删除这张明信片吗？')) {
+                    const index = appState.mailbox.postcards.findIndex(p => p.id === postcardId);
+                    if (index > -1) {
+                        appState.mailbox.postcards.splice(index, 1);
+                        saveState(); // 使用即时保存以确保删除操作的可靠性
+                        renderPostcardWall();
+                        showToast('明信片已删除');
+                    }
+                }
+            } else {
+                openPostcardViewer(postcardId);
             }
         });
 
@@ -7857,9 +7971,228 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
                 openPostcardViewer(postcardId);
             }, 300);
         });
+        getEl('postcard-viewer').addEventListener('click', e => {
+            if (e.target.closest('.postcard-reply-btn')) {
+                const postcardId = e.currentTarget.dataset.currentPostcardId;
+                // 优化：打开回信弹窗前，先关闭明信片查看器
+                getEl('postcard-viewer').classList.remove('visible');
+                openReplyPostcardModal(postcardId);
+            }
+        });
+                function openReplyPostcardModal(originalPostcardId) {
+            const originalCard = appState.mailbox.postcards.find(p => p.id === originalPostcardId);
+            if (!originalCard) return;
 
+            const modal = getEl('reply-postcard-modal');
+            
+            // 核心修复：从char的联系人对象中获取所有上下文信息
+            const charContact = appState.chat.contacts.find(c => c.id === originalCard.senderId);
+            if (!charContact) return showToast('找不到对应的联系人', 'error');
+            
+            const charSettings = charContact.charSettings;
+            const userSettingsForThisChar = charContact.userSettings;
+
+            getEl('reply-original-postcard-id').value = originalPostcardId;
+
+            // 优化：提供基于上下文的、可编辑的默认值
+            getEl('reply-postcard-salutation').value = charSettings.name;
+            getEl('reply-postcard-signature').value = userSettingsForThisChar.name;
+            
+            // 清空和重置
+            getEl('reply-postcard-body').value = '';
+            getEl('reply-postcard-location').value = '';
+            const imgPreview = getEl('reply-postcard-image-preview');
+            // 优化：移除预设图片，初始状态下隐藏预览
+            imgPreview.src = '';
+            imgPreview.style.display = 'none';
+            imgPreview.dataset.imageId = '';
+
+            modal.classList.add('visible');
+        }
+
+    getEl('upload-reply-postcard-image-btn').addEventListener('click', () => getEl('reply-postcard-image-file-input').click());
+            getEl('reply-postcard-image-file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            showToast('正在处理图片...');
+            const compressedFile = await compressImageBeforeSaving(file);
+            const newImageId = newId('postcard_reply_img');
+            await addMediaToDB(newImageId, compressedFile);
+            
+            const imgPreview = getEl('reply-postcard-image-preview');
+            imgPreview.src = await getMediaURL(newImageId);
+            imgPreview.style.display = 'block'; // 优化：上传后显示图片
+            imgPreview.dataset.imageId = newImageId;
+            e.target.value = '';
+        });
+
+            getEl('add-reply-postcard-image-url-btn').addEventListener('click', () => {
+            const url = prompt('请输入图片URL:');
+            if (url && url.startsWith('http')) {
+                const imgPreview = getEl('reply-postcard-image-preview');
+                imgPreview.src = url;
+                imgPreview.style.display = 'block'; // 优化：添加URL后显示图片
+                imgPreview.dataset.imageId = url;
+            } else if (url) {
+                showToast('请输入有效的URL', 'error');
+            }
+        });
+    
+    getEl('cancel-reply-postcard-btn').addEventListener('click', () => getEl('reply-postcard-modal').classList.remove('visible'));
+
+            getEl('send-reply-postcard-btn').addEventListener('click', () => {
+            const originalCardId = getEl('reply-original-postcard-id').value;
+            const originalCard = appState.mailbox.postcards.find(p => p.id === originalCardId);
+            if (!originalCard) return;
+
+            const body = getEl('reply-postcard-body').value.trim();
+            const location = getEl('reply-postcard-location').value.trim();
+            const imageUrl = getEl('reply-postcard-image-preview').dataset.imageId;
+            const salutation = getEl('reply-postcard-salutation').value.trim();
+            const signature = getEl('reply-postcard-signature').value.trim();
+
+            if (!imageUrl || !body || !location || !salutation || !signature) {
+                return showToast('图片、称呼、内容、落款和地点均不能为空', 'error');
+            }
+
+            const newPostcard = {
+                id: newId('postcard'),
+                senderId: 'user',
+                recipientId: originalCard.senderId,
+                salutation: salutation,
+                body: body,
+                signature: signature,
+                location: location,
+                timestamp: Date.now(),
+                imageUrl: imageUrl,
+                isRead: true, // 用户自己发的，默认为已读
+                gift: null
+            };
+
+            appState.mailbox.postcards.push(newPostcard);
+            debouncedSaveState();
+            
+            getEl('reply-postcard-modal').classList.remove('visible');
+            renderPostcardWall();
+            showToast('回信已发送！');
+        });
         getEl('postcard-viewer').querySelector('.postcard-close-btn').addEventListener('click', () => {
             getEl('postcard-viewer').classList.remove('visible');
+        });
+                // --- 新增：明信片编辑功能 ---
+        function renderLetterAuthorSelector(container, selectedId, excludeUser = false) {
+            let availableAuthors = [
+                { id: 'user', name: appState.chat.userProfile.name, avatarId: appState.chat.userProfile.avatarId },
+                ...appState.chat.contacts.filter(c => !c.isGroup).map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
+            ];
+
+            if (excludeUser) {
+                availableAuthors = availableAuthors.filter(author => author.id !== 'user');
+            }
+
+            container.innerHTML = availableAuthors.map(author => `
+                <div class="author-selector-item ${author.id === selectedId ? 'selected' : ''}" data-id="${author.id}">
+                    <div class="avatar" data-avatar-id="${author.avatarId}"></div>
+                    <span class="name">${author.name}</span>
+                </div>
+            `).join('');
+            container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+        }
+
+        function openEditPostcardModal(postcardId) {
+            const modal = getEl('edit-postcard-modal');
+            const card = appState.mailbox.postcards.find(p => p.id === postcardId);
+            if (!card) return;
+
+            getEl('editing-postcard-id').value = postcardId;
+            
+            const imgPreview = getEl('edit-postcard-image-preview');
+            imgPreview.src = card.imageUrl;
+            imgPreview.dataset.imageId = card.imageUrl; // 存储当前图片ID或URL
+
+            getEl('edit-postcard-salutation').value = card.salutation;
+            getEl('edit-postcard-body').value = card.body;
+            getEl('edit-postcard-signature').value = card.signature;
+            getEl('edit-postcard-location').value = card.location;
+            
+            // 渲染寄信人选择器
+            renderLetterAuthorSelector(getEl('postcard-author-selector'), card.senderId, false);
+
+            modal.classList.add('visible');
+        }
+
+        getEl('cancel-edit-postcard-btn').addEventListener('click', () => {
+            getEl('edit-postcard-modal').classList.remove('visible');
+        });
+
+        getEl('upload-postcard-image-btn').addEventListener('click', () => {
+            getEl('postcard-image-file-input').click();
+        });
+
+        getEl('postcard-image-file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            showToast('正在处理图片...');
+            const compressedFile = await compressImageBeforeSaving(file);
+            const newImageId = newId('postcard_img');
+            await addMediaToDB(newImageId, compressedFile);
+            
+            const imgPreview = getEl('edit-postcard-image-preview');
+            const url = await getMediaURL(newImageId);
+            imgPreview.src = url;
+            imgPreview.dataset.imageId = newImageId; // 更新图片ID
+            showToast('图片已更新！');
+            e.target.value = '';
+        });
+
+        getEl('add-postcard-image-url-btn').addEventListener('click', () => {
+            const url = prompt('请输入新的图片URL:');
+            if (url && url.startsWith('http')) {
+                const imgPreview = getEl('edit-postcard-image-preview');
+                imgPreview.src = url;
+                imgPreview.dataset.imageId = url; // 直接使用URL作为ID
+            } else if (url) {
+                showToast('请输入一个有效的URL', 'error');
+            }
+        });
+
+        getEl('save-postcard-btn').addEventListener('click', () => {
+            const postcardId = getEl('editing-postcard-id').value;
+            const card = appState.mailbox.postcards.find(p => p.id === postcardId);
+            if (!card) return;
+
+            const selectedAuthorEl = getEl('postcard-author-selector').querySelector('.selected');
+            if (!selectedAuthorEl) {
+                showToast('请选择一位寄信人', 'error');
+                return;
+            }
+
+            card.senderId = selectedAuthorEl.dataset.id;
+            card.imageUrl = getEl('edit-postcard-image-preview').dataset.imageId;
+            card.salutation = getEl('edit-postcard-salutation').value;
+            card.body = getEl('edit-postcard-body').value;
+            card.signature = getEl('edit-postcard-signature').value;
+            card.location = getEl('edit-postcard-location').value;
+            
+            // 如果修改了寄信人，同步修改落款（如果落款是旧名字的话）
+            const oldSender = findUserById(card.senderId);
+            const newSender = findUserById(selectedAuthorEl.dataset.id);
+            if(card.signature === oldSender.name) {
+                card.signature = newSender.name;
+            }
+
+            debouncedSaveState();
+            renderPostcardWall();
+            getEl('edit-postcard-modal').classList.remove('visible');
+            showToast('明信片已更新！');
+        });
+
+        getEl('edit-postcard-modal').addEventListener('click', e => {
+            const item = e.target.closest('#postcard-author-selector .author-selector-item');
+            if (item) {
+                item.parentElement.querySelectorAll('.author-selector-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+            }
         });
                         // --- 新增：修复随机图片链接的核心辅助函数 ---
         function resolveRedirectUrl(url) {
@@ -7870,15 +8203,7 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
                 img.src = url;
             });
         }
-                // --- 新增：修复随机图片链接的核心辅助函数 ---
-        function resolveRedirectUrl(url) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img.src);
-                img.onerror = () => reject(new Error(`Failed to load and resolve image URL: ${url}`));
-                img.src = url;
-            });
-        }
+                
 function processAndScopeCss(cssString, scopeSelector) {
     if (!cssString || !scopeSelector) {
         return cssString || '';
@@ -12107,23 +12432,40 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             const promptEl = getEl('unread-postcard-prompt');
             const postcards = [...appState.mailbox.postcards].sort((a, b) => b.timestamp - a.timestamp);
 
-            if (postcards.length === 0) {
+                       // 核心优化：筛选与用户相关的所有明信片（收到或寄出）
+            const userPostcards = postcards.filter(p => p.recipientId === 'user' || p.senderId === 'user');
+
+            if (userPostcards.length === 0) {
                 wallEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1; margin-top: 50px;">还没有收到过明信片...</p>';
             } else {
-                wallEl.innerHTML = postcards.map(card => {
-                    const sender = findUserById(card.senderId);
+                wallEl.innerHTML = userPostcards.map(card => {
+                    const isReceived = card.senderId !== 'user';
+                    const charId = isReceived ? card.senderId : card.recipientId;
+                    const charContact = appState.chat.contacts.find(c => c.id === charId);
+                    if (!charContact) return ''; // 如果找不到联系人，则不渲染此卡片
+
+                    const charName = charContact.charSettings.name;
+                    const isUnread = isReceived && !card.isRead;
+                    
+                    const displayTimestamp = typeof card.timestamp === 'number'
+                        ? new Date(card.timestamp).toLocaleDateString()
+                        : card.timestamp;
+
                     return `
-                        <div class="postcard-preview-card ${!card.isRead ? 'unread' : ''}" data-postcard-id="${card.id}">
+                        <div class="postcard-preview-card ${isUnread ? 'unread' : ''}" data-postcard-id="${card.id}">
                             <div class="postcard-preview-image" style="background-image: url('${card.imageUrl}')"></div>
                             <div class="postcard-preview-footer">
-                                <span class="postcard-preview-sender">From: ${sender.name}</span>
+                                <span class="postcard-preview-sender">${isReceived ? 'From:' : 'To:'} ${charName}</span>
                                 <span class="postcard-preview-location">${card.location}</span>
-                                <span class="postcard-preview-timestamp">${card.timestamp}</span>
+                                <span class="postcard-preview-timestamp">${displayTimestamp}</span>
+                            </div>
+                            <div class="postcard-preview-actions">
+                                <button class="icon-btn edit-postcard-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="icon-btn delete-postcard-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>
                     `;
                 }).join('');
-                wallEl.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
             }
 
             const firstUnread = postcards.find(p => !p.isRead);
@@ -12137,8 +12479,15 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
 
         function openPostcardViewer(postcardId) {
             const viewer = getEl('postcard-viewer');
+            viewer.dataset.currentPostcardId = postcardId; // 存储ID给回信按钮用
             const card = appState.mailbox.postcards.find(p => p.id === postcardId);
             if (!card) return;
+
+            const isReceived = card.senderId !== 'user';
+            
+            // 新增：根据是否为收到的信，决定是否显示回信按钮
+            const replyBtn = viewer.querySelector('.postcard-reply-btn');
+            replyBtn.style.display = isReceived ? 'flex' : 'none';
 
             viewer.querySelector('.postcard-image-section img').src = card.imageUrl;
             viewer.querySelector('.postcard-salutation').textContent = card.salutation;
@@ -12146,7 +12495,18 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             viewer.querySelector('.postcard-signature').textContent = card.signature;
             viewer.querySelector('.postcard-location').textContent = card.location;
             viewer.querySelector('.postcard-timestamp').textContent = new Date(card.timestamp).toLocaleString();
-            setElementImage(viewer.querySelector('.postcard-stamp'), findUserById(card.senderId).avatarId);
+            
+            // 核心修复：根据上下文获取正确的头像
+            let stampAvatarId;
+            if (isReceived) {
+                // 收到char的信，邮戳是char的头像
+                stampAvatarId = findUserById(card.senderId).avatarId;
+            } else {
+                // 寄给char的信，邮戳是user在该char认知中的头像
+                const recipientContact = appState.chat.contacts.find(c => c.id === card.recipientId);
+                stampAvatarId = recipientContact ? recipientContact.userSettings.avatarId : findUserById('user').avatarId;
+            }
+            setElementImage(viewer.querySelector('.postcard-stamp'), stampAvatarId);
 
             const giftArea = viewer.querySelector('.postcard-gift-area');
             if (card.gift) {
@@ -12547,9 +12907,10 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                 // 如果不存在，先移除可能存在的来自“旅人A”的旧的、不完整的预设明信片
                 appState.mailbox.postcards = appState.mailbox.postcards.filter(p => p.senderId !== testChar.id);
                 
-                const presetPostcard = {
+const presetPostcard = {
                     id: newId('postcard'),
                     senderId: testChar.id,
+                    recipientId: 'user', // 新增：明确收信人
                     salutation: '致 我最亲爱的User：',
                     body: '见字如晤。\n\n不知不觉，秋意已浓。此地昨日降温，夜里起了风，我便将你为我准备的薄外套取了出来，暖洋洋的，很安心。\n\n窗外有一株很大的枫树，叶子红得像燃烧的火焰，风一过，便簌簌地落下来，铺了满地。真想让你也看看这景色。\n\n勿念，照顾好自己。\n',
                     signature: '旅人A',
