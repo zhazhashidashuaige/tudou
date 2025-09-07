@@ -1191,24 +1191,18 @@ align-content: start;
     padding-bottom: 8px;
 }
 .love-letter-preview-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-size: cover;
-    background-position: center;
-    border: 2px solid white;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    flex-shrink: 0;
+/* 优化：根据要求删除头像 */
+display: none;
 }
 .love-letter-preview-meta {
     overflow: hidden;
 }
 .love-letter-preview-meta .subject {
-    font-weight: bold;
-    font-size: 15px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+font-weight: bold;
+font-size: 15px;
+/* 优化：允许标题换行以完整显示 */
+white-space: normal;
+word-break: break-all;
 }
 .love-letter-preview-meta .subject.unread-subject {
     color: var(--accent-color);
@@ -1245,6 +1239,43 @@ align-content: start;
 .collected-letter-item .icon { font-size: 36px; color: #a38c6d; margin-bottom: 5px; }
 .collected-letter-item .sender { font-size: 10px; color: var(--secondary-text-color); }
 .collected-letter-item .date { font-size: 9px; color: #ccc; }
+#love-letter-style-grid {
+    grid-template-columns: repeat(2, 1fr); /* 每行2个，使其更大 */
+    gap: 15px;
+}
+.letter-style-preview-content {
+    height: 160px; /* 增加预览区域的高度 */
+    padding: 10px;
+    font-family: 'KaiTi', 'STKaiti', serif;
+    font-size: 11px; /* 增大预览字体 */
+    line-height: 1.5;
+    color: #5c5245;
+    background: var(--love-letter-texture), linear-gradient(to bottom right, #fdfbf7, #f4f0e8);
+    border: 1px solid #e0d8cc;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    cursor: pointer;
+}
+.letter-style-preview-content .salutation {
+    font-weight: bold;
+}
+.letter-style-preview-content .body {
+    flex-grow: 1;
+    overflow: hidden;
+    padding: 5px 0;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+}
+.letter-style-preview-content .signature {
+    text-align: right;
+    font-style: italic;
+    flex-shrink: 0;
+}
 /* --- 拆信动画 --- */
 #unread-letter-prompt { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.3); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); z-index: 210; display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
 #unread-letter-prompt.visible { opacity: 1; visibility: visible; }
@@ -1415,6 +1446,7 @@ padding: 0 10px;
 </style>
 <style id="theme-preview-styles"></style>
 <style id="saved-styles-preview-style"></style>
+<style id="mail-settings-preview-style"></style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
     <style id="bubble-preview-styles"></style>
 </head>
@@ -1486,13 +1518,9 @@ padding: 0 10px;
                 <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button" data-bubble-id="settings-save-preset">保存预设</button><button id="manage-presets-btn" class="settings-button secondary" data-bubble-id="settings-manage-presets">管理预设</button></div></div>
                 <div class="settings-group"><div class="group-title">数据管理</div><div class="button-group" style="flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 10px;">
-                        <button id="export-config-btn" class="settings-button" data-bubble-id="settings-export-config">导出配置与记录</button>
-                        <button id="import-config-btn" class="settings-button secondary" data-bubble-id="settings-import-config">导入配置与记录</button>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="export-media-btn" class="settings-button" data-bubble-id="settings-export-media">导出媒体库</button>
-                        <button id="import-media-btn" class="settings-button secondary" data-bubble-id="settings-import-media">导入媒体库</button>
-                    </div>
+                    <button id="export-all-btn" class="settings-button">导出全部数据</button>
+                    <button id="import-all-btn" class="settings-button secondary">导入全部数据</button>
+                </div>
                     <input type="file" id="import-file-input" style="display: none;" multiple accept=".zip">
                     
                 </div>
@@ -2498,6 +2526,21 @@ padding: 0 10px;
 <button class="context-menu-btn" id="wp-set-chat-bg">设为全局背景</button>
 <button class="context-menu-btn danger" id="wp-delete">删除</button>
 </div>
+<!-- 新增：信纸样式设置弹窗 -->
+<div id="mail-settings-modal" class="modal-overlay">
+<div class="modal-content library-modal">
+<h3 class="modal-title">信纸样式</h3>
+<div class="modal-body">
+<div id="love-letter-style-grid" class="library-grid"></div>
+</div>
+<div class="modal-actions">
+<button id="mail-settings-close-btn" class="cancel-btn">关闭</button>
+<button id="mail-settings-mode-toggle-btn" class="cancel-btn">删除</button>
+<button id="mail-settings-delete-btn" class="danger-btn" style="display:none;">确认删除</button>
+</div>
+</div>
+</div>
+</div>
     <!-- 背景选项上下文菜单 -->
     <div id="background-context-menu" style="display: none;">
         <button class="context-menu-btn" id="bg-menu-chat-bg">聊天背景</button>
@@ -2908,6 +2951,7 @@ const gcsUsBubbleRestoreBtn = getEl('gcs-us-bubble-restore-btn');
         const mailFabContainer = getEl('mail-fab-container');
         const editLoveLetterModal = getEl('edit-love-letter-modal');
         const letterReplyBtn = getEl('letter-reply-btn');
+const mailSettingsModal = getEl('mail-settings-modal');
     // --- 来电UI元素 ---
         const incomingCallBanner = getEl('incoming-call-banner');
         const incomingCallAvatar = getEl('incoming-call-avatar');
@@ -3766,224 +3810,142 @@ try {
     async function setElementImage(element, id, property = 'backgroundImage') { if (!element) return; const url = await getMediaURL(id); if (url) { if (property === 'src') { element.src = url; } else { element.style.backgroundImage = `url("${url}")`; } } else { if (property === 'src') { element.src = ''; } else { element.style.backgroundImage = 'none'; } } }
 
     // ===================================================================
-    // --- 完整备份与恢复 ---
-    // ===================================================================
-    function downloadFile(blob, filename) {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        URL.revokeObjectURL(url);
-        a.remove();
+// --- 统一备份与恢复 ---
+// ===================================================================
+function downloadFile(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+}
+
+// 辅助函数：深度遍历appState对象，收集所有被引用的媒体ID
+function findAllMediaIds(obj) {
+    const ids = new Set();
+    // 匹配所有自定义ID前缀的正则表达式
+    const prefixRegex = /^(wp|font|icon|bubble|data_avatar|emoji|lib|song|image|moment_|album_|photo_|video_bg|post|message|notification|letter|comment|reply)_/;
+
+    function traverse(current) {
+        if (!current) return;
+
+        if (Array.isArray(current)) {
+            current.forEach(traverse);
+        } else if (typeof current === 'object') {
+            Object.values(current).forEach(traverse);
+        } else if (typeof current === 'string') {
+            // 如果一个字符串值不是URL且匹配ID格式，则将其视为媒体ID
+            if (!current.startsWith('http') && !current.startsWith('data:') && prefixRegex.test(current)) {
+                ids.add(current);
+            }
+        }
     }
 
-    getEl('export-config-btn').addEventListener('click', () => {
-        try {
-            const dataStr = JSON.stringify(appState);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            downloadFile(blob, `EmperorPhone-ConfigBackup-${new Date().toISOString().slice(0, 10)}.json`);
-            showToast("配置与记录已导出！");
-        } catch (error) {
-            showToast("导出配置失败", 'error');
-            console.error(error);
-        }
-    });
+    traverse(obj);
+    return ids;
+}
 
-    getEl('import-config-btn').addEventListener('click', () => {
-        importFileInput.accept = '.json';
-        importFileInput.onchange = (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (confirm("这将覆盖所有当前的配置和聊天记录（媒体文件不受影响），确定吗？")) {
-                    try {
-                        const importedState = JSON.parse(e.target.result);
-                        localStorage.setItem(DB_KEY, JSON.stringify(importedState));
-                        showToast("导入成功，正在刷新...", 'info');
-                        setTimeout(() => window.location.reload(), 1500);
-                    } catch (error) {
-                        showToast(`导入失败: ${error.message}`, 'error');
-                        console.error("导入错误:", error);
+getEl('export-all-btn').addEventListener('click', async () => {
+    showToast('正在准备导出...', 'info');
+    try {
+        const zip = new JSZip();
+
+        // 1. 添加配置文件
+        const configStr = JSON.stringify(appState);
+        zip.file('config.json', configStr);
+
+        // 2. (新) 深度遍历appState，精准收集所有被引用的媒体ID
+        showToast('正在收集媒体文件引用...', 'info');
+        const allReferencedIds = findAllMediaIds(appState);
+        
+        // 3. (新) 根据ID列表，逐一从数据库获取媒体文件并打包
+        if (allReferencedIds.size > 0) {
+            showToast(`正在压缩 ${allReferencedIds.size} 个媒体文件...`);
+            const mediaPromises = [];
+            allReferencedIds.forEach(id => {
+                const promise = getMediaFromDB(id).then(data => {
+                    if (data) {
+                        zip.file(id, data);
+                    } else {
+                        console.warn(`在IndexedDB中未找到ID为: ${id} 的媒体文件，已跳过。`);
                     }
-                }
-                importFileInput.value = ''; // Reset for next import
-            };
-            reader.readAsText(file);
-        };
-        importFileInput.click();
-    });
-
-    getEl('export-media-btn').addEventListener('click', () => {
-const CHUNK_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
-
-const processNextChunk = () => {
-    if (!db) return showToast("数据库未初始化", 'error');
-    const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
-    const store = transaction.objectStore(IDB_STORE_NAME);
-    
-    let zip = new JSZip();
-    let currentChunkSize = 0;
-    let filesInThisChunk = 0;
-
-    const cursorRequest = store.openCursor();
-    let isAdvancing = runtimeState.exportProgress.filesProcessed > 0;
-    showToast(`准备导出第 ${runtimeState.exportProgress.currentPart} 部分...`, 'info');
-
-    cursorRequest.onsuccess = (event) => {
-        const cursor = event.target.result;
-
-        if (isAdvancing && cursor) {
-            isAdvancing = false;
-            cursor.advance(runtimeState.exportProgress.filesProcessed);
-            return;
+                });
+                mediaPromises.push(promise);
+            });
+            await Promise.all(mediaPromises);
         }
 
-        if (cursor) {
-            const item = cursor.value;
-            const itemSize = item.data.size || item.data.byteLength || 0;
-
-            if (filesInThisChunk > 0 && currentChunkSize + itemSize > CHUNK_SIZE_BYTES) {
-                finalizeAndDownload();
-                return; 
+        // 4. 生成并下载ZIP文件
+        showToast('正在生成压缩包...', 'info');
+        const content = await zip.generateAsync({
+            type: "blob",
+            compression: "DEFLATE",
+            compressionOptions: {
+                level: 6 
             }
-
-            zip.file(item.id, item.data);
-            currentChunkSize += itemSize;
-            filesInThisChunk++;
-            cursor.continue();
-        } else {
-            if (filesInThisChunk > 0) {
-                finalizeAndDownload(true);
-            }
-        }
-    };
-
-    cursorRequest.onerror = (event) => {
-        showToast('导出媒体时发生错误', 'error');
-        console.error("Cursor error:", event.target.error);
-    };
-
-    const finalizeAndDownload = async (isLastChunk = false) => {
-        const partNum = runtimeState.exportProgress.currentPart;
-        showToast(`正在生成第 ${partNum} 部分...`, 'info');
-        try {
-            const content = await zip.generateAsync({ type: "blob" });
-            downloadFile(content, `EmperorPhone-MediaBackup-part${partNum}-${new Date().toISOString().slice(0, 10)}.zip`);
-            
-            runtimeState.exportProgress.filesProcessed += filesInThisChunk;
-            runtimeState.exportProgress.currentPart++;
-
-            if (isLastChunk) {
-                showToast("媒体库导出完成！", 'info');
-                runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
-            } else {
-                showToast(`第 ${partNum} 部分导出成功！请再次点击按钮继续。`, 'info');
-            }
-        } catch (e) {
-            showToast(`生成第 ${partNum} 部分失败`, 'error');
-            console.error(e);
-        }
-    };
-};
-
-if (!db) return showToast("数据库未初始化", 'error');
-const transaction = db.transaction([IDB_STORE_NAME], 'readonly');
-const store = transaction.objectStore(IDB_STORE_NAME);
-store.count().onsuccess = async (e) => {
-    const totalFiles = e.target.result;
-    if (totalFiles === 0) return showToast("媒体库为空");
-
-    if (runtimeState.exportProgress.filesProcessed >= totalFiles) {
-         runtimeState.exportProgress = { filesProcessed: 0, currentPart: 1 };
-    }
-
-    const currentPart = runtimeState.exportProgress.currentPart;
-    if (currentPart === 1) {
-        showToast('正在计算文件大小...', 'info');
-        const allItems = await getAllMediaFromDB();
-        let totalSize = 0;
-        allItems.forEach(item => {
-            totalSize += item.data.size || item.data.byteLength || 0;
         });
-        const totalParts = Math.ceil(totalSize / CHUNK_SIZE_BYTES) || 1;
-
-        if (confirm(`您的媒体库(${totalFiles}个文件)将被拆分为 ${totalParts} 个压缩包。\n\n是否开始导出第 1 部分？`)) {
-            processNextChunk();
-        } else {
-            showToast("导出已取消");
-        }
-    } else {
-        if (confirm(`导出未完成。是否继续导出第 ${currentPart} 部分？`)) {
-            processNextChunk();
-        } else {
-            showToast("导出已暂停");
-        }
+        
+        downloadFile(content, `EmperorPhone-FullBackup-${new Date().toISOString().slice(0, 10)}.zip`);
+        showToast('全部数据导出成功！', 'info');
+    } catch (error) {
+        showToast('导出失败，请查看控制台获取详情', 'error');
+        console.error("Full export failed:", error);
     }
-};
 });
-    
-    getEl('import-media-btn').addEventListener('click', () => {
+
+getEl('import-all-btn').addEventListener('click', () => {
     importFileInput.accept = '.zip';
     importFileInput.onchange = async (event) => {
-        const files = event.target.files;
-        if (files.length === 0) return;
+        const file = event.target.files[0];
+        if (!file) return;
 
-        if (confirm(`即将导入 ${files.length} 个压缩包。这将把所有文件添加到您现有的媒体库中。确定吗？`)) {
-            showToast(`准备导入 ${files.length} 个压缩包...`, 'info');
-            let totalImportedCount = 0;
-
-            for (const file of files) {
-                showToast(`正在处理 ${file.name}...`, 'info');
-                try {
-                    const zip = await JSZip.loadAsync(file);
-                    const promises = [];
-                    let filesInThisZip = 0;
-
-                    zip.forEach((relativePath, zipEntry) => {
-                        if (zipEntry.dir) return;
-                        filesInThisZip++;
-
-                        const promise = zipEntry.async("blob").then(async (blobData) => {
-                            const id = zipEntry.name;
-                            await addMediaToDB(id, blobData);
-
-                            if (id.startsWith('wp_')) {
-                                if (!appState.beautify.wallpapers.some(wp => wp.id === id)) {
-                                    appState.beautify.wallpapers.push({ id });
-                                }
-                            } else if (id.startsWith('font_')) {
-                                if (!appState.beautify.fonts.some(f => f.id === id)) {
-                                    const name = id.replace(/\.[^/.]+$/, '').replace(/^font_/, '');
-                                    appState.beautify.fonts.push({ id, name });
-                                }
-                            } else if (id.startsWith('song_')) {
-                                 if (!appState.music.playlist.some(s => s.id === id)) {
-                                    const title = id.replace(/\.[^/.]+$/, '').replace(/^song_/, '');
-                                    appState.music.playlist.push({ id, title, artist: '未知艺术家', url: id, duration: NaN, isLocal: true });
-                                 }
-                            }
-                        });
-                        promises.push(promise);
-                    });
-                    
-                    await Promise.all(promises);
-                    totalImportedCount += filesInThisZip;
-
-                } catch (error) {
-                    showToast(`处理文件 ${file.name} 失败`, 'error');
-                    console.error(`Error processing ${file.name}:`, error);
+        if (confirm("【最高警告】\n\n此操作将彻底覆盖您当前的所有配置、记录和媒体文件！\n\n确定要继续吗？")) {
+            showToast('正在导入，请勿操作...', 'info');
+            try {
+                const zip = await JSZip.loadAsync(file);
+                
+                // 1. 验证并读取配置文件
+                const configFile = zip.file('config.json');
+                if (!configFile) {
+                    throw new Error('压缩包内未找到 "config.json" 配置文件。');
                 }
-            }
+                const configStr = await configFile.async('string');
+                const importedState = JSON.parse(configStr);
 
-            saveState(); // 在处理完所有文件后，进行一次性保存
-            
-            showToast(`导入完成！共处理了 ${totalImportedCount} 个文件。正在刷新...`, 'info');
-            setTimeout(() => window.location.reload(), 1500);
+                // 2. 清空现有媒体库
+                showToast('正在清空旧媒体库...', 'info');
+                await clearMediaDB();
+
+                // 3. 导入新的媒体文件
+                const mediaFiles = [];
+                zip.forEach((relativePath, zipEntry) => {
+                    if (!zipEntry.dir && zipEntry.name !== 'config.json') {
+                        mediaFiles.push(
+                            zipEntry.async('blob').then(blobData => addMediaToDB(zipEntry.name, blobData))
+                        );
+                    }
+                });
+                
+                if(mediaFiles.length > 0) {
+                    showToast(`正在导入 ${mediaFiles.length} 个媒体文件...`, 'info');
+                    await Promise.all(mediaFiles);
+                }
+
+                // 4. 应用新的配置
+                localStorage.setItem(DB_KEY, JSON.stringify(importedState));
+
+                showToast('导入成功！应用即将刷新...', 'info');
+                setTimeout(() => window.location.reload(), 1500);
+
+            } catch (error) {
+                showToast(`导入失败: ${error.message}`, 'error');
+                console.error("Full import failed:", error);
+            }
         }
-        importFileInput.value = ''; // Reset for next import
+        importFileInput.value = ''; // 重置文件输入，以便下次使用
     };
     importFileInput.click();
 });
@@ -4699,39 +4661,38 @@ function handleMailTabChange(tabId) {
         debouncedSaveState();
     }
     function scheduleLoveLetterChecks() {
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        
-        if (appState.meta.lastUserActivityTimestamp >= todayStart) {
-            return;
+    const now = new Date();
+    
+    appState.chat.contacts.forEach(contact => {
+        if (contact.isGroup) return;
+
+        // 检查是否有已安排的信件任务，或者最近6小时内是否已寄过信
+        const hasPendingLetter = contact.charSettings.proactiveLetterDue && contact.charSettings.proactiveLetterDue > now.getTime();
+        const hasSentRecently = (contact.lastLetterSent || 0) > (now.getTime() - 6 * 60 * 60 * 1000);
+
+        if (hasPendingLetter || hasSentRecently) {
+            return; // 如果有待办或最近寄过，则跳过，避免重复
         }
         
-        console.log("First user activity of the day detected. Scheduling proactive love letter checks...");
-        appState.meta.lastUserActivityTimestamp = now.getTime();
-        
-        appState.chat.contacts.forEach(contact => {
-            if (contact.isGroup || contact.charSettings.proactiveLetterDue) return; // Don't schedule if one is already pending
+        // 安排一个新的主动写信任务
+        // 优化：将延迟从3-8小时缩短到30-90分钟
+        const randomDelay = (Math.random() * 60 + 30) * 60 * 1000; 
+        contact.charSettings.proactiveLetterDue = now.getTime() + randomDelay;
+        console.log(`Scheduling a proactive letter for ${contact.name} at ${new Date(contact.charSettings.proactiveLetterDue).toLocaleString()}.`);
+    });
 
-            const hasSentToday = (contact.lastLetterSent || 0) >= todayStart;
-            
-            if (!hasSentToday) {
-                const randomDelay = (Math.random() * 5 + 3) * 60 * 60 * 1000; // 3-8 hours in ms
-                contact.charSettings.proactiveLetterDue = Date.now() + randomDelay;
-                console.log(`Scheduling a proactive letter for ${contact.name} at ${new Date(contact.charSettings.proactiveLetterDue).toLocaleString()}.`);
-            }
-        });
-
-        debouncedSaveState();
-    }
+    debouncedSaveState();
+}
 
     function scheduleLoveLetterReply(originalLetterId, recipientCharId) {
     const letter = appState.mailbox.loveLetters.find(l => l.id === originalLetterId);
-    if (!letter) {
-        console.error("Cannot schedule reply: original letter not found.", originalLetterId);
-        return;
-    }
+if (!letter) {
+    console.error("Cannot schedule reply: original letter not found.", originalLetterId);
+    return;
+}
 
-    const randomDelay = (Math.random() * 2 + 1) * 60 * 60 * 1000; // 1-3 hours in ms
+// 优化：将延迟从1-3小时缩短到20-60分钟，使其更及时
+const randomDelay = (Math.random() * 40 + 20) * 60 * 1000; // 20-60 minutes in ms
     const replyDueTimestamp = Date.now() + randomDelay;
 
     // Store the due time directly on the letter object, which is persistent
@@ -8363,7 +8324,7 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `14. **主动发起视频 (单聊/群聊)**: \`[ACTION: INITIATE_VIDEO_CALL]\` (在合适的时机主动向用户发起视频通话)\n`;
         prompt += `15. **删除好友 (单聊)**: \`[ACTION: DELETE_FRIEND]\` (极端情况下使用)\n`;
         prompt += `16. **回应好友申请 (单聊)**: \`[ACTION: ACCEPT_FRIEND_REQUEST]\` 或 \`[ACTION: REJECT_FRIEND_REQUEST]\`\n`;
-        prompt += `17. **群管理 (仅群主/管理员可用)**: \`[ACTION: MUTE_MEMBER "@成员昵称"]\`, \`[ACTION: UNMUTE_MEMBER "@成员昵称"]\`, \`[ACTION: MUTE_ALL]\`, \`[ACTION: UNMUTE_ALL]\`, \`[ACTION: SET_GROUP_NAME "新群名"]\`, \`[ACTION: SET_TITLE "@成员昵称" "新头衔"]\`, \`[ACTION: SET_NICKNAME "@旧昵称" "新昵称"]\`\n`;
+        prompt += `17. **群管理 (仅群主/管理员可用)**: \`[ACTION: MUTE_MEMBER "执行者ID" "@成员昵称"]\`, \`[ACTION: UNMUTE_MEMBER "执行者ID" "@成员昵称"]\`, \`[ACTION: MUTE_ALL]\`, \`[ACTION: UNMUTE_ALL]\`, \`[ACTION: SET_GROUP_NAME "新群名"]\`, \`[ACTION: SET_TITLE "执行者ID" "@成员昵称" "新头衔"]\`, \`[ACTION: SET_NICKNAME "执行者ID" "@旧昵称" "新昵称"]\`\n`;
         prompt += `18. **群主专属**: \`[ACTION: TRANSFER_OWNERSHIP "@成员昵称"]\`, \`[ACTION: PROMOTE_ADMIN "@成员昵称"]\`, \`[ACTION: DEMOTE_ADMIN "@成员昵称"]\`\n`;
         prompt += `19. **发表动态 (重要)**: \`[ACTION: POST_MOMENT "type" "content" "visibility"]\`\n`;
     prompt += `    - **类型 (type)**: 必须是 "status" (说说) 或 "log" (日志)。\n`;
@@ -8699,22 +8660,41 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 contact.groupSettings.members[currentSenderId].nickname = args[0];
                 addSystemNotification(contact.id, `'${oldNickname}' 在群里改名为 '${args[0]}'`, false);
             } else if (action.startsWith('MUTE_') && contact.isGroup) {
-                if (action === 'MUTE_ALL') { contact.groupSettings.isMuted = true; addSystemNotification(contact.id, `'${actorName}' 开启了全体禁言`, false); }
-                else if (action === 'UNMUTE_ALL') { contact.groupSettings.isMuted = false; addSystemNotification(contact.id, `'${actorName}' 解除了全体禁言`, false); }
-                else if (args[0]) { const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', '')); if (targetId && targetId !== 'user') { const isMute = action === 'MUTE_MEMBER'; contact.groupSettings.members[targetId].isMuted = isMute; addSystemNotification(contact.id, `'${actorName}' ${isMute ? '禁言了' : '解除了对'} '${args[0].replace('@', '')}'${isMute ? '' : ' 的禁言'}`, false); } }
+            if (action === 'MUTE_ALL' || action === 'UNMUTE_ALL') {
+                const isMute = action === 'MUTE_ALL';
+                contact.groupSettings.isMuted = isMute;
+                addSystemNotification(contact.id, `'${actorName}' ${isMute ? '开启了全体禁言' : '解除了全体禁言'}`, false);
+            } else if (args.length >= 2) {
+                const [executorId, targetNicknameRaw] = args;
+                const executorName = getDisplayName(executorId, contact.id);
+                const targetNickname = targetNicknameRaw.replace('@', '');
+                const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname);
+                if (targetId && targetId !== 'user') {
+                    const isMute = action === 'MUTE_MEMBER';
+                    contact.groupSettings.members[targetId].isMuted = isMute;
+                    addSystemNotification(contact.id, `'${executorName}' ${isMute ? '禁言了' : '解除了对'} '${targetNickname}'${isMute ? '' : ' 的禁言'}`, false);
+                }
+            }
+        
             } else if (action === 'SET_GROUP_NAME' && contact.isGroup && args[0]) {
                 contact.groupSettings.name = args[0]; addSystemNotification(contact.id, `'${actorName}' 将群名修改为 "${args[0]}"`, false); updateSingleChatUI();
-            } else if ((action === 'SET_TITLE' || action === 'SET_NICKNAME') && contact.isGroup && args.length >= 2) {
-                const targetNickname = args[0].replace('@', '');
-                const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname);
-                if (targetId) {
-if (action === 'SET_TITLE') {
-                        contact.groupSettings.members[targetId].title = args[1];
-                        const memberToChange = contact.groupSettings.members[targetId];
-                        addSystemNotification(contact.id, `'${actorName}' 将 '${memberToChange.nickname}' 的群聊头衔修改为 '${args[1]}'`, false);
-                    }                    else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = args[1]; addSystemNotification(contact.id, `'${actorName}' 修改了 '${oldNickname}' 的群名片为 '${args[1]}'`, false); }
+            } else if ((action === 'SET_TITLE' || action === 'SET_NICKNAME') && contact.isGroup && args.length >= 3) {
+            const [executorId, targetNicknameRaw, newValue] = args;
+            const executorName = getDisplayName(executorId, contact.id);
+            const targetNickname = targetNicknameRaw.replace('@', '');
+            const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname);
+            if (targetId) {
+                if (action === 'SET_TITLE') {
+                    const memberToChange = contact.groupSettings.members[targetId];
+                    memberToChange.title = newValue;
+                    addSystemNotification(contact.id, `'${executorName}' 将 '${memberToChange.nickname}' 的群聊头衔修改为 '${newValue}'`, false);
+                } else { // SET_NICKNAME
+                    const oldNickname = contact.groupSettings.members[targetId].nickname;
+                    contact.groupSettings.members[targetId].nickname = newValue;
+                    addSystemNotification(contact.id, `'${executorName}' 修改了 '${oldNickname}' 的群名片为 '${newValue}'`, false);
                 }
-            } else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) {
+            }
+        } else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) {
                 const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', ''));
                 if (targetId && targetId !== 'user') { contact.groupSettings.owner = targetId; if (currentSenderId) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== currentSenderId); addSystemNotification(contact.id, `'${actorName}' 将群主转让给了 '${args[0].replace('@', '')}'`, false); }
             } else if ((action === 'PROMOTE_ADMIN' || action === 'DEMOTE_ADMIN') && contact.isGroup && args[0]) {
@@ -12131,7 +12111,137 @@ authorSelector.addEventListener('click', e => {
              openEditLoveLetterModal('new', null);
         });
 
-    getEl('save-love-letter-btn').addEventListener('click', () => {
+    getEl('mail-settings-btn').addEventListener('click', () => openMailSettingsModal());
+
+function openMailSettingsModal() {
+    if (!runtimeState.mailSettings) {
+        runtimeState.mailSettings = { selection: [] };
+    }
+    runtimeState.mailSettings.selection = [];
+    mailSettingsModal.classList.remove('selection-mode');
+    getEl('mail-settings-delete-btn').style.display = 'none';
+    getEl('mail-settings-mode-toggle-btn').textContent = '删除';
+    getEl('mail-settings-close-btn').style.display = 'block';
+
+    renderLoveLetterStyleGrid();
+    mailSettingsModal.classList.add('visible');
+}
+
+function renderLoveLetterStyleGrid() {
+    const grid = getEl('love-letter-style-grid');
+    const previewStyleTag = getEl('mail-settings-preview-style');
+    let previewCss = '';
+    
+    const letterStyles = appState.data.savedThemes.filter(theme => theme.styles && theme.styles.loveLetter);
+
+    grid.innerHTML = ''; // Clear the grid first
+
+    // Define the larger preview HTML structure
+    const createPreviewHTML = (isDefault = false) => `
+        <div class="letter-style-preview-content">
+            <div class="salutation">亲爱的...</div>
+            <div class="body">这是信纸样式的预览，展示了字体、颜色和背景...</div>
+            <div class="signature">爱你的, ...</div>
+        </div>
+    `;
+
+    // Add default style item
+    const defaultItem = document.createElement('div');
+    defaultItem.className = 'style-preview-card library-item';
+    defaultItem.dataset.id = 'default';
+    if (!appState.beautify.customThemes.loveLetter) {
+        defaultItem.classList.add('selected');
+    }
+    defaultItem.innerHTML = `<div class="style-preview-name">默认样式</div>${createPreviewHTML(true)}`;
+    grid.appendChild(defaultItem);
+
+    // Add custom style items
+    letterStyles.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'style-preview-card library-item';
+        card.dataset.id = item.id;
+        
+        if (appState.beautify.customThemes.loveLetter === item.styles.loveLetter) {
+            card.classList.add('selected');
+        }
+
+        card.innerHTML = `<div class="style-preview-name">${escapeHTML(item.name)}</div><div data-theme-id="${item.id}">${createPreviewHTML()}</div>`;
+        grid.appendChild(card);
+        
+        // Apply scoped CSS to the new, larger preview container
+        const scopeSelector = `[data-theme-id="${item.id}"] .letter-style-preview-content`;
+        previewCss += processAndScopeCss(item.styles.loveLetter, scopeSelector);
+    });
+
+    previewStyleTag.textContent = previewCss;
+}
+
+// Event listeners for the new modal
+getEl('mail-settings-close-btn').addEventListener('click', () => mailSettingsModal.classList.remove('visible'));
+
+getEl('mail-settings-mode-toggle-btn').addEventListener('click', () => {
+    const isSelectionMode = mailSettingsModal.classList.toggle('selection-mode');
+    getEl('mail-settings-delete-btn').style.display = isSelectionMode ? 'block' : 'none';
+    getEl('mail-settings-close-btn').style.display = isSelectionMode ? 'none' : 'block';
+    getEl('mail-settings-mode-toggle-btn').textContent = isSelectionMode ? '取消' : '删除';
+    if (!isSelectionMode) {
+        runtimeState.mailSettings.selection = [];
+        getEl('love-letter-style-grid').querySelectorAll('.selected-for-deletion').forEach(el => el.classList.remove('selected-for-deletion'));
+    }
+});
+
+getEl('love-letter-style-grid').addEventListener('click', e => {
+    const item = e.target.closest('.library-item');
+    if (!item) return;
+    const styleId = item.dataset.id;
+    
+    if (mailSettingsModal.classList.contains('selection-mode')) {
+        if (styleId !== 'default') {
+            item.classList.toggle('selected-for-deletion');
+            if (item.classList.contains('selected-for-deletion')) {
+                runtimeState.mailSettings.selection.push(styleId);
+            } else {
+                runtimeState.mailSettings.selection = runtimeState.mailSettings.selection.filter(id => id !== styleId);
+            }
+        }
+    } else {
+        if (styleId === 'default') {
+            appState.beautify.customThemes.loveLetter = '';
+        } else {
+            const theme = appState.data.savedThemes.find(t => t.id === styleId);
+            if (theme && theme.styles) {
+                appState.beautify.customThemes.loveLetter = theme.styles.loveLetter;
+            }
+        }
+        applyCustomThemes();
+        debouncedSaveState();
+        renderLoveLetterStyleGrid(); // Re-render to show selection
+    }
+});
+
+getEl('mail-settings-delete-btn').addEventListener('click', () => {
+    const selection = runtimeState.mailSettings.selection;
+    if (selection.length === 0) return;
+    if (confirm(`确定要删除选中的 ${selection.length} 个信纸样式吗？`)) {
+        appState.data.savedThemes = appState.data.savedThemes.map(theme => {
+            if (selection.includes(theme.id)) {
+                // If the currently applied theme is being deleted, revert to default
+                if (appState.beautify.customThemes.loveLetter === theme.styles.loveLetter) {
+                    appState.beautify.customThemes.loveLetter = '';
+                    applyCustomThemes();
+                }
+                delete theme.styles.loveLetter;
+            }
+            return theme;
+        }).filter(theme => theme.styles && Object.keys(theme.styles).some(k => theme.styles[k])); // Remove themes that are now empty
+
+        debouncedSaveState();
+        openMailSettingsModal(); // Re-open to refresh view and reset state
+        showToast('样式已删除');
+    }
+});
+
+getEl('save-love-letter-btn').addEventListener('click', () => {
     const modal = getEl('edit-love-letter-modal');
     const mode = modal.dataset.mode;
     const editingId = getEl('editing-letter-id').value;
@@ -12311,62 +12421,50 @@ authorSelector.addEventListener('click', e => {
     setupBubbleEditorListeners('gcs-us');
 
                 initializeAllRealtimeActivity();
-            checkAllDueLetters(); // Run once on startup to catch up
+            scheduleLoveLetterChecks(); // 每次启动都检查是否需要安排主动写信
+        checkAllDueLetters(); // Run once on startup to catch up
             setInterval(checkAllDueLetters, 60 * 1000); // Check every minute
             // --- 动态通知初始化 ---
                 momentsNotificationBtn.addEventListener('click', openMomentsNotificationModal);
                 closeMomentsNotificationModalBtn.addEventListener('click', () => momentsNotificationModal.classList.remove('visible'));
                 new ListInteractionHandler(momentsNotificationList, {
-                    itemSelector: '.notification-item',
-                    contentSelector: '.notification-item-container',
-                    actionsSelector: '.preset-data-item-actions',
-                    onDelete: (item) => {
-                        const notificationId = item.dataset.notificationId;
-                        if (confirm('确定要删除这条通知吗？')) {
-                            const index = appState.chat.moments.notifications.findIndex(n => n.id === notificationId);
-                            if (index > -1) {
-                                appState.chat.moments.notifications.splice(index, 1);
-                                saveState();
-                                renderMomentsNotifications();
-                                updateMomentsNotificationUI();
-                            }
-                        }
-                    },
-                    onTap: (item) => {
-                        const notificationId = item.dataset.notificationId;
-                        const notification = appState.chat.moments.notifications.find(n => n.id === notificationId);
-                        
-                        momentsNotificationModal.classList.remove('visible');
-
-                        if (notification) {
-                            setTimeout(() => {
-                                navigateToMomentsContent(notification);
-                            }, 250); 
-                        } else {
-                             setTimeout(() => {
-                                showToast('找不到该通知的详情');
-                            }, 250);
+                itemSelector: '.notification-item',
+                contentSelector: '.notification-item-container',
+                actionsSelector: '.preset-data-item-actions',
+                onDelete: (item) => {
+                    const notificationId = item.dataset.notificationId;
+                    if (confirm('确定要删除这条通知吗？')) {
+                        const index = appState.chat.moments.notifications.findIndex(n => n.id === notificationId);
+                        if (index > -1) {
+                            appState.chat.moments.notifications.splice(index, 1);
+                            saveState();
+                            renderMomentsNotifications();
+                            updateMomentsNotificationUI();
                         }
                     }
-                });
+                },
+                onTap: (item) => {
+                    const notificationId = item.dataset.notificationId;
+                    const notification = appState.chat.moments.notifications.find(n => n.id === notificationId);
+                    
+                    momentsNotificationModal.classList.remove('visible');
 
-                        // --- Love Letter Daily Scheduler Listener ---
-            let initialActivityDone = false;
-            const activityHandler = () => {
-                if (!initialActivityDone) {
-                    scheduleLoveLetterChecks();
-                    initialActivityDone = true;
-                    // To be safe, remove the listener after first trigger if not needed constantly
-                    // document.removeEventListener('pointerdown', activityHandler);
-                    // document.removeEventListener('keydown', activityHandler);
+                    if (notification) {
+                        setTimeout(() => {
+                            navigateToMomentsContent(notification);
+                        }, 250); 
+                    } else {
+                         setTimeout(() => {
+                            showToast('找不到该通知的详情');
+                        }, 250);
+                    }
                 }
-            };
-            document.addEventListener('pointerdown', activityHandler, { once: true });
-            document.addEventListener('keydown', activityHandler, { once: true });
-                // 初始化角标
-                updateMomentsNotificationUI(false);
+            });
 
-                appState.music.currentQueueIndex = -1;
+            // 初始化角标
+            updateMomentsNotificationUI(false);
+
+            appState.music.currentQueueIndex = -1;
                 updateMusicListPlayingStatus();
                 
                 updateTime();
