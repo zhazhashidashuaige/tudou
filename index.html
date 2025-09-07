@@ -957,6 +957,7 @@ align-content: start;
         .post-image-item .camera-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: white; color: black; display: flex; justify-content: center; align-items: flex-start; text-align: center; padding: 10px; box-sizing: border-box; border-radius: 6px; opacity: 0; visibility: hidden; transition: opacity 0.2s; }
         .post-image-item.show-text .camera-text-overlay { opacity: 1; visibility: visible; }
         .post-log-summary { font-size: 15px; line-height: 1.6; background-color: #f9f9f9; padding: 10px; border-radius: 6px; cursor: pointer; }
+        .post-log-summary p { white-space: pre-wrap; }
         .post-visibility-info { font-size: 12px; color: var(--secondary-text-color); padding-top: 5px; padding-bottom: 0; }
         .post-footer { border-top: 1px solid #f0f0f0; padding-top: 10px; margin-top: 0; }
         .post-likes-summary { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; border-top: 1px solid #f0f0f0; display: flex; align-items: center; gap: 6px; }
@@ -966,7 +967,9 @@ align-content: start;
         #moments-fab:active { transform: scale(0.95); }
         #moments-fab-options { position: absolute; bottom: 65px; right: 0; display: none; flex-direction: column; gap: 10px; align-items: flex-end; }
         .fab-option { background-color: white; padding: 8px 16px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; font-size: 14px; white-space: nowrap; }
-        #mail-app-screen .moments-fab-container { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
+                #mail-app-screen .moments-fab-container {
+            bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+        }
         #moments-notification-btn { position: relative; }
         #moments-notification-badge { position: absolute; top: -2px; left: -2px; width: 18px; height: 18px; background-color: var(--danger-color); color: white; border-radius: 50%; font-size: 11px; font-weight: bold; display: none; justify-content: center; align-items: center; border: 2px solid var(--item-bg); }
         #moments-notification-badge.visible, .moments-notification-badge-clone.visible { display: flex; }
@@ -2255,12 +2258,13 @@ padding: 0 10px;
                     </div>
                 </div>
                 <div id="tree-hole-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">树洞功能待开发...</p></div>
-                <div id="drift-bottle-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">漂流瓶功能待开发...</p></div>
-            </div>
-            <div class="moments-fab-container" id="mail-fab-container" style="display: none;"><div id="mail-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
-            <div class="app-bottom-tabs">
-                <div class="tab-link active" data-tab="love-letter">情书</div>
-                <div class="tab-link" data-tab="postcard">明信片</div>
+<div id="drift-bottle-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">漂流瓶功能待开发...</p></div>
+</div>
+<div class="moments-fab-container" id="mail-fab-container" style="display: none;"><div id="mail-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
+<div class="moments-fab-container" id="postcard-fab-container" style="display: none;"><div id="postcard-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
+<div class="app-bottom-tabs">
+<div class="tab-link active" data-tab="love-letter">情书</div>
+<div class="tab-link" data-tab="postcard">明信片</div>
                 <div class="tab-link" data-tab="tree-hole">树洞</div>
                 <div class="tab-link" data-tab="drift-bottle">漂流瓶</div>
             </div>
@@ -2689,6 +2693,46 @@ padding: 0 10px;
             <div class="modal-actions row">
                 <button id="cancel-reply-postcard-btn" class="cancel-btn">取消</button>
                 <button id="send-reply-postcard-btn" class="confirm-btn">发送</button>
+            </div>
+        </div>
+    </div>
+    <!-- 新增：写新明信片弹窗 -->
+    <div id="new-postcard-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">写新明信片</h3>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>收信人</label>
+                    <div id="new-postcard-recipient-selector" class="author-selector-grid"></div>
+                </div>
+                <div class="form-group">
+                    <label for="new-postcard-salutation">称呼</label>
+                    <input type="text" id="new-postcard-salutation" placeholder="To:">
+                </div>
+                <div class="form-group" style="text-align: center;">
+                    <img id="new-postcard-image-preview" src="" alt="明信片图片预览" style="display: none; max-width: 100%; height: auto; max-height: 150px; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border-color); object-fit: cover;">
+                    <div class="button-group">
+                        <button id="upload-new-postcard-image-btn" class="settings-button secondary">上传</button>
+                        <button id="add-new-postcard-image-url-btn" class="settings-button secondary">添加</button>
+                    </div>
+                    <input type="file" id="new-postcard-image-file-input" accept="image/*" style="display:none;">
+                </div>
+                <div class="form-group">
+                    <label for="new-postcard-body">内容</label>
+                    <textarea id="new-postcard-body" class="wide-textarea" rows="4" placeholder="分享你的近况..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="new-postcard-signature">落款</label>
+                    <input type="text" id="new-postcard-signature" placeholder="From:">
+                </div>
+                <div class="form-group">
+                    <label for="new-postcard-location">地点</label>
+                    <input type="text" id="new-postcard-location" placeholder="你在哪里？">
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-new-postcard-btn" class="cancel-btn">取消</button>
+                <button id="send-new-postcard-btn" class="confirm-btn">发送</button>
             </div>
         </div>
     </div>
@@ -4428,7 +4472,7 @@ if (!contact.userSettings.videoBackgroundLibrary) {
         persona: contact.userSettings.persona // Also sync persona for consistency
     };
      } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } if (!contact.charSettings.videoBackgroundLibrary) { contact.charSettings.videoBackgroundLibrary = []; }                    
-      if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; }
+                          if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.hasHadFirstInteraction === 'undefined') { contact.charSettings.hasHadFirstInteraction = false; }
                     // --- 新增：明信片计数器 ---
                     if (typeof contact.charSettings.realtimeTicksSincePostcard === 'undefined') {
                         contact.charSettings.realtimeTicksSincePostcard = 0;
@@ -5048,32 +5092,6 @@ const createLetterHTML = (letter, otherParty) => {
                 debouncedSaveState();
                 renderLoveLetterTab();
             }
-        }
-function handleMailTabChange(tabId) {
-            const titleEl = mailAppScreen.querySelector('.title');
-            const fab = getEl('mail-fab-container');
-            const tabMap = { 'love-letter': '情书', 'postcard': '明信片', 'tree-hole': '树洞', 'drift-bottle': '漂流瓶' };
-
-            // --- 核心修复：先隐藏所有，再显示目标 ---
-            mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-            mailAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            const activeTabLink = mailAppScreen.querySelector(`.tab-link[data-tab="${tabId}"]`);
-            const activeTabContent = getEl(`${tabId}-tab-content`);
-            
-            if (activeTabLink) activeTabLink.classList.add('active');
-            if (activeTabContent) activeTabContent.classList.add('active');
-            // --- 修复结束 ---
-
-            fab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
-
-            if (tabId === 'love-letter') {
-                renderLoveLetterTab();
-            }
-
-            titleEl.textContent = tabMap[tabId] || '信箱';
-            appState.mailbox.activeTab = tabId;
-            debouncedSaveState();
         }
     
     function handleDiaryTabChange(tabId) {
@@ -6133,6 +6151,19 @@ function renderConversation(isLoadingMore = false) {
         chatMessagesView.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'src'));
     }
 function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; }
+
+// --- 核心新增：首次互动触发器 ---
+if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstInteraction) {
+    // 仅在这是第一条真正的用户消息时触发
+    const userMessageCount = contact.conversation.filter(m => m.sender === 'user').length;
+    if (userMessageCount === 0) { // 在添加当前消息之前，用户消息数为0
+        contact.charSettings.hasHadFirstInteraction = true;
+        showToast(`与 ${contact.charSettings.name} 的故事开始了...`);
+        // 使用setTimeout让角色的反应看起来更自然
+        setTimeout(() => generateAndSendLoveLetter(contact.id), 2000);
+        setTimeout(() => generateAndSendPostcard(contact), 3500);
+    }
+}
 // --- ADDED: First Love Letter Trigger ---
 if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstChat && contact.conversation.length === 0) {
 contact.charSettings.hasHadFirstChat = true;
@@ -7836,6 +7867,46 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
                     }
                     break;
             } renderGroupMemberList(); gcsMemberActionModal.classList.remove('visible'); });
+                    async function generateAndSendPostcardReply(contact, originalCard) {
+            console.log(`Generating postcard reply for ${contact.name}...`);
+            try {
+                const { apiUrl, apiKey, selectedModel } = appState.settings;
+                if (!apiUrl || !apiKey || !selectedModel) throw new Error("API not configured for postcard reply.");
+
+                const prompt = constructPostcardReplyPrompt(contact, originalCard);
+                const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({ model: selectedModel, messages: [{ role: 'system', content: prompt }], response_format: { type: "json_object" } })
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                const replyContent = data.choices[0]?.message?.content;
+                
+                if (replyContent) {
+                    const postcardData = JSON.parse(replyContent);
+                    if (postcardData.imageUrl && postcardData.imageUrl.includes('random_img.php')) {
+                        postcardData.imageUrl = await resolveRedirectUrl(postcardData.imageUrl);
+                    }
+                    const newPostcard = {
+                        id: newId('postcard'),
+                        senderId: contact.id,
+                        recipientId: 'user',
+                        isRead: false,
+                        ...postcardData
+                    };
+                    appState.mailbox.postcards.push(newPostcard);
+                    debouncedSaveState();
+                    queueNotification(`${contact.name} 回复了你的明信片`, 'system', contact.id, 'mail');
+                    if (mailAppScreen.classList.contains('active')) {
+                        handleMailTabChange('postcard');
+                    }
+                }
+            } catch (error) {
+                console.error(`Failed to generate postcard reply for ${contact.name}:`, error);
+            }
+        }
             async function generateAndSendPostcard(contact) {
             console.log(`Generating postcard for ${contact.name}...`);
             try {
@@ -7884,14 +7955,181 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
                 console.error(`Failed to generate postcard for ${contact.name}:`, error);
             }
         }
-        
+                function openNewPostcardModal() {
+            const modal = getEl('new-postcard-modal');
+            const recipientSelector = getEl('new-postcard-recipient-selector');
+            const salutationInput = getEl('new-postcard-salutation');
+            const bodyInput = getEl('new-postcard-body');
+            const signatureInput = getEl('new-postcard-signature');
+            const locationInput = getEl('new-postcard-location');
+            const imgPreview = getEl('new-postcard-image-preview');
+
+            // Reset fields
+            salutationInput.value = '';
+            bodyInput.value = '';
+            locationInput.value = '';
+            imgPreview.src = '';
+            imgPreview.style.display = 'none';
+            imgPreview.dataset.imageId = '';
+            
+            // Populate signature with global user name initially
+            signatureInput.value = appState.chat.userProfile.name;
+
+            // Populate recipient selector, excluding the user
+            renderLetterAuthorSelector(recipientSelector, null, true);
+
+            modal.classList.add('visible');
+        }
+
+        // --- Mail App New Listeners & Functions ---
+        getEl('postcard-fab-container').addEventListener('click', () => {
+            openNewPostcardModal();
+        });
+
+        getEl('new-postcard-modal').addEventListener('click', e => {
+            const item = e.target.closest('#new-postcard-recipient-selector .author-selector-item');
+            if (item) {
+                item.parentElement.querySelectorAll('.author-selector-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+
+                const recipientId = item.dataset.id;
+                const charContact = appState.chat.contacts.find(c => c.id === recipientId);
+                if (charContact) {
+                    getEl('new-postcard-salutation').value = charContact.charSettings.name;
+                    getEl('new-postcard-signature').value = charContact.userSettings.name;
+                }
+            }
+        });
+
+        getEl('upload-new-postcard-image-btn').addEventListener('click', () => getEl('new-postcard-image-file-input').click());
+        getEl('new-postcard-image-file-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            showToast('正在处理图片...');
+            const compressedFile = await compressImageBeforeSaving(file);
+            const newImageId = newId('postcard_new_img');
+            await addMediaToDB(newImageId, compressedFile);
+            
+            const imgPreview = getEl('new-postcard-image-preview');
+            imgPreview.src = await getMediaURL(newImageId);
+            imgPreview.style.display = 'block';
+            imgPreview.dataset.imageId = newImageId;
+            e.target.value = '';
+        });
+
+        getEl('add-new-postcard-image-url-btn').addEventListener('click', () => {
+            const url = prompt('请输入图片URL:');
+            if (url && url.startsWith('http')) {
+                const imgPreview = getEl('new-postcard-image-preview');
+                imgPreview.src = url;
+                imgPreview.style.display = 'block';
+                imgPreview.dataset.imageId = url;
+            } else if (url) {
+                showToast('请输入有效的URL', 'error');
+            }
+        });
+
+        getEl('cancel-new-postcard-btn').addEventListener('click', () => getEl('new-postcard-modal').classList.remove('visible'));
+
+        getEl('send-new-postcard-btn').addEventListener('click', () => {
+            const recipientSelector = getEl('new-postcard-recipient-selector');
+            const selectedRecipient = recipientSelector.querySelector('.author-selector-item.selected');
+
+            if (!selectedRecipient) {
+                return showToast('请选择一位收信人', 'error');
+            }
+
+            const recipientId = selectedRecipient.dataset.id;
+            const body = getEl('new-postcard-body').value.trim();
+            const location = getEl('new-postcard-location').value.trim();
+            const imageUrl = getEl('new-postcard-image-preview').dataset.imageId;
+            const salutation = getEl('new-postcard-salutation').value.trim();
+            const signature = getEl('new-postcard-signature').value.trim();
+
+            if (!imageUrl || !body || !location || !salutation || !signature) {
+                return showToast('图片、称呼、内容、落款和地点均不能为空', 'error');
+            }
+
+            const newPostcard = {
+                id: newId('postcard'),
+                senderId: 'user',
+                recipientId: recipientId,
+                salutation: salutation,
+                body: body,
+                signature: signature,
+                location: location,
+                timestamp: Date.now(),
+                imageUrl: imageUrl,
+                isRead: true, 
+                gift: null
+            };
+
+            appState.mailbox.postcards.push(newPostcard);
+            debouncedSaveState();
+            
+            getEl('new-postcard-modal').classList.remove('visible');
+            renderPostcardWall();
+            showToast('明信片已发送！');
+        });
+                function constructPostcardReplyPrompt(charContact, originalCard) {
+            const now = new Date();
+            const season = ['冬季', '春季', '夏季', '秋季'][Math.floor((now.getMonth() + 1) / 3) % 4];
+            const user = charContact.userSettings;
+            const myLastPostcardToUser = appState.mailbox.postcards.find(p => p.senderId === charContact.id && p.recipientId === 'user');
+
+            let prompt = `你正在扮演角色 “${charContact.charSettings.name}”，为人设是 “${charContact.charSettings.persona}” 的角色，给你的心上人 “${user.name}”（人设：“${user.persona}”）写一张回信明信片。\n\n`;
+            
+            prompt += `--- **【写信情景分析(核心)】** ---\n`;
+            if (originalCard.body.includes('--- 原信 ---')) {
+                prompt += `**当前情景**: 你正在回复“${user.name}”对你之前明信片的回信。这已经是你们之间的第N次书信往来了，情感应该更加深入和熟稔。\n`;
+                prompt += `**TA的回信内容**: ${originalCard.body}\n`;
+            } else if (!myLastPostcardToUser) {
+                prompt += `**当前情景**: 这是你第一次收到来自“${user.name}”的主动来信！你感到非常惊喜和开心。你的回复需要表达出这份收到意外来信的喜悦。\n`;
+                prompt += `**TA的来信内容**: ${originalCard.body}\n`;
+            } else {
+                 prompt += `**当前情景**: 你之前可能给“${user.name}”寄过信，现在收到了TA的主动来信。你的回复应该基于TA信中的内容，进行情感和话题上的互动。\n`;
+                 prompt += `**TA的来信内容**: ${originalCard.body}\n`;
+            }
+            prompt += `\n`;
+
+            prompt += `--- **【核心规则】** ---\n`;
+            prompt += `1. **【秘密性】**: 明信片是你和用户之间的秘密，【绝对禁止】在聊天、动态等任何其他地方提及或暗示明信片的存在和内容。\n`;
+            prompt += `2. **【内容核心】**: 你的回信内容【必须】与收到的来信内容紧密相关。延续TA的话题，分享你的感受，并表达你收到回信后的喜悦与更深厚的思念。\n`;
+            prompt += `3. **【称呼与落款】**: 称呼和落款【必须】根据你的人设和当前的情感自由发挥，使其充满个性，【严禁】使用固定模板。\n`;
+            prompt += `4. **【其他规则】**: 其他所有关于地点、时间延迟感、内容风格、图片和礼物的要求，均与你主动寄出明信片时完全一致。\n`;
+            prompt += `5. **【JSON输出格式】**: 你的回复【必须】是一个格式正确的JSON对象，不能包含任何额外的文字。格式如下：\n`;
+            prompt += "```json\n";
+            prompt += "{\n";
+            prompt += '  "salutation": "（给收信人“' + user.name + '”的、充满个性的称呼）",\n';
+            prompt += '  "body": "（明信片正文，50-80字，用\\\\n换行）",\n';
+            prompt += '  "signature": "（你充满个性的落款签名）",\n';
+            prompt += '  "location": "（你写信时所在的虚拟地点）",\n';
+            prompt += '  "timestamp": "（一个符合延迟感的、人类可读的模糊时间）",\n';
+            prompt += '  "imageUrl": "（一张符合你描述的、来自 https://img.xjh.me/random_img.php 的图片链接）",\n';
+            prompt += '  "gift": "（小礼物的名称，或null）"\n';
+            prompt += "}\n";
+            prompt += "```\n";
+            
+            return prompt;
+        }
         function constructPostcardPrompt(charContact) {
             const now = new Date();
             const season = ['冬季', '春季', '夏季', '秋季'][Math.floor((now.getMonth() + 1) / 3) % 4];
             const user = charContact.userSettings;
 
             let prompt = `你正在扮演角色 “${charContact.charSettings.name}”，为人设是 “${charContact.charSettings.persona}” 的角色，给你的心上人 “${user.name}”（人设：“${user.persona}”）写一张明信片。\n\n`;
+            
+            prompt += `--- **【写信情景分析(核心)】** ---\n`;
+            const hasSentBefore = appState.mailbox.postcards.some(p => p.senderId === charContact.id);
+            if (!hasSentBefore) {
+                prompt += `**当前情景**: 这是你【主动】写给“${user.name}”的【第一封】明信片。请在信中表达你初次以这种方式与TA联系的心情，可以是略带羞涩的试探，或是积蓄已久的思念的第一次迸发。\n`;
+            } else {
+                prompt += `**当前情景**: 你之前给“${user.name}”寄过明信片，但似乎一直没有收到回信。你的心情可能有些失落和担忧。这次，请写一封信再次表达你的思念，并可以 subtly地流露出你对回信的期盼。\n`;
+            }
+            prompt += '\n';
+
             prompt += `--- **【核心规则】** ---\n`;
+            prompt += `1. **【秘密性】**: 明信片是你和用户之间的秘密，【绝对禁止】在聊天、动态等任何其他地方提及或暗示明信片的存在和内容。\n`;
             prompt += `1. **【情景设定】**: 当前是${season}。你可能正在工作、旅行或日常闲逛。请随机选择一个符合你人设和当前季节的地点和时间（时间可以是过去24-48小时内的任意时刻，例如“昨夜”或“今天清晨”，以营造一种延迟感）。\n`;
             prompt += `2. **【内容核心】**: 明信片内容必须简短（50-60字），但充满细节和真情实感。核心是表达对 “${user.name}” 的思念之情，可以引用诗句“涉江采芙蓉，兰泽多芳草。采之欲遗谁，所思在远道”的意境，但不要直接照搬。\n`;
             prompt += `3. **【风格要求】**: 文风必须温柔细腻、富有诗意、贴合人设、真实不油腻、严禁模板化。\n`;
@@ -8107,7 +8345,7 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
             getEl('editing-postcard-id').value = postcardId;
             
             const imgPreview = getEl('edit-postcard-image-preview');
-            imgPreview.src = card.imageUrl;
+            setElementImage(imgPreview, card.imageUrl, 'src'); // 核心修复：使用辅助函数
             imgPreview.dataset.imageId = card.imageUrl; // 存储当前图片ID或URL
 
             getEl('edit-postcard-salutation').value = card.salutation;
@@ -8761,7 +8999,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `4. **【可见性规则】**: 当动态或留言信息中标注了 \`(仅对 ... 可见)\` 时，你扮演的角色【只有在自己的名字出现在可见列表中时】才能看到并对其进行互动（如点赞、评论、回复）。严禁扮演 A 角色去评论一条只对 B 角色可见的内容。\n\n`;
         prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
         prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
-        
+                prompt += `7. **【明信片的同等秘密性】**: 与情书一样，“明信片”也是你和用户之间的秘密渠道。你【绝对禁止】在聊天、动态、评论等任何非信箱应用的地方，提及任何与明信片相关的话题。回应用户明信片的【唯一】方式是在后台活动中自动生成一张新的明信片作为回复。\n\n`;
         // --- 通用聊天规则模块 (重构后) ---
         prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前【必须】加上发言人信息，格式为 \`[昵称 (ID: char_id)]: 内容\`。你【必须】从上文的成员列表中获取准确的昵称和ID，例如: \`[小明(ID: char_123)]: user今天有空吗？<MSG_SPLIT>[小明(ID: char_123)]: 和我一起出去玩吧？<MSG_SPLIT>[小红(ID: char_456)]: user之前就和我约好了呀！<MSG_SPLIT>[小明(ID: char_123)]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
@@ -11614,6 +11852,10 @@ areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked,
     if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contactId) {
         endVideoCall();
     }
+                        // --- 新增：同步删除关联的明信片 ---
+                    if (appState.mailbox && appState.mailbox.postcards) {
+                        appState.mailbox.postcards = appState.mailbox.postcards.filter(p => p.senderId !== contactId && p.recipientId !== contactId);
+                    }
     // --- ADDED CODE END ---
                     // --- Enhanced Deletion Logic for Single Chars ---
                     if (!contact.isGroup) {
@@ -12402,7 +12644,9 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
     }
             function handleMailTabChange(tabId) {
             const titleEl = mailAppScreen.querySelector('.title');
-            const fab = getEl('mail-fab-container');
+            const loveLetterFab = getEl('mail-fab-container');
+            const postcardFab = getEl('postcard-fab-container');
+                        const settingsBtn = getEl('mail-settings-btn');
             const tabMap = { 'love-letter': '情书', 'postcard': '明信片', 'tree-hole': '树洞', 'drift-bottle': '漂流瓶' };
 
             mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
@@ -12414,7 +12658,9 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             if (activeTabLink) activeTabLink.classList.add('active');
             if (activeTabContent) activeTabContent.classList.add('active');
 
-            fab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+                        loveLetterFab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+            postcardFab.style.display = (tabId === 'postcard') ? 'block' : 'none';
+                        settingsBtn.style.display = (tabId === 'love-letter') ? 'block' : 'none';
 
             if (tabId === 'love-letter') {
                 renderLoveLetterTab();
@@ -12453,7 +12699,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
 
                     return `
                         <div class="postcard-preview-card ${isUnread ? 'unread' : ''}" data-postcard-id="${card.id}">
-                            <div class="postcard-preview-image" style="background-image: url('${card.imageUrl}')"></div>
+                            <div class="postcard-preview-image" data-image-id="${card.imageUrl}"></div>
                             <div class="postcard-preview-footer">
                                 <span class="postcard-preview-sender">${isReceived ? 'From:' : 'To:'} ${charName}</span>
                                 <span class="postcard-preview-location">${card.location}</span>
@@ -12466,6 +12712,8 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                         </div>
                     `;
                 }).join('');
+                // --- 核心修复：使用setElementImage来处理所有图片 ---
+                wallEl.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
             }
 
             const firstUnread = postcards.find(p => !p.isRead);
@@ -12489,7 +12737,8 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             const replyBtn = viewer.querySelector('.postcard-reply-btn');
             replyBtn.style.display = isReceived ? 'flex' : 'none';
 
-            viewer.querySelector('.postcard-image-section img').src = card.imageUrl;
+            // --- 核心修复：使用setElementImage来正确解析URL或ID ---
+            setElementImage(viewer.querySelector('.postcard-image-section img'), card.imageUrl, 'src');
             viewer.querySelector('.postcard-salutation').textContent = card.salutation;
             viewer.querySelector('.postcard-body').textContent = card.body;
             viewer.querySelector('.postcard-signature').textContent = card.signature;
@@ -12753,6 +13002,19 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                 runtimeState.realtimeActivityTimers[contact.id] = setInterval(() => { 
                     // 检查用户是否在该聊天中沉默，但在别处活跃（嫉妒触发器）
                     const lastUserMessage = [...contact.conversation].reverse().find(m => m.sender === 'user');
+                                        // --- 新增：优先检查并回复明信片 ---
+                    const unrepliedPostcards = appState.mailbox.postcards.filter(p => 
+                        p.senderId === 'user' && 
+                        p.recipientId === contact.id && 
+                        !p.replyProcessed
+                    );
+                    if (unrepliedPostcards.length > 0) {
+                        unrepliedPostcards.forEach(card => {
+                            generateAndSendPostcardReply(contact, card);
+                            card.replyProcessed = true; // 标记为已处理，防止重复回复
+                        });
+                    }
+                    // --- 结束新增 ---
                     const userSilenceDuration = lastUserMessage ? (Date.now() - lastUserMessage.timestamp) : Infinity;
                     // 检查用户在其他聊天或动态中的近期活动
                     const isUserActiveElsewhere = appState.chat.contacts.some(c => c.id !== contact.id && c.conversation.some(m => m.sender === 'user' && (Date.now() - m.timestamp < 5 * 60 * 1000))) || appState.chat.moments.posts.some(p => p.authorId === 'user' && (Date.now() - p.timestamp < 5 * 60 * 1000));
@@ -12888,41 +13150,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
                 queryAll('[data-icon-id]').forEach(el => { runtimeState.originalIconContent[el.dataset.iconId] = el.innerHTML; });
                 queryAll('[data-bubble-id]').forEach(el => { runtimeState.originalBubbleContent[el.dataset.bubbleId] = el.style.cssText; });
                 loadState();
-                // --- 注入预设明信片和联系人 ---
-                const testCharName = '旅人A';
-                let testChar = appState.chat.contacts.find(c => c.name === testCharName);
-                if (!testChar) {
-                    testChar = { id: newId('contact'),name: testCharName, remark: '', avatarId: `https://api.multiavatar.com/${testCharName}.png`, status: 'online', statusText: '旅行中', signature: '在路上。', lastMessage: '...', lastMessageTime: Date.now() - 86400000, isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0, unreadCount: 0 };
-                    initializeContactSettings(testChar);
-                    appState.chat.contacts.push(testChar);
-                    showToast(`已为你添加测试联系人: ${testCharName}`);
-                }
-
-                        if (testChar) { // 确保测试角色存在
-            const presetPostcardExists = appState.mailbox.postcards.some(p =>
-                p.senderId === testChar.id && p.signature === '旅人A'
-            );
-
-            if (!presetPostcardExists) {
-                // 如果不存在，先移除可能存在的来自“旅人A”的旧的、不完整的预设明信片
-                appState.mailbox.postcards = appState.mailbox.postcards.filter(p => p.senderId !== testChar.id);
                 
-const presetPostcard = {
-                    id: newId('postcard'),
-                    senderId: testChar.id,
-                    recipientId: 'user', // 新增：明确收信人
-                    salutation: '致 我最亲爱的User：',
-                    body: '见字如晤。\n\n不知不觉，秋意已浓。此地昨日降温，夜里起了风，我便将你为我准备的薄外套取了出来，暖洋洋的，很安心。\n\n窗外有一株很大的枫树，叶子红得像燃烧的火焰，风一过，便簌簌地落下来，铺了满地。真想让你也看看这景色。\n\n勿念，照顾好自己。\n',
-                    signature: '旅人A',
-                    location: '枫林晚照亭',
-                    timestamp: Date.now() - 20 * 60 * 60 * 1000, // 20 hours ago
-                    imageUrl: 'https://picsum.photos/seed/postcard_A_1/400/600', // 修复：使用固定的图片链接
-                    isRead: false
-                };
-                appState.mailbox.postcards.unshift(presetPostcard); // 使用 unshift 确保它在列表最前面
-                showToast('已为你添加/恢复预设明信片。');
-            }
-        }                
                     // 恢复视频通话状态
     if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId) {
         // openVideoCallModal will handle if it should show as minimized or full screen
