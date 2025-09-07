@@ -12104,24 +12104,49 @@ function setupBackgroundLibraryListeners() {
     });
 
     uploadBtn.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', async e => {
+fileInput.addEventListener('change', async e => {
         const files = e.target.files;
         if (files.length === 0) return;
-        showToast(`正在添加 ${files.length} 张背景...`);
+
+        showToast(`正在处理 ${files.length} 个文件...`, 'info');
         const context = runtimeState.backgroundLibraryContext;
+        let addedCount = 0;
 
         for (const file of files) {
-            const newId = newId('bg');
-            await addMediaToDB(newId, file);
-            if (context.type === 'chat') {
-                appState.beautify.wallpapers.push({ id: newId });
-            } else { // video
-                context.settingsObject[context.libraryKey].push(newId);
+            // 只处理图片文件
+            if (file.type.startsWith('image/')) {
+                try {
+                    const compressedFile = await compressImageBeforeSaving(file);
+                    // 【核心修复】使用一个不会冲突的新变量名 newBgId
+                    const newBgId = newId(context.type === 'chat' ? 'wp' : 'video_bg');
+                    await addMediaToDB(newBgId, compressedFile);
+
+                    if (context.type === 'chat') {
+                        // 聊天背景被视为全局壁纸，添加到主壁纸库
+                        appState.beautify.wallpapers.push({ id: newBgId });
+                    } else { // 视频背景
+                        // 确保目标库数组存在
+                        if (!context.settingsObject[context.libraryKey]) {
+                            context.settingsObject[context.libraryKey] = [];
+                        }
+                        // 将新ID添加到正确的库中 (例如: userSettings.videoBackgroundLibrary)
+                        context.settingsObject[context.libraryKey].push(newBgId);
+                    }
+                    addedCount++;
+                } catch (err) {
+                    console.error("处理背景文件失败:", file.name, err);
+                }
             }
         }
-        debouncedSaveState();
-        renderBackgroundLibraryGrid();
-        fileInput.value = '';
+        
+        if (addedCount > 0) {
+            // 注意：此处不调用全局保存，因为我们正在修改一个临时设置对象。
+            // 最终的保存在用户离开设置界面时统一进行。
+            renderBackgroundLibraryGrid();
+            showToast(`成功添加 ${addedCount} 个背景`);
+        }
+        
+        fileInput.value = ''; // 完成后清空文件选择器
     });
 
     addUrlBtn.addEventListener('click', async () => {
