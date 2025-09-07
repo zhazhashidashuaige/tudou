@@ -4003,6 +4003,7 @@ return {
                             avatarFrameId: '',
                             avatarLibrary: [],
                             avatarFrameLibrary: [],
+                            videoBackgroundLibrary: [], // 新增：全局用户视频背景库
                             persona: '全网唯一土皇帝',
                             signature: '全网唯一土皇帝',
                             balance: 1000000.00
@@ -4163,8 +4164,14 @@ return {
                  if (moduleName === 'settings' && savedModule.globalRealtimeActivity) {
                     appState.settings.globalRealtimeActivity = { ...defaultState.settings.globalRealtimeActivity, ...savedModule.globalRealtimeActivity };
                 }
-                if (moduleName === 'chat') {
-                    if (savedModule.userProfile) appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
+if (moduleName === 'chat') {
+                    if (savedModule.userProfile) {
+                        appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
+                        // 确保新字段在旧数据加载时也能被正确初始化
+                        if (!appState.chat.userProfile.videoBackgroundLibrary) {
+                            appState.chat.userProfile.videoBackgroundLibrary = [];
+                        }
+                    }
                     if (savedModule.moments) appState.chat.moments = { ...defaultState.chat.moments, ...savedModule.moments };
                     if (savedModule.moments?.profile) appState.chat.moments.profile = { ...defaultState.chat.moments.profile, ...savedModule.moments.profile };
                 }
@@ -4467,9 +4474,7 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
 } else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCss === 'undefined') {
             contact.userSettings.bubbleCss = '';
 }
-if (!contact.userSettings.videoBackgroundLibrary) {
-    contact.userSettings.videoBackgroundLibrary = [];
-}if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
@@ -7804,10 +7809,12 @@ function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click'
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
     if(gcsUsUserVideoBackgroundBtn) {
     gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
+        // 核心修复：与单聊逻辑保持一致
         openBackgroundLibraryModal({
             type: 'video',
             title: '选择视频背景',
-            settingsObject: runtimeState.tempChatSettings.userSettings,
+            settingsObject: runtimeState.tempChatSettings.userSettings, // 用于读取和设置 activeKey
+            librarySource: appState.chat.userProfile, // 【新增】指定库的来源
             activeKey: 'videoBackgroundId',
             libraryKey: 'videoBackgroundLibrary',
             defaultId: ''
@@ -12001,10 +12008,12 @@ function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventLis
     csCharBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.charSettings }); });
     const usUserVideoBackgroundBtn = getEl('us-user-video-background-btn'); if(usUserVideoBackgroundBtn) {
     usUserVideoBackgroundBtn.addEventListener('click', (e) => {
+        // 核心修复：库从全局读取，但当前选中的背景ID依然从当前聊天的临时设置中读取
         openBackgroundLibraryModal({
             type: 'video',
             title: '选择视频背景',
-            settingsObject: runtimeState.tempChatSettings.userSettings,
+            settingsObject: runtimeState.tempChatSettings.userSettings, // 用于读取和设置 activeKey
+            librarySource: appState.chat.userProfile, // 【新增】指定库的来源
             activeKey: 'videoBackgroundId',
             libraryKey: 'videoBackgroundLibrary',
             defaultId: ''
@@ -12032,11 +12041,15 @@ function renderBackgroundLibraryGrid() {
     grid.innerHTML = '';
 
     let items, activeItem;
+    // 核心修复：优先从 context.librarySource 读取媒体库，否则回退到旧逻辑
+    const libSource = context.librarySource || context.settingsObject;
+
     if (context.type === 'chat') {
         items = appState.beautify.wallpapers.map(wp => wp.id);
         activeItem = context.settingsObject.chatBackgroundId;
     } else { // video
-        items = context.settingsObject[context.libraryKey] || [];
+        items = libSource[context.libraryKey] || [];
+        // activeItem 仍然从 settingsObject 读取，以反映当前聊天的选择
         activeItem = context.settingsObject[context.activeKey];
     }
 
@@ -12121,17 +12134,20 @@ fileInput.addEventListener('change', async e => {
                     const newBgId = newId(context.type === 'chat' ? 'wp' : 'video_bg');
                     await addMediaToDB(newBgId, compressedFile);
 
-                    if (context.type === 'chat') {
-                        // 聊天背景被视为全局壁纸，添加到主壁纸库
-                        appState.beautify.wallpapers.push({ id: newBgId });
-                    } else { // 视频背景
-                        // 确保目标库数组存在
-                        if (!context.settingsObject[context.libraryKey]) {
-                            context.settingsObject[context.libraryKey] = [];
-                        }
-                        // 将新ID添加到正确的库中 (例如: userSettings.videoBackgroundLibrary)
-                        context.settingsObject[context.libraryKey].push(newBgId);
-                    }
+                    // 核心修复：优先向 context.librarySource 添加新媒体，否则回退
+            const libSource = context.librarySource || context.settingsObject;
+
+            if (context.type === 'chat') {
+                // 聊天背景被视为全局壁纸，添加到主壁纸库
+                appState.beautify.wallpapers.push({ id: newBgId });
+            } else { // 视频背景
+                // 确保目标库数组存在
+                if (!libSource[context.libraryKey]) {
+                    libSource[context.libraryKey] = [];
+                }
+                // 将新ID添加到正确的（全局）库中
+                libSource[context.libraryKey].push(newBgId);
+            }
                     addedCount++;
                 } catch (err) {
                     console.error("处理背景文件失败:", file.name, err);
@@ -12154,12 +12170,19 @@ fileInput.addEventListener('change', async e => {
     if (url && url.startsWith('http')) {
         const context = runtimeState.backgroundLibraryContext;
         try {
+            // 核心修复：优先向 context.librarySource 添加新链接，否则回退
+            const libSource = context.librarySource || context.settingsObject;
+
             if (context.type === 'chat') {
                 // 直接将URL作为ID存入壁纸列表
                 appState.beautify.wallpapers.push({ id: url });
             } else { // video
-                // 直接将URL存入视频背景库
-                context.settingsObject[context.libraryKey].push(url);
+                // 确保目标库数组存在
+                if (!libSource[context.libraryKey]) {
+                    libSource[context.libraryKey] = [];
+                }
+                // 直接将URL存入正确的（全局）视频背景库
+                libSource[context.libraryKey].push(url);
             }
             debouncedSaveState();
             renderBackgroundLibraryGrid();
@@ -12210,7 +12233,20 @@ fileInput.addEventListener('change', async e => {
                     appState.beautify.currentChatBgId = 'default';
                 }
             } else { // video
-                context.settingsObject[context.libraryKey] = context.settingsObject[context.libraryKey].filter(id => id !== idToDelete);
+                // 核心修复：从正确的（全局）源删除，并更新所有可能用到它的地方
+                const libSource = context.librarySource || context.settingsObject;
+                
+                // 从全局库中删除
+                libSource[context.libraryKey] = libSource[context.libraryKey].filter(id => id !== idToDelete);
+
+                // 检查并重置所有使用该背景的联系人的设置
+                appState.chat.contacts.forEach(contact => {
+                    if (contact.userSettings && contact.userSettings.videoBackgroundId === idToDelete) {
+                        contact.userSettings.videoBackgroundId = '';
+                    }
+                });
+
+                // 如果当前正在编辑的聊天恰好在使用这个背景，也重置它
                 if (context.settingsObject[context.activeKey] === idToDelete) {
                     context.settingsObject[context.activeKey] = '';
                 }
