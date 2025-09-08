@@ -7515,6 +7515,7 @@ async function updateLibraryPreview() { const context = runtimeState.libraryCont
 libraryGrid.addEventListener('click', (e) => { const item = e.target.closest('.library-item'); if (!item) return; const context = runtimeState.libraryContext; if (libraryModal.classList.contains('selection-mode')) { item.classList.toggle('selected'); const id = item.dataset.id; if (id === '') return; if (item.classList.contains('selected')) { if (!runtimeState.librarySelection.includes(id)) runtimeState.librarySelection.push(id); } else { runtimeState.librarySelection = runtimeState.librarySelection.filter(u => u !== id); } } else { const id = item.dataset.id; let settingsObj, uiUpdateFunc; if (context.isGroup) { settingsObj = runtimeState.tempChatSettings.groupSettings; uiUpdateFunc = loadGroupChatSettingsUI; } else if (context.memberId) { settingsObj = runtimeState.tempGcsMemberSettings; uiUpdateFunc = loadGcsMemberModalUI; } else { settingsObj = runtimeState.tempChatSettings[context.settingsGroup]; uiUpdateFunc = context.isGroupUser ? loadGroupChatSettingsUI : loadSingleChatSettingsUI; } settingsObj[context.activeKey] = id; uiUpdateFunc(); renderLibraryGrid(); } });
 function enterLibrarySelectionMode() {
     libraryModal.classList.add('selection-mode');
+    libraryGrid.querySelectorAll('.library-item.selected').forEach(item => item.classList.remove('selected')); // 核心修复：进入删除模式时清除所有高亮
     libraryModeToggleBtn.textContent = '取消';
     libraryDeleteBtn.style.display = 'block';
     libraryCloseBtn.style.display = 'none';
@@ -7541,74 +7542,110 @@ libraryCloseBtn.addEventListener('click', () => {
     libraryModal.classList.remove('visible');
 });
 libraryDeleteBtn.addEventListener('click', async () => {
-    const context = runtimeState.libraryContext;
-    const selection = runtimeState.librarySelection;
-    if (selection.length === 0 || !confirm(`确定要删除选中的 ${selection.length} 个项目吗？`)) return;
+    try {
+        const context = runtimeState.libraryContext;
+        const selection = runtimeState.librarySelection;
 
-    // First, delete all media files from the database
-    for (const id of selection) {
-        await deleteMediaFromDB(id);
-    }
+        if (!context) {
+            showToast('删除失败：缺少上下文信息。', 'error');
+            console.error("Delete failed due to missing context.");
+            return;
+        }
 
-    if (context.isGlobalUserLib) {
-        // --- Logic for Global User Avatar Library ---
-        appState.chat.userProfile.avatarLibrary = appState.chat.userProfile.avatarLibrary.filter(id => !selection.includes(id));
+        if (selection.length === 0) {
+            showToast('请先选择要删除的项目', 'info');
+            return; 
+        }
+        
+        if (!confirm(`确定要删除选中的 ${selection.length} 个项目吗？此操作不可撤销。`)) return;
 
-        selection.forEach(deletedId => {
-            // Reset in global user profile if active
-            if (appState.chat.userProfile.avatarId === deletedId) {
-                appState.chat.userProfile.avatarId = 'default_user_avatar';
+        showToast('正在删除...', 'info');
+
+        // First, delete all media files from the database
+        for (const id of selection) {
+            // 只删除本地存储的ID，保留URL
+            if (!id.startsWith('http')) {
+                await deleteMediaFromDB(id);
             }
-            // Reset in all contacts' user settings
-            appState.chat.contacts.forEach(contact => {
-                if (contact.userSettings && contact.userSettings.avatarId === deletedId) {
-                    contact.userSettings.avatarId = 'default_user_avatar';
+        }
+
+        if (context.isGlobalUserLib) {
+            // --- Logic for Global User Avatar Library ---
+            appState.chat.userProfile.avatarLibrary = appState.chat.userProfile.avatarLibrary.filter(id => !selection.includes(id));
+
+            selection.forEach(deletedId => {
+                if (appState.chat.userProfile.avatarId === deletedId) {
+                    appState.chat.userProfile.avatarId = 'default_user_avatar';
                 }
-                if (contact.isGroup && contact.groupSettings.members['user'] && contact.groupSettings.members['user'].avatarId === deletedId) {
-                    contact.groupSettings.members['user'].avatarId = 'default_user_avatar';
+                appState.chat.contacts.forEach(contact => {
+                    if (contact.userSettings && contact.userSettings.avatarId === deletedId) {
+                        contact.userSettings.avatarId = 'default_user_avatar';
+                    }
+                    if (contact.isGroup && contact.groupSettings.members['user'] && contact.groupSettings.members['user'].avatarId === deletedId) {
+                        contact.groupSettings.members['user'].avatarId = 'default_user_avatar';
+                    }
+                });
+                if (runtimeState.tempChatSettings && runtimeState.tempChatSettings.userSettings && runtimeState.tempChatSettings.userSettings.avatarId === deletedId) {
+                    runtimeState.tempChatSettings.userSettings.avatarId = 'default_user_avatar';
                 }
             });
-            // Reset in current temporary settings as well
-            if (runtimeState.tempChatSettings.userSettings && runtimeState.tempChatSettings.userSettings.avatarId === deletedId) {
-                runtimeState.tempChatSettings.userSettings.avatarId = 'default_user_avatar';
+
+            if (chatSettingsScreen.classList.contains('active')) {
+                loadSingleChatSettingsUI();
+            } else if (groupChatSettingsScreen.classList.contains('active')) {
+                loadGroupChatSettingsUI();
             }
-        });
 
-        // Determine which UI to refresh
-        if (chatSettingsScreen.classList.contains('active')) {
-            loadSingleChatSettingsUI();
-        } else if (groupChatSettingsScreen.classList.contains('active')) {
-            loadGroupChatSettingsUI();
+        } else {
+            // --- Logic for other libraries (Char, Group, Frames, etc.) ---
+            let lib, activeItemKey, settingsObj, uiUpdateFunc;
+
+            if (context.isFrame) { 
+                settingsObj = appState.chat.userProfile; 
+                lib = settingsObj.avatarFrameLibrary; 
+            } else if (context.isGroup) { 
+                settingsObj = runtimeState.tempChatSettings.groupSettings; 
+                lib = settingsObj[context.libraryKey]; 
+            } else if (context.memberId) { 
+                settingsObj = runtimeState.tempGcsMemberSettings; 
+                lib = settingsObj[context.libraryKey]; 
+            } else if (context.settingsGroup) { 
+                settingsObj = runtimeState.tempChatSettings[context.settingsGroup]; 
+                lib = settingsObj[context.libraryKey]; 
+            }
+
+            if (!settingsObj || !Array.isArray(lib)) {
+                throw new Error("找不到有效的库进行删除操作。");
+            }
+            
+            activeItemKey = context.activeKey;
+            const newLib = lib.filter(id => !selection.includes(id));
+
+            if (context.isFrame) { 
+                settingsObj.avatarFrameLibrary = newLib; 
+            } else { 
+                settingsObj[context.libraryKey] = newLib; 
+            }
+
+            if (selection.includes(settingsObj[activeItemKey])) {
+                settingsObj[activeItemKey] = context.hasNoItemOption ? '' : (newLib[0] || '');
+            }
+
+            if (context.memberId) { uiUpdateFunc = loadGcsMemberModalUI; }
+            else if (context.isGroupUser || context.isGroup) { uiUpdateFunc = loadGroupChatSettingsUI; }
+            else { uiUpdateFunc = loadSingleChatSettingsUI; }
+            if (uiUpdateFunc) uiUpdateFunc();
         }
 
-    } else {
-        // --- Existing Logic for other libraries (Char, Group, Frames, etc.) ---
-        let lib, activeItemKey, settingsObj, uiUpdateFunc;
-        if (context.isFrame) { settingsObj = appState.chat.userProfile; lib = settingsObj.avatarFrameLibrary; }
-        else if (context.isGroup) { settingsObj = runtimeState.tempChatSettings.groupSettings; lib = settingsObj[context.libraryKey]; }
-        else if (context.memberId) { settingsObj = runtimeState.tempGcsMemberSettings; lib = settingsObj[context.libraryKey]; }
-        else { settingsObj = runtimeState.tempChatSettings[context.settingsGroup]; lib = settingsObj[context.libraryKey]; }
-        
-        activeItemKey = context.activeKey;
-        const newLib = lib.filter(id => !selection.includes(id));
-
-        if (context.isFrame) { settingsObj.avatarFrameLibrary = newLib; }
-        else { settingsObj[context.libraryKey] = newLib; }
-
-        if (selection.includes(settingsObj[activeItemKey])) {
-            settingsObj[activeItemKey] = context.hasNoItemOption ? '' : (newLib[0] || '');
-        }
-
-        if (context.memberId) { uiUpdateFunc = loadGcsMemberModalUI; }
-        else if (context.isGroupUser || context.isGroup) { uiUpdateFunc = loadGroupChatSettingsUI; }
-        else { uiUpdateFunc = loadSingleChatSettingsUI; }
-        if (uiUpdateFunc) uiUpdateFunc();
+        debouncedSaveState();
+        showToast('删除成功！');
+    } catch (error) {
+        console.error("删除失败:", error);
+        showToast(`删除失败: ${error.message}`, 'error');
+    } finally {
+        exitLibrarySelectionMode();
+        renderLibraryGrid(); 
     }
-
-    // Common cleanup for all cases
-    debouncedSaveState();
-    exitLibrarySelectionMode();
-    renderLibraryGrid(); // Re-render after exiting selection mode
 });libraryUploadBtn.addEventListener('click', () => {
         libraryFileInput.accept = 'image/*,.zip';
         libraryFileInput.click();
@@ -7637,64 +7674,85 @@ libraryAddUrlBtn.addEventListener('click', async () => {
     }
 });
 libraryFileInput.addEventListener('change', async (e) => {
-    const files = e.target.files;
-    if (files.length === 0) return;
+    try {
+        const files = e.target.files;
+        if (files.length === 0) return;
 
-    const context = runtimeState.libraryContext;
-    let lib;
-    if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; }
-    else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; }
-    else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; }
-    else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; }
-    else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; }
-
-    showToast(`正在处理 ${files.length} 个文件...`, 'info');
-    let addedCount = 0;
-    const processingPromises = [];
-
-    const processImageFile = async (imageFile) => {
-        // 检查上下文，如果正在上传的是头像框(isFrame为true)，则不压缩；否则，压缩。
-        const fileToSave = context.isFrame
-            ? imageFile
-            : await compressImageBeforeSaving(imageFile);
-
-        const newLibId = newId('lib');
-        await addMediaToDB(newLibId, fileToSave);
-        lib.push(newLibId);
-        addedCount++;
-    };
-
-    for (const file of files) {
-        if (file.type.startsWith('image/')) {
-            processingPromises.push(processImageFile(file));
-        } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
-            const promise = JSZip.loadAsync(file).then(zip => {
-                const zipFilePromises = [];
-                zip.forEach((relativePath, zipEntry) => {
-                    if (!zipEntry.dir && /\.(gif|png|jpg|jpeg|webp)$/i.test(zipEntry.name)) {
-                        zipFilePromises.push(zipEntry.async("blob").then(processImageFile));
-                    }
-                });
-                return Promise.all(zipFilePromises);
-            }).catch(err => {
-                console.error("解压ZIP失败:", err);
-                showToast(`处理 ${file.name} 失败`, 'error');
-            });
-            processingPromises.push(promise);
+        const context = runtimeState.libraryContext;
+        if (!context || !context.libraryKey && !context.isGlobalUserLib && !context.isFrame) {
+            showToast('上传失败：缺少上下文信息。', 'error');
+            console.error("Upload failed due to missing context:", runtimeState.libraryContext);
+            return;
         }
+
+        let lib;
+        if (context.isGlobalUserLib) { lib = appState.chat.userProfile.avatarLibrary; }
+        else if (context.isFrame) { lib = appState.chat.userProfile.avatarFrameLibrary; }
+        else if (context.isGroup) { lib = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; }
+        else if (context.memberId) { lib = runtimeState.tempGcsMemberSettings[context.libraryKey]; }
+        else { lib = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; }
+
+        if (!Array.isArray(lib)) {
+            showToast('上传失败：目标库无效。', 'error');
+            console.error("Upload failed due to invalid library target:", lib);
+            return;
+        }
+
+        showToast(`正在处理 ${files.length} 个文件...`, 'info');
+        let addedCount = 0;
+        const processingPromises = [];
+
+        const processImageFile = async (imageFile) => {
+            try {
+                const fileToSave = context.isFrame
+                    ? imageFile
+                    : await compressImageBeforeSaving(imageFile);
+
+                const newLibId = newId('lib');
+                await addMediaToDB(newLibId, fileToSave);
+                lib.push(newLibId);
+                addedCount++;
+            } catch (err) {
+                console.error("处理图片文件失败:", imageFile.name, err);
+                showToast(`处理 ${imageFile.name} 失败`, 'error');
+            }
+        };
+
+        for (const file of files) {
+            if (file.type.startsWith('image/')) {
+                processingPromises.push(processImageFile(file));
+            } else if (file.type === 'application/zip' || file.name.toLowerCase().endsWith('.zip')) {
+                const promise = JSZip.loadAsync(file).then(zip => {
+                    const zipFilePromises = [];
+                    zip.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir && /\.(gif|png|jpg|jpeg|webp)$/i.test(zipEntry.name)) {
+                            zipFilePromises.push(zipEntry.async("blob").then(processImageFile));
+                        }
+                    });
+                    return Promise.all(zipFilePromises);
+                }).catch(err => {
+                    console.error("解压ZIP失败:", err);
+                    showToast(`处理 ${file.name} 失败`, 'error');
+                });
+                processingPromises.push(promise);
+            }
+        }
+
+        await Promise.all(processingPromises);
+
+        if (addedCount > 0) {
+            debouncedSaveState();
+            renderLibraryGrid();
+            showToast(`成功添加 ${addedCount} 个项目！`);
+        } else {
+            showToast('没有找到可添加的图片文件', 'error');
+        }
+    } catch (globalError) {
+        console.error("文件上传时发生严重错误:", globalError);
+        showToast("上传过程中发生错误，请查看控制台。", 'error');
+    } finally {
+        libraryFileInput.value = ''; // Reset for next use
     }
-
-    await Promise.all(processingPromises);
-
-    if (addedCount > 0) {
-        debouncedSaveState();
-        renderLibraryGrid();
-        showToast(`成功添加 ${addedCount} 个项目！`);
-    } else {
-        showToast('没有找到可添加的图片文件', 'error');
-    }
-
-    libraryFileInput.value = ''; // Reset for next use
 });
 async function handleChatBackgroundUpload(file, settingsObject) { if (!file) return; const newWallpaperId = newId('wp'); await addMediaToDB(newWallpaperId, file); appState.beautify.wallpapers.push({ id: newWallpaperId }); settingsObject.chatBackgroundId = newWallpaperId; debouncedSaveState(); showToast('背景已设置并存入壁纸库'); await updateSingleChatUI(); }
     async function handleVideoBackgroundUpload(file, settingsObject) {
