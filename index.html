@@ -1209,6 +1209,7 @@ align-content: start;
 .love-letter-collection-container { padding: 15px; border-top: 1px solid var(--border-color); }
 .love-letter-collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; align-items: start; }
 .love-letter-preview-card {
+    height: 220px; /* 新增：为卡片设置统一高度 */
     background: var(--love-letter-texture), linear-gradient(to bottom right, #fdfbf7, #f4f0e8);
     border: 1px solid #e0d8cc;
     border-radius: 8px;
@@ -1243,10 +1244,9 @@ display: none;
 .love-letter-preview-meta .subject {
 font-weight: bold;
 font-size: 15px;
-/* 新增：确保标题即使过长也不会换行，而是以省略号结尾 */
-white-space: nowrap;
-overflow: hidden;
-text-overflow: ellipsis;
+/* 优化：允许标题换行以完整显示 */
+white-space: normal;
+word-break: break-all;
 }
 .love-letter-preview-meta .subject.unread-subject {
     color: var(--accent-color);
@@ -1258,9 +1258,14 @@ text-overflow: ellipsis;
 .love-letter-preview-content {
     font-size: 13px;
     line-height: 1.6;
+    display: flex; /* 新增：启用flex布局 */
+    flex-direction: column; /* 新增：垂直排列子元素 */
+    flex-grow: 1; /* 新增：使其填充卡片内的剩余垂直空间 */
+    min-height: 0; /* 新增：修复flex子项内容溢出的常见问题 */
 }
 .love-letter-preview-content .body-preview {
-    max-height: 6.4em; /* Approx 4 lines */
+    max-height: 3.2em; /* 新增：设置2行文字的最大高度 (2 * 1.6em line-height) */
+    -webkit-line-clamp: 2; /* 优化：严格限制为最多显示2行 */
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -1271,10 +1276,9 @@ text-overflow: ellipsis;
     text-align: right;
     font-style: italic;
     margin-top: 8px;
-    /* 新增：确保签名即使过长也不会换行，而是以省略号结尾 */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal; /* 优化：允许签名换行以完整显示 */
+    word-break: break-all; /* 新增：确保长单词也能换行 */
+    margin-top: auto; /* 核心新增：自动外边距将签名推至容器底部 */
 }
 .love-letter-preview-card .love-letter-actions {
     justify-content: flex-end;
@@ -2282,19 +2286,16 @@ padding: 0 10px;
             <div class="app-header">
                 <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
                 <div class="title-wrapper"><h2 class="title">信箱</h2></div>
-                <div class="app-header-right"><button class="action-btn" id="mail-settings-btn" data-icon-id="header-settings"><i class="fa-solid fa-gear"></i></button></div>
+                <div class="app-header-right">
+                    <button class="action-btn" id="mail-filter-btn" style="display: none;"><i class="fa-solid fa-filter"></i></button>
+                    <button class="action-btn" id="mail-settings-btn" data-icon-id="header-settings"><i class="fa-solid fa-gear"></i></button>
+                </div>
             </div>
+                        <div id="mail-filter-dropdown" class="filter-dropdown"></div>
             <div class="app-content tab-content-wrapper">
                 <div id="love-letter-tab-content" class="tab-content active">
-                    <div class="love-letter-container">
-                        <div class="styles-column">
-                            <h3>寄出的信</h3>
-                            <div id="sent-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; padding: 10px; align-content: flex-start;"></div>
-                        </div>
-                        <div class="styles-column">
-                            <h3>收到的信</h3>
-                            <div id="received-letters-list" class="love-letter-collection-grid" style="flex-grow: 1; padding: 10px; align-content: flex-start;"></div>
-                        </div>
+                    <div id="all-letters-container" class="styles-rows-container">
+                         <div id="all-letters-list" class="love-letter-collection-grid"></div>
                     </div>
                 </div>
                 <div id="postcard-tab-content" class="tab-content">
@@ -2302,7 +2303,7 @@ padding: 0 10px;
                         <!-- Postcards will be rendered here by JS -->
                     </div>
                 </div>
-                <div id="tree-hole-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">树洞功能待开发...</p></div>
+
 <div id="drift-bottle-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">漂流瓶功能待开发...</p></div>
 </div>
 <div class="moments-fab-container" id="mail-fab-container" style="display: none;"><div id="mail-fab" class="moments-fab"><i class="fa-solid fa-plus"></i></div></div>
@@ -2310,7 +2311,7 @@ padding: 0 10px;
 <div class="app-bottom-tabs">
 <div class="tab-link active" data-tab="love-letter">情书</div>
 <div class="tab-link" data-tab="postcard">明信片</div>
-                <div class="tab-link" data-tab="tree-hole">树洞</div>
+
                 <div class="tab-link" data-tab="drift-bottle">漂流瓶</div>
             </div>
         </div>
@@ -3415,6 +3416,8 @@ const gcsUsBubbleRestoreBtn = getEl('gcs-us-bubble-restore-btn');
     // --- 信箱 APP 优化元素 ---
         const mailFabContainer = getEl('mail-fab-container');
         const editLoveLetterModal = getEl('edit-love-letter-modal');
+        const mailFilterBtn = getEl('mail-filter-btn');
+        const mailFilterDropdown = getEl('mail-filter-dropdown');
         const letterReplyBtn = getEl('letter-reply-btn');
 const mailSettingsModal = getEl('mail-settings-modal');
     // --- 来电UI元素 ---
@@ -3647,19 +3650,12 @@ themeModules.forEach(module => {
 
 previewStyleTag.textContent = previewCss;}
 
-    getEl('styles-tab-content').addEventListener('click', e => {
+        getEl('styles-tab-content').addEventListener('click', e => {
     const card = e.target.closest('.style-preview-card');
     if (!card) return;
 
-            const styleId = card.dataset.id;
+    const styleId = card.dataset.id;
     const styleType = card.dataset.type;
-
-    // Handle Import Button Click
-    if (e.target.closest('.import-style-btn')) {
-        e.stopPropagation();
-        getEl('import-style-file-input').click();
-        return;
-    }
 
     // Handle Export Button Click
     if (e.target.closest('.export-style-btn')) {
@@ -3674,7 +3670,7 @@ previewStyleTag.textContent = previewCss;}
         openEditStyleModal(styleId, styleType);
         return;
     }
-    
+
     // Handle Delete Button Click
     if (e.target.closest('.delete-style-btn')) {
         e.stopPropagation();
@@ -3692,7 +3688,7 @@ previewStyleTag.textContent = previewCss;}
         return;
     }
 
-    // Original click-to-apply logic
+    // Click-to-apply logic
     if (styleType === 'theme') {
         const theme = appState.data.savedThemes.find(t => t.id === styleId);
         if (theme && confirm(`确定要立即应用主题样式 "${theme.name}" 吗？`)) {
@@ -3703,16 +3699,13 @@ previewStyleTag.textContent = previewCss;}
         }
     } else if (styleType === 'bubble') {
         const bubble = appState.data.savedBubbles.find(b => b.id === styleId);
-        if (bubble && runtimeState.currentChatId && confirm(`要将气泡样式 "${bubble.name}" 应用到当前聊天吗？`)) {
-            const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-            if (contact) {
+        if (bubble && confirm(`要将样式 "${bubble.name}" 应用为全局聊天气泡吗？\n\n此操作将覆盖所有联系人独立设置的聊天气泡。`)) {
+            appState.chat.contacts.forEach(contact => {
                 contact.userSettings.bubbleCss = bubble.css;
-                applyAllCustomBubbleStyles();
-                debouncedSaveState();
-                showToast('气泡样式已应用！请返回聊天设置查看。');
-            }
-        } else if (!runtimeState.currentChatId) {
-            showToast('请先进入一个聊天设置界面再应用气泡样式。', 'error');
+            });
+            applyAllCustomBubbleStyles();
+            debouncedSaveState();
+            showToast('全局气泡样式已应用！');
         }
     }
 });
@@ -3900,7 +3893,7 @@ getEl('import-style-file-input').addEventListener('change', (event) => {
     const { type, context } = runtimeState.styleLoadContext;
     const moduleKeyMap = {
         momentsPost: 'moments', appHeader: 'header', bottomTabs: 'tabs',
-        listItem: 'list-item', loveLetter: 'letter'
+        listItem: 'list-item', loveLetter: 'letter', chatInput: 'chat-input'
     };
 
     if (type === 'theme') {
@@ -4157,7 +4150,8 @@ return {
                 currentProfileId: 'user', 
                 postContext: {},
                 viewerContext: { items: [], currentIndex: 0 }
-        }
+                },
+        mailboxFilter: { selected: 'all' }
 ,
 
         videoCallContext: { // Add this new object
@@ -5079,60 +5073,64 @@ getEl('wp-set-chat-bg').addEventListener('click', () => { if (!runtimeState.wall
 getEl('wp-delete').addEventListener('click', async () => { if (!runtimeState.wallpaperContextMenuTarget) return; if (confirm('确定要删除这张壁纸吗？')) { const id = runtimeState.wallpaperContextMenuTarget.dataset.id; await deleteMediaFromDB(id); appState.beautify.wallpapers = appState.beautify.wallpapers.filter(wp => wp.id !== id); if (appState.beautify.currentWallpaperId === id) { appState.beautify.currentWallpaperId = 'default'; await applyWallpaperById('default', phoneScreen); } if (appState.beautify.currentChatBgId === id) { appState.beautify.currentChatBgId = 'default'; } appState.chat.contacts.forEach(contact => { if (contact.isGroup && contact.groupSettings.chatBackgroundId === id) { contact.groupSettings.chatBackgroundId = 'default'; } else if (!contact.isGroup && contact.charSettings.chatBackgroundId === id) { contact.charSettings.chatBackgroundId = 'default'; } }); debouncedSaveState(); renderWallpapers(); hideWallpaperContextMenu(); showToast('壁纸已删除'); } });
 async function applyWallpaperById(id, element) { if (!id || id === 'default' || id === 'default_moments_cover') { element.style.backgroundImage = (id === 'default_moments_cover') ? 'none' : `url(${DEFAULT_WALLPAPER_URL})`; element.style.backgroundColor = (id === 'default_moments_cover') ? '#ccc' : 'var(--bg-color)'; return; } const url = await getMediaURL(id); if (url) { element.style.backgroundImage = `url(${url})`; element.style.backgroundColor = 'transparent'; } else { element.style.backgroundImage = `url(${DEFAULT_WALLPAPER_URL})`; element.style.backgroundColor = 'var(--bg-color)'; } }
 function renderLoveLetterTab() {
-    const sentListEl = getEl('sent-letters-list');
-    const receivedListEl = getEl('received-letters-list');
+    const allLettersListEl = getEl('all-letters-list');
     const unreadPrompt = getEl('unread-letter-prompt');
+    if (!allLettersListEl) return;
 
-const allLetters = [...appState.mailbox.loveLetters].sort((a, b) => b.timestamp - a.timestamp);
-const sentLetters = allLetters.filter(l => l.senderId === 'user');
-const receivedLetters = allLetters.filter(l => l.senderId !== 'user');
+    let lettersToRender = [...appState.mailbox.loveLetters];
 
-const createLetterHTML = (letter, otherParty) => {
-    const isUnread = !letter.isRead && letter.senderId !== 'user';
-    return `
-        <div class="love-letter-preview-card" data-letter-id="${letter.id}">
-            <div class="love-letter-preview-header">
-                <div class="love-letter-preview-avatar" data-avatar-id="${otherParty.avatarId}"></div>
-                <div class="love-letter-preview-meta">
-                    <div class="subject ${isUnread ? 'unread-subject' : ''}">${escapeHTML(letter.subject || '无题')}</div>
-                    <div class="timestamp">${new Date(letter.timestamp).toLocaleString()}</div>
+    // 1. Filtering logic based on runtime state
+    const filter = runtimeState.mailboxFilter ? runtimeState.mailboxFilter.selected : 'all';
+    if (filter === 'sent') {
+        lettersToRender = lettersToRender.filter(l => l.senderId === 'user');
+    } else if (filter === 'received') {
+        lettersToRender = lettersToRender.filter(l => l.senderId !== 'user');
+    } else if (filter !== 'all') { // It's a character ID
+        lettersToRender = lettersToRender.filter(l => l.senderId === filter || l.recipientId === filter);
+    }
+
+    // 2. Chronological sorting logic
+    lettersToRender.sort((a, b) => b.timestamp - a.timestamp);
+
+    const createLetterHTML = (letter) => {
+        const isReceived = letter.senderId !== 'user';
+        const otherPartyId = isReceived ? letter.senderId : letter.recipientId;
+        const otherParty = findUserById(otherPartyId);
+        const isUnread = isReceived && !letter.isRead;
+
+        return `
+            <div class="love-letter-preview-card" data-letter-id="${letter.id}">
+                <div class="love-letter-preview-header">
+                    <div class="love-letter-preview-avatar" data-avatar-id="${otherParty.avatarId}"></div>
+                    <div class="love-letter-preview-meta">
+                        <div class="subject ${isUnread ? 'unread-subject' : ''}">${escapeHTML(letter.subject || '无题')}</div>
+                        <div class="timestamp">${new Date(letter.timestamp).toLocaleString()}</div>
+                    </div>
+                </div>
+                <div class="love-letter-preview-content">
+                    <div class="salutation">${escapeHTML(letter.salutation || '')}</div>
+                    <div class="body-preview">${escapeHTML(truncateText(letter.body || '', 50))}</div>
+                    <div class="signature">${escapeHTML(letter.signature || '')}</div>
+                </div>
+                <div class="love-letter-actions">
+                    <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
             </div>
-            <div class="love-letter-preview-content">
-                <div class="salutation">${escapeHTML(letter.salutation || '')}</div>
-                <div class="body-preview">${escapeHTML(truncateText(letter.body || '', 50))}</div>
-                <div class="signature">${escapeHTML(letter.signature || '')}</div>
-            </div>
-            <div class="love-letter-actions">
-                <button class="icon-btn edit-letter-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
-                <button class="icon-btn delete-letter-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
-            </div>
-        </div>
-    `;
-};
+        `;
+    };
 
-    // Render Sent Letters
-    if (sentLetters.length > 0) {
-        sentListEl.innerHTML = sentLetters.map(letter => {
-        const recipient = findUserById(letter.recipientId);
-        return createLetterHTML(letter, recipient);
-    }).join('');
+    // 3. Rendering logic
+    if (lettersToRender.length > 0) {
+        allLettersListEl.innerHTML = lettersToRender.map(createLetterHTML).join('');
+        allLettersListEl.querySelectorAll('.love-letter-preview-avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
     } else {
-        sentListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有寄出过情书...</p>';
+        allLettersListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1; padding-top: 50px;">此分类下没有情书...</p>';
     }
 
-    // Render Received Letters
-    if (receivedLetters.length > 0) {
-        receivedListEl.innerHTML = receivedLetters.map(letter => {
-        const sender = findUserById(letter.senderId);
-        return createLetterHTML(letter, sender);
-    }).join('');
-    } else {
-        receivedListEl.innerHTML = '<p style="text-align:center; color:#888; grid-column: 1 / -1;">还没有收到过情书...</p>';
-    }
-
-    // Handle unread prompt
-    const firstUnread = receivedLetters.find(l => !l.isRead);
+    // 4. Unread prompt logic (always checks all received letters regardless of filter)
+    const allReceivedLetters = appState.mailbox.loveLetters.filter(l => l.senderId !== 'user');
+    const firstUnread = allReceivedLetters.find(l => !l.isRead);
     if (firstUnread) {
         unreadPrompt.dataset.letterId = firstUnread.id;
         unreadPrompt.classList.add('visible');
@@ -5141,6 +5139,59 @@ const createLetterHTML = (letter, otherParty) => {
     }
 }
 
+function renderMailFilterDropdown() {
+    const charIds = new Set();
+    appState.mailbox.loveLetters.forEach(l => {
+        if (l.senderId !== 'user') charIds.add(l.senderId);
+        if (l.recipientId !== 'user') charIds.add(l.recipientId);
+    });
+
+    const charOptions = [...charIds].map(id => {
+        const char = findUserById(id);
+        return { value: id, text: char.name };
+    });
+
+    const filterOptions = [
+        { value: 'all', text: '全部' },
+        { value: 'sent', text: '寄出的信' },
+        { value: 'received', text: '收到的信' },
+        ...charOptions
+    ];
+    
+    const selected = runtimeState.mailboxFilter ? runtimeState.mailboxFilter.selected : 'all';
+
+    mailFilterDropdown.innerHTML = filterOptions.map(opt => `
+        <label class="radio-label" style="width: 100%; border: none; border-radius: 4px; padding: 8px 5px;">
+            <input type="radio" name="love-letter-filter" value="${opt.value}" ${selected === opt.value ? 'checked' : ''}>
+            <span>${escapeHTML(opt.text)}</span>
+        </label>
+    `).join('');
+}
+
+function toggleMailFilterDropdown() {
+    if (mailFilterDropdown.classList.contains('visible')) {
+        mailFilterDropdown.classList.remove('visible');
+    } else {
+        renderMailFilterDropdown();
+        mailFilterDropdown.classList.add('visible');
+    }
+}
+
+mailFilterBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMailFilterDropdown();
+});
+
+mailFilterDropdown.addEventListener('change', (e) => {
+    if (e.target.name === 'love-letter-filter') {
+        if (!runtimeState.mailboxFilter) {
+            runtimeState.mailboxFilter = {};
+        }
+        runtimeState.mailboxFilter.selected = e.target.value;
+        renderLoveLetterTab();
+        toggleMailFilterDropdown();
+    }
+});
     function openLoveLetter(letterId) {
         const letterColors = [
                 'linear-gradient(to bottom right, #fcd4d9, #fde8eb)', // Light Pink
@@ -9737,6 +9788,23 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `1.  **【叙事视角】**: 在使用括号()进行第三人称描述时，请避免“他/她如何如何”的单调句式。尝试变换句式，例如将动作置于句首（“他抬起头”变为“抬起头，他……”），或使用更复杂的从句来丰富叙事结构，使其读起来更像文学作品而非简单的行为记录。\n`;
         prompt += `2.  **【情感深度】**: 拒绝平铺直叙和“工业糖精”。你的情感表达必须是细腻且有层次的。通过微妙的动作、环境描写、或内心的独白来暗示角色的情感变化，而不是直白地说出“我很高兴”或“我很难过”。\n`;
         prompt += `3.  **【文字质感】**: 追求生动、自然、有美感的文字。你可以从喜爱的作家（如村上春树的疏离感、加西亚·马尔克斯的奇幻现实、或是张爱玲的精妙比喻）那里汲取灵感，但【最终必须】形成符合角色人设的、独一无二的文风。\n\n`;
+                prompt += `--- **【括号描述（内心/动作）的【进阶】写作技巧 - 消除模板化】** ---\n`;
+        prompt += `为彻底摆脱模板化的描述，你【必须】掌握并运用以下技巧：\n`;
+        prompt += `1.  **【感官聚焦与环境互动】**: 不要直白描述“他感觉...”，而是描述“他看到/听到/闻到/感觉到”的具体事物，通过环境来烘托内心。这能让描述不再空洞。\n`;
+        prompt += `    - **【禁止】**: \`(他看着窗外，感到一丝忧伤)\`\n`;
+        prompt += `    - **【推荐】**: \`(窗外的雨滴顺着玻璃滑落，在昏黄的灯光下留下一道道蜿蜒的水痕，房间里只听得见时钟单调的滴答声)\`\n`;
+        prompt += `2.  **【打破主谓宾结构】**: 改变句子的开頭，避免总是用“他/她”开始。尝试用【动作】、【感官细节】或【所见的物体】作为句子的起点。\n`;
+        prompt += `    - **【禁止】**: \`(他拿起茶杯，轻轻吹了口气)\`\n`;
+        prompt += `    - **【推荐】**: \`(指尖触碰到微凉的杯壁，他将杯子凑到唇边，吹散了袅袅升起的热气)\`\n`;
+        prompt += `3.  **【内心独白与动作结合】**: 将角色的瞬间想法直接呈现，并紧跟一个微小的身体反应。这比单纯描述“他在想...”要生动得多。\n`;
+        prompt += `    - **【禁止】**: \`(他想知道你是不是在生气)\`\n`;
+        prompt += `    - **【推荐】**: \`(你生气了吗？这个念头在他脑海中一闪而过，让他端着杯子的手微微一顿)\`\n`;
+        prompt += `4.  **【严禁使用的八股文短语黑名单】**: 为彻底消除模板化，【严禁】在括号描述中使用以下或类似的高度重复性短语：\n`;
+        prompt += `    - “眼中闪过一丝/一抹......” (例如：复杂、心疼、宠溺)\n`;
+        prompt += `    - “嘴角勾起一抹......” (例如：弧度、微笑、苦笑)\n`;
+        prompt += `    - 不容......” (例如：质疑、拒绝、置喙)\n`;
+        prompt += `    - “心中一......” (例如：暖、痛、紧)\n`;
+        prompt += `    - “周身散发着......的气息”\n\n`;
         const availableEmojis = appState.chat.emojis.map(e => e.description);
         if (availableEmojis.length > 0) {
             prompt += `**重要: 可用的表情包描述列表为: [${availableEmojis.join(', ')}]. 你必须从这个列表中选择表情描述。如果列表中没有合适的表情，【严禁捏造表情包列表里没有的表情】，你必须放弃发送表情，转而使用其他消息类型。**\n`;
@@ -13173,7 +13241,8 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             const titleEl = mailAppScreen.querySelector('.title');
             const loveLetterFab = getEl('mail-fab-container');
             const postcardFab = getEl('postcard-fab-container');
-                        const settingsBtn = getEl('mail-settings-btn');
+            const settingsBtn = getEl('mail-settings-btn');
+            const filterBtn = getEl('mail-filter-btn'); // 新增：获取筛选按钮
             const tabMap = { 'love-letter': '情书', 'postcard': '明信片', 'tree-hole': '树洞', 'drift-bottle': '漂流瓶' };
 
             mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
@@ -13185,14 +13254,18 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             if (activeTabLink) activeTabLink.classList.add('active');
             if (activeTabContent) activeTabContent.classList.add('active');
 
-                        loveLetterFab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+            loveLetterFab.style.display = (tabId === 'love-letter') ? 'block' : 'none';
             postcardFab.style.display = (tabId === 'postcard') ? 'block' : 'none';
-                        settingsBtn.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+            settingsBtn.style.display = (tabId === 'love-letter') ? 'block' : 'none';
+            filterBtn.style.display = (tabId === 'love-letter') ? 'block' : 'none'; // 新增：根据标签页显示/隐藏筛选按钮
 
             if (tabId === 'love-letter') {
                 renderLoveLetterTab();
             } else if (tabId === 'postcard') {
                 renderPostcardWall();
+            } else {
+                // 新增：切换到其他标签页时，隐藏筛选下拉菜单
+                mailFilterDropdown.classList.remove('visible');
             }
 
             titleEl.textContent = tabMap[tabId] || '信箱';
@@ -14341,9 +14414,13 @@ getEl('save-love-letter-btn').addEventListener('click', () => {
                             fabOptions.style.display = 'none';
                         }
                     }
-                if (worldBookFilterDropdown.classList.contains('visible') && !e.target.closest('#world-book-filter-dropdown') && !e.target.closest('#data-filter-btn')) {
-                worldBookFilterDropdown.classList.remove('visible');
-            }
+                    if (worldBookFilterDropdown.classList.contains('visible') && !e.target.closest('#world-book-filter-dropdown') && !e.target.closest('#data-filter-btn')) {
+                        worldBookFilterDropdown.classList.remove('visible');
+                    }
+                    // 新增：关闭情书筛选菜单
+                    if (mailFilterDropdown.classList.contains('visible') && !e.target.closest('#mail-filter-dropdown') && !e.target.closest('#mail-filter-btn')) {
+                        mailFilterDropdown.classList.remove('visible');
+                    }
                 });
             } catch (error) {
                 console.error("CRITICAL INITIALIZATION FAILURE:", error);
