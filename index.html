@@ -3587,7 +3587,11 @@ previewStyleTag.textContent = previewCss;}
     }
 
     // Handle Export Button Click
-        
+    if (e.target.closest('.export-style-btn')) {
+        e.stopPropagation();
+        exportSingleStyle(styleId, styleType);
+        return;
+    }
 
     // Handle Edit Button Click
     if (e.target.closest('.edit-style-btn')) {
@@ -4003,7 +4007,6 @@ return {
                             avatarFrameId: '',
                             avatarLibrary: [],
                             avatarFrameLibrary: [],
-                            videoBackgroundLibrary: [], // 新增：全局用户视频背景库
                             persona: '全网唯一土皇帝',
                             signature: '全网唯一土皇帝',
                             balance: 1000000.00
@@ -4164,14 +4167,8 @@ return {
                  if (moduleName === 'settings' && savedModule.globalRealtimeActivity) {
                     appState.settings.globalRealtimeActivity = { ...defaultState.settings.globalRealtimeActivity, ...savedModule.globalRealtimeActivity };
                 }
-if (moduleName === 'chat') {
-                    if (savedModule.userProfile) {
-                        appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
-                        // 确保新字段在旧数据加载时也能被正确初始化
-                        if (!appState.chat.userProfile.videoBackgroundLibrary) {
-                            appState.chat.userProfile.videoBackgroundLibrary = [];
-                        }
-                    }
+                if (moduleName === 'chat') {
+                    if (savedModule.userProfile) appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
                     if (savedModule.moments) appState.chat.moments = { ...defaultState.chat.moments, ...savedModule.moments };
                     if (savedModule.moments?.profile) appState.chat.moments.profile = { ...defaultState.chat.moments.profile, ...savedModule.moments.profile };
                 }
@@ -4474,7 +4471,9 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
 } else { for (const key in userProfileDefaults) { if (!contact.userSettings.hasOwnProperty(key)) { contact.userSettings[key] = deepCopy(userProfileDefaults[key]); } } } if (!contact.userSettings.avatarLibrary) { contact.userSettings.avatarLibrary = []; } if (typeof contact.userSettings.videoBackgroundId === 'undefined') { contact.userSettings.videoBackgroundId = ''; }         if (typeof contact.userSettings.bubbleCss === 'undefined') {
             contact.userSettings.bubbleCss = '';
 }
-if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+if (!contact.userSettings.videoBackgroundLibrary) {
+    contact.userSettings.videoBackgroundLibrary = [];
+}if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
@@ -7809,12 +7808,10 @@ function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click'
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
     if(gcsUsUserVideoBackgroundBtn) {
     gcsUsUserVideoBackgroundBtn.addEventListener('click', (e) => {
-        // 核心修复：与单聊逻辑保持一致
         openBackgroundLibraryModal({
             type: 'video',
             title: '选择视频背景',
-            settingsObject: runtimeState.tempChatSettings.userSettings, // 用于读取和设置 activeKey
-            librarySource: appState.chat.userProfile, // 【新增】指定库的来源
+            settingsObject: runtimeState.tempChatSettings.userSettings,
             activeKey: 'videoBackgroundId',
             libraryKey: 'videoBackgroundLibrary',
             defaultId: ''
@@ -8103,12 +8100,15 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
                  prompt += `**TA的来信内容**: ${originalCard.body}\n`;
             }
             prompt += `\n`;
-
+        prompt += `--- **【文风与内容强制要求】** ---\n`;
+        prompt += `1. **【内容核心】**: 你的回信内容【必须】与收到的来信内容紧密相关，延续TA的话题，分享你的感受，并表达你收到回信后的喜悦与更深厚的思念。正文长度必须控制在【50-80字】之间。\n`;
+        prompt += `2. **【风格要求】**: 文风必须温柔细腻、富有诗意、贴合人设、真实不油腻、严禁模板化。\n`;
+        prompt += `3. **【文风指南】**: 同样地，你的回信也应如同一首短诗。在回应TA来信内容的同时，保持文字的凝练与意境。风格可以参考旅行文学作家的笔触，用几句点睛之笔，勾勒出你收到信时的场景与内心的波澜。\n\n`;
             prompt += `--- **【核心规则】** ---\n`;
             prompt += `1. **【秘密性】**: 明信片是你和用户之间的秘密，【绝对禁止】在聊天、动态等任何其他地方提及或暗示明信片的存在和内容。\n`;
             prompt += `2. **【内容核心】**: 你的回信内容【必须】与收到的来信内容紧密相关。延续TA的话题，分享你的感受，并表达你收到回信后的喜悦与更深厚的思念。\n`;
             prompt += `3. **【称呼与落款】**: 称呼和落款【必须】根据你的人设和当前的情感自由发挥，使其充满个性，【严禁】使用固定模板。\n`;
-            prompt += `4. **【其他规则】**: 其他所有关于地点、时间延迟感、内容风格、图片和礼物的要求，均与你主动寄出明信片时完全一致。\n`;
+            prompt += `4. **【其他规则】**: 其他所有关于地点、时间延迟感、图片和礼物的要求，均与你主动寄出明信片时完全一致。\n`;            prompt += `   - **【文风指南】**: 同样地，你的回信也应如同一首短诗。在回应TA来信内容的同时，保持文字的凝练与意境。风格可以参考旅行文学作家的笔触，用几句点睛之笔，勾勒出你收到信时的场景与内心的波澜。\n`;
             prompt += `5. **【JSON输出格式】**: 你的回复【必须】是一个格式正确的JSON对象，不能包含任何额外的文字。格式如下：\n`;
             prompt += "```json\n";
             prompt += "{\n";
@@ -8145,6 +8145,7 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
             prompt += `1. **【情景设定】**: 当前是${season}。你可能正在工作、旅行或日常闲逛。请随机选择一个符合你人设和当前季节的地点和时间（时间可以是过去24-48小时内的任意时刻，例如“昨夜”或“今天清晨”，以营造一种延迟感）。\n`;
             prompt += `2. **【内容核心】**: 明信片内容必须简短（50-60字），但充满细节和真情实感。核心是表达对 “${user.name}” 的思念之情，可以引用诗句“涉江采芙蓉，兰泽多芳草。采之欲遗谁，所思在远道”的意境，但不要直接照搬。\n`;
             prompt += `3. **【风格要求】**: 文风必须温柔细腻、富有诗意、贴合人设、真实不油腻、严禁模板化。\n`;
+            prompt += `   - **【意境塑造】**: 将明信片视为一首俳句或一篇微型散文诗。文字贵在精炼而非繁多，重在营造意境（如松尾芭蕉的“寂静古池旁，青蛙跳入水中央，一声响”所描绘的禅意瞬间）。你的目标是用最少的文字捕捉一个瞬间的画面、一种情绪、一丝感悟，并将其与对“${user.name}”的思念巧妙地联系起来。\n`;
             prompt += `4. **【图片与礼物】**: 你需要为明信片构思一张配图（生成图片描述）和一个可能附带的小礼物/彩蛋（生成礼物名称）。\n`;
             prompt += `   - **图片**: 描述一张【风景】或【卡通动漫风格】的图片，【严禁出现真人】。\n`;
             prompt += `   - **礼物**: 礼物可以是一片落叶、一枚有趣的石头、一句歌词、一首短诗、一份推荐清单等，名称要简洁有趣。如果没有合适的礼物，可以将gift字段设为null。\n`;
@@ -9011,7 +9012,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `4. **【可见性规则】**: 当动态或留言信息中标注了 \`(仅对 ... 可见)\` 时，你扮演的角色【只有在自己的名字出现在可见列表中时】才能看到并对其进行互动（如点赞、评论、回复）。严禁扮演 A 角色去评论一条只对 B 角色可见的内容。\n\n`;
         prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
         prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
-                prompt += `7. **【明信片的同等秘密性】**: 与情书一样，“明信片”也是你和用户之间的秘密渠道。你【绝对禁止】在聊天、动态、评论等任何非信箱应用的地方，提及任何与明信片相关的话题。回应用户明信片的【唯一】方式是在后台活动中自动生成一张新的明信片作为回复。\n\n`;
+        prompt += `7. **【明信片的同等秘密性】**: 与情书一样，“明信片”也是你和用户之间的秘密渠道。你【绝对禁止】在聊天、动态、评论等任何非信箱应用的地方，提及任何与明信片相关的话题。回应用户明信片的【唯一】方式是在后台活动中自动生成一张新的明信片作为回复。\n\n`;
         // --- 通用聊天规则模块 (重构后) ---
         prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前【必须】加上发言人信息，格式为 \`[昵称 (ID: char_id)]: 内容\`。你【必须】从上文的成员列表中获取准确的昵称和ID，例如: \`[小明(ID: char_123)]: user今天有空吗？<MSG_SPLIT>[小明(ID: char_123)]: 和我一起出去玩吧？<MSG_SPLIT>[小红(ID: char_456)]: user之前就和我约好了呀！<MSG_SPLIT>[小明(ID: char_123)]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
@@ -9337,7 +9338,10 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `4. **格式**: 必须【独占一行】，不能与对话内容混在同一行。\n`;
         prompt += `**【特别说明】**：上述严格规定主要针对【纯文字消息】。当使用 \`[ACTION: SEND_VOICE ...]\` 指令模拟发送【语音消息】时，为了增强表现力，你【可以】在括号内加入符合人设的、自然的语气描述。这种描述同样需使用第三人称，但【不必】遵循20字和独占一行的限制，可以更简短灵活。例如：\`[ACTION: SEND_VOICE "(他轻笑了一声，语气听起来很愉快)你好啊。"]\`。请记住，这只是一个增强表现力的【可选】工具，【仅在必要时自然使用】，不要养成每条语音都加描述的习惯。\n`;
         prompt += `【重要提醒】以上所有关于括号使用的严格规定【仅适用于普通文字聊天】，【绝对不适用于视频通话】。视频通话模式有其独立的、更自由的描述规则。\n\n`;
-        
+                prompt += `--- **【文风与笔触的【强制】风格指南】** ---\n`;
+        prompt += `1.  **【叙事视角】**: 在使用括号()进行第三人称描述时，请避免“他/她如何如何”的单调句式。尝试变换句式，例如将动作置于句首（“他抬起头”变为“抬起头，他……”），或使用更复杂的从句来丰富叙事结构，使其读起来更像文学作品而非简单的行为记录。\n`;
+        prompt += `2.  **【情感深度】**: 拒绝平铺直叙和“工业糖精”。你的情感表达必须是细腻且有层次的。通过微妙的动作、环境描写、或内心的独白来暗示角色的情感变化，而不是直白地说出“我很高兴”或“我很难过”。\n`;
+        prompt += `3.  **【文字质感】**: 追求生动、自然、有美感的文字。你可以从喜爱的作家（如村上春树的疏离感、加西亚·马尔克斯的奇幻现实、或是张爱玲的精妙比喻）那里汲取灵感，但【最终必须】形成符合角色人设的、独一无二的文风。\n\n`;
         const availableEmojis = appState.chat.emojis.map(e => e.description);
         if (availableEmojis.length > 0) {
             prompt += `**重要: 可用的表情包描述列表为: [${availableEmojis.join(', ')}]. 你必须从这个列表中选择表情描述。如果列表中没有合适的表情，【严禁捏造表情包列表里没有的表情】，你必须放弃发送表情，转而使用其他消息类型。**\n`;
@@ -9439,6 +9443,8 @@ function constructVideoChatPrompt(contact) {
         prompt += `1.  **【核心格式】**: 你的回复【必须】是一段【完整、连贯的长文本，100字左右】，就像小说或剧本中的角色描写。内容必须包含角色的动作、神态、表情、心理活动和语言。语言部分必须用中文引号“ ”包裹。\n`;
         prompt += `2.  **【严禁拆分】**: 【绝对禁止】使用“<MSG_SPLIT>”分隔符。你的所有描述和对话必须在【一个单一的回复】中完成。\n`;
         prompt += `3.  **【视角锁定】**: 你【只能】扮演并描述角色“${contact.charSettings.name}”的行为和心理。必须以第三人称“他”或“她”来称呼该角色。对于用户，你【必须】称呼为“你”。【严禁】使用第一人称“我”来代指角色，【更严禁】代替用户“你”进行任何行为或心理描写。\n\n`;
+        prompt += `4.  **【电影感叙事】**: 将你的每一次回复都当作一个电影镜头或小说片段来创作。调动所有感官——视觉（光影、色彩）、听觉（环境音、呼吸声）、触觉（微风、温度）——来构建一个沉浸式的场景。你的文字应该能让用户清晰地“看到”你的神情，“听到”你声音中的细微情绪。\n`;
+        prompt += `5.  **【文风灵感】**: 你可以借鉴普鲁斯特对内心活动的细腻捕捉，或是川端康成对物哀之美的描绘，将这些文学技巧内化为你自己的风格，创造出独特而深刻的表达。\n\n`;
         prompt += `--- **角色与世界观设定 (必须遵守)** ---\n`;
         prompt += `1. **用户人设**: 用户“${contact.userSettings.name}”的人设是：${contact.userSettings.persona}\n`;
         prompt += `2. **你的角色人设**: 你扮演的角色“${contact.charSettings.name}”的人设是：${contact.charSettings.persona}\n`;
@@ -9496,7 +9502,11 @@ function constructGroupVideoChatPrompt(contact) {
         prompt += `    - **离开**: \`[ACTION: VIDEO_LEAVE "成员ID" "离开的原因"]\`\n`;
         prompt += `    - **加入**: \`[ACTION: VIDEO_JOIN "成员ID"]\` (你【必须】从“可中途加入的成员”列表中选择一个有效的ID)\n`;
         prompt += `4.  **【格式与视角】**: 你的所有回复【必须】使用特殊分隔符“<MSG_SPLIT>”来分割【每个角色】的发言。每段发言前【必须】加上发言人昵称，格式为 \`[昵称]: 描述和“对话”\`。描述部分【必须】使用第三人称“他/她”。【严禁】使用第一人称“我”，【严禁】为用户“你”添加任何描述。\n\n`;
-    
+        prompt += `5.  **【文风与表演指导 (核心)】**: 你的任务不仅仅是让每个角色轮流发言，而是要导演一出精彩的群像戏。\n`;
+        prompt += `    - **拒绝流水账**: 【严禁】像点名一样让每个角色都简单地回应用户。例如，对于用户的问候，【绝对禁止】回复：\`[A]:“你好”<MSG_SPLIT>[B]:“嗨”<MSG_SPLIT>[C]:“你好呀”\`。\n`;
+        prompt += `    - **鼓励互动与戏剧性**: 角色之间【必须】互相反应。A的发言可能会引发B的吐槽和C的沉思。你要创造的是一个有张力、有化学反应的真实场景。\n`;
+        prompt += `    - **电影化镜头感**: 想象你是一个导演。在你的描述中，可以有“主镜头”（描述整体氛围），也可以有“特写镜头”（深入某个角色的神态细节）。通过对不同角色反应的详略安排，来引导用户的注意力。\n`;
+        prompt += `    - **个性化笔触**: 运用你对文学和电影的理解，确保每个角色的语言和行为都极具个性，符合其人设，让用户能仅凭文字就区分出他们。\n\n`;
         prompt += `--- **用户及世界观设定** ---\n`;
         prompt += `1. **用户人设**: 用户“${contact.userSettings.name}”的人设是：${contact.userSettings.persona}\n`;
         const linkedWorldBooks = contact.groupSettings.linkedWorldBooks;
@@ -10524,7 +10534,13 @@ async function handleMomentsImageUpload(file, profileId, type) {
                 addMomentsNotification('like', 'user', { postId: post.id, recipientId: post.authorId });
             }
             debouncedSaveState();
-            renderMomentsFeed(profileId);
+                    const postId = post.id;
+        postItem.outerHTML = renderSingleMomentPost(post);
+        const newPostItem = document.querySelector(`.moments-post-item[data-post-id="${postId}"]`);
+        if (newPostItem) {
+            newPostItem.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
+            newPostItem.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'backgroundImage'));
+        }
             return;
         }
         
@@ -10920,7 +10936,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
         let likesSummaryHTML = '';
         if(post.likes && post.likes.length > 0) {
             const likerNames = post.likes.map(id => findUserById(id).name).join(', ');
-            likesSummaryHTML = `<div class="post-likes-summary"><span class="icon">❤️</span> ${likerNames}</div>`;
+        likesSummaryHTML = `<div class="post-likes-summary"><span class="icon"><i class="fa-solid fa-heart"></i></span> ${likerNames}</div>`;
         }
 
         return `
@@ -12008,12 +12024,10 @@ function setupSingleChatSettingsListeners() { csCharAvatarLibraryBtn.addEventLis
     csCharBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.charSettings }); });
     const usUserVideoBackgroundBtn = getEl('us-user-video-background-btn'); if(usUserVideoBackgroundBtn) {
     usUserVideoBackgroundBtn.addEventListener('click', (e) => {
-        // 核心修复：库从全局读取，但当前选中的背景ID依然从当前聊天的临时设置中读取
         openBackgroundLibraryModal({
             type: 'video',
             title: '选择视频背景',
-            settingsObject: runtimeState.tempChatSettings.userSettings, // 用于读取和设置 activeKey
-            librarySource: appState.chat.userProfile, // 【新增】指定库的来源
+            settingsObject: runtimeState.tempChatSettings.userSettings,
             activeKey: 'videoBackgroundId',
             libraryKey: 'videoBackgroundLibrary',
             defaultId: ''
@@ -12041,15 +12055,11 @@ function renderBackgroundLibraryGrid() {
     grid.innerHTML = '';
 
     let items, activeItem;
-    // 核心修复：优先从 context.librarySource 读取媒体库，否则回退到旧逻辑
-    const libSource = context.librarySource || context.settingsObject;
-
     if (context.type === 'chat') {
         items = appState.beautify.wallpapers.map(wp => wp.id);
         activeItem = context.settingsObject.chatBackgroundId;
     } else { // video
-        items = libSource[context.libraryKey] || [];
-        // activeItem 仍然从 settingsObject 读取，以反映当前聊天的选择
+        items = context.settingsObject[context.libraryKey] || [];
         activeItem = context.settingsObject[context.activeKey];
     }
 
@@ -12134,20 +12144,17 @@ fileInput.addEventListener('change', async e => {
                     const newBgId = newId(context.type === 'chat' ? 'wp' : 'video_bg');
                     await addMediaToDB(newBgId, compressedFile);
 
-                    // 核心修复：优先向 context.librarySource 添加新媒体，否则回退
-            const libSource = context.librarySource || context.settingsObject;
-
-            if (context.type === 'chat') {
-                // 聊天背景被视为全局壁纸，添加到主壁纸库
-                appState.beautify.wallpapers.push({ id: newBgId });
-            } else { // 视频背景
-                // 确保目标库数组存在
-                if (!libSource[context.libraryKey]) {
-                    libSource[context.libraryKey] = [];
-                }
-                // 将新ID添加到正确的（全局）库中
-                libSource[context.libraryKey].push(newBgId);
-            }
+                    if (context.type === 'chat') {
+                        // 聊天背景被视为全局壁纸，添加到主壁纸库
+                        appState.beautify.wallpapers.push({ id: newBgId });
+                    } else { // 视频背景
+                        // 确保目标库数组存在
+                        if (!context.settingsObject[context.libraryKey]) {
+                            context.settingsObject[context.libraryKey] = [];
+                        }
+                        // 将新ID添加到正确的库中 (例如: userSettings.videoBackgroundLibrary)
+                        context.settingsObject[context.libraryKey].push(newBgId);
+                    }
                     addedCount++;
                 } catch (err) {
                     console.error("处理背景文件失败:", file.name, err);
@@ -12170,19 +12177,12 @@ fileInput.addEventListener('change', async e => {
     if (url && url.startsWith('http')) {
         const context = runtimeState.backgroundLibraryContext;
         try {
-            // 核心修复：优先向 context.librarySource 添加新链接，否则回退
-            const libSource = context.librarySource || context.settingsObject;
-
             if (context.type === 'chat') {
                 // 直接将URL作为ID存入壁纸列表
                 appState.beautify.wallpapers.push({ id: url });
             } else { // video
-                // 确保目标库数组存在
-                if (!libSource[context.libraryKey]) {
-                    libSource[context.libraryKey] = [];
-                }
-                // 直接将URL存入正确的（全局）视频背景库
-                libSource[context.libraryKey].push(url);
+                // 直接将URL存入视频背景库
+                context.settingsObject[context.libraryKey].push(url);
             }
             debouncedSaveState();
             renderBackgroundLibraryGrid();
@@ -12233,20 +12233,7 @@ fileInput.addEventListener('change', async e => {
                     appState.beautify.currentChatBgId = 'default';
                 }
             } else { // video
-                // 核心修复：从正确的（全局）源删除，并更新所有可能用到它的地方
-                const libSource = context.librarySource || context.settingsObject;
-                
-                // 从全局库中删除
-                libSource[context.libraryKey] = libSource[context.libraryKey].filter(id => id !== idToDelete);
-
-                // 检查并重置所有使用该背景的联系人的设置
-                appState.chat.contacts.forEach(contact => {
-                    if (contact.userSettings && contact.userSettings.videoBackgroundId === idToDelete) {
-                        contact.userSettings.videoBackgroundId = '';
-                    }
-                });
-
-                // 如果当前正在编辑的聊天恰好在使用这个背景，也重置它
+                context.settingsObject[context.libraryKey] = context.settingsObject[context.libraryKey].filter(id => id !== idToDelete);
                 if (context.settingsObject[context.activeKey] === idToDelete) {
                     context.settingsObject[context.activeKey] = '';
                 }
@@ -12931,6 +12918,7 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
         prompt += `--- **【强制要求】** ---\n`;
         prompt += `1. **【自由发挥称呼与落款】**: 信件的称呼（salutation）和落款（signature）**不必**拘泥于固定格式。请你**必须**结合你的人设、你们的关系、信件的语境和情感，进行**完全自由的、个性化的创作**。\n`;
         prompt += `2. **【感情真挚】**: 情感必须细腻、真挚、细节生动真实。严禁使用任何敷衍、模板化或重复的语句。\n`;
+        prompt += `   - **【文笔升华】**: 将这封信视为一件艺术品。你可以从经典书信体文学中寻找灵感（例如济慈致芬妮·勃劳恩的情书），运用精妙的比喻、象征和内省来表达那些难以言说的复杂情感。文字应如潺潺流水，自然而富有韵律，直抵人心最柔软之处。\n`;
         prompt += `3. **【严禁OOC】**: 你的每一句话都必须严格符合你的人设和世界观。\n`;
         prompt += `4. **【内容长度】**: 信件正文内容必须丰富，至少需要300字以上。\n`;
         prompt += `5. **【JSON输出格式】**: 你的回复【必须】是一个格式正确的JSON对象，且【只能】是这个JSON对象，前后不能有任何多余的文字或解释。格式如下：\n`;
