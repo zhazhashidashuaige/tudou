@@ -148,7 +148,7 @@
         .app-header-left { justify-content: flex-start; }
         .app-header-right { justify-content: flex-end; align-items: center; }
         .app-header .back-btn, .app-header .action-btn { position: relative; top: 8px; /* 向下偏移8px */ }
-        .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; white-space: nowrap; }
+        .app-header .back-btn { font-size: 16px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; white-space: nowrap; font-family: inherit; }
         .app-header .title-wrapper { flex-grow: 1; text-align: center; }
         .app-header .title { font-size: 17px; font-weight: 600; position: relative; top: -5px; /* 向上偏移5px */ }
         .app-header .action-btn { font-size: 28px; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px 10px; line-height: 1; display: flex; align-items: center; justify-content: center; }
@@ -552,7 +552,7 @@ align-content: start;
         #bubble-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .bubble-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; padding: 10px; border-radius: 8px; }
         .bubble-item .bubble-preview-container { width: 100%; height: 40px; display: flex; justify-content: center; align-items: center; }
-        .bubble-item .bubble-preview-container button { background-color: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 10px; font-size: 14px; color: var(--accent-color); }
+        .bubble-item .bubble-preview-container button { background-color: white; border: 1px solid var(--border-color); border-radius: 8px; padding: 5px 10px; font-size: 14px; color: var(--accent-color); font-family: inherit; }
         .bubble-item .bubble-preview-container button img { height: 24px; width: auto; }
         .bubble-item.global-bubble-item { border: 2px solid transparent; } /* Replaced dashed border with transparent */
             .theme-css-editor {
@@ -596,18 +596,32 @@ align-content: start;
         .modal-body { margin-bottom: 20px; max-height: 60vh; overflow-y: auto; }
         .modal-body .form-group { margin-bottom: 12px; }
         .modal-body .form-group label { display: block; font-size: 14px; margin-bottom: 5px; color: var(--secondary-text-color); }
-        .modal-body .form-group input, .modal-body .form-group select { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; box-sizing: border-box; }
+        .modal-body .form-group input, .modal-body .form-group select,
+        .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="password"] { 
+            width: 100%; 
+            padding: 8px; 
+            border: 1px solid var(--border-color); 
+            border-radius: 5px; 
+            font-size: 15px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+        }
         .wide-textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; box-sizing: border-box; resize: vertical; min-height: 120px; font-family: inherit; }
+        input::placeholder,
+        textarea::placeholder {
+            font-family: inherit;
+            opacity: 0.7;
+        }
         #pat-suffix-input { width: 100%; box-sizing: border-box; }
         .uniform-input-box { width: 100%; height: 40px; min-height: 40px !important; padding: 8px 15px; box-sizing: border-box; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; font-family: inherit; resize: none; }
         .modal-actions { display: flex; justify-content: space-around; gap: 10px; flex-direction: column; }
-        .modal-actions button { width: 100%; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; }
+        .modal-actions button { width: 100%; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 500; font-family: inherit; }
         .modal-actions .confirm-btn { background-color: var(--accent-color); color: white; }
         .modal-actions .cancel-btn { background-color: #e5e5ea; color: var(--accent-color); }
         .modal-actions .danger-btn { background-color: var(--danger-color); color: white; }
         .modal-actions.row { flex-direction: row; } .modal-actions.row button { flex: 1; }
         .modal-tabs { display: flex; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--secondary-text-color); border-bottom: 2px solid transparent; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-size: 16px; color: var(--secondary-text-color); border-bottom: 2px solid transparent; font-family: inherit; }
         .tab-btn.active { color: var(--accent-color); border-bottom-color: var(--accent-color); }
         .modal-tab-content { display: none; }
         .modal-tab-content.active { display: block; }
@@ -841,7 +855,7 @@ align-content: start;
 
         /* --- 自定义单选/多选按钮 --- */
         .radio-group, .checkbox-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .radio-label, .checkbox-label { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 20px; cursor: pointer; }
+        .radio-label, .checkbox-label { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 20px; cursor: pointer; font-family: inherit; }
         .radio-label input[type="radio"], .checkbox-label input[type="checkbox"] { display: none; }
         .radio-label input[type="radio"]:checked + span, .checkbox-label input[type="checkbox"]:checked + span { color: var(--accent-color); font-weight: bold; }
         .radio-label:has(input:checked), .checkbox-label:has(input:checked) { border-color: var(--accent-color); }
@@ -942,10 +956,11 @@ align-content: start;
         /* --- World Book Group Selector --- */
         .wb-group-selector { position: relative; }
         .wb-group-selector-btn { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 15px; text-align: left; background-color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+               .wb-group-selector-btn { font-family: inherit; }
         .wb-group-selector-btn::after { content: '▼'; font-size: 12px; }
         .wb-group-dropdown { display: none; position: absolute; top: 100%; left: 0; right: 0; background-color: white; border: 1px solid var(--border-color); border-radius: 5px; max-height: 150px; overflow-y: auto; z-index: 10; }
         .wb-group-dropdown.visible { display: block; }
-        .wb-group-dropdown .checkbox-label { width: 100%; border: none; border-radius: 0; border-bottom: 1px solid #eee; padding: 8px 12px; box-sizing: border-box; }
+        .wb-group-dropdown .checkbox-label { width: 100%; border: none; border-radius: 0; border-bottom: 1px solid #eee; padding: 8px 12px; box-sizing: border-box; font-family: inherit; /* 确保继承字体 */ }
         .wb-group-dropdown .checkbox-label:last-child { border-bottom: none; }
 
         /* --- 动态 (Moments) 界面 --- */
@@ -1198,7 +1213,7 @@ align-content: start;
     border: 1px solid #e0d8cc;
     border-radius: 8px;
     padding: 12px;
-    font-family: 'KaiTi', 'STKaiti', serif;
+    font-family: inherit;
     color: #5c5245;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     cursor: pointer;
@@ -1279,7 +1294,7 @@ text-overflow: ellipsis;
 .letter-style-preview-content {
     height: 160px; /* 增加预览区域的高度 */
     padding: 10px;
-    font-family: 'KaiTi', 'STKaiti', serif;
+    font-family: inherit;
     font-size: 11px; /* 增大预览字体 */
     line-height: 1.5;
     color: #5c5245;
@@ -1324,7 +1339,7 @@ text-overflow: ellipsis;
     z-index: 220; display: flex; flex-direction: column;
     padding: calc(env(safe-area-inset-top, 10px) + 20px) 25px calc(env(safe-area-inset-bottom, 10px) + 20px);
     box-sizing: border-box;
-    font-family: 'KaiTi', 'STKaiti', serif; color: #333;
+    font-family: var(--system-font-family); color: #333;
     transform: scale(0.1) rotate(-15deg); border-radius: 50%; opacity: 0; visibility: hidden;
     transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     background: var(--love-letter-texture), var(--love-letter-gradient);
@@ -3540,7 +3555,7 @@ const getMiniPreviewHTML = (moduleKey) => {
         listItem: '<div class="mini-list-item"><div class="swipe-content"><div class="avatar"></div><span>列表项</span></div></div>',
         momentsPost: '<div class="mini-moments-card"><div class="post-item-content"><div class="avatar"></div><span>动态卡片</span></div></div>',
         bottomTabs: '<div class="mini-tabs"><span>标签1</span><span>标签2</span></div>',
-        loveLetter: `<div class="mini-letter" style="font-family: KaiTi, serif; font-size: 8px; line-height: 1.3; color: #333; background: #fdfbf7; border: 1px solid #e0d8cc; padding: 5px; text-align: left;">
+        loveLetter: `<div class="mini-letter" style="font-size: 8px; line-height: 1.3; color: #333; background: #fdfbf7; border: 1px solid #e0d8cc; padding: 5px; text-align: left;">
                     <div style="display: flex; align-items: center; gap: 5px; padding-bottom: 4px; margin-bottom: 4px; border-bottom: 1px dashed #dcd3c5;">
                         <div style="width: 20px; height: 20px; border-radius: 50%; background-color: #ccc; flex-shrink: 0;"></div>
                         <div>
@@ -5505,7 +5520,7 @@ restoreBubbleBtn.addEventListener('click', async () => { const bubbleId = editBu
     appHeader: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--app-screen-bg);\n@font-family: default;\n@font-size: 17px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.title {\n  font-weight: 600;\n}',
     bottomTabs: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 14px;\n@color: var(--secondary-text-color);\n\n/* 在下方输入自定义CSS */\n.tab-link.active {\n  color: var(--accent-color);\n}',
     listItem: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: var(--item-bg);\n@font-family: default;\n@font-size: 16px;\n@color: var(--primary-text-color);\n\n/* 在下方输入自定义CSS */\n.contact-name {\n  font-weight: 500;\n}',
-    loveLetter: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f4f0e8;\n@font-family: KaiTi;\n@font-size: 17px;\n@color: #333333;\n\n/* 在下方输入自定义CSS */\n.letter-signature {\n  text-align: right;\n}',
+    loveLetter: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f4f0e8;\n@font-family: default;\n@font-size: 17px;\n@color: #333333;\n\n/* 在下方输入自定义CSS */\n.letter-signature {\n  text-align: right;\n}',
     chatInput: '/* @属性值示例 (设置背景图后背景色将失效) */\n@background-image: url(图片链接);\n@background-color: #f7f7f7;\n@font-family: default;\n@font-size: 16px;\n@color: #000000;\n@textarea-height: 40px;\n@textarea-width: auto; /* auto: 自动填充, 200px: 固定宽度 */\n\n/* 在下方输入自定义CSS */\n/* 可针对的图标: refresh, voice, image, camera, video, music, link, redpacket, shop */\n.icon-btn i {\n  color: #555;\n}'
     };
 
@@ -5682,7 +5697,7 @@ function updateThemeCssPreview(id) {
         const previewHTML = {
             moments: `<div class="moments-post-item"><div class="post-item-content"><div class="post-header"><div class="post-avatar" style="background-color:#ccc"></div><div class="post-author-info"><div class="post-author-name">预览用户</div><div class="post-timestamp">刚刚</div></div></div><div class="post-content-text">这是一个预览动态...</div></div></div>`,
             header: `<div class="app-header"><div class="app-header-left"><button class="back-btn">&lt; 返回</button></div><div class="title-wrapper"><h2 class="title">预览标题</h2></div><div class="app-header-right"><button class="action-btn">+</button></div></div>`,
-            letter: `<div id="love-letter-viewer-preview" style="font-family: KaiTi, serif; padding: 12px; font-size: 11px; line-height: 1.5; color: #333; background: var(--love-letter-texture), linear-gradient(to bottom right, #f4f0e8, #fdfbf7); border: 1px solid #e0d8cc;">
+            letter: `<div id="love-letter-viewer-preview" style="padding: 12px; font-size: 11px; line-height: 1.5; color: #333; background: var(--love-letter-texture), linear-gradient(to bottom right, #f4f0e8, #fdfbf7); border: 1px solid #e0d8cc;">
             <div style="display: flex; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px dashed #dcd3c5;">
                 <div style="width: 30px; height: 30px; border-radius: 50%; background-color: #ccc; flex-shrink: 0; border: 1px solid white;"></div>
                 <div>
