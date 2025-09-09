@@ -1986,6 +1986,25 @@ text-overflow: clip;
 <style id="saved-styles-preview-style"></style>
 <style id="mail-settings-preview-style"></style>
 <style id="anniversary-calendar-styles">
+    .anniversary-details-item {
+        padding: 12px;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        border-left: 4px solid var(--accent-color);
+    }
+    .anniversary-details-item.special {
+        border-left-color: var(--danger-color);
+        background-color: #fff0f0;
+    }
+    .anniversary-details-item .name {
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .anniversary-details-item .associated-chars {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        margin-top: 4px;
+    }
                     #diary-app-screen .app-bottom-tabs {
             position: relative; /* 关键修复：覆盖 absolute 定位，使其在 flex 布局中占据空间 */
             flex-shrink: 0; /* 防止标签栏在空间不足时被压缩 */
@@ -2096,32 +2115,41 @@ text-overflow: clip;
             color: var(--danger-color); /* 样式优化：高亮数字和文字 */
             font-weight: bold;
         }
-                .edit-anniversary-btn {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 24px;
-            height: 24px;
-            background-color: rgba(0, 0, 0, 0.1);
-            border: none;
-            border-radius: 50%;
-            color: var(--primary-text-color);
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 12px;
-            opacity: 0; /* 默认隐藏 */
-            transition: opacity 0.2s ease-in-out, background-color 0.2s;
-            pointer-events: none; /* 默认不可点击 */
-        }
-        .calendar-day:hover .edit-anniversary-btn {
-            opacity: 1; /* 悬浮时显示 */
-            pointer-events: auto; /* 悬浮时可点击 */
-        }
-        .edit-anniversary-btn:hover {
-            background-color: rgba(0, 0, 0, 0.2);
-        }
+                        .calendar-day-actions {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        pointer-events: none;
+    }
+    .calendar-day:hover .calendar-day-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .calendar-action-btn {
+        width: 24px;
+        height: 24px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border: none;
+        border-radius: 50%;
+        color: var(--primary-text-color);
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 12px;
+        transition: background-color 0.2s;
+    }
+    .calendar-action-btn:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+    .calendar-action-btn.delete:hover {
+        background-color: var(--danger-color);
+        color: white;
+    }
 </style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
     <style id="bubble-preview-styles"></style>
@@ -3534,6 +3562,20 @@ text-overflow: clip;
             </div>
         </div>
     </div>
+    <!-- 新增：纪念日详情查看弹窗 -->
+<div id="anniversary-details-modal" class="modal-overlay" style="z-index: 280;">
+    <div class="modal-content">
+        <h3 class="modal-title" id="anniversary-details-title">纪念日详情</h3>
+        <div class="modal-body">
+            <ul id="anniversary-details-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                <!-- Details will be injected here -->
+            </ul>
+        </div>
+        <div class="modal-actions">
+            <button id="close-anniversary-details-btn" class="cancel-btn">关闭</button>
+        </div>
+    </div>
+</div>
         <!-- 新增：展厅礼物编辑弹窗 -->
              <!-- 新增：纪念日编辑/添加弹窗 -->
     <div id="anniversary-modal" class="modal-overlay" style="z-index: 260;">
@@ -3549,6 +3591,10 @@ text-overflow: clip;
                     <label for="anniversary-name-input">名称</label>
                     <input type="text" id="anniversary-name-input" placeholder="例如：我们的第一次约会">
                 </div>
+                                        <div class="form-group">
+                <label for="anniversary-char-selector">关联角色 (可多选)</label>
+                <div id="anniversary-char-selector" class="friend-selector-grid"></div>
+            </div>
                 <div class="form-group">
                     <label class="checkbox-label tick-style">
                         <input type="checkbox" id="anniversary-special-checkbox">
@@ -3562,6 +3608,22 @@ text-overflow: clip;
             </div>
         </div>
     </div>
+    <!-- 新增：纪念日管理（选择/删除）弹窗 -->
+<div id="anniversary-management-modal" class="modal-overlay" style="z-index: 270;">
+    <div class="modal-content">
+        <h3 class="modal-title" id="anniversary-management-title">管理纪念日</h3>
+        <div class="modal-body">
+            <p id="anniversary-management-prompt" style="font-size: 14px; color: var(--secondary-text-color); text-align: center; margin-top: 0;"></p>
+            <div id="anniversary-management-list" class="checkbox-list" style="flex-direction: column; align-items: stretch; gap: 0;">
+                <!-- Anniversaries will be injected here -->
+            </div>
+        </div>
+        <div class="modal-actions row">
+            <button id="cancel-anniversary-management-btn" class="cancel-btn">取消</button>
+            <button id="confirm-anniversary-management-btn" class="confirm-btn">确认</button>
+        </div>
+    </div>
+</div>
     <div id="edit-gift-modal" class="modal-overlay" style="z-index: 240;">
         <div class="modal-content">
             <h3 class="modal-title">编辑礼物信息</h3>
@@ -5118,14 +5180,14 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
 }
 if (!contact.userSettings.videoBackgroundLibrary) {
     contact.userSettings.videoBackgroundLibrary = [];
-}if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
+}if (contact.isGroup) { if (!contact.groupSettings) { contact.groupSettings = { name: contact.name, avatarId: '', avatarLibrary: [], chatBackgroundId: 'default', videoBackgroundId: '', linkedWorldBooks: [], contextMemory: 99, owner: 'user', admins: [], isMuted: false, isDisbanded: false, members: {} }; } if (!contact.groupSettings.chatBackgroundId) contact.groupSettings.chatBackgroundId = 'default'; if (typeof contact.groupSettings.videoBackgroundId === 'undefined') { contact.groupSettings.videoBackgroundId = ''; } if (typeof contact.groupSettings.lastAnniversaryCelebrated === 'undefined') { contact.groupSettings.lastAnniversaryCelebrated = ''; } const allMemberIds = ['user', ...contact.members]; allMemberIds.forEach(memberId => { if (!contact.groupSettings.members[memberId]) { if (memberId === 'user') { contact.groupSettings.members['user'] = {
         nickname: contact.userSettings.name,
         title: '皇帝',
         avatarId: contact.userSettings.avatarId,
         avatarFrameId: contact.userSettings.avatarFrameId,
         persona: contact.userSettings.persona // Also sync persona for consistency
     };
-     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } contact.charSettings.relationship = '朋友'; /* 新增字段并设置默认值*/ if (!contact.charSettings.videoBackgroundLibrary) { contact.charSettings.videoBackgroundLibrary = []; }                    
+     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } contact.charSettings.relationship = '朋友'; /* 新增字段并设置默认值*/ if (typeof contact.charSettings.lastAnniversaryCelebrated === 'undefined') { contact.charSettings.lastAnniversaryCelebrated = ''; }
                           if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.hasHadFirstInteraction === 'undefined') { contact.charSettings.hasHadFirstInteraction = false; }
                     // --- 新增：明信片计数器 ---
                     if (typeof contact.charSettings.realtimeTicksSincePostcard === 'undefined') {
@@ -6927,66 +6989,73 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
         return `${lunarData[3][mo - 1]}月${dayStr}${dayNum}`;
     }
 
-            function renderAnniversaryCalendar(year, month) {
-        const grid = getEl('anniversary-calendar-grid');
-        const monthYearDisplay = diaryAppScreen.querySelector('.current-month-year');
-        const fullDateDisplay = diaryAppScreen.querySelector('.current-date-display');
-        if (!grid || !monthYearDisplay || !fullDateDisplay) return;
+                    function renderAnniversaryCalendar(year, month) {
+    const grid = getEl('anniversary-calendar-grid');
+    const monthYearDisplay = diaryAppScreen.querySelector('.current-month-year');
+    const fullDateDisplay = diaryAppScreen.querySelector('.current-date-display');
+    if (!grid || !monthYearDisplay || !fullDateDisplay) return;
 
-        const today = new Date();
-        const firstDayOfMonth = new Date(year, month, 1);
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const startDayOfWeek = firstDayOfMonth.getDay();
+    const today = new Date();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDayOfWeek = firstDayOfMonth.getDay();
 
-        monthYearDisplay.textContent = `${year}年${month + 1}月`;
-        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-        fullDateDisplay.textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
+    monthYearDisplay.textContent = `${year}年${month + 1}月`;
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    fullDateDisplay.textContent = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日 ${weekdays[today.getDay()]}`;
 
-        grid.innerHTML = '';
+    grid.innerHTML = '';
 
-        const daysInPrevMonth = new Date(year, month, 0).getDate();
-        for (let i = 0; i < startDayOfWeek; i++) {
-            const day = daysInPrevMonth - startDayOfWeek + 1 + i;
-            grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${day}</span><span class="day-info"></span></div>`;
-        }
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    for (let i = 0; i < startDayOfWeek; i++) {
+        const day = daysInPrevMonth - startDayOfWeek + 1 + i;
+        grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${day}</span><span class="day-info"></span></div>`;
+    }
 
-        for (let i = 1; i <= daysInMonth; i++) {
-            const dateStrFull = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-            
-            const holidayInfo = holidays[dateStrFull];
-            const anniversaryInfo = appState.diary.anniversaries.find(a => a.date === dateStrFull);
-            const lunarDate = getLunarDate(year, month, i);
+    for (let i = 1; i <= daysInMonth; i++) {
+        const dateStrFull = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        
+        const holidayInfo = holidays[dateStrFull];
+        const anniversariesForDay = appState.diary.anniversaries.filter(a => a.date === dateStrFull);
+        const lunarDate = getLunarDate(year, month, i);
 
-            let dayInfo = lunarDate;
-            let classes = 'calendar-day';
+        let dayInfo = lunarDate;
+        let classes = 'calendar-day';
 
-            // 优先级: 自定义特殊纪念日 > 法定节假日 > 普通自定义纪念日 > 农历
-            if (anniversaryInfo) {
-                dayInfo = anniversaryInfo.name;
-                if (anniversaryInfo.isSpecial) {
-                    classes += ' holiday';
-                }
-            } else if (holidayInfo) {
-                dayInfo = holidayInfo.name;
-                if (holidayInfo.holiday) {
-                    classes += ' holiday';
-                }
+        const allEvents = [...anniversariesForDay];
+        if(holidayInfo) allEvents.push(holidayInfo);
+
+        if (allEvents.length > 0) {
+            dayInfo = allEvents.map(e => e.name).join(' / ');
+            if (allEvents.some(e => e.isSpecial || e.holiday)) {
+                classes += ' holiday';
             }
-            
-            grid.innerHTML += `
-                <div class="${classes}" data-date="${dateStrFull}">
-                    <span class="day-number">${i}</span>
-                    <span class="day-info">${dayInfo}</span>
-                    <button class="edit-anniversary-btn" title="编辑当天纪念日"><i class="fa-solid fa-pen"></i></button>
-                </div>`;
         }
         
-        const totalCells = startDayOfWeek + daysInMonth;
-        const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
-        for (let i = 1; i <= remainingCells; i++) {
-            grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${i}</span><span class="day-info"></span></div>`;
+                let actionsHTML = '';
+        if (anniversariesForDay.length > 0) {
+            actionsHTML = `
+                <div class="calendar-day-actions">
+                    <button class="calendar-action-btn edit" title="编辑"><i class="fa-solid fa-pen"></i></button>
+                    <button class="calendar-action-btn delete" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            `;
         }
+
+        grid.innerHTML += `
+            <div class="${classes}" data-date="${dateStrFull}">
+                <span class="day-number">${i}</span>
+                <span class="day-info">${dayInfo}</span>
+                ${actionsHTML}
+            </div>`;
     }
+    
+    const totalCells = startDayOfWeek + daysInMonth;
+    const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+    for (let i = 1; i <= remainingCells; i++) {
+        grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${i}</span><span class="day-info"></span></div>`;
+    }
+}
 
     getEl('prev-month-btn')?.addEventListener('click', () => {
         anniversaryCalendarState.month--;
@@ -7014,49 +7083,229 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
     const nameInput = getEl('anniversary-name-input');
     const specialCheckbox = getEl('anniversary-special-checkbox');
 
-        function openAnniversaryModal(dateStr, mode = 'add') {
-        if (mode === 'add') {
-            // 仅当点击顶部“+”按钮时，标题为“添加纪念日”
+                           function openAnniversaryModal(anniversaryId, dateHint) {
+        const isEditing = anniversaryId !== null;
+        const anniversary = isEditing ? appState.diary.anniversaries.find(a => a.id === anniversaryId) : null;
+
+        const charSelector = getEl('anniversary-char-selector');
+        const associatedCharIds = isEditing ? (anniversary.associatedCharIds || []) : [];
+
+        const allChars = appState.chat.contacts.filter(c => !c.isGroup);
+        const selectorItems = [
+            { id: 'general', name: '通用(对所有人)', avatarId: '' },
+            ...allChars.map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
+        ];
+        
+        charSelector.innerHTML = selectorItems.map(char => {
+            const isSelected = associatedCharIds.includes(char.id) || (char.id === 'general' && associatedCharIds.length === 0);
+            return `
+                <div class="friend-selector-item ${isSelected ? 'selected' : ''}" data-id="${char.id}">
+                    <div class="avatar" data-avatar-id="${char.avatarId}"></div>
+                    <span class="name">${char.name}</span>
+                </div>`;
+        }).join('');
+        charSelector.querySelectorAll('.avatar').forEach(el => setElementImage(el, el.dataset.avatarId));
+
+        if (isEditing) {
+            anniversaryModalTitle.textContent = '编辑纪念日';
+            editingAnniversaryIdInput.value = anniversaryId;
+            dateInput.value = anniversary.date;
+            dateInput.readOnly = true;
+            nameInput.value = anniversary.name;
+            specialCheckbox.checked = anniversary.isSpecial || false;
+        } else { // Adding new
             anniversaryModalTitle.textContent = '添加纪念日';
             editingAnniversaryIdInput.value = '';
-            dateInput.value = dateStr || new Date().toISOString().split('T')[0];
-            dateInput.readOnly = false; // 允许自由选择日期
+            dateInput.value = dateHint || new Date().toISOString().split('T')[0];
+            dateInput.readOnly = !dateHint;
             nameInput.value = '';
             specialCheckbox.checked = false;
-        } else { // 'edit' mode, 来源于点击日历格子
-            const anniversary = appState.diary.anniversaries.find(a => a.date === dateStr);
-            if (anniversary) {
-                // 如果当天已有纪念日，标题为“编辑纪念日”
-                anniversaryModalTitle.textContent = '编辑纪念日';
-                editingAnniversaryIdInput.value = anniversary.id;
-                dateInput.value = anniversary.date;
-                dateInput.readOnly = true;
-                nameInput.value = anniversary.name;
-                specialCheckbox.checked = anniversary.isSpecial || false;
-            } else {
-                // 如果当天为空白，标题为“编辑日期”，以符合用户操作
-                anniversaryModalTitle.textContent = '编辑日期';
-                editingAnniversaryIdInput.value = '';
-                dateInput.value = dateStr;
-                dateInput.readOnly = true; // 日期固定为用户点击的日期
-                nameInput.value = '';
-                specialCheckbox.checked = false;
-            }
         }
         anniversaryModal.classList.add('visible');
     }
 
-        getEl('diary-action-btn').addEventListener('click', () => openAnniversaryModal(null, 'add'));
+    function openAnniversaryDetailsModal(dateStr) {
+        const userAnniversaries = appState.diary.anniversaries.filter(a => a.date === dateStr);
+        const holiday = holidays[dateStr];
+        
+        const allEvents = [...userAnniversaries];
+        if (holiday) allEvents.push(holiday);
 
-    getEl('anniversary-calendar-grid').addEventListener('click', (e) => {
-        const editBtn = e.target.closest('.edit-anniversary-btn');
-        if (editBtn) {
-            const dayCell = editBtn.closest('.calendar-day');
-            if (dayCell && dayCell.dataset.date) {
-                openAnniversaryModal(dayCell.dataset.date, 'edit');
+        if (allEvents.length === 0) return; // Don't open if there's nothing to show
+
+        const modal = getEl('anniversary-details-modal');
+        getEl('anniversary-details-title').textContent = `${dateStr} 的日程`;
+        const listEl = getEl('anniversary-details-list');
+        
+        listEl.innerHTML = allEvents.map(event => {
+            const isSpecial = event.isSpecial || event.holiday;
+            let associatedCharsHTML = '';
+            if (event.associatedCharIds && event.associatedCharIds.length > 0) {
+                const charNames = event.associatedCharIds.map(id => findUserById(id).name).join(', ');
+                associatedCharsHTML = `<div class="associated-chars">与 ${escapeHTML(charNames)} 相关</div>`;
+            } else if (event.id) { // It's a user-defined general event
+                associatedCharsHTML = `<div class="associated-chars">通用纪念日</div>`;
+            }
+
+            return `
+                <li class="anniversary-details-item ${isSpecial ? 'special' : ''}">
+                    <div class="name">${escapeHTML(event.name)}</div>
+                    ${associatedCharsHTML}
+                </li>
+            `;
+        }).join('');
+
+        modal.classList.add('visible');
+    }
+
+    getEl('close-anniversary-details-btn').addEventListener('click', () => {
+        getEl('anniversary-details-modal').classList.remove('visible');
+    });
+
+    getEl('save-anniversary-btn').addEventListener('click', () => {
+        const id = editingAnniversaryIdInput.value;
+        const date = dateInput.value;
+        const name = nameInput.value.trim();
+        const isSpecial = specialCheckbox.checked;
+
+        const selectedItems = getEl('anniversary-char-selector').querySelectorAll('.friend-selector-item.selected');
+        let associatedCharIds = Array.from(selectedItems).map(item => item.dataset.id);
+        
+        // If "General" is selected, treat it as an empty array (general for all)
+        if (associatedCharIds.includes('general')) {
+            associatedCharIds = [];
+        }
+        
+        if (!date || !name) {
+            showToast('日期和名称不能为空', 'error');
+            return;
+        }
+
+        if (id) { // Editing
+            const anniversary = appState.diary.anniversaries.find(a => a.id === id);
+            if (anniversary) {
+                anniversary.date = date;
+                anniversary.name = name;
+                anniversary.isSpecial = isSpecial;
+                anniversary.associatedCharIds = associatedCharIds;
+            }
+        } else { // Adding new
+            const newAnniversary = {
+                id: newId('anniv'),
+                date: date,
+                name: name,
+                isSpecial: isSpecial,
+                associatedCharIds: associatedCharIds
+            };
+            appState.diary.anniversaries.push(newAnniversary);
+        }
+
+        debouncedSaveState();
+        renderAnniversaryCalendar(anniversaryCalendarState.year, anniversaryCalendarState.month);
+        anniversaryModal.classList.remove('visible');
+        showToast('纪念日已保存！');
+    });
+
+    getEl('anniversary-char-selector').addEventListener('click', e => {
+        const item = e.target.closest('.friend-selector-item');
+        if (!item) return;
+
+        const charId = item.dataset.id;
+        const selector = item.parentElement;
+        
+        if (charId === 'general') {
+            // If "General" is selected, deselect all others
+            selector.querySelectorAll('.friend-selector-item').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+        } else {
+            // If a specific char is selected, deselect "General"
+            const generalItem = selector.querySelector('.friend-selector-item[data-id="general"]');
+            if (generalItem) generalItem.classList.remove('selected');
+            item.classList.toggle('selected');
+            // If no specific char is selected, re-select "General"
+            if (selector.querySelectorAll('.friend-selector-item.selected').length === 0) {
+                 if (generalItem) generalItem.classList.add('selected');
             }
         }
     });
+
+        getEl('diary-action-btn').addEventListener('click', () => openAnniversaryModal(null, 'add'));
+
+    getEl('anniversary-calendar-grid').addEventListener('click', (e) => {
+    const dayCell = e.target.closest('.calendar-day:not(.other-month)');
+    if (!dayCell) return;
+    
+    const dateStr = dayCell.dataset.date;
+    const editBtn = e.target.closest('.calendar-action-btn.edit');
+    const deleteBtn = e.target.closest('.calendar-action-btn.delete');
+
+    if (editBtn) {
+        e.stopPropagation();
+        const anniversariesOnDay = appState.diary.anniversaries.filter(a => a.date === dateStr);
+        if (anniversariesOnDay.length === 1) {
+            openAnniversaryModal(anniversariesOnDay[0].id, dateStr);
+        } else if (anniversariesOnDay.length > 1) {
+            openAnniversaryManagementModal(dateStr, 'edit');
+        }
+    } else if (deleteBtn) {
+        e.stopPropagation();
+        openAnniversaryManagementModal(dateStr, 'delete');
+    } else {
+        // Click on the day cell itself to VIEW details
+        openAnniversaryDetailsModal(dateStr);
+    }
+});
+
+function openAnniversaryManagementModal(dateStr, mode) {
+    const modal = getEl('anniversary-management-modal');
+    const titleEl = getEl('anniversary-management-title');
+    const promptEl = getEl('anniversary-management-prompt');
+    const listEl = getEl('anniversary-management-list');
+    const confirmBtn = getEl('confirm-anniversary-management-btn');
+
+    const anniversariesOnDay = appState.diary.anniversaries.filter(a => a.date === dateStr);
+    const inputType = (mode === 'edit') ? 'radio' : 'checkbox';
+
+    titleEl.textContent = (mode === 'edit') ? '选择要编辑的纪念日' : '选择要删除的纪念日';
+    promptEl.textContent = `在 ${dateStr} 有以下 ${anniversariesOnDay.length} 个纪念日:`;
+    
+    listEl.innerHTML = anniversariesOnDay.map((anniv, index) => `
+        <label class="checkbox-label" style="border-radius: 5px; margin-bottom: 5px;">
+            <input type="${inputType}" name="anniversary-selection" value="${anniv.id}" ${inputType === 'radio' && index === 0 ? 'checked' : ''}>
+            <span>${escapeHTML(anniv.name)}</span>
+        </label>
+    `).join('');
+
+    // Use .onclick for simple one-time listener assignment
+    confirmBtn.onclick = () => {
+        const selectedInputs = listEl.querySelectorAll('input:checked');
+        if (selectedInputs.length === 0) {
+            showToast('请至少选择一项', 'error');
+            return;
+        }
+
+        const selectedIds = Array.from(selectedInputs).map(input => input.value);
+
+        if (mode === 'edit') {
+            modal.classList.remove('visible');
+            openAnniversaryModal(selectedIds[0], dateStr);
+        } else { // delete
+            if (confirm(`确定要删除选中的 ${selectedIds.length} 个纪念日吗？`)) {
+                appState.diary.anniversaries = appState.diary.anniversaries.filter(a => !selectedIds.includes(a.id));
+                debouncedSaveState();
+                renderAnniversaryCalendar(anniversaryCalendarState.year, anniversaryCalendarState.month);
+                showToast('纪念日已删除');
+            }
+            modal.classList.remove('visible');
+        }
+    };
+
+    modal.classList.add('visible');
+}
+
+getEl('cancel-anniversary-management-btn').addEventListener('click', () => {
+    getEl('anniversary-management-modal').classList.remove('visible');
+});
 
     getEl('cancel-anniversary-btn').addEventListener('click', () => {
         anniversaryModal.classList.remove('visible');
@@ -7073,12 +7322,7 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
             return;
         }
 
-        // 检查同一天是否已有纪念日（仅在添加模式下，或编辑模式但修改了日期时）
-        const isDateOccupied = appState.diary.anniversaries.some(a => a.date === date && a.id !== id);
-        if (isDateOccupied) {
-            showToast('该日期已存在一个纪念日，请编辑或删除原有纪念日后再添加。', 'error');
-            return;
-        }
+      
         
         if (id) { // Editing
             const anniversary = appState.diary.anniversaries.find(a => a.id === id);
@@ -10624,7 +10868,7 @@ prompt += proactivePreamble;
             prompt += `1. **优先回复互动**: 检查下方社交信息，优先使用 \`[ACTION: REPLY_...]\` 指令回复任何你尚未回复的新互动。\n`;
             prompt += `2. **关心用户动态**: 检查用户“${findUserById('user').name}”的动态，对你从未评论过的动态使用 \`[ACTION: COMMENT_MOMENT]\` 进行评论，对你觉得很有趣的动态使用\`[ACTION: LIKE_MOMENT]\`进行点赞。\n`;
             prompt += `3. **鼓励Char间互动**: 浏览其他Char的动态，可点赞、评论、留言或发动态隔空喊话。\n`;
-            prompt += `4. **自由活动**: 完成上述社交活动后，可自由进行其他活动，如发布自己的新动态、主动给用户发私信（如果你们是好友）、或发送好友申请（如果你们不是好友）等。你的所有回复都必须遵循上方的【通用聊天规则】。\n\n`;
+            prompt += `4. **自由活动与探索**: 完成上述社交活动后，你可以自由探索。如果你感到无事可做，一个绝佳的选择是去访问User或其他角色的动态主页，即使他们最近没有发新动态，你也可以使用 \`[ACTION: LEAVE_MESSAGE "留言内容"]\` 在他们的留言板上留下问候或分享你的心情。除此之外，你也可以发布自己的新动态、主动私信用户等。你的所有回复都必须遵循上方的【通用聊天规则】。\n\n`;
         } else if (isJealousyTrigger) {
              prompt += `--- **【本次行动情景：特殊-嫉妒】** ---\n`;
              prompt += `你注意到，用户已经很久没有回复你了，但你发现TA在和其他人聊天或在发动态。你现在的心情可能很复杂（委屈、生气、病娇式质问等，取决于你的人设）。请基于这个情景，【主动】向用户发起质问或表达你的情绪。你的所有回复都必须遵循上方的【通用聊天规则】。\n\n`;
@@ -10861,7 +11105,7 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `6.  **发拼手气红包 (群聊)**: \`[ACTION: SEND_REDPACKET_LUCKY "留言" 总金额 红包个数]\`\n`;
         prompt += `7.  **发专属红包 (群聊)**: \`[ACTION: SEND_REDPACKET_EXCLUSIVE "留言" 金额 "@目标昵称"]\`\n`;
         prompt += `8.  **发普通红包 (群聊)**: \`[ACTION: SEND_REDPACKET_NORMAL "留言" 单个金额 红包个数]\`\n`;
-        prompt += `9.  **拍一拍**: \`[ACTION: PAT "@目标昵称" "可选后缀"]\`\n`;
+        prompt += `9.  **拍一拍**: \`[ACTION: PAT "目标成员ID" "可选后缀"]\` (目标成员ID可以是 'user' 或你自己或其他角色的ID)\n`;
         prompt += `10. **修改状态 (单聊)**: \`[ACTION: SET_STATUS "状态" "状态描述"]\` (状态: "online", "busy", "offline")\n`;
         prompt += `11. **修改签名 (单聊)**: \`[ACTION: SET_SIGNATURE "新签名内容"]\`\n`;
         prompt += `12. **修改群名片 (群聊)**: \`[ACTION: SET_MY_NICKNAME "新昵称"]\` (修改你自己的群名片)\n`;
@@ -10871,8 +11115,8 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `16. **好友关系管理 (单聊)**:\n`;
 prompt += `    - **回应申请**: \`[ACTION: ACCEPT_FRIEND_REQUEST]\` 或 \`[ACTION: REJECT_FRIEND_REQUEST "这里必须写上你的拒绝理由，可以是一段小作文"]\` (拒绝时，【必须】将理由作为字符串参数放在指令内部)。\n`;
 prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须写上你的拒绝理由，可以是一段小作文"]\` (当你们不是好友，而你想重新建立联系时使用)。\n`;
-        prompt += `17. **群管理 (仅群主/管理员可用)**: \`[ACTION: MUTE_MEMBER "执行者ID" "@成员昵称"]\`, \`[ACTION: UNMUTE_MEMBER "执行者ID" "@成员昵称"]\`, \`[ACTION: MUTE_ALL]\`, \`[ACTION: UNMUTE_ALL]\`, \`[ACTION: SET_GROUP_NAME "新群名"]\`, \`[ACTION: SET_TITLE "执行者ID" "@成员昵称" "新头衔"]\`, \`[ACTION: SET_NICKNAME "执行者ID" "@旧昵称" "新昵称"]\`\n`;
-        prompt += `18. **群主专属**: \`[ACTION: TRANSFER_OWNERSHIP "@成员昵称"]\`, \`[ACTION: PROMOTE_ADMIN "@成员昵称"]\`, \`[ACTION: DEMOTE_ADMIN "@成员昵称"]\`\n`;
+        prompt += `17. **群管理 (仅群主/管理员可用)**: \`[ACTION: MUTE_MEMBER "执行者ID" "目标成员ID"]\`, \`[ACTION: UNMUTE_MEMBER "执行者ID" "目标成员ID"]\`, \`[ACTION: MUTE_ALL]\`, \`[ACTION: UNMUTE_ALL]\`, \`[ACTION: SET_GROUP_NAME "新群名"]\`, \`[ACTION: SET_TITLE "执行者ID" "目标成员ID" "新头衔"]\`, \`[ACTION: SET_NICKNAME "执行者ID" "目标成员ID" "新昵称"]\`\n`;
+        prompt += `18. **群主专属**: \`[ACTION: TRANSFER_OWNERSHIP "目标成员ID"]\`, \`[ACTION: PROMOTE_ADMIN "目标成员ID"]\`, \`[ACTION: DEMOTE_ADMIN "目标成员ID"]\`\n`;
         prompt += `19. **发表动态 (重要)**: \`[ACTION: POST_MOMENT "type" "content" "visibility"]\`\n`;
     prompt += `    - **类型 (type)**: 必须是 "status" (说说) 或 "log" (日志)。\n`;
     prompt += `    - **决策规则**: 当你想分享一个简短的想法或心情时，使用 "status"。当你想记录一个详细的事件、一个完整的故事或一段深刻的内心反思时，你【必须】使用 "log"。\n`;
@@ -10887,7 +11131,8 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `22. **留言 (通用)**: \`[ACTION: LEAVE_MESSAGE "留言内容"]\`\n`;
         prompt += `23. **点赞动态 (通用)**: \`[ACTION: LIKE_MOMENT "postId"]\`\n`;
         prompt += `24. **评论动态 (通用)**: \`[ACTION: COMMENT_MOMENT "postId" "评论内容"]\` (评论内容【必须】是完整的一段话，【严禁】在其中使用<MSG_SPLIT>分隔符)\n`;
-        prompt += `25. **回复动态评论 (通用)**: \`[ACTION: REPLY_MOMENT_COMMENT "postId" "commentId" "回复内容" "optional_replyToId"]\` (回复内容也【必须】是完整的一段话，【严禁】使用<MSG_SPLIT>。要回复楼中楼请提供第4个参数)\n`;        prompt += `26. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
+        prompt += `25. **回复动态评论 (通用)**: \`[ACTION: REPLY_MOMENT_COMMENT "postId" "commentId" "回复内容" "optional_replyToId"]\` (回复内容也【必须】是完整的一段话，【严禁】使用<MSG_SPLIT>。要回复楼中楼请提供第4个参数)\n`;        
+        prompt += `26. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
         prompt += `27. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
         prompt += `28. **寄出情书 (单聊)**: \`[ACTION: SEND_LOVE_LETTER "收信人ID" "称呼" "标题" "正文" "落款"]\` (这是回应用户或主动寄出情书的【唯一】方式)\n`;
         prompt += `--- 结束 ---\n`;
@@ -11044,6 +11289,86 @@ function constructGroupVideoChatPrompt(contact) {
             prompt += `现在，请为所有成员生成决策指令。\n--- 结束 ---`;
             return prompt;
         }
+            function constructAnniversaryPrompt(contact, anniversaryName) {
+        const user = contact.userSettings;
+        let prompt = `你正在扮演角色 “${contact.charSettings.name}”（人设：“${contact.charSettings.persona}”）。\n\n`;
+                const isSpecific = appState.diary.anniversaries.some(a => a.name === anniversaryName && a.associatedCharId === contact.id);
+        if(isSpecific) {
+            prompt += `【重要情景】：今天这个纪念日是专属于你和“${user.name}”两个人的，这让今天变得格外有意义。\n`;
+        }
+        prompt += `--- **【最高优先级任务：纪念日庆祝】** ---\n`;
+        prompt += `今天是一个非常特别的日子：【${anniversaryName}】。你必须为你的心上人“${user.name}”（人设：“${user.persona}”）准备一个惊喜大礼包。\n\n`;
+        prompt += `--- **你的任务 (必须全部完成)** ---\n`;
+        prompt += `1.  **撰写祝福**: 构思一段在聊天中要说的、与【${anniversaryName}】主题相关的祝福语。这段话应该充满感情，符合你的人设和你们的关系“${contact.charSettings.relationship || '朋友'}”。\n`;
+        prompt += `2.  **准备礼物**: 构思一份送给“${user.name}”的、与【${anniversaryName}】主题相关的虚拟礼物。你需要为礼物命名，并为其撰写一段充满心意的描述。\n`;
+        prompt += `3.  **撰写信件**: 写一封特别的信。这封信的主题【必须】围绕【${anniversaryName}】展开，情感要比平时更加深刻、真挚。\n\n`;
+        prompt += `--- **【强制输出格式】** ---\n`;
+        prompt += `你的【整个回复】都【必须】是包裹在一个 \`\`\`json ... \`\`\` 代码块中的JSON对象，前后【绝对禁止】包含任何额外的说明或聊天文字。格式如下：\n`;
+        prompt += "```json\n";
+        prompt += "{\n";
+        prompt += `  "anniversary_chat": "（这里是你构思的、将在聊天中发送的祝福语，【必须】遵循单聊的所有通用规则。",\n`;
+        prompt += `  "anniversary_gift": {\n`;
+prompt += `    "name": "（礼物的名称）",\n`;
+prompt += `    "description": "（对这份礼物的、充满心意的描述）",\n`;
+prompt += `    "postcard_salutation": "（写在礼物卡片上的、给“${user.name}”的称呼）",\n`;
+prompt += `    "postcard_body": "（写在礼物卡片上的、与礼物和纪念日相关的祝福语，必须符合明信片的写作规则）",\n`;
+prompt += `    "postcard_location": "（一个虚拟的、你送出礼物时所在的地点）"\n`;
+prompt += `  },\n`;
+        prompt += `  "special_love_letter": {\n`;
+        prompt += `    "salutation": "（给“${user.name}”的、充满特殊情感的称呼）",\n`;
+        prompt += `    "subject": "（一个与“${anniversaryName}”相关的、特别的标题）",\n`;
+        prompt += `    "body": "（围绕“${anniversaryName}”展开的、至少300字的信件正文，用\\\\n换行）",\n`;
+        prompt += `    "signature": "（你充满个性的落款签名）"\n`;
+        prompt += `  }\n`;
+        prompt += "}\n";
+        prompt += "```\n";
+
+        return `【系统指令】请严格按照以下说明，生成一个用于纪念日庆祝的JSON数据包。你的所有创造力都必须在JSON的值中体现。严禁在此指令之外添加任何回复。${prompt}`;
+    }
+    function constructGroupAnniversaryPrompt(contact, anniversaryName) {
+    const user = findUserById('user');
+    let prompt = `你正在一场名为“${contact.groupSettings.name}”的【虚拟群组聊天】中，扮演多个角色。\n\n`;
+    prompt += `--- **【最高优先级任务：群组纪念日庆祝】** ---\n`;
+    prompt += `今天是一个非常特别的日子：【${anniversaryName}】。所有在线且未被禁言的群成员都注意到了这一点，并准备在群聊中向用户“${user.name}”送上祝福。\n\n`;
+    prompt += `--- **你的任务** ---\n`;
+    prompt += `为下方“你的扮演范围”中的【每一位】成员，构思一段符合他们人设、关系，并与【${anniversaryName}】主题相关的群聊对话。你们可以互相聊天、调侃、共同庆祝，但核心是围绕用户和这个纪念日展开。\n\n`;
+    prompt += `--- **你的扮演范围 (仅限以下角色)** ---\n`;
+    contact.members.forEach(memberId => {
+        const member = contact.groupSettings.members[memberId];
+        if (member) {
+            const isOwner = contact.groupSettings.owner === memberId;
+            const isAdmin = contact.groupSettings.admins.includes(memberId);
+            const canSpeak = !member.isMuted && (!contact.groupSettings.isMuted || isOwner || isAdmin);
+            if (canSpeak) {
+                prompt += `- **成员“${member.nickname}” (ID: ${memberId})**: 人设是“${member.persona}”，与User的关系是“${member.relationship || '朋友'}”。\n`;
+            }
+        }
+    });
+    prompt += `\n`;
+    prompt += `--- **【强制输出格式】** ---\n`;
+    prompt += `你的回复【必须】严格遵循常规群聊的格式。使用特殊分隔符“<MSG_SPLIT>”来分割【每条消息】，且每条消息前【必须】加上发言人昵称和ID，例如: \`[小明(ID: char_123)]: 生日快乐呀！<MSG_SPLIT>[小红(ID: char_456)]: 同乐同乐！\`\n`;
+    prompt += `【重要】这只是一次普通的群聊互动，【严禁】生成任何礼物或情书相关的JSON代码块，也【严禁】使用任何[ACTION]指令。\n`;
+    
+    return `【系统指令】请严格按照以上说明，生成一段关于“${anniversaryName}”的群聊对话。严禁在此指令之外添加任何回复。${prompt}`;
+}
+function constructAnniversaryMomentPrompt(contact, anniversaryName) {
+    let prompt = `你正在扮演角色 “${contact.charSettings.name}”（人设：“${contact.charSettings.persona}”）。\n\n`;
+    prompt += `--- **【最高优先级任务：发表纪念日动态】** ---\n`;
+    prompt += `今天是一个非常特别的日子：【${anniversaryName}】。你刚刚已经私下为用户送上了祝福，现在，你决定公开发表一条动态来记录和庆祝这个美好的日子。\n\n`;
+    prompt += `--- **你的任务** ---\n`;
+    prompt += `根据你的人设和【${anniversaryName}】这个主题，从以下三种形式中【选择一种最合适的】来发表动态：\n`;
+    prompt += `1.  **说说 (Status)**: 发表一段简短的、充满感情的文字，可以是对今天的感慨，或是对未来的期许。\n`;
+    prompt += `2.  **日志 (Log)**: 写一篇完整的日志来详细记录今天发生的事情，或者回顾你们之间的美好回忆。\n`;
+    prompt += `3.  **照片 (Photo)**: 构思一张与今天主题相关的【虚拟文字图】，并为其配上照片名称和描述。\n\n`;
+    prompt += `--- **【强制输出格式】** ---\n`;
+    prompt += `你的回复【必须】是【一条单独的】 \`[ACTION: POST_...]\` 指令，前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
+    prompt += `- **说说指令**: \`[ACTION: POST_MOMENT "status" "说说的内容" "public"]\`\n`;
+    prompt += `- **日志指令**: \`[ACTION: POST_MOMENT "log" "日志标题|日志正文" "public"]\`\n`;
+    prompt += `- **照片指令**: \`[ACTION: POST_PHOTO "照片名称" "照片描述" "默认相册" "AI生成的图片描述"]\`\n`;
+    prompt += `**【重要】**: 你【必须】从中选择一个并严格按照格式输出。\n`;
+
+    return `【系统指令】请严格按照以上说明，生成一条用于庆祝“${anniversaryName}”的动态指令。严禁在此指令之外添加任何回复。${prompt}`;
+}
 async function processVideoCallInvitationReply(replyContent, contact) {
             const lines = replyContent.split('\n').map(l => l.trim()).filter(l => l);
             let hasAcceptedMember = false;
@@ -11106,24 +11431,28 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         }
 
     async function processAiReply(replyContent, contact) {
-            // --- NEW: Secret JSON reply detection ---
+            // --- NEW: Secret JSON reply detection (Upgraded) ---
         const jsonMatch = replyContent.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonMatch && jsonMatch[1]) {
             try {
                 const data = JSON.parse(jsonMatch[1]);
+                // Check for Anniversary keys (Highest Priority)
+                if (data.anniversary_chat && data.anniversary_gift && data.special_love_letter) {
+                    await processAnniversaryReply(data, contact);
+                    return; 
+                }
                 // Check for love letter keys
                 if (data.salutation && data.subject && data.body && data.signature) {
                     processReceivedLoveLetter(data, contact);
-                    return; // Stop further processing
+                    return;
                 }
                 // Check for postcard keys
                 if (data.imageUrl && data.location && data.body) {
                     await processReceivedPostcard(data, contact);
-                    return; // Stop further processing
+                    return;
                 }
             } catch (e) {
                 console.warn("AI returned a JSON-like block that failed to parse or match known types:", e);
-                // Fall through to process as regular text if parsing fails
             }
         }
         // --- END NEW ---
@@ -11199,17 +11528,17 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                     else if (action.startsWith('SEND_REDPACKET')) { let packetData; if (action === 'SEND_REDPACKET_LUCKY' && contact.isGroup && args.length >= 3) { let [message, totalAmount, count] = args; packetData = { packetType: 'lucky', message, totalAmount: parseFloat(totalAmount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET_EXCLUSIVE' && contact.isGroup && args.length >= 3) { let [message, amount, targetNickname] = args; const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname.replace('@', '')); if (targetId) packetData = { packetType: 'exclusive', message, amount: parseFloat(amount), exclusiveTo: targetId }; } else if (action === 'SEND_REDPACKET_NORMAL' && contact.isGroup && args.length >= 3) { let [message, amount, count] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET' && !contact.isGroup && args.length >= 2) { let [message, amount] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount) }; } if (packetData) addMessageToConversation({ id: messageId, type: 'redPacket', ...packetData, sender: currentSenderId, timestamp, status: 'unclaimed', claimedBy: {}, contactId: contact.id }, true); } 
                     else if (action === 'CLAIM_REDPACKET' && args.length >= 2) { const [messageId, claimerId] = args; claimRedPacketByAI(messageId, claimerId); } 
                     else if (action === 'INITIATE_VIDEO_CALL') { if (appState.chat.videoCallState.isActive) { addMessageToConversation({ id: newId('msg'), type: 'text', content: '（我想给你打视频，但你好像正在通话中...）', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } else if (!runtimeState.incomingCall.from) { showIncomingCallUI(currentSenderId); } } 
-                    else if (action === 'PAT' && args[0]) { addSystemNotification(contact.id, `'${actorName}' 拍了拍 '${args[0].replace('@', '')}'${args[1] ? ` ${args[1]}` : ''}`); } 
+                    else if (action === 'PAT' && args[0]) { const targetId = args[0]; const targetName = getDisplayName(targetId, contact.id); addSystemNotification(contact.id, `'${actorName}' 拍了拍 '${targetName}'${args[1] ? ` ${args[1]}` : ''}`); } 
                     else if (action.startsWith('POST_') || action.startsWith('LEAVE_') || action.startsWith('LIKE_') || action.startsWith('COMMENT_') || action.startsWith('REPLY_')) { handleSocialAction(action, args, currentSenderId); } 
                     else if (action === 'SET_STATUS' && !contact.isGroup && args.length >= 1) { const status = args[0].toLowerCase(); const statusText = args[1] || ''; if (['online', 'busy', 'offline'].includes(status)) { contact.status = status; contact.statusText = statusText; addSystemNotification(contact.id, `${actorName} 将状态修改为：${(statusMap[contact.status] || '')} ${contact.statusText || ''}`.trim(), false); updateSingleChatUI(); } } 
                     else if (action === 'SET_SIGNATURE' && !contact.isGroup && args.length >= 1) { contact.signature = args.join(' '); addSystemNotification(contact.id, `${actorName} 将签名修改为：“${contact.signature}”`, false); updateSingleChatUI(); } 
                     else if (action === 'DELETE_FRIEND' && !contact.isGroup) { contact.charSettings.isFriend = false; addSystemNotification(contact.id, `${actorName} 删除你了`, false); updateSingleChatUI(); } 
                     else if (action === 'SET_MY_NICKNAME' && contact.isGroup && args[0]) { const oldNickname = contact.groupSettings.members[currentSenderId].nickname; contact.groupSettings.members[currentSenderId].nickname = args[0]; addSystemNotification(contact.id, `'${oldNickname}' 在群里改名为 '${args[0]}'`, false); } 
-                    else if (action.startsWith('MUTE_') && contact.isGroup) { if (action === 'MUTE_ALL' || action === 'UNMUTE_ALL') { const isMute = action === 'MUTE_ALL'; contact.groupSettings.isMuted = isMute; addSystemNotification(contact.id, `'${actorName}' ${isMute ? '开启了全体禁言' : '解除了全体禁言'}`, false); } else if (args.length >= 2) { const [executorId, targetNicknameRaw] = args; const executorName = getDisplayName(executorId, contact.id); const targetNickname = targetNicknameRaw.replace('@', ''); const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname); if (targetId && targetId !== 'user') { const isMute = action === 'MUTE_MEMBER'; contact.groupSettings.members[targetId].isMuted = isMute; addSystemNotification(contact.id, `'${executorName}' ${isMute ? '禁言了' : '解除了对'} '${targetNickname}'${isMute ? '' : ' 的禁言'}`, false); } } } 
+                    else if (action.startsWith('MUTE_') && contact.isGroup) { if (action === 'MUTE_ALL' || action === 'UNMUTE_ALL') { const isMute = action === 'MUTE_ALL'; contact.groupSettings.isMuted = isMute; addSystemNotification(contact.id, `'${actorName}' ${isMute ? '开启了全体禁言' : '解除了全体禁言'}`, false); } else if (args.length >= 2) { const [executorId, targetId] = args; const executorName = getDisplayName(executorId, contact.id); const targetMember = contact.groupSettings.members[targetId]; if (targetMember && targetId !== 'user') { const isMute = action === 'MUTE_MEMBER'; targetMember.isMuted = isMute; addSystemNotification(contact.id, `'${executorName}' ${isMute ? '禁言了' : '解除了对'} '${targetMember.nickname}'${isMute ? '' : ' 的禁言'}`, false); } } } 
                     else if (action === 'SET_GROUP_NAME' && contact.isGroup && args[0]) { contact.groupSettings.name = args[0]; addSystemNotification(contact.id, `'${actorName}' 将群名修改为 "${args[0]}"`, false); updateSingleChatUI(); } 
-                    else if ((action === 'SET_TITLE' || action === 'SET_NICKNAME') && contact.isGroup && args.length >= 3) { const [executorId, targetNicknameRaw, newValue] = args; const executorName = getDisplayName(executorId, contact.id); const targetNickname = targetNicknameRaw.replace('@', ''); const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname); if (targetId) { if (action === 'SET_TITLE') { const memberToChange = contact.groupSettings.members[targetId]; memberToChange.title = newValue; addSystemNotification(contact.id, `'${executorName}' 将 '${memberToChange.nickname}' 的群聊头衔修改为 '${newValue}'`, false); } else { const oldNickname = contact.groupSettings.members[targetId].nickname; contact.groupSettings.members[targetId].nickname = newValue; addSystemNotification(contact.id, `'${executorName}' 修改了 '${oldNickname}' 的群名片为 '${newValue}'`, false); } } } 
-                    else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) { const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', '')); if (targetId && targetId !== 'user') { contact.groupSettings.owner = targetId; if (currentSenderId) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== currentSenderId); addSystemNotification(contact.id, `'${actorName}' 将群主转让给了 '${args[0].replace('@', '')}'`, false); } } 
-                    else if ((action === 'PROMOTE_ADMIN' || action === 'DEMOTE_ADMIN') && contact.isGroup && args[0]) { const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === args[0].replace('@', '')); if (targetId && targetId !== 'user') { const isPromote = action === 'PROMOTE_ADMIN'; if (isPromote && !contact.groupSettings.admins.includes(targetId)) contact.groupSettings.admins.push(targetId); else if (!isPromote) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== targetId); addSystemNotification(contact.id, `'${args[0].replace('@', '')}' 已被'${actorName}'${isPromote ? '设为' : '撤销'}管理员`, false); } } 
+                    else if ((action === 'SET_TITLE' || action === 'SET_NICKNAME') && contact.isGroup && args.length >= 3) { const [executorId, targetId, newValue] = args; const executorName = getDisplayName(executorId, contact.id); const targetMember = contact.groupSettings.members[targetId]; if (targetMember) { if (action === 'SET_TITLE') { targetMember.title = newValue; addSystemNotification(contact.id, `'${executorName}' 将 '${targetMember.nickname}' 的群聊头衔修改为 '${newValue}'`, false); } else { const oldNickname = targetMember.nickname; targetMember.nickname = newValue; addSystemNotification(contact.id, `'${executorName}' 修改了 '${oldNickname}' 的群名片为 '${newValue}'`, false); } } } 
+                    else if (action === 'TRANSFER_OWNERSHIP' && contact.isGroup && args[0]) { const targetId = args[0]; const targetMember = contact.groupSettings.members[targetId]; if (targetMember && targetId !== 'user') { contact.groupSettings.owner = targetId; if (currentSenderId) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== currentSenderId); addSystemNotification(contact.id, `'${actorName}' 将群主转让给了 '${targetMember.nickname}'`, false); } } 
+                    else if ((action === 'PROMOTE_ADMIN' || action === 'DEMOTE_ADMIN') && contact.isGroup && args[0]) { const targetId = args[0]; const targetMember = contact.groupSettings.members[targetId]; if (targetMember && targetId !== 'user') { const isPromote = action === 'PROMOTE_ADMIN'; if (isPromote && !contact.groupSettings.admins.includes(targetId)) contact.groupSettings.admins.push(targetId); else if (!isPromote) contact.groupSettings.admins = contact.groupSettings.admins.filter(id => id !== targetId); addSystemNotification(contact.id, `'${targetMember.nickname}' 已被'${actorName}'${isPromote ? '设为' : '撤销'}管理员`, false); } } 
                     else if (action.startsWith('VIDEO_') && contact.isGroup) { if (action === 'VIDEO_ACCEPT' && args[0]) { if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id && !appState.chat.videoCallState.participants.includes(args[0])) { appState.chat.videoCallState.participants.push(args[0]); addSystemNotification(contact.id, `${getDisplayName(args[0], contact.id)} 加入了视频通话`, false); openVideoCallModal(); } } else if (action === 'VIDEO_REJECT' && args[0]) { rejectVideoCall(contact.id, args[0], args[1] || ""); } else if (action === 'REQUEST_JOIN_VIDEO') { if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId === contact.id && !appState.chat.videoCallState.participants.includes(currentSenderId)) { appState.chat.videoCallState.participants.push(currentSenderId); addSystemNotification(contact.id, `${actorName} 加入了视频通话`, false); openVideoCallModal(); } } }
                 }
             } else if (segment.type === 'text') {
@@ -11262,18 +11591,18 @@ async function processVideoCallInvitationReply(replyContent, contact) {
     }
 
     async function processReceivedPostcard(postcardData, contact) {
-        const charId = contact.id;
-        const originalCard = appState.mailbox.postcards.find(p => p.senderId === 'user' && p.recipientId === charId && !p.replyProcessed);
+                const charId = contact.id;
+    const originalCard = appState.mailbox.postcards.find(p => p.senderId === 'user' && p.recipientId === charId && !p.replyProcessed);
 
-        if (postcardData.imageUrl && postcardData.imageUrl.includes('random_img.php')) {
-    try {
-        postcardData.imageUrl = await resolveRedirectUrl(postcardData.imageUrl);
-    } catch (imgError) {
-        console.error('Failed to resolve random image URL, using fallback:', imgError);
-        // Re-introduce the fallback mechanism
-        postcardData.imageUrl = 'https://picsum.photos/seed/' + newId('fallback') + '/400/600';
+    if (postcardData.imageUrl && postcardData.imageUrl.includes('random_img.php')) {
+        try {
+            postcardData.imageUrl = await resolveRedirectUrl(postcardData.imageUrl);
+        } catch (imgError) {
+            console.error('Failed to resolve random image URL, will retry:', imgError);
+            // Throw an error to trigger the retry mechanism
+            throw new Error("Image URL resolution failed.");
+        }
     }
-}
         const newPostcard = { id: newId('postcard'), senderId: charId, recipientId: 'user', isRead: false, ...postcardData };
         appState.mailbox.postcards.push(newPostcard);
 
@@ -11289,6 +11618,150 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         queueNotification(`${contact.name} 给你寄来了一张明信片`, 'system', charId, 'mail');
         if (mailAppScreen.classList.contains('active')) { handleMailTabChange('postcard'); }
         console.log(`Postcard from ${contact.name} processed successfully.`);
+    }
+        async function processAnniversaryReply(data, contact) {
+                const charId = contact.id;
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const anniversaryInfo = appState.diary.anniversaries.find(a => a.date === todayStr) || holidays[todayStr];
+    const anniversaryName = anniversaryInfo ? anniversaryInfo.name : '特别的日子';
+
+    // 1. Send chat message
+    addMessageToConversation({
+        id: newId('msg'),
+        type: 'text',
+        content: data.anniversary_chat,
+        sender: charId,
+        timestamp: Date.now(),
+        status: 'sent',
+        contactId: charId
+    }, true);
+
+    // 2. Create and save the gift with personalized postcard text
+    const giftData = data.anniversary_gift;
+    const newGiftPostcard = {
+        id: newId('postcard'),
+        senderId: charId,
+        recipientId: 'user',
+        isRead: false,
+        gift: giftData.name,
+        giftDescription: giftData.description,
+        isAnniversaryGift: true,
+        anniversaryName: anniversaryName,
+        salutation: giftData.postcard_salutation,
+        body: giftData.postcard_body,
+        signature: contact.charSettings.name,
+        location: giftData.postcard_location,
+        timestamp: Date.now(),
+        imageUrl: 'https://i.postimg.cc/mD4C82b9/image.png'
+    };
+    appState.mailbox.postcards.push(newGiftPostcard);
+    queueNotification(`${contact.name} 送给了你一份纪念日礼物！`, 'system', charId, 'mail');
+    if (diaryAppScreen.classList.contains('active') && appState.diary.activeTab === 'exhibition') {
+        renderExhibitionTab();
+    }
+
+    // 3. Create and save the special love letter
+    const letterData = data.special_love_letter;
+    const newLetter = {
+        id: newId('letter'),
+        senderId: charId,
+        recipientId: 'user',
+        timestamp: Date.now(),
+        isRead: false,
+        isSpecial: true,
+        specialOccasion: anniversaryName,
+        ...letterData
+    };
+    appState.mailbox.loveLetters.push(newLetter);
+    queueNotification(`${contact.name} 在这个特别的日子给你寄来了一封信`, 'system', charId, 'mail');
+    
+    // 4. Mark this anniversary as celebrated to prevent re-triggering
+    contact.charSettings.lastAnniversaryCelebrated = todayStr;
+
+    // 5. NEW: Trigger the anniversary moment post
+    console.log(`Triggering anniversary moment for ${contact.name}...`);
+    const momentInstruction = constructAnniversaryMomentPrompt(contact, anniversaryName);
+    await triggerAiResponse(contact.id, false, false, false, momentInstruction);
+
+        // 5. Save all changes
+        debouncedSaveState();
+        console.log(`Anniversary event for ${contact.name} processed successfully.`);
+    }
+        // ===================================================================
+    // --- 新增：纪念日事件核心逻辑 ---
+    // ===================================================================
+    async function checkForAnniversaryEvents() {
+                const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        const todaysAnniversaries = appState.diary.anniversaries.filter(a => a.date === todayStr);
+        const todaysHoliday = holidays[todayStr] && holidays[todayStr].holiday ? holidays[todayStr] : null;
+
+        if (todaysAnniversaries.length === 0 && !todaysHoliday) {
+            console.log("Today is not a special day.");
+            return;
+        }
+
+        // --- Process Single Chars ---
+        const charToEventsMap = new Map();
+        appState.chat.contacts.forEach(c => { if (!c.isGroup) { charToEventsMap.set(c.id, []); } });
+
+        todaysAnniversaries.forEach(anniv => {
+            const ids = anniv.associatedCharIds;
+            if (ids && ids.length > 0) {
+                ids.forEach(charId => { if (charToEventsMap.has(charId)) { charToEventsMap.get(charId).push(anniv.name); } });
+            } else {
+                charToEventsMap.forEach(eventList => eventList.push(anniv.name));
+            }
+        });
+
+        if (todaysHoliday) {
+            charToEventsMap.forEach(eventList => eventList.push(todaysHoliday.name));
+        }
+
+        for (const [charId, eventNames] of charToEventsMap.entries()) {
+            if (eventNames.length > 0) {
+                const contact = appState.chat.contacts.find(c => c.id === charId);
+                if (contact && contact.charSettings.lastAnniversaryCelebrated !== todayStr) {
+                    const combinedName = eventNames.join('和');
+                    console.log(`Triggering SINGLE CHAR anniversary event for ${contact.name}: ${combinedName}`);
+                    const secretInstruction = constructAnniversaryPrompt(contact, combinedName);
+                    await triggerAiResponse(contact.id, false, false, false, secretInstruction);
+                }
+            }
+        }
+
+        // --- Process Groups ---
+        for (const contact of appState.chat.contacts) {
+            if (contact.isGroup && contact.groupSettings.lastAnniversaryCelebrated !== todayStr) {
+                const groupMemberIds = contact.members;
+                const groupEventNames = new Set();
+
+                // Check for general events
+                const generalAnnivs = todaysAnniversaries.filter(a => !a.associatedCharIds || a.associatedCharIds.length === 0);
+                generalAnnivs.forEach(a => groupEventNames.add(a.name));
+                if (todaysHoliday) {
+                    groupEventNames.add(todaysHoliday.name);
+                }
+
+                // Check for member-specific events
+                todaysAnniversaries.forEach(anniv => {
+                    if (anniv.associatedCharIds && anniv.associatedCharIds.some(id => groupMemberIds.includes(id))) {
+                        groupEventNames.add(anniv.name);
+                    }
+                });
+
+                if (groupEventNames.size > 0) {
+                    const combinedName = Array.from(groupEventNames).join('和');
+                    console.log(`Triggering GROUP anniversary event for ${contact.name}: ${combinedName}`);
+                    const secretInstruction = constructGroupAnniversaryPrompt(contact, combinedName);
+                    await triggerAiResponse(contact.id, false, false, false, secretInstruction);
+                    contact.groupSettings.lastAnniversaryCelebrated = todayStr; // Mark as celebrated for today
+                    debouncedSaveState();
+                }
+            }
+        }
     }
 function handleSocialAction(action, args, actorId) {
     const actorName = getDisplayName(actorId, actorId);
@@ -11360,11 +11833,11 @@ function handleSocialAction(action, args, actorId) {
             if (!appState.music.comments[song.id]) appState.music.comments[song.id] = [];
             appState.music.comments[song.id].unshift({ id: newId('comment'), authorId: actorId, text: reviewText, likes: [], replies: [], timestamp: Date.now() });
         }
-    } else if (action === 'LEAVE_MESSAGE' && args[0]) {
-        const content = args[0];
-        const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: content, senderId: actorId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
-        appState.chat.moments.messages.push(newMessage);
-        queueNotification(`${actorName} 给你留言了`, 'system', actorId, 'moments'); logVisitor('user', actorId);
+                } else if (action === 'LEAVE_MESSAGE' && args[0]) {
+                const content = args[0];
+                const newMessage = { id: newId('message'), recipientId: 'user', recipientName: findUserById('user').name, content: content, senderId: actorId, senderName: actorName, timestamp: Date.now(), visibility: 'public', visibleTo: [], replies: [] };
+                appState.chat.moments.messages.push(newMessage);
+                addMomentsNotification('message', actorId, { messageId: newMessage.id, recipientId: 'user', content: content }); logVisitor('user', actorId);
     } else if (action === 'LIKE_MOMENT' && args[0]) {
         const post = appState.chat.moments.posts.find(p => p.id === args[0]);
         if (post && canCharViewMoment(actorId, post)) {
@@ -15338,7 +15811,7 @@ getEl('save-love-letter-btn').addEventListener('click', () => {
                 setInterval(checkExpiredPackets, 60 * 1000);
                 
                 queueNotification("欢迎使用土皇帝小手机！", 'system', 'system');
-                
+                            checkForAnniversaryEvents(); // 检查是否有纪念日事件
                 [addMusicModal, addFontModal, replaceIconModal, addEmojiModal, groupRedPacketModal, editMessageModal, libraryModal, loadPersonaModal, gcsMemberModal, gcsManageMembersModal, gcsMemberActionModal, postMomentModal].forEach(setupModalTabs);
                 
                 document.addEventListener('click', (e) => {
