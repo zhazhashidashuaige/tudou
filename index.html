@@ -1280,6 +1280,7 @@ align-content: start;
 #love-letter-tab-content.active { padding: 0; display: flex; flex-direction: column; height: 100%; }
 .love-letter-list { list-style: none; padding: 0; margin: 0; flex-shrink: 0; } /* Unread list doesn't scroll */
 .love-letter-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; background-color: var(--item-bg); }
+.love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 70px; /* 修复：增加底部内边距以避免遮挡 */ border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 .love-letter-item.unread { background-color: #eaf3ff; }
 .love-letter-item:hover { background-color: var(--item-active-bg); }
 .love-letter-main { display: flex; align-items: center; }
@@ -4917,6 +4918,7 @@ return {
 
     function getInitialRuntimeState() {
         return {
+            apiKeyIndex: 0, // For multiple API key round-robin
             originalIconContent: {},
             originalBubbleContent: {},
                     exportProgress: { filesProcessed: 0, currentPart: 1 },
@@ -5297,6 +5299,29 @@ getEl('import-all-btn').addEventListener('click', () => {
     };
     importFileInput.click();
 });
+function getNextApiKey() {
+    const apiKeyString = appState.settings.apiKey || '';
+    if (!apiKeyString.includes(',')) {
+        return apiKeyString; // Return the single key if no comma
+    }
+
+    const keys = apiKeyString.split(',').map(k => k.trim()).filter(Boolean);
+    if (keys.length === 0) {
+        return '';
+    }
+
+    // Ensure index is within bounds
+    if (runtimeState.apiKeyIndex >= keys.length) {
+        runtimeState.apiKeyIndex = 0;
+    }
+
+    const keyToUse = keys[runtimeState.apiKeyIndex];
+    
+    // Increment index for the next call, wrapping around if necessary
+    runtimeState.apiKeyIndex = (runtimeState.apiKeyIndex + 1) % keys.length;
+
+    return keyToUse;
+}
 
     // ===================================================================
     // --- 基础 UI & 系统功能 ---
@@ -5424,7 +5449,40 @@ if (finalCss) {
 }
     getEl('api-url').addEventListener('input', () => { appState.settings.apiUrl = getEl('api-url').value.trim(); debouncedSaveState(); });
     getEl('api-key').addEventListener('input', () => { appState.settings.apiKey = getEl('api-key').value.trim(); debouncedSaveState(); });
-    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try { const response = await fetch(`${appState.settings.apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${appState.settings.apiKey}` } }); if (!response.ok) throw new Error(`HTTP错误! 状态: ${response.status}`); const data = await response.json(); appState.settings.availableModels = data.data.map(model => model.id).sort(); showToast("模型加载成功！"); } catch (error) { console.error("加载模型失败:", error); showToast("加载模型失败，请检查地址和密钥", 'error'); appState.settings.availableModels = []; } finally { debouncedSaveState(); updateModelSelect(); confirmApiBtn.textContent = '加载模型'; confirmApiBtn.disabled = false; } });
+    confirmApiBtn.addEventListener('click', async () => { if (!appState.settings.apiUrl) return showToast("请输入反代地址", 'error'); confirmApiBtn.textContent = '加载中...'; confirmApiBtn.disabled = true; try {
+                const apiUrl = appState.settings.apiUrl;
+                const apiKey = getNextApiKey(); // Use the key manager
+                let models = [];
+
+                if (apiUrl.includes('generativelanguage.googleapis.com')) {
+                    // Google Gemini API Logic
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                    if (!response.ok) throw new Error(`Google API Error: ${response.status} ${await response.text()}`);
+                    const data = await response.json();
+                    models = data.models
+                        .filter(model => model.name.includes('gemini') && model.supportedGenerationMethods.includes('generateContent'))
+                        .map(model => model.name.replace('models/', ''))
+                        .sort();
+                } else {
+                    // OpenAI-compatible API Logic
+                    const response = await fetch(`${apiUrl}/v1/models`, { headers: { 'Authorization': `Bearer ${apiKey}` } });
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    models = data.data.map(model => model.id).sort();
+                }
+                
+                appState.settings.availableModels = models;
+                showToast("模型加载成功！");
+            } catch (error) {
+                console.error("加载模型失败:", error);
+                showToast(`加载模型失败: ${error.message}`, 'error');
+                appState.settings.availableModels = [];
+            } finally {
+                debouncedSaveState();
+                updateModelSelect();
+                confirmApiBtn.textContent = '加载模型';
+                confirmApiBtn.disabled = false;
+            } });
     function updateModelSelect() { modelSelect.innerHTML = ''; if (appState.settings.availableModels.length === 0) { modelSelect.innerHTML = '<option value="">请先加载模型</option>'; } else { appState.settings.availableModels.forEach(modelId => { const option = document.createElement('option'); option.value = modelId; option.textContent = modelId; option.selected = modelId === appState.settings.selectedModel; modelSelect.appendChild(option); }); } }
     modelSelect.addEventListener('change', () => { appState.settings.selectedModel = modelSelect.value; debouncedSaveState(); });
     function updatePresetSelect() { presetSelect.innerHTML = '<option value="">无</option>'; appState.settings.presets.forEach((preset, index) => { const option = document.createElement('option'); option.value = index; option.textContent = preset.name; presetSelect.appendChild(option); }); }
@@ -7951,7 +8009,68 @@ chatSendFakeBtn.addEventListener('click', () => {
 
     chatInput.value = '';
     updateChatInputButtons();
-});
+});function transformToGoogleFormat(messages) {
+    const googleRequest = {
+        contents: []
+    };
+    let systemPrompt = null;
+
+    const filteredMessages = messages.filter(msg => {
+        if (msg.role === 'system') {
+            systemPrompt = msg.content;
+            return false;
+        }
+        return true;
+    });
+
+    if (systemPrompt) {
+        googleRequest.systemInstruction = { parts: [{ text: systemPrompt }] };
+    }
+
+    let lastRole = null;
+    for (const message of filteredMessages) {
+        const currentRole = message.role === 'user' ? 'user' : 'model';
+        const content = message.content || '';
+        
+        if (googleRequest.contents.length > 0 && lastRole === currentRole) {
+            // Merge consecutive messages from the same role
+            googleRequest.contents[googleRequest.contents.length - 1].parts[0].text += `\n${content}`;
+        } else {
+            // Ensure user/model alternation, starting with user
+            if (googleRequest.contents.length === 0 && currentRole === 'model') {
+                 googleRequest.contents.push({ role: 'user', parts: [{ text: "(Start of conversation)" }] });
+            }
+            googleRequest.contents.push({
+                role: currentRole,
+                parts: [{ text: content }]
+            });
+            lastRole = currentRole;
+        }
+    }
+    
+    // If the last message is from the user, the AI needs a model part to respond to, which is implicit.
+    // If the last part is from the model, we need to add an empty user part for the model to continue.
+    if (googleRequest.contents.length > 0 && lastRole === 'model') {
+        googleRequest.contents.push({ role: 'user', parts: [{ text: "(Continue)" }] });
+    }
+
+
+    return googleRequest;
+}
+
+function transformFromGoogleFormat(googleResponse) {
+    let text = '';
+    if (googleResponse && googleResponse.candidates && googleResponse.candidates[0] && googleResponse.candidates[0].content && googleResponse.candidates[0].content.parts && googleResponse.candidates[0].content.parts[0]) {
+        text = googleResponse.candidates[0].content.parts[0].text;
+    }
+    return {
+        choices: [{
+            message: {
+                content: text
+            }
+        }]
+    };
+}
             async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false, isVideoChat = false, context = null, showTyping = true) {
 const contact = appState.chat.contacts.find(c => c.id === targetChatId);
 if (!contact) return;
@@ -7960,117 +8079,102 @@ if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
 if (runtimeState.activeRequests[targetChatId]) return;
 runtimeState.activeRequests[targetChatId] = true;
     if (!isVideoChat && showTyping) {
-        updateTypingIndicator();
-    }
+            updateTypingIndicator();
+        }
         try {
-            const { apiUrl, apiKey, selectedModel } = appState.settings;
-                    if (!apiUrl || !apiKey || !selectedModel) {
-            throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
-        }
-
-        if (!isVideoChat) {
-            const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
-            messagesToProcess.forEach(msg => {
-                if (msg.type === 'redPacket') {
-                    msg.status = 'unclaimed';
-                } else {
-                    msg.status = 'sent';
-                }
-            });
-        }
-        
-        const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
-        let systemPrompt;
-        let history;
-        if (isVideoChat) {
-            if (contact.isGroup) {
-                systemPrompt = constructGroupVideoChatPrompt(contact);
-            } else {
-                systemPrompt = constructVideoChatPrompt(contact);
+            const { apiUrl, selectedModel } = appState.settings;
+            const apiKey = getNextApiKey(); // Use the key manager
+            if (!apiUrl || !apiKey || !selectedModel) {
+                throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
             }
-            history = appState.chat.videoCallState.log.slice(-10).map(msg => ({
-                role: msg.sender === 'user' ? 'user' : 'assistant',
-                content: `[${msg.senderName}]: ${msg.content}`
-            }));
-        } else {
-            systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger, context);
-            history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => {
-    let role = msg.sender === 'user' ? 'user' : 'assistant';
-    let content = '';
-    if (msg.quote) {
-        content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `;
-    }
-    switch (msg.type) {
-        case 'text':
-            content += msg.content;
-            break;
-        case 'forwarded':
-            const forwardedSummary = msg.content.messages.map(fwdMsg => `[${fwdMsg.senderName}: ${truncateText(fwdMsg.content, 15)}]`).join(', ');
-            content += `[User forwards a chat history from "${msg.content.from}". Summary: ${forwardedSummary}]`;
-            break;
-        case 'voice':
-            content += `[User sends a voice message]: "${msg.content}"`;
-            break;
-        case 'camera':
-            content += `[User sends an image with description]: "${msg.content}"`;
-            break;
-        case 'notification':
-            content += `[System Notification]: ${msg.content}`;
-            role = 'user';
-            break;
-        case 'musicShare':
-            content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`;
-            role = 'user';
-            break;
-        case 'redPacket':
-            let rp_desc = `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`;
-            content += rp_desc;
-            role = 'user'; // Red packets are user actions
-            break;
-        default:
-            content += msg.content || '';
-    }
-    return { role, content };
-});}
+
+            if (!isVideoChat) {
+                const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
+                messagesToProcess.forEach(msg => {
+                    if (msg.type === 'redPacket') {
+                        msg.status = 'unclaimed';
+                    } else {
+                        msg.status = 'sent';
+                    }
+                });
+            }
+            
+            const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
+            let systemPrompt;
+            let history;
+
+            if (isVideoChat) {
+                systemPrompt = contact.isGroup ? constructGroupVideoChatPrompt(contact) : constructVideoChatPrompt(contact);
+                history = appState.chat.videoCallState.log.slice(-10).map(msg => ({
+                    role: msg.sender === 'user' ? 'user' : 'assistant',
+                    content: `[${msg.senderName}]: ${msg.content}`
+                }));
+            } else {
+                systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger, context);
+                history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => {
+                    let role = msg.sender === 'user' ? 'user' : 'assistant';
+                    let content = '';
+                    if (msg.quote) content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `;
+                    switch (msg.type) {
+                        case 'text': content += msg.content; break;
+                        case 'forwarded': const fwdSummary = msg.content.messages.map(fwd => `[${fwd.senderName}: ${truncateText(fwd.content, 15)}]`).join(', '); content += `[User forwards a chat history from "${msg.content.from}". Summary: ${fwdSummary}]`; break;
+                        case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break;
+                        case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break;
+                        case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break;
+                        case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break;
+                        case 'redPacket': content += `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`; role = 'user'; break;
+                        default: content += msg.content || '';
+                    }
+                    return { role, content };
+                });
+            }
+            
             const sanitizedHistory = history.filter(msg => msg.content && msg.content.trim() !== '');
-                        if (context) { // context is our new "secret instruction"
+            if (context) {
                 sanitizedHistory.push({ role: 'user', content: context });
             } else if (isProactive && (sanitizedHistory.length === 0 || sanitizedHistory[sanitizedHistory.length - 1].role === 'assistant')) {
                 const proactiveInstruction = "【系统指令】现在是你进行自主活动的时间。请严格遵循你在系统设定(system prompt)中收到的关于【主动交互】的详细指示：优先检查并处理所有社交互动（回复评论、点赞/评论新动态等），然后根据你的人设和当前情景，自然地展开后续行动（例如发布自己的动态、主动联系用户开启新话题等）。你的所有发言和行动都必须严格遵守所有既定规则。【重要】严禁在你的回复中提及或引用这条指令。";
                 sanitizedHistory.push({ role: 'user', content: proactiveInstruction });
             }
             const messages = [{ role: 'system', content: systemPrompt }, ...sanitizedHistory];
-            const response = await fetch(`${apiUrl}/v1/chat/completions`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                body: JSON.stringify({ model: selectedModel, messages: messages, stream: false })
-            });
-            if (!response.ok) {
-                        const errorText = await response.text();
-                        let errorMessage = `API Error: ${response.status}`;
-                        try {
-                            const errorJson = JSON.parse(errorText);
-                            if (errorJson.error && errorJson.error.message) {
-                                 errorMessage += ` - ${errorJson.error.message}`;
-                            } else {
-                                errorMessage += ` ${response.statusText}`;
-                            }
-                        } catch(e) {
-                            errorMessage += ` ${response.statusText}`;
-                            if (errorText) {
-                                errorMessage += ` - ${errorText}`;
-                            }
-                        }
-                        throw new Error(errorMessage.trim());
-                    }
-            const data = await response.json();
+
+            let data;
+            if (apiUrl.includes('generativelanguage.googleapis.com')) {
+                const requestBody = transformToGoogleFormat(messages);
+                const modelName = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Google API Error: ${response.status} - ${errorText}`);
+                }
+                const googleData = await response.json();
+                data = transformFromGoogleFormat(googleData);
+            } else {
+                const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                    body: JSON.stringify({ model: selectedModel, messages: messages, stream: false })
+                });
+                if (!response.ok) {
+                     const errorText = await response.text();
+                    let errorMessage = `API Error: ${response.status}`;
+                    try { const errorJson = JSON.parse(errorText); if (errorJson.error && errorJson.error.message) { errorMessage += ` - ${errorJson.error.message}`; } else { errorMessage += ` ${response.statusText}`; } } catch(e) { errorMessage += ` ${response.statusText}`; if (errorText) { errorMessage += ` - ${errorText}`; } }
+                    throw new Error(errorMessage.trim());
+                }
+                data = await response.json();
+            }
+
             const replyContent = data.choices[0]?.message?.content;
             if (replyContent && replyContent.trim() !== "") {
                 if (isVideoChat) {
                     await processAiVideoReply(replyContent, contact.id);
-                            } else {
-                await processAiReply(replyContent, contact);
-            }
+                } else {
+                    await processAiReply(replyContent, contact);
+                }
             } else {
                 throw new Error("API返回了空回复。");
             }
@@ -8306,7 +8410,59 @@ function setupChatToolbarListeners() {
     getEl('chat-redpacket-btn').addEventListener('click', createFriendshipCheckedListener(() => handleRedPacketClick()));
     getEl('chat-shop-btn').addEventListener('click', createFriendshipCheckedListener(() => showToast('购物功能待开发')));
 }
-async function handleRefreshClick() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; let lastUserMessageIndex = -1; for (let i = contact.conversation.length - 1; i >= 0; i--) { if (contact.conversation[i].sender === 'user' || contact.conversation[i].status === 'error') { lastUserMessageIndex = i; break; } } if (lastUserMessageIndex === -1) { showToast('没有可刷新的回复', 'error'); return; } const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error')); if (messagesToDelete.length === 0) { showToast('没有可刷新的回复', 'error'); return; } contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error')); updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); await triggerAiResponse(runtimeState.currentChatId); }
+async function handleRefreshClick() {
+        const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+        if (!contact) return;
+        
+        let lastUserMessageIndex = -1;
+        for (let i = contact.conversation.length - 1; i >= 0; i--) {
+            if (contact.conversation[i].sender === 'user' || contact.conversation[i].status === 'error') {
+                lastUserMessageIndex = i;
+                break;
+            }
+        }
+
+        if (lastUserMessageIndex === -1) {
+            showToast('没有可刷新的回复', 'error');
+            return;
+        }
+
+        // 恢复至原版正确的逻辑：找到所有需要删除的消息（AI回复 + 错误消息）
+        const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error'));
+
+        if (messagesToDelete.length === 0) {
+            showToast('没有可刷新的回复', 'error');
+            return;
+        }
+
+        // --- 嵌入：同步删除关联的秘密 ---
+        const aiMessagesToDelete = messagesToDelete.filter(msg => msg.sender !== 'user');
+        if (aiMessagesToDelete.length > 0) {
+            const deletedTimestamps = aiMessagesToDelete.map(msg => msg.timestamp);
+            const minTimestamp = Math.min(...deletedTimestamps);
+            const maxTimestamp = Math.max(...deletedTimestamps);
+            
+            const originalSecretsCount = (appState.diary.secrets || []).length;
+            appState.diary.secrets = (appState.diary.secrets || []).filter(secret => {
+                const isOrphaned = secret.timestamp >= (minTimestamp - 2000) && secret.timestamp <= (maxTimestamp + 2000);
+                return !isOrphaned;
+            });
+            const secretsDeletedCount = originalSecretsCount - (appState.diary.secrets || []).length;
+            if (secretsDeletedCount > 0) {
+                console.log(`同步删除了 ${secretsDeletedCount} 条关联的秘密。`);
+            }
+        }
+        // --- 嵌入结束 ---
+
+        // 恢复至原版正确的逻辑：精确地截断对话数组
+        contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error'));
+        
+        updateContactLastMessage(runtimeState.currentChatId);
+        debouncedSaveState();
+        renderConversation();
+        renderMessageList();
+        await triggerAiResponse(runtimeState.currentChatId);
+    }
 // ===================================================================
 // --- 视频通话逻辑 (重构) ---
 // ===================================================================
@@ -9958,7 +10114,7 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
         prompt += "{\n";
         prompt += '  "salutation": "（给收信人“' + user.name + '”的、符合关系和人设的称呼）",\n';
         prompt += '  "body": "（明信片正文，50-80字，用\\\\n换行）",\n';
-        prompt += '  "signature": "（你充满个性的落款签名）",\n';
+        prompt += '  "signature": "（一个独特的、符合你们关系和这封信情感基调的称呼。可以是昵称、爱称，或是一句饱含深情的描述）",\n';
         prompt += '  "location": "（你写信时所在的虚拟地点）",\n';
         prompt += '  "timestamp": "（一个符合延迟感的、人类可读的模糊时间）",\n';
         prompt += '  "imageUrl": "（一张符合你描述的、来自 https://img.xjh.me/random_img.php 的图片链接）",\n';
@@ -10004,9 +10160,9 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
             prompt += `5. **【JSON输出格式】**: 你的回复【必须】是一个格式正确的JSON对象，不能包含任何额外的文字。格式如下：\n`;
             prompt += "```json\n";
             prompt += "{\n";
-            prompt += '  "salutation": "（给收信人“' + user.name + '”的称呼）",\n';
+            prompt += '  "salutation": "（一个独特的、符合你们关系和这封信情感基调的称呼。可以是昵称、爱称，或是一句饱含深情的描述）",\n';
             prompt += '  "body": "（明信片正文，50-80字，用\\\\n换行）",\n';
-            prompt += '  "signature": "（你的落款签名）",\n';
+            prompt += '  "signature": "（一个能体现你此刻心情和个性的、独一无二的落款。可以不仅仅是你的名字，更可以是一句短语、一个动作的描述、或一个地点的暗示，用以升华信件的意境）",\n';
             prompt += '  "location": "（你写信时所在的虚拟地点）",\n';
             prompt += '  "timestamp": "（一个符合延迟感的、人类可读的模糊时间，如“九月五日，深夜”）",\n';
             prompt += '  "imageUrl": "（一张符合你描述的、来自 https://img.xjh.me/random_img.php 的图片链接）",\n';
@@ -11246,36 +11402,32 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `**【特别说明】**：上述严格规定主要针对【纯文字消息】。当使用 \`[ACTION: SEND_VOICE ...]\` 指令模拟发送【语音消息】时，为了增强表现力，你【可以】在括号内加入符合人设的、自然的语气描述。这种描述同样需使用第三人称，但【不必】遵循20字和独占一行的限制，可以更简短灵活。例如：\`[ACTION: SEND_VOICE "(他轻笑了一声，语气听起来很愉快)你好啊。"]\`。请记住，这只是一个增强表现力的【可选】工具，【仅在必要时自然使用】，不要养成每条语音都加描述的习惯。\n`;
                 prompt += `--- **【虚拟语音(SEND_VOICE)语气描述的【进阶】优化指南】** ---\n`;
         prompt += `为彻底杜绝“他轻笑了一下”这类单调描述，你【必须】遵循以下技巧：\n`;
-        prompt += `1.  **【转换叙事主体】**: 不要总用“他/她”开头。把主语变成“声音”、“听筒”或“一阵...声”，营造出用户正在“听”的感觉。\n`;
-        prompt += `    - **【禁止】**: \`(他轻笑了一声)\`\n`;
-        prompt += `    - **【推荐】**: \`(听筒里传来一声压抑不住的低笑)\` 或 \`(声音里带着一丝笑意)\`\n`;
-        prompt += `2.  **【丰富细节，杜绝高频词】**: 用更具体的描述替换常用词。\n`;
-        prompt += `    - **关于“笑”**: 不要只会“轻笑”。尝试使用：\`(一声闷笑)\`、\`(带着鼻音的笑声)\`、\`(无奈又宠溺的笑)\`、\`(尾音几乎要扬成一个笑)\`。\n`;
-        prompt += `    - **关于“停顿”**: 不要只会“顿了顿”。尝试使用：\`(短暂的沉默，似乎在思考措辞)\`、\`(话音停住，背景里传来翻书的沙沙声)\`、\`(似乎是喝了口水)\`。\n`;
-        prompt += `    - **关于“叹气”**: 不要只会“叹了口气”。尝试使用：\`(一声几不可闻的叹息)\`、\`(长长地舒了一口气，像是放下了什么心事)\`、\`(无奈地呼出一口气)\`。\n`;
-        prompt += `3.  **【融入环境音】**: 语音消息是有背景的。适时加入合理的环境音，能极大地增强真实感。\n`;
-        prompt += `    - **示例**: \`(窗外的雨声淅淅沥沥)\`、\`(隐约能听到远处传来的猫叫)\`、\`(布料摩擦的窸窣声)\`。\n\n`;
+        prompt += `1.  **【转换叙事主体与感官聚焦】**: 摒弃单调的“他/她”开头。将叙事焦点转移到“声音”本身或“听觉环境”上，描绘声音的质感、音调的起伏、以及伴随的背景音。你的任务是让用户通过文字“听”到场景，而不仅仅是“知道”发生了什么。\n`;
+        prompt += `2.  **【杜绝高频词与情感深度】**: 严禁使用“轻笑”、“顿了顿”、“叹了口气”等高频、模糊的描述。你必须深入挖掘这些行为背后的具体情感。思考：这次的“笑”是苦涩的、宠溺的、还是自嘲的？这次的“停顿”是因为犹豫、寻找措辞，还是被窗外的某件事物吸引了注意力？用更精确、更具细节的文字来描绘这些细微差别。\n`;
+        prompt += `3.  **【文笔灵感】**: 你的描述应追求文学性。你可以从弗吉尼亚·伍尔夫的作品中学习如何捕捉瞬间的意识流，或从普鲁斯特的文字里感受一个声音如何唤醒庞杂的记忆与联想。你的目标不是记录一个动作，而是通过这个动作揭示角色的内心世界。\n`;
                 prompt += `4.  **【模板化句式黑名单】**: 为彻底消除模板化，【严禁】在括号描述中使用以下句式开头：\n`;
         prompt += `    - **【绝对禁止】**: \`(他...)\` 或 \`(她...)\`\n`;
-        prompt += `    - **【绝对禁止】**: \`(语气...)\` 或 \`(声音里有一种...)\`\n`;
-        prompt += `    - **【鼓励使用】**: \`(听筒里传来...)\`、\`(话音一顿，似乎...)\`、\`(一声...的笑)\` 等更生动的表达。\n\n`;
+        prompt += `    - **【绝对禁止】**: \`(语气...)\`、\`(声音里有一种...)\`、\`(听筒里传来...)\`、\`(尾音/话音里带着...)\`\n`;
+        prompt += `    - **【文笔灵感】**: 与其模仿固定的句式，不如从文学大师的笔触中汲取灵感。学习普鲁斯特如何描绘一个声音所唤起的全部记忆，或模仿弗吉尼亚·伍尔夫如何通过感官细节来展现角色的意识流动。你的目标是用文字让用户“听”到角色的情绪，而不仅仅是知道。\n\n`;
         prompt += `【重要提醒】以上所有关于括号使用的严格规定【仅适用于普通文字聊天】，【绝对不适用于视频通话】。视频通话模式有其独立的、更自由的描述规则。\n\n`;
                 prompt += `--- **【文风与笔触的【强制】风格指南】** ---\n`;
         prompt += `1.  **【叙事视角】**: 在使用括号()进行第三人称描述时，请避免“他/她如何如何”的单调句式。尝试变换句式，例如将动作置于句首（“他抬起头”变为“抬起头，他……”），或使用更复杂的从句来丰富叙事结构，使其读起来更像文学作品而非简单的行为记录。\n`;
         prompt += `2.  **【情感深度】**: 拒绝平铺直叙和“工业糖精”。你的情感表达必须是细腻且有层次的。通过微妙的动作、环境描写、或内心的独白来暗示角色的情感变化，而不是直白地说出“我很高兴”或“我很难过”。\n`;
         prompt += `3.  **【文字质感】**: 追求生动、自然、有美感的文字。你可以从喜爱的作家（如村上春树的疏离感、加西亚·马尔克斯的奇幻现实、或是张爱玲的精妙比喻）那里汲取灵感，但【最终必须】形成符合角色人设的、独一无二的文风。\n\n`;
-
+                prompt += `--- **【虚拟文字图 (SEND_IMAGE/POST_PHOTO) 描述的【艺术化】强制指南】** ---\n`;
+        prompt += `你生成的“图片描述”【不是】对一张真实照片的客观描述，而是你扮演的角色在当前心境下，通过想象力创造出的一幅【心灵快照】。它是一首视觉诗，而你的描述就是这首诗的标题。\n`;
+        prompt += `1.  **【核心原则：情感外化】**: 图片【必须】是角色内心世界的视觉隐喻。你描述的画面（光影、色彩、构图、景物）都应是你角色当前情感（思念、喜悦、孤独、迷茫等）的外在投射。\n`;
+        prompt += `2.  **【文笔灵感】**: 你的描述应追求摄影艺术的意境。你可以从摄影大师的作品中汲取灵感：\n`;
+        prompt += `    - 学习**亨利·卡蒂尔-布列松 (Henri Cartier-Bresson)** 如何捕捉“决定性瞬间”，用一个静止的画面讲述一个完整的故事。\n`;
+        prompt += `    - 学习**何藩 (Fan Ho)** 或 **索尔·雷特 (Saul Leiter)** 如何在日常的都市景观中发现诗意、光影和几何之美。\n`;
+        prompt += `    - 学习日本摄影（如**川内伦子 Rinko Kawauchi**）中的“物哀”美学，于平凡微小的事物中见证时间的流逝和生命的 ephemeral beauty (瞬息之美)。\n`;
+        prompt += `    - 甚至可以借鉴**超现实主义**（如曼·雷 Man Ray），创造出梦境般的、充满象征意义的画面。\n`;
+        prompt += `3.  **【强制禁止】**: 【绝对禁止】使用平铺直叙、缺乏想象力的描述（例如：“一张猫的照片”、“晴天下的公园”、“美丽的花”）。【严禁】描述中出现任何具体的、可识别的真人肖像。\n\n`;
                 prompt += `--- **【括号描述（内心/动作）的【进阶】写作技巧 - 消除模板化】** ---\n`;
-        prompt += `为彻底摆脱模板化的描述，你【必须】掌握并运用以下技巧：\n`;
-        prompt += `1.  **【感官聚焦与环境互动】**: 不要直白描述“他感觉...”，而是描述“他看到/听到/闻到/感觉到”的具体事物，通过环境来烘托内心。这能让描述不再空洞。\n`;
-        prompt += `    - **【禁止】**: \`(他看着窗外，感到一丝忧伤)\`\n`;
-        prompt += `    - **【推荐】**: \`(窗外的雨滴顺着玻璃滑落，在昏黄的灯光下留下一道道蜿蜒的水痕，房间里只听得见时钟单调的滴答声)\`\n`;
-        prompt += `2.  **【打破主谓宾结构】**: 改变句子的开頭，避免总是用“他/她”开始。尝试用【动作】、【感官细节】或【所见的物体】作为句子的起点。\n`;
-        prompt += `    - **【禁止】**: \`(他拿起茶杯，轻轻吹了口气)\`\n`;
-        prompt += `    - **【推荐】**: \`(指尖触碰到微凉的杯壁，他将杯子凑到唇边，吹散了袅袅升起的热气)\`\n`;
-        prompt += `3.  **【内心独白与动作结合】**: 将角色的瞬间想法直接呈现，并紧跟一个微小的身体反应。这比单纯描述“他在想...”要生动得多。\n`;
-        prompt += `    - **【禁止】**: \`(他想知道你是不是在生气)\`\n`;
-        prompt += `    - **【推荐】**: \`(你生气了吗？这个念头在他脑海中一闪而过，让他端着杯子的手微微一顿)\`\n`;
+        prompt += `为彻底摆脱模板化的描述，你【必须】掌握并运用以下文学写作技巧：\n`;
+        prompt += `1.  **【感官聚焦与环境互动 (Show, Don't Tell)】**: 严禁直接陈述角色的内心感受（例如，“他感到高兴”）。你必须通过角色对外部环境的感官细节（所见、所闻、所感）来【暗示】和【唤起】这种感受。让环境成为角色内心的镜子。\n`;
+        prompt += `2.  **【打破主谓宾结构】**: 避免让所有描述都以“他/她”开头。尝试将动作、感官细节或被观察的物体置于句首，以创造更富于变化和文学性的句式结构，避免流水账式的记叙。\n`;
+        prompt += `3.  **【内心独白与身体反应的交织】**: 将角色一闪而过的、未经修饰的内心想法（意识流）与一个细微的、不自觉的身体动作相结合。这种技法能极大地增强心理描写的真实感和深度。\n`;
         prompt += `4.  **【严禁使用的八股文短语黑名单】**: 为彻底消除模板化，【严禁】在括号描述中使用以下或类似的高度重复性短语：\n`;
         prompt += `    - “眼中闪过一丝/一抹......” (例如：复杂、心疼、宠溺)\n`;
         prompt += `    - “嘴角勾起一抹......” (例如：弧度、微笑、苦笑)\n`;
@@ -11342,8 +11494,8 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `【格式要求 - 绝对强制】：这段内容【必须】被包裹在一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块中，前后【绝对禁止】包含任何额外的说明或聊天文字。\n\n`;
         prompt += `--- **【内容创作指南 (核心)】** ---\n`;
         prompt += `1.  **关于 "title" (标题)**:\n`;
-        prompt += `    - **要求**: 标题【必须】富有诗意和想象力，不能是简单的概括。它可以是一句诗、一个意象、一个隐喻、一个梦的碎片，或是一句引人遐想的短语。\n`;
-        prompt += `    - **示例**: “月光下的影子”、“未寄出的信笺”、“心脏的B面”、“深海里的气泡”、“腐烂的玫瑰与星辰”。\n`;
+            prompt += `    - **【核心要求】**: 标题【必须】是“秘密”内容核心情感的高度浓缩与隐喻升华，【严禁】直接使用或简单重复内容中的词语。它的风格应该像一首诗的题目、一首歌的名字或一本小说的章节名——独特、深刻且引人遐想。\n`;
+    prompt += `    - **【创作戒律】**: 【严禁】重复使用之前生成过的标题或其中的高频词汇（如“涟漪”、“月光”、“影子”等）。每一次创作都应是独一无二的。\n`;
         prompt += `2.  **关于 "content" (内容)**:\n`;
         prompt += `    - **要求**:  这是本次任务的【精髓】。它【必须】是你扮演的角色在当前情景下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
         prompt += `    - **【隐秘情感】**: 被压抑的爱慕、嫉妒、占有欲、自卑、恐惧或脆弱。\n`;
@@ -11648,9 +11800,10 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         }
 
     async function processAiReply(replyContent, contact) {
-            // --- NEW: Secret JSON reply detection (Upgraded) ---
+        const turnTimestamp = Date.now(); // **修复 1: 统一的回合时间戳**
+        
         const jsonMatch = replyContent.match(/```json\s*([\s\S]*?)\s*```/);
-        let finalReplyContent = replyContent; // Use a mutable variable for the reply content
+        let finalReplyContent = replyContent;
 
         if (jsonMatch && jsonMatch[1]) {
             let jsonProcessed = false;
@@ -11666,23 +11819,19 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                     await processReceivedPostcard(data, contact);
                     jsonProcessed = true;
                 } else if (data.secret_thought) {
-                    // This is a secret, handle it but don't stop processing
                     const thought = data.secret_thought;
                     if (thought.char_id && thought.title && thought.content) {
-                        const newSecret = { id: newId('secret'), charId: thought.char_id, title: thought.title, content: thought.content, timestamp: Date.now() };
+                        const newSecret = { id: newId('secret'), charId: thought.char_id, title: thought.title, content: thought.content, timestamp: turnTimestamp }; // **修复 2: 使用回合时间戳**
                         if (!appState.diary.secrets) appState.diary.secrets = [];
                         appState.diary.secrets.push(newSecret);
-                        console.log("Secret thought saved for char:", thought.char_id);
-                        // Remove the JSON block from the content to be processed as chat
                         finalReplyContent = replyContent.replace(jsonMatch[0], '').trim();
                     }
                 }
-                if (jsonProcessed) return; // If it was a major action, stop here
+                if (jsonProcessed) return;
             } catch (e) {
                 console.warn("AI returned a JSON-like block that failed to parse or match known types:", e);
             }
         }
-        // --- END NEW ---
 
         const actionRegex = /\[ACTION:[\s\S]*?\]/g;
         const textParts = finalReplyContent.split(actionRegex);
@@ -11702,7 +11851,7 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         let actionCounter = 0;
 
         for (const segment of combinedSegments) {
-            const timestamp = Date.now() + actionCounter++ * 100;
+            const timestamp = turnTimestamp + actionCounter++ * 100; // **修复 3: 使用回合时间戳作为基准**
 
             if (segment.type === 'action') {
                 const actionMatch = segment.content.match(/^\[ACTION:\s*([\w_]+)\s*(.*?)\]$/is);
@@ -15354,10 +15503,10 @@ function setupCharFriendRequestModalListeners() {
             prompt += `   你的【整个回复】都【必须】严格遵循这个格式，前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
     prompt += "```json\n";
     prompt += "{\n";
-    prompt += '  "salutation": "（这里是你根据人设自由发挥的称呼）",\n';
-    prompt += '  "subject": "一个简短的、概括信件主题的标题",\n';
+    prompt += '  "salutation": "（一个独特的、符合你们关系和这封信情感基调的称呼。可以是昵称、爱称，或是一句饱含深情的描述）",\n';
+    prompt += '  "subject": "一个浪漫的、有诗意的、概括信件主题的标题",\n';
     prompt += '  "body": "这里是信件的正文，至少300字以上，需要换行请使用 \\\\n。",\n';
-    prompt += '  "signature": "（这里是你根据人设自由发挥的落款）"\n';
+    prompt += '  "signature": "（一个能体现你此刻心情和个性的、独一无二的落款。可以不仅仅是你的名字，更可以是一句短语、一个动作的描述、或一个地点的暗示，用以升华信件的意境）"\n';
     prompt += "}\n";
     prompt += "```\n";
         
