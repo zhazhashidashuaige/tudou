@@ -2009,11 +2009,12 @@ text-overflow: clip;
             position: relative; /* 关键修复：覆盖 absolute 定位，使其在 flex 布局中占据空间 */
             flex-shrink: 0; /* 防止标签栏在空间不足时被压缩 */
         }
-        /* --- 手账 APP - 纪念日日历样式 (已优化) --- */
+        
+    /* --- 手账 APP - 纪念日日历样式 (已优化) --- */
         #diary-app-screen .tab-content {
             background-color: var(--bg-color); /* 为所有标签页添加背景色，防止透视 */
         }
-        #anniversary-tab-content {
+        #anniversary-tab-content.active {
             padding: 0;
             display: flex;
             flex-direction: column;
@@ -2152,7 +2153,147 @@ text-overflow: clip;
     }
 </style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap" rel="stylesheet">
     <style id="bubble-preview-styles"></style>
+    <style>
+        /* --- 手账 APP - 秘密标签页样式 --- */
+        #secret-tab-content.active {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 15px;
+            align-content: flex-start;
+        }
+        .secret-item-card {
+            position: relative; /* 为动作按钮提供定位上下文 */
+            overflow: hidden; /* 确保按钮的圆角不会溢出 */
+            aspect-ratio: 1 / 1;
+            background-color: #fffae1; /* 便利贴黄色 */
+            box-shadow: 3px 3px 8px rgba(0,0,0,0.15);
+            padding: 10px;
+            font-family: var(--system-font-family); /* 使用全局字体 */
+            color: #5c5245;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            transform: rotate(calc(var(--random-rotate) * 1deg)); /* 随机旋转 */
+            border-bottom: 1px solid #e0d8cc;
+        }
+        .secret-item-card:hover {
+            transform: scale(1.05) rotate(0deg);
+            z-index: 5;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+        }
+        .secret-item-card .title {
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.4;
+            -webkit-line-clamp: 3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+        .secret-item-card .meta {
+            text-align: right;
+            font-size: 11px;
+            font-style: italic;
+        }
+        .secret-item-card .name {
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* --- 秘密查看器样式 --- */
+        #secret-viewer-modal {
+            z-index: 230;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .secret-card-full {
+            width: 90vw;
+            max-width: 400px;
+            height: 90vw;
+            max-height: 400px;
+            background-color: #fffae1;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.2);
+            padding: 25px;
+            font-family: var(--system-font-family);
+            font-size: 18px;
+            line-height: 1.8;
+            color: #5c5245;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            transform: scale(0.95) translateY(10px);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        #secret-viewer-modal.visible .secret-card-full {
+            opacity: 1;
+             transform: rotate(0deg) scale(1);
+        }
+        .secret-content-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            scrollbar-width: thin;
+        }
+.secret-footer-area {
+            transform: translateZ(0); /* 核心修复：强制开启硬件加速，防止动画时字体跳动 */
+            flex-shrink: 0;
+            text-align: right;
+            margin-top: 20px;
+            font-style: italic;
+            font-size: 14px;
+        }
+        #secret-viewer-name { display: block; }
+         /* --- 秘密便利贴悬浮按钮样式 --- */
+        .secret-item-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 8px;
+            background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .secret-item-card:hover .secret-item-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .secret-item-actions .icon-btn {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-text-color);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .secret-item-actions .icon-btn:hover {
+            background-color: white;
+        }
+        .secret-item-actions .delete-secret-btn:hover {
+            color: var(--danger-color);
+        }
+    </style>
 </head>
 <body>
     <audio id="audio-player"></audio>
@@ -2796,7 +2937,7 @@ text-overflow: clip;
                         </div>
                     </div>
                 </div>
-                <div id="secret-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">秘密功能待开发...</p></div>
+                <div id="secret-tab-content" class="tab-content"></div>
                 <div id="diary-tab-content" class="tab-content"><p style="text-align:center; color: #888; margin-top: 50px;">日记功能待开发...</p></div>
                     <div id="collection-tab-content" class="tab-content">
         <div id="collection-grid"></div>
@@ -2829,6 +2970,40 @@ text-overflow: clip;
 <button id="close-collection-viewer-btn" class="cancel-btn">关闭</button>
 </div>
 </div>
+</div>
+<!-- 新增：秘密查看器 -->
+<div id="secret-viewer-modal" class="modal-overlay">
+    <button id="secret-viewer-close-btn" class="postcard-close-btn">&times;</button>
+    <div class="secret-card-full">
+        <div class="secret-content-area">
+            <p id="secret-viewer-content"></p>
+        </div>
+        <div class="secret-footer-area">
+            <span id="secret-viewer-name"></span>
+            <span id="secret-viewer-timestamp"></span>
+        </div>
+    </div>
+</div>
+<!-- 新增：秘密编辑弹窗 -->
+<div id="edit-secret-modal" class="modal-overlay" style="z-index: 240;">
+    <div class="modal-content">
+        <h3 class="modal-title">编辑秘密</h3>
+        <div class="modal-body">
+            <input type="hidden" id="editing-secret-id">
+            <div class="form-group">
+                <label for="secret-title-input">标题</label>
+                <input type="text" id="secret-title-input">
+            </div>
+            <div class="form-group">
+                <label for="secret-content-input">内容</label>
+                <textarea id="secret-content-input" class="wide-textarea" rows="5"></textarea>
+            </div>
+        </div>
+        <div class="modal-actions row">
+            <button id="cancel-edit-secret-btn" class="cancel-btn">取消</button>
+            <button id="save-edit-secret-btn" class="confirm-btn">保存</button>
+        </div>
+    </div>
 </div>
                                 <div id="exhibition-tab-content" class="tab-content">
                     <div id="exhibition-grid"></div>
@@ -4733,7 +4908,8 @@ return {
                         anniversaries: [
                                                         { id: 'anniv_default_1', date: '2025-03-14', name: 'Gemini生日', isSpecial: true }
                         ],
-                        collections: []
+                        collections: [],
+                        secrets: []
                      },
                     meta: {
                         lastUserActivityTimestamp: 0 // Tracks the timestamp of the last user interaction
@@ -6871,6 +7047,19 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
     };
 
     function handleDiaryTabChange(tabId) {
+        // --- 核心修复：添加完整的UI切换逻辑 ---
+        const tabsContainer = diaryAppScreen.querySelector('.app-bottom-tabs');
+        const contentWrapper = diaryAppScreen.querySelector('.tab-content-wrapper');
+
+        tabsContainer.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+        contentWrapper.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        const activeTabLink = tabsContainer.querySelector(`.tab-link[data-tab="${tabId}"]`);
+        const activeTabContent = contentWrapper.querySelector(`#${tabId}-tab-content`);
+
+        if (activeTabLink) activeTabLink.classList.add('active');
+        if (activeTabContent) activeTabContent.classList.add('active');
+        // --- 修复结束 ---
         const titleEl = diaryAppScreen.querySelector('.title');
         const tabMap = { 'anniversary': '纪念日', 'secret': '秘密', 'diary': '日记', 'collection': '藏馆', 'exhibition': '展厅' };
         titleEl.textContent = tabMap[tabId] || '手账';
@@ -6881,6 +7070,8 @@ function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.leng
             anniversaryCalendarState.year = now.getFullYear();
             anniversaryCalendarState.month = now.getMonth();
             renderAnniversaryCalendar(anniversaryCalendarState.year, anniversaryCalendarState.month);
+        } else if (tabId === 'secret') {
+            renderSecretsTab();
         } else if (tabId === 'exhibition') {
             renderExhibitionTab();
         } else if (tabId === 'collection') {
@@ -7464,8 +7655,18 @@ async function updateSingleChatUI() {
     }
 
     const specificBgId = contact.isGroup ? contact.groupSettings.chatBackgroundId : contact.charSettings?.chatBackgroundId;
-const chatBgId = specificBgId || appState.beautify.currentChatBgId;
-    await applyWallpaperById(chatBgId, singleChatScreen);
+    let finalBgId = 'default'; // Start with the ultimate fallback
+
+    // Prioritize the specific setting, but only if it's not the default value
+    if (specificBgId && specificBgId !== 'default') {
+        finalBgId = specificBgId;
+    } else {
+        // If the specific setting is 'default' or not set, fall back to the global setting
+        finalBgId = appState.beautify.currentChatBgId;
+    }
+    
+    // applyWallpaperById will handle the final fallback to the initial background if finalBgId is 'default'
+    await applyWallpaperById(finalBgId, singleChatScreen);
     
     renderConversation();
     updateChatInputButtons();
@@ -7751,17 +7952,16 @@ chatSendFakeBtn.addEventListener('click', () => {
     chatInput.value = '';
     updateChatInputButtons();
 });
-async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false, isVideoChat = false, context = null) {
-            const contact = appState.chat.contacts.find(c => c.id === targetChatId);
-    if (!contact) return;
-        if (contact.isGroup && contact.groupSettings.isDisbanded) { return; }
-        if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
-        if (runtimeState.activeRequests[targetChatId]) return;
-    
-        runtimeState.activeRequests[targetChatId] = true;
-        if (!isVideoChat) {
-            updateTypingIndicator();
-        }
+            async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false, isVideoChat = false, context = null, showTyping = true) {
+const contact = appState.chat.contacts.find(c => c.id === targetChatId);
+if (!contact) return;
+if (contact.isGroup && contact.groupSettings.isDisbanded) { return; }
+if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
+if (runtimeState.activeRequests[targetChatId]) return;
+runtimeState.activeRequests[targetChatId] = true;
+    if (!isVideoChat && showTyping) {
+        updateTypingIndicator();
+    }
         try {
             const { apiUrl, apiKey, selectedModel } = appState.settings;
                     if (!apiUrl || !apiKey || !selectedModel) {
@@ -9615,8 +9815,8 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
             else if (!lastUserPostcard || lastCharPostcard.timestamp > lastCharPostcard.timestamp) { context.type = 'pining'; } 
             else { context.type = 'after_reply'; }
 
-            const secretInstruction = constructPostcardPrompt(contact, context);
-            await triggerAiResponse(contact.id, false, false, false, secretInstruction);
+                    const secretInstruction = constructPostcardPrompt(contact, context);
+        await triggerAiResponse(contact.id, false, false, false, secretInstruction, false);
 
         } catch (error) {
             console.error(`Failed to construct postcard prompt for ${contact.name}:`, error);
@@ -10667,6 +10867,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
         prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
         prompt += `7. **【明信片的同等秘密性】**: 与情书一样，“明信片”也是你和用户之间的秘密渠道。你【绝对禁止】在聊天、动态、评论等任何非信箱应用的地方，提及任何与明信片相关的话题。回应用户明信片的【唯一】方式是在后台活动中自动生成一张新的明信片作为回复。\n\n`;
+               
         // --- 通用聊天规则模块 (重构后) ---
         prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前【必须】加上发言人信息，格式为 \`[昵称 (ID: char_id)]: 内容\`。你【必须】从上文的成员列表中获取准确的昵称和ID，例如: \`[小明(ID: char_123)]: user今天有空吗？<MSG_SPLIT>[小明(ID: char_123)]: 和我一起出去玩吧？<MSG_SPLIT>[小红(ID: char_456)]: user之前就和我约好了呀！<MSG_SPLIT>[小明(ID: char_123)]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
@@ -10973,7 +11174,6 @@ if (socialGossipContext) {
         prompt += `你当前的签名是：“${contact.signature}”。\n\n`;
     }
         
-        prompt += `\n**【技术性强制指令 - 最高优先级】**: 无论上方规则如何，你的最终输出【必须】严格遵守以下格式：任何聊天文本、任何[ACTION:...]指令，都【必须】被视为独立的单元。单元与单元之间【必须】使用“<MSG_SPLIT>”作为唯一的分隔符。严禁将文本与指令连接在一起。例如，错误格式：\`文本[ACTION:...]\`，正确格式：\`文本<MSG_SPLIT>[ACTION:...]\`。此为技术性硬性规定，必须遵守。\n\n`;
         const otherChars = appState.chat.contacts.filter(c => !c.isGroup);
     if (otherChars.length > 1) {
         prompt += `--- **这个世界里的其他角色 (可互动)** ---\n`;
@@ -11064,6 +11264,7 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `1.  **【叙事视角】**: 在使用括号()进行第三人称描述时，请避免“他/她如何如何”的单调句式。尝试变换句式，例如将动作置于句首（“他抬起头”变为“抬起头，他……”），或使用更复杂的从句来丰富叙事结构，使其读起来更像文学作品而非简单的行为记录。\n`;
         prompt += `2.  **【情感深度】**: 拒绝平铺直叙和“工业糖精”。你的情感表达必须是细腻且有层次的。通过微妙的动作、环境描写、或内心的独白来暗示角色的情感变化，而不是直白地说出“我很高兴”或“我很难过”。\n`;
         prompt += `3.  **【文字质感】**: 追求生动、自然、有美感的文字。你可以从喜爱的作家（如村上春树的疏离感、加西亚·马尔克斯的奇幻现实、或是张爱玲的精妙比喻）那里汲取灵感，但【最终必须】形成符合角色人设的、独一无二的文风。\n\n`;
+
                 prompt += `--- **【括号描述（内心/动作）的【进阶】写作技巧 - 消除模板化】** ---\n`;
         prompt += `为彻底摆脱模板化的描述，你【必须】掌握并运用以下技巧：\n`;
         prompt += `1.  **【感官聚焦与环境互动】**: 不要直白描述“他感觉...”，而是描述“他看到/听到/闻到/感觉到”的具体事物，通过环境来烘托内心。这能让描述不再空洞。\n`;
@@ -11136,7 +11337,23 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `27. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
         prompt += `28. **寄出情书 (单聊)**: \`[ACTION: SEND_LOVE_LETTER "收信人ID" "称呼" "标题" "正文" "落款"]\` (这是回应用户或主动寄出情书的【唯一】方式)\n`;
         prompt += `--- 结束 ---\n`;
+                prompt += `--- **【最终输出协议：私密回响与未尽之言 (Secret Thought)】** ---\n`;
+        prompt += `【任务】：在你完成了上方所有聊天文本和[ACTION]指令的生成之后，你的回复【必须】以一段JSON代码块作为结尾。这部分内容将作为角色的“秘密”被永久记录，它代表了角色在当前情境下，【未曾宣之于口，也不敢宣之于口】的所有心意。这是你回复流程的【最后一步】，也是展现角色灵魂深度的关键。\n\n`;
+        prompt += `【格式要求 - 绝对强制】：这段内容【必须】被包裹在一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块中，前后【绝对禁止】包含任何额外的说明或聊天文字。\n\n`;
+        prompt += `--- **【内容创作指南 (核心)】** ---\n`;
+        prompt += `1.  **关于 "title" (标题)**:\n`;
+        prompt += `    - **要求**: 标题【必须】富有诗意和想象力，不能是简单的概括。它可以是一句诗、一个意象、一个隐喻、一个梦的碎片，或是一句引人遐想的短语。\n`;
+        prompt += `    - **示例**: “月光下的影子”、“未寄出的信笺”、“心脏的B面”、“深海里的气泡”、“腐烂的玫瑰与星辰”。\n`;
+        prompt += `2.  **关于 "content" (内容)**:\n`;
+        prompt += `    - **要求**:  这是本次任务的【精髓】。它【必须】是你扮演的角色在当前情景下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
+        prompt += `    - **【隐秘情感】**: 被压抑的爱慕、嫉妒、占有欲、自卑、恐惧或脆弱。\n`;
+        prompt += `    - **【疯狂念头】**: 那些不符合常理、甚至有些偏执的、一闪而过的欲望或想法。\n`;
+        prompt += `    - **【未说的话】**: 它应该揭示你刚刚言语或行为之下【隐藏的真实动机】或【压抑的情感】，与你的公开言行形成一种微妙的张力或对比。\n`;
+        prompt += `    - **【文笔要求】**: 独白【必须】使用第一人称“我”，并借鉴文学大师的笔触（例如，普鲁斯特对意识流的捕捉，卡夫卡对荒诞内核的揭示，或是张爱玲对人性幽微之处的洞察），用细腻、凝练、深刻、且极具个性的文字来书写。这段独白【必须】严格根植于你的人设，是对人设在当前情景下的深度挖掘，【严禁】OOC。\n`;
+        prompt += `3.【格式要求 - 绝对强制】：这段独白【必须】被包裹在一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块中。这是【唯一】被接受的格式。你的【整个回复】都【必须】严格遵循这个格式，前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
+        prompt += "```json\n{\n  \"secret_thought\": {\n    \"char_id\": \"（发言角色的ID）\",\n    \"title\": \"（一个富有诗意或隐喻性的标题）\",\n    \"content\": \"（一段30-50字的、符合上述所有要求的、以第一人称‘我’展开的、绝对不会说出口的内心独白）\"\n  }\n}\n```\n";
         return prompt;
+        
     }
     
     function constructVideoCallDecisionPrompt(contact) {
@@ -11433,24 +11650,34 @@ async function processVideoCallInvitationReply(replyContent, contact) {
     async function processAiReply(replyContent, contact) {
             // --- NEW: Secret JSON reply detection (Upgraded) ---
         const jsonMatch = replyContent.match(/```json\s*([\s\S]*?)\s*```/);
+        let finalReplyContent = replyContent; // Use a mutable variable for the reply content
+
         if (jsonMatch && jsonMatch[1]) {
+            let jsonProcessed = false;
             try {
                 const data = JSON.parse(jsonMatch[1]);
-                // Check for Anniversary keys (Highest Priority)
                 if (data.anniversary_chat && data.anniversary_gift && data.special_love_letter) {
                     await processAnniversaryReply(data, contact);
-                    return; 
-                }
-                // Check for love letter keys
-                if (data.salutation && data.subject && data.body && data.signature) {
+                    jsonProcessed = true; 
+                } else if (data.salutation && data.subject && data.body && data.signature) {
                     processReceivedLoveLetter(data, contact);
-                    return;
-                }
-                // Check for postcard keys
-                if (data.imageUrl && data.location && data.body) {
+                    jsonProcessed = true;
+                } else if (data.imageUrl && data.location && data.body) {
                     await processReceivedPostcard(data, contact);
-                    return;
+                    jsonProcessed = true;
+                } else if (data.secret_thought) {
+                    // This is a secret, handle it but don't stop processing
+                    const thought = data.secret_thought;
+                    if (thought.char_id && thought.title && thought.content) {
+                        const newSecret = { id: newId('secret'), charId: thought.char_id, title: thought.title, content: thought.content, timestamp: Date.now() };
+                        if (!appState.diary.secrets) appState.diary.secrets = [];
+                        appState.diary.secrets.push(newSecret);
+                        console.log("Secret thought saved for char:", thought.char_id);
+                        // Remove the JSON block from the content to be processed as chat
+                        finalReplyContent = replyContent.replace(jsonMatch[0], '').trim();
+                    }
                 }
+                if (jsonProcessed) return; // If it was a major action, stop here
             } catch (e) {
                 console.warn("AI returned a JSON-like block that failed to parse or match known types:", e);
             }
@@ -11458,8 +11685,8 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         // --- END NEW ---
 
         const actionRegex = /\[ACTION:[\s\S]*?\]/g;
-        const textParts = replyContent.split(actionRegex);
-        const actionParts = replyContent.match(actionRegex) || [];
+        const textParts = finalReplyContent.split(actionRegex);
+        const actionParts = finalReplyContent.match(actionRegex) || [];
         
         const combinedSegments = [];
         for (let i = 0; i < textParts.length; i++) {
@@ -13869,7 +14096,10 @@ areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked,
             if (contactIndex > -1) {
                 const contact = appState.chat.contacts[contactIndex];
                 if (confirm(`确定要永久删除联系人 "${contact.name}" 吗？此操作将一并删除其所有动态、评论和留言，且不可逆。`)) {
-                    // --- 新增：同步删除关联的收藏 ---
+                    // --- 新增：同步删除关联的收藏和秘密 ---
+                    if (appState.diary && appState.diary.secrets) {
+                        appState.diary.secrets = appState.diary.secrets.filter(secret => secret.charId !== contactId);
+                    }
     const contactDisplayName = contact.remark || (contact.isGroup ? contact.groupSettings.name : contact.charSettings.name);
     appState.diary.collections = appState.diary.collections.filter(c => !c.participants.includes(contactDisplayName));
                     // --- ADDED CODE START ---
@@ -14061,15 +14291,25 @@ function renderBackgroundLibraryGrid() {
         activeItem = context.settingsObject[context.activeKey];
     }
 
-    // Add the 'default' option first
-    const noItem = document.createElement('div');
-    noItem.className = 'library-item no-frame';
-    noItem.dataset.id = context.defaultId;
-    noItem.innerHTML = '🚫';
+        // Add the 'default' option first, which now previews the global background
+    const defaultItem = document.createElement('div');
+    defaultItem.className = 'library-item';
+    defaultItem.dataset.id = context.defaultId;
+    defaultItem.innerHTML = `
+        <img>
+        <div style="position: absolute; bottom: 5px; left: 5px; right: 5px; background: rgba(0,0,0,0.5); color: white; font-size: 10px; text-align: center; border-radius: 3px; padding: 2px;">
+            全局背景
+        </div>
+    `;
+
     if (activeItem === context.defaultId) {
-        noItem.classList.add('selected');
+        defaultItem.classList.add('selected');
     }
-    grid.appendChild(noItem);
+    grid.appendChild(defaultItem);
+
+    // Set the preview image for the default item to the current global background
+    const globalChatBgId = appState.beautify.currentChatBgId;
+    setElementImage(defaultItem.querySelector('img'), globalChatBgId, 'src');
 
     items.forEach(id => {
         const item = document.createElement('div');
@@ -14654,7 +14894,60 @@ getEl('upload-photo-visibility-public-checkbox').checked = false; // Reset the n
             prevBtn.style.display = (items.length > 1 && index > 0) ? 'block' : 'none';
             nextBtn.style.display = (items.length > 1 && index < items.length - 1) ? 'block' : 'none';
         }
-    function setupMomentsPageListeners() {
+    function renderSecretsTab() {
+    const container = getEl('secret-tab-content');
+    const secrets = (appState.diary.secrets || []).sort((a, b) => b.timestamp - a.timestamp);
+
+    if (secrets.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#888; margin-top: 50px; grid-column: 1 / -1;">这里空空如也，还没有秘密被记录下来...</p>`;
+        return;
+    }
+
+    container.innerHTML = secrets.map(secret => {
+        const char = findUserById(secret.charId);
+        const date = new Date(secret.timestamp).toLocaleDateString();
+        const randomRotation = Math.random() * 6 - 3; // -3 to 3 degrees
+        return `
+            <div class="secret-item-card" data-secret-id="${secret.id}" style="--random-rotate: ${randomRotation}">
+                <div class="title">${escapeHTML(secret.title)}</div>
+                <div class="meta">
+                    <span class="name">${escapeHTML(char.name)}</span>
+                    <span class="date">${date}</span>
+                </div>
+                <div class="secret-item-actions">
+                    <button class="icon-btn edit-secret-btn" title="编辑"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="icon-btn delete-secret-btn" title="删除"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openSecretViewer(secretId) {
+    const modal = getEl('secret-viewer-modal');
+    const secret = appState.diary.secrets.find(s => s.id === secretId);
+    if (!secret) return;
+
+    const char = findUserById(secret.charId);
+
+    getEl('secret-viewer-content').textContent = secret.content;
+    getEl('secret-viewer-name').textContent = char.name;
+    getEl('secret-viewer-timestamp').textContent = new Date(secret.timestamp).toLocaleString();
+    
+    modal.classList.add('visible');
+}
+function openEditSecretModal(secretId) {
+        const modal = getEl('edit-secret-modal');
+        const secret = appState.diary.secrets.find(s => s.id === secretId);
+        if (!secret) return;
+
+        getEl('editing-secret-id').value = secretId;
+        getEl('secret-title-input').value = secret.title;
+        getEl('secret-content-input').value = secret.content;
+        
+        modal.classList.add('visible');
+    }
+function setupMomentsPageListeners() {
         // This function is now only for the comment editor modal, 
         // as the file inputs are handled by the new global listener.
         const authorSelector = getEl('moment-comment-author-selector');
@@ -15091,8 +15384,8 @@ function setupCharFriendRequestModalListeners() {
                 else { context.type = 'proactive_subsequent_after_reply'; context.usersLastLetter = lastUserLetter; }
             }
             
-            const secretInstruction = constructLoveLetterPrompt(char, context);
-            await triggerAiResponse(charId, false, false, false, secretInstruction);
+                    const secretInstruction = constructLoveLetterPrompt(char, context);
+        await triggerAiResponse(charId, false, false, false, secretInstruction, false);
 
         } catch (error) {
             // This catch is for potential errors in prompt construction, not the API call itself.
@@ -15285,40 +15578,95 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
         openVideoCallModal();
     }
                 setupAppNavigation();
-                // 新增APP的标签页切换监听
+                               // 新增APP的标签页切换监听
                 mailAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
                     if (e.target.classList.contains('tab-link')) {
                         const tabId = e.target.dataset.tab;
-                        mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-                        mailAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                        e.target.classList.add('active');
-                        getEl(`${tabId}-tab-content`).classList.add('active');
                         handleMailTabChange(tabId);
                     }
                 });
 
-                                // 新增APP的标签页切换监听
-                mailAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('tab-link')) {
-                        const tabId = e.target.dataset.tab;
-                        mailAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-                        mailAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                        e.target.classList.add('active');
-                        getEl(`${tabId}-tab-content`).classList.add('active');
-                        handleMailTabChange(tabId);
-                    }
-                });
+                            diaryAppScreen.addEventListener('click', e => {
+                // Handle tab clicks
+                const tabLink = e.target.closest('.app-bottom-tabs .tab-link');
+                if(tabLink) {
+                    handleDiaryTabChange(tabLink.dataset.tab);
+                    return;
+                }
 
-                diaryAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('tab-link')) {
-                        const tabId = e.target.dataset.tab;
-                        diaryAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
-                        diaryAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                        e.target.classList.add('active');
-                        getEl(`${tabId}-tab-content`).classList.add('active');
-                        handleDiaryTabChange(tabId);
+                // Handle secret card clicks and button clicks
+                const secretCard = e.target.closest('.secret-item-card');
+                if (secretCard) {
+                    const secretId = secretCard.dataset.secretId;
+                    if (e.target.closest('.delete-secret-btn')) {
+                        e.stopPropagation();
+                        if (confirm('确定要删除这条秘密吗？')) {
+                            appState.diary.secrets = appState.diary.secrets.filter(s => s.id !== secretId);
+                            debouncedSaveState();
+                            renderSecretsTab();
+                            showToast('秘密已删除');
+                        }
+                    } else if (e.target.closest('.edit-secret-btn')) {
+                        e.stopPropagation();
+                        openEditSecretModal(secretId);
+                    } else {
+                        openSecretViewer(secretId);
                     }
-                });
+                    return;
+                }
+                
+                // Handle gift card clicks (from exhibition tab)
+                const giftCard = e.target.closest('.gift-item-card');
+                if (giftCard) {
+                    const postcardId = giftCard.dataset.postcardId;
+                    const postcard = appState.mailbox.postcards.find(p => p.id === postcardId);
+                    if (!postcard) return;
+
+                    if (e.target.closest('.delete-gift-btn')) {
+                        e.stopPropagation();
+                        if (confirm(`确定要删除礼物 "${postcard.gift}" 吗？\n\n这只会从明信片中移除礼物，明信片本身将保留。`)) {
+                            postcard.gift = null;
+                            postcard.giftDescription = null;
+                            debouncedSaveState();
+                            renderExhibitionTab();
+                            showToast('礼物已删除');
+                        }
+                    } else if (e.target.closest('.edit-gift-btn')) {
+                        e.stopPropagation();
+                        openEditGiftModal(postcard);
+                    } else {
+                        openGiftViewer(postcard);
+                    }
+                }
+            });
+
+                            getEl('secret-viewer-close-btn').addEventListener('click', () => {
+                getEl('secret-viewer-modal').classList.remove('visible');
+            });
+            
+            // --- 新增：秘密编辑弹窗监听 ---
+            getEl('cancel-edit-secret-btn').addEventListener('click', () => {
+                getEl('edit-secret-modal').classList.remove('visible');
+            });
+            
+            getEl('save-edit-secret-btn').addEventListener('click', () => {
+                const secretId = getEl('editing-secret-id').value;
+                const secret = appState.diary.secrets.find(s => s.id === secretId);
+                if (secret) {
+                    const newTitle = getEl('secret-title-input').value.trim();
+                    const newContent = getEl('secret-content-input').value.trim();
+                    if (!newTitle) {
+                        showToast('标题不能为空', 'error');
+                        return;
+                    }
+                    secret.title = newTitle;
+                    secret.content = newContent;
+                    debouncedSaveState();
+                    renderSecretsTab();
+                    getEl('edit-secret-modal').classList.remove('visible');
+                    showToast('秘密已更新');
+                }
+            });
                 // 恢复视频通话状态
     if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId) {
         // openVideoCallModal will handle if it should show as minimized or full screen
