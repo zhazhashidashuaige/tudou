@@ -272,6 +272,7 @@
     height: 100%;
     overflow-y: auto;
     padding: 15px;
+    padding-bottom: 80px; /* 修复：增加底部内边距以避免遮挡 */
     box-sizing: border-box;
 }
 .style-row-group {
@@ -1280,7 +1281,6 @@ align-content: start;
 #love-letter-tab-content.active { padding: 0; display: flex; flex-direction: column; height: 100%; }
 .love-letter-list { list-style: none; padding: 0; margin: 0; flex-shrink: 0; } /* Unread list doesn't scroll */
 .love-letter-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; background-color: var(--item-bg); }
-.love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 70px; /* 修复：增加底部内边距以避免遮挡 */ border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 .love-letter-item.unread { background-color: #eaf3ff; }
 .love-letter-item:hover { background-color: var(--item-active-bg); }
 .love-letter-main { display: flex; align-items: center; }
@@ -8427,7 +8427,7 @@ async function handleRefreshClick() {
             return;
         }
 
-        // 恢复至原版正确的逻辑：找到所有需要删除的消息（AI回复 + 错误消息）
+        // 修复：恢复至原版正确的逻辑，以识别所有需要删除的消息（AI回复 + 错误消息）
         const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error'));
 
         if (messagesToDelete.length === 0) {
@@ -8454,7 +8454,7 @@ async function handleRefreshClick() {
         }
         // --- 嵌入结束 ---
 
-        // 恢复至原版正确的逻辑：精确地截断对话数组
+        // 修复：恢复至原版正确的逻辑，以精确地截断对话数组
         contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error'));
         
         updateContactLastMessage(runtimeState.currentChatId);
@@ -11812,11 +11812,11 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 if (data.anniversary_chat && data.anniversary_gift && data.special_love_letter) {
                     await processAnniversaryReply(data, contact);
                     jsonProcessed = true; 
-                } else if (data.salutation && data.subject && data.body && data.signature) {
-                    processReceivedLoveLetter(data, contact);
-                    jsonProcessed = true;
-                } else if (data.imageUrl && data.location && data.body) {
+                } else if (data.imageUrl && data.location && data.body) { // 修复：优先判断明信片
                     await processReceivedPostcard(data, contact);
+                    jsonProcessed = true;
+                } else if (data.salutation && data.subject && data.body && data.signature) { // 后判断情书
+                    processReceivedLoveLetter(data, contact);
                     jsonProcessed = true;
                 } else if (data.secret_thought) {
                     const thought = data.secret_thought;
@@ -15604,7 +15604,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                     appState.chat.moments.messages.some(m => (m.senderId === 'user' && m.timestamp > fiveMinutesAgo) || (m.replies && m.replies.some(r => r.authorId === 'user' && r.timestamp > fiveMinutesAgo)));
 
                 if (userSilenceDuration > intervalMinutes * 60 * 1000 && isUserActiveElsewhere) {
-                    triggerAiResponse(contact.id, false, true); 
+                    triggerAiResponse(contact.id, false, true, false, null, false); 
                 } else {
                     // 主动发送明信片
                     contact.charSettings.realtimeTicksSincePostcard++;
@@ -15617,7 +15617,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                     if (Math.random() < 0.25) { 
                        logVisitor('user', contact.id);
                     } else {
-                       triggerAiResponse(contact.id, true); 
+                       triggerAiResponse(contact.id, true, false, false, null, false); 
                     }
                 }
             }, intervalMinutes * 60 * 1000); 
