@@ -272,7 +272,6 @@
     height: 100%;
     overflow-y: auto;
     padding: 15px;
-    padding-bottom: 80px; /* 修复：增加底部内边距以避免遮挡 */
     box-sizing: border-box;
 }
 .style-row-group {
@@ -1281,6 +1280,7 @@ align-content: start;
 #love-letter-tab-content.active { padding: 0; display: flex; flex-direction: column; height: 100%; }
 .love-letter-list { list-style: none; padding: 0; margin: 0; flex-shrink: 0; } /* Unread list doesn't scroll */
 .love-letter-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; background-color: var(--item-bg); }
+.love-letter-collection-container { flex-grow: 1; overflow-y: auto; padding: 15px; padding-bottom: 70px; /* 修复：增加底部内边距以避免遮挡 */ border-top: 1px solid var(--border-color); } /* Makes this area scrollable */
 .love-letter-item.unread { background-color: #eaf3ff; }
 .love-letter-item:hover { background-color: var(--item-active-bg); }
 .love-letter-main { display: flex; align-items: center; }
@@ -7964,13 +7964,6 @@ if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHa
         setTimeout(() => generateAndSendPostcard(contact), 3500);
     }
 }
-// --- ADDED: First Love Letter Trigger ---
-if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstChat && contact.conversation.length === 0) {
-contact.charSettings.hasHadFirstChat = true;
-// Use a timeout to make it feel more natural, as if the character is writing it after the first chat.
-setTimeout(() => generateAndSendLoveLetter(contact.id), 2000);
-}
-// --- END ADDED ---
 contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(message.content, contact.id, message.sender); }
 // When a new message is added, increase the display limit to ensure it's visible
 if (runtimeState.chatDisplayLimits[contact.id]) {
@@ -8076,8 +8069,11 @@ const contact = appState.chat.contacts.find(c => c.id === targetChatId);
 if (!contact) return;
 if (contact.isGroup && contact.groupSettings.isDisbanded) { return; }
 if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
-if (runtimeState.activeRequests[targetChatId]) return;
-runtimeState.activeRequests[targetChatId] = true;
+            // --- 核心修复：仅在需要显示输入状态时，才设置请求标志 ---
+            if (showTyping) {
+                if (runtimeState.activeRequests[targetChatId]) return;
+                runtimeState.activeRequests[targetChatId] = true;
+            }
     if (!isVideoChat && showTyping) {
             updateTypingIndicator();
         }
@@ -8088,16 +8084,16 @@ runtimeState.activeRequests[targetChatId] = true;
                 throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
             }
 
-            if (!isVideoChat) {
-                const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
-                messagesToProcess.forEach(msg => {
-                    if (msg.type === 'redPacket') {
-                        msg.status = 'unclaimed';
-                    } else {
-                        msg.status = 'sent';
-                    }
-                });
-            }
+                    if (!isVideoChat && !context) {
+            const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
+            messagesToProcess.forEach(msg => {
+                if (msg.type === 'redPacket') {
+                    msg.status = 'unclaimed';
+                } else {
+                    msg.status = 'sent';
+                }
+            });
+        }
             
             const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
             let systemPrompt;
@@ -8188,7 +8184,9 @@ runtimeState.activeRequests[targetChatId] = true;
                 addMessageToVideoChatLog('system', `(系统错误: ${error.message})`, 'System');
             }
         } finally {
-            delete runtimeState.activeRequests[targetChatId];
+            if (showTyping) {
+                delete runtimeState.activeRequests[targetChatId];
+            }
             if (!isVideoChat) {
                 updateTypingIndicator();
                 debouncedSaveState();
@@ -8427,7 +8425,7 @@ async function handleRefreshClick() {
             return;
         }
 
-        // 修复：恢复至原版正确的逻辑，以识别所有需要删除的消息（AI回复 + 错误消息）
+        // 恢复至原版正确的逻辑：找到所有需要删除的消息（AI回复 + 错误消息）
         const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error'));
 
         if (messagesToDelete.length === 0) {
@@ -8454,7 +8452,7 @@ async function handleRefreshClick() {
         }
         // --- 嵌入结束 ---
 
-        // 修复：恢复至原版正确的逻辑，以精确地截断对话数组
+        // 恢复至原版正确的逻辑：精确地截断对话数组
         contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error'));
         
         updateContactLastMessage(runtimeState.currentChatId);
@@ -9509,29 +9507,26 @@ csRealtimeInterval.addEventListener('input', () => {
                 }
             });
 csRestoreBtn.addEventListener('click', () => { if (confirm('确定要还原所有未保存的更改吗？')) { runtimeState.tempChatSettings = JSON.parse(JSON.stringify(runtimeState.originalChatSettings)); loadSingleChatSettingsUI(); showToast('设置已还原'); } });
-csClearHistoryBtn.addEventListener('click', () => {
-                    if (confirm('此操作将永久清空与该角色的所有聊天记录，确定吗？')) {
-                        const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-                        if (contact) {
-                            contact.conversation = [];
-                            // --- 新增：同步删除关联的秘密 ---
-                            if (appState.diary && appState.diary.secrets) {
-                                const originalSecretsCount = appState.diary.secrets.length;
-                                appState.diary.secrets = appState.diary.secrets.filter(secret => secret.charId !== contact.id);
-                                const secretsDeletedCount = originalSecretsCount - appState.diary.secrets.length;
-                                if (secretsDeletedCount > 0) {
-                                    console.log(`清空聊天记录，同步删除了 ${secretsDeletedCount} 条关联的秘密。`);
-                                }
-                            }
-                            // --- 新增结束 ---
-                            updateContactLastMessage(runtimeState.currentChatId);
-                            debouncedSaveState();
-                            renderConversation();
-                            renderMessageList();
-                            showToast('聊天记录已清空');
+csClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空与该角色的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);                 if (contact) {
+                    // --- 新增：同步删除关联的秘密 ---
+                    if (appState.diary && appState.diary.secrets && contact.conversation.length > 0) {
+                        const charId = contact.id; // Corrected: Use the single contact's ID
+                        const timestamps = contact.conversation.map(msg => msg.timestamp);
+                        const minTimestamp = Math.min(...timestamps);
+                        const maxTimestamp = Math.max(...timestamps);
+                        
+                        const originalSecretsCount = appState.diary.secrets.length;
+                        appState.diary.secrets = appState.diary.secrets.filter(secret => {
+                            // Keep the secret if it's not from this character OR if it's outside the conversation's time range
+                            return secret.charId !== charId || secret.timestamp < (minTimestamp - 2000) || secret.timestamp > (maxTimestamp + 2000);
+                        });
+                        const secretsDeletedCount = originalSecretsCount - appState.diary.secrets.length;
+                        if (secretsDeletedCount > 0) {
+                            console.log(`同步删除了 ${secretsDeletedCount} 条与该聊天相关的秘密。`);
                         }
                     }
-                });
+                    // --- 新增结束 --- 
+                    contact.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } });
 csDeleteFriendBtn.addEventListener('click', () => { if (confirm('确定要删除该好友吗？此操作会通知对方。')) { runtimeState.tempChatSettings.charSettings.isFriend = false; addSystemNotification(runtimeState.currentChatId, "你删除了对方好友", false); loadSingleChatSettingsUI(); showToast('好友已删除'); } });
 
 // **核心修改**: 替换旧的 prompt 为打开新弹窗
@@ -9897,31 +9892,25 @@ function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c
     }
     appState.chat.userProfile = { ...appState.chat.userProfile, ...contact.userSettings }; debouncedSaveState();
     applyAllCustomBubbleStyles();  updateSingleChatUI(); renderMessageList(); renderConversation(); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
-function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsGroupBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.groupSettings }); }); gcsClearHistoryBtn.addEventListener('click', () => {
-                        if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) {
-                            const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
-                            if (contact) {
-                                contact.conversation = [];
-                                runtimeState.tempChatSettings.groupSettings.conversation = [];
-                                // --- 新增：同步删除关联的秘密 ---
-                                if (appState.diary && appState.diary.secrets) {
-                                    const originalSecretsCount = appState.diary.secrets.length;
-                                    const memberIds = contact.members || []; // Get all char members of the group
-                                    appState.diary.secrets = appState.diary.secrets.filter(secret => !memberIds.includes(secret.charId));
-                                    const secretsDeletedCount = originalSecretsCount - appState.diary.secrets.length;
-                                    if (secretsDeletedCount > 0) {
-                                        console.log(`清空群聊记录，同步删除了 ${secretsDeletedCount} 条关联的秘密。`);
-                                    }
-                                }
-                                // --- 新增结束 ---
-                                updateContactLastMessage(runtimeState.currentChatId);
-                                debouncedSaveState();
-                                renderConversation();
-                                renderMessageList();
-                                showToast('聊天记录已清空');
-                            }
+function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click', () => { saveGroupChatSettings(); closeSubScreen(groupChatSettingsScreen, singleChatScreen); }); query('#group-chat-settings-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#group-chat-settings-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#group-chat-settings-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); } }); gcsGroupName.addEventListener('input', () => { const oldName = runtimeState.tempChatSettings.groupSettings.name; const newName = gcsGroupName.value.trim(); if (newName && newName !== oldName) { addSystemNotification(runtimeState.currentChatId, `'${runtimeState.tempChatSettings.userSettings.name}' 将群名修改为 "${newName}"`, false); runtimeState.tempChatSettings.groupSettings.name = newName; } }); gcsContextMemory.addEventListener('input', () => runtimeState.tempChatSettings.groupSettings.contextMemory = parseInt(gcsContextMemory.value) || 20); gcsGroupAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '群头像库', isGroup: true, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsGroupBackgroundBtn.addEventListener('click', (e) => { showBackgroundContextMenu(e.currentTarget, { settingsObject: runtimeState.tempChatSettings.groupSettings }); }); gcsClearHistoryBtn.addEventListener('click', () => { if (confirm('此操作将永久清空该群的所有聊天记录，确定吗？')) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);                 if (contact) {
+                    // --- 新增：同步删除关联的秘密 ---
+                    if (appState.diary && appState.diary.secrets && contact.conversation.length > 0) {
+                        const memberIds = new Set(contact.members);
+                        const timestamps = contact.conversation.map(msg => msg.timestamp);
+                        const minTimestamp = Math.min(...timestamps);
+                        const maxTimestamp = Math.max(...timestamps);
+                        
+                        const originalSecretsCount = appState.diary.secrets.length;
+                        appState.diary.secrets = appState.diary.secrets.filter(secret => {
+                            // 如果秘密不是这个群成员的，或者时间戳不在消息范围内（前后加2秒缓冲），则保留
+                            return !memberIds.has(secret.charId) || secret.timestamp < (minTimestamp - 2000) || secret.timestamp > (maxTimestamp + 2000);
+                        });
+                        const secretsDeletedCount = originalSecretsCount - appState.diary.secrets.length;
+                        if (secretsDeletedCount > 0) {
+                            console.log(`同步删除了 ${secretsDeletedCount} 条与该群聊相关的秘密。`);
                         }
-                    }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
+                    }
+                     contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
     // 为群聊User设置中的视频背景按钮添加直接上传监听
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
@@ -10239,8 +10228,33 @@ gcsMemberActionBody.addEventListener('click', (e) => { const btn = e.target.clos
 
         // --- Postcard Listeners ---
         getEl('postcard-wall').addEventListener('click', (e) => {
-            const card = e.target.closest('.postcard-preview-card');
-            if (!card) return;
+                    const card = e.target.closest('.postcard-preview-card');
+        if (!card) return;
+
+        // --- 新增：处理图片重试点击 ---
+        if (e.target.closest('.postcard-preview-image') && card.querySelector('.fa-camera-slash')) {
+            const postcardIdToRetry = card.dataset.postcardId;
+            const postcardToRetry = appState.mailbox.postcards.find(p => p.id === postcardIdToRetry);
+            if (postcardToRetry) {
+                // 找到最初由AI生成的原始随机URL
+                const originalRandomUrl = `https://img.xjh.me/random_img.php`; // 假设这是原始URL，或从某处获取
+                
+                showToast('正在尝试重新加载图片...');
+                resolveRedirectUrl(originalRandomUrl)
+                    .then(resolvedUrl => {
+                        postcardToRetry.imageUrl = resolvedUrl;
+                        debouncedSaveState();
+                        renderPostcardWall();
+                        showToast('图片加载成功！');
+                    })
+                    .catch(err => {
+                        showToast('还是失败了，请稍后再试', 'error');
+                        console.error("Retry failed:", err);
+                    });
+            }
+            return; // 阻止后续逻辑执行
+        }
+        // --- 新增结束 ---
             
             const postcardId = card.dataset.postcardId;
 
@@ -11518,10 +11532,10 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `18. **群主专属**: \`[ACTION: TRANSFER_OWNERSHIP "目标成员ID"]\`, \`[ACTION: PROMOTE_ADMIN "目标成员ID"]\`, \`[ACTION: DEMOTE_ADMIN "目标成员ID"]\`\n`;
         prompt += `19. **发表动态 (重要)**: \`[ACTION: POST_MOMENT "type" "content" "visibility"]\`\n`;
     prompt += `    - **类型 (type)**: 必须是 "status" (说说) 或 "log" (日志)。\n`;
-prompt += `    - **决策规则**: 当你想分享一个简短的想法或心情时，使用 "status"。当你想记录一个详细的事件、一个完整的故事或一段深刻的内心反思时，你【必须】使用 "log"。\n`;
-prompt += `    - **内容 (content)**:\n`;
-prompt += `        - 如果 type 是 "status"，content 就是说说的文字内容。\n`;
-prompt += `        - 如果 type 是 "log"，content 【必须】是 "日志标题|日志正文" 的格式。在日志正文，你需要换行来分段时，请【只使用一个 \\n】作为标记。【严禁】使用 \`\\n\\n\` 或多个连续的换行标记。\n`;
+    prompt += `    - **决策规则**: 当你想分享一个简短的想法或心情时，使用 "status"。当你想记录一个详细的事件、一个完整的故事或一段深刻的内心反思时，你【必须】使用 "log"。\n`;
+    prompt += `    - **内容 (content)**:\n`;
+    prompt += `        - 如果 type 是 "status"，content 就是说说的文字内容。\n`;
+    prompt += `        - 如果 type 是 "log"，content 【必须】是 "日志标题|日志正文" 的格式。在日志正文中，你【必须使用 \\n 来代表换行】，以实现分段。\n`;
     prompt += `    - **可见性 (visibility)**: 必须是 "public" (公开) 或 "specific" (指定好友)。\n`;
     prompt += `    - **【重要】**: 你的日志内容必须是完整的，【严禁】使用“省略号”或“（此处省略...）”等任何形式的省略写法来偷懒。\n`;
     prompt += `    - **示例**: \`[ACTION: POST_MOMENT "status" "今天天气真好！" "public"]\` 或 \`[ACTION: POST_MOMENT "log" "关于今天下午的邂逅|今天下午的阳光很好，我在街角的咖啡店看到了一个很像你的人...\\n\\n那一刻我的心跳都漏了一拍，多希望那真的是你。" "public"]\`\n`;
@@ -11858,11 +11872,11 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 if (data.anniversary_chat && data.anniversary_gift && data.special_love_letter) {
                     await processAnniversaryReply(data, contact);
                     jsonProcessed = true; 
-                } else if (data.imageUrl && data.location && data.body) { // 修复：优先判断明信片
-                    await processReceivedPostcard(data, contact);
-                    jsonProcessed = true;
-                } else if (data.salutation && data.subject && data.body && data.signature) { // 后判断情书
+                } else if (data.salutation && data.subject && data.body && data.signature) {
                     processReceivedLoveLetter(data, contact);
+                    jsonProcessed = true;
+                } else if (data.imageUrl && data.location && data.body) {
+                    await processReceivedPostcard(data, contact);
                     jsonProcessed = true;
                 } else if (data.secret_thought) {
                     const thought = data.secret_thought;
@@ -12017,14 +12031,14 @@ async function processVideoCallInvitationReply(replyContent, contact) {
     const originalCard = appState.mailbox.postcards.find(p => p.senderId === 'user' && p.recipientId === charId && !p.replyProcessed);
 
     if (postcardData.imageUrl && postcardData.imageUrl.includes('random_img.php')) {
-        try {
-            postcardData.imageUrl = await resolveRedirectUrl(postcardData.imageUrl);
-        } catch (imgError) {
-            console.error('Failed to resolve random image URL, will retry:', imgError);
-            // Throw an error to trigger the retry mechanism
-            throw new Error("Image URL resolution failed.");
-        }
+    try {
+        postcardData.imageUrl = await resolveRedirectUrl(postcardData.imageUrl);
+    } catch (imgError) {
+        console.error('Failed to resolve random image URL, marking as resolution_failed:', imgError);
+        // Mark this postcard's image as failed, so the UI can handle it gracefully.
+        postcardData.imageUrl = 'resolution_failed'; 
     }
+}
         const newPostcard = { id: newId('postcard'), senderId: charId, recipientId: 'user', isRead: false, ...postcardData };
         appState.mailbox.postcards.push(newPostcard);
 
@@ -13003,8 +13017,7 @@ async function handleMomentsImageUpload(file, profileId, type) {
         
         if (target.closest('.post-log-summary')) {
             viewContentTitle.textContent = post.content.title;
-            const logTextWithBreaks = escapeHTML(post.content.text).replace(/(?:\\n|\r?\n)+/g, '<br>');
-            viewContentBody.innerHTML = `<p>${logTextWithBreaks}</p>`;
+            viewContentBody.innerHTML = `<p>${escapeHTML(post.content.text).replace(/\n/g, '<br>')}</p>`;
             viewContentModal.classList.add('visible');
             return;
         }
@@ -13333,8 +13346,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
                 : '';
             contentHTML = `${postText}${imageGridHTML}`;
         } else if (post.type === 'log') {
-            const logTextWithNewlines = post.content.text.replace(/(?:\\n|\r?\n)+/g, '\n');
-            const summary = logTextWithNewlines.length > 30 ? logTextWithNewlines.substring(0, 30).replace(/[，。！？]$/, '') + '...' : logTextWithNewlines;
+            const summary = post.content.text.length > 30 ? post.content.text.substring(0, 30).replace(/[，。！？]$/, '') + '...' : post.content.text;
             contentHTML = `<div class="post-log-summary"><h3>${escapeHTML(post.content.title)}</h3><p>${escapeHTML(summary)}</p></div>`;
         } else if (post.type === 'photo') {
             const photoData = appState.chat.moments.photos.filter(p => post.content.photoIds.includes(p.id));
@@ -14333,9 +14345,12 @@ areCommentsPrivate: getEl('upload-photo-comment-private-checkbox').checked,
                             }
                         });
 
-                        // 2. Clean Message Board Messages and Replies
-                        // Filter out messages by the char
-                        appState.chat.moments.messages = appState.chat.moments.messages.filter(msg => msg.senderId !== charId);
+                        // Clean up notifications from the char
+                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.actorId !== charId);
+
+                    // 2. Clean Message Board Messages and Replies
+                    // Filter out messages by the char
+                    appState.chat.moments.messages = appState.chat.moments.messages.filter(msg => msg.senderId !== charId);
                          // Clean Message Board Messages and Replies
                         // Filter out messages by the char
                         appState.chat.moments.messages = appState.chat.moments.messages.filter(msg => msg.senderId !== charId);
@@ -15244,6 +15259,17 @@ function setupMomentsPageListeners() {
                     if (!charContact) return ''; // 如果找不到联系人，则不渲染此卡片
 
                     const charName = charContact.charSettings.name;
+                let imageContentHTML = '';
+                if (card.imageUrl === 'resolution_failed') {
+                    imageContentHTML = `
+                        <div class="postcard-preview-image" style="background-color: #e0e0e0; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 8px; color: #888;">
+                            <i class="fa-solid fa-camera-slash" style="font-size: 24px;"></i>
+                            <span style="font-size: 11px;">加载失败, 点击重试</span>
+                        </div>
+                    `;
+                } else {
+                    imageContentHTML = `<div class="postcard-preview-image" data-image-id="${card.imageUrl}"></div>`;
+                }
                     const isUnread = isReceived && !card.isRead;
                     
                     const displayTimestamp = typeof card.timestamp === 'number'
@@ -15252,7 +15278,7 @@ function setupMomentsPageListeners() {
 
                     return `
                         <div class="postcard-preview-card ${isUnread ? 'unread' : ''}" data-postcard-id="${card.id}">
-                            <div class="postcard-preview-image" data-image-id="${card.imageUrl}"></div>
+                            ${imageContentHTML}
                             <div class="postcard-preview-footer">
                                 <span class="postcard-preview-sender">${isReceived ? 'From:' : 'To:'} ${charName}</span>
                                 <span class="postcard-preview-location">${card.location}</span>
@@ -15652,7 +15678,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                     appState.chat.moments.messages.some(m => (m.senderId === 'user' && m.timestamp > fiveMinutesAgo) || (m.replies && m.replies.some(r => r.authorId === 'user' && r.timestamp > fiveMinutesAgo)));
 
                 if (userSilenceDuration > intervalMinutes * 60 * 1000 && isUserActiveElsewhere) {
-                    triggerAiResponse(contact.id, false, true, false, null, false); 
+                    triggerAiResponse(contact.id, false, true); 
                 } else {
                     // 主动发送明信片
                     contact.charSettings.realtimeTicksSincePostcard++;
@@ -15665,7 +15691,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                     if (Math.random() < 0.25) { 
                        logVisitor('user', contact.id);
                     } else {
-                       triggerAiResponse(contact.id, true, false, false, null, false); 
+                       triggerAiResponse(contact.id, true); 
                     }
                 }
             }, intervalMinutes * 60 * 1000); 
