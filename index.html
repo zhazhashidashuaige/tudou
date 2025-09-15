@@ -5528,37 +5528,31 @@ if (finalCss) {
         debouncedSaveState();
     });
 
-    globalRealtimeCharSelector.addEventListener('click', (e) => {
-        const item = e.target.closest('.realtime-char-item');
-        if (!item) return;
-        const contactId = item.dataset.id;
-        const contact = appState.chat.contacts.find(c => c.id === contactId);
-        if (contact) {
-            const charSettings = contact.charSettings.realtimeActivity;
-            charSettings.enabled = !charSettings.enabled;
-            if (charSettings.enabled) {
-                charSettings.interval = appState.settings.globalRealtimeActivity.interval;
+                globalRealtimeCharSelector.addEventListener('click', (e) => {
+            const item = e.target.closest('.realtime-char-item');
+            if (!item) return;
+            const contactId = item.dataset.id;
+            const contact = appState.chat.contacts.find(c => c.id === contactId);
+            if (contact) {
+                const charSettings = contact.charSettings.realtimeActivity;
+                charSettings.enabled = !charSettings.enabled;
+                updateRealtimeActivityTimer(contact);
+                item.classList.toggle('selected');
+                debouncedSaveState();
             }
-            updateRealtimeActivityTimer(contact);
-            item.classList.toggle('selected');
-            debouncedSaveState();
-        }
-    });
-
-    globalRealtimeSelectAll.addEventListener('click', () => {
-        const allChars = appState.chat.contacts.filter(c => !c.isGroup);
-        const shouldEnableAll = allChars.some(c => !c.charSettings.realtimeActivity.enabled);
-
-        allChars.forEach(contact => {
-            contact.charSettings.realtimeActivity.enabled = shouldEnableAll;
-            if (shouldEnableAll) {
-                contact.charSettings.realtimeActivity.interval = appState.settings.globalRealtimeActivity.interval;
-            }
-            updateRealtimeActivityTimer(contact);
         });
-        renderGlobalRealtimeSettings();
-        debouncedSaveState();
-    });
+
+                globalRealtimeSelectAll.addEventListener('click', () => {
+            const allChars = appState.chat.contacts.filter(c => !c.isGroup);
+            const shouldEnableAll = allChars.some(c => !c.charSettings.realtimeActivity.enabled);
+    
+            allChars.forEach(contact => {
+                contact.charSettings.realtimeActivity.enabled = shouldEnableAll;
+                updateRealtimeActivityTimer(contact);
+            });
+            renderGlobalRealtimeSettings();
+            debouncedSaveState();
+        });
     closeManageModalBtn.addEventListener('click', () => managePresetsModal.classList.remove('visible'));
     function renderPresetList() { presetListEl.innerHTML = ''; if (appState.settings.presets.length === 0) { presetListEl.innerHTML = '<li><div class="preset-item-content">暂无预设</div></li>'; return; } appState.settings.presets.forEach((preset, index) => { const li = document.createElement('li'); li.className = 'preset-list-item'; li.dataset.index = index; li.innerHTML = `<div class="preset-item-content">${preset.name}</div><div class="preset-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; presetListEl.appendChild(li); }); }
     cancelEditBtn.addEventListener('click', () => editPresetModal.classList.remove('visible'));
@@ -8436,31 +8430,38 @@ async function handleRefreshClick() {
         }
 
         // 恢复至原版正确的逻辑：找到所有需要删除的消息（AI回复 + 错误消息）
-        const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error'));
+            const messagesToDelete = contact.conversation.filter((msg, index) => index >= lastUserMessageIndex && (msg.sender !== 'user' || msg.status === 'error'));
 
-        if (messagesToDelete.length === 0) {
-            showToast('没有可刷新的回复', 'error');
-            return;
-        }
+    if (messagesToDelete.length === 0) {
+        showToast('没有可刷新的回复', 'error');
+        return;
+    }
 
-        // --- 嵌入：同步删除关联的秘密 ---
-        const aiMessagesToDelete = messagesToDelete.filter(msg => msg.sender !== 'user');
-        if (aiMessagesToDelete.length > 0) {
-            const deletedTimestamps = aiMessagesToDelete.map(msg => msg.timestamp);
-            const minTimestamp = Math.min(...deletedTimestamps);
-            const maxTimestamp = Math.max(...deletedTimestamps);
-            
-            const originalSecretsCount = (appState.diary.secrets || []).length;
-            appState.diary.secrets = (appState.diary.secrets || []).filter(secret => {
-                const isOrphaned = secret.timestamp >= (minTimestamp - 2000) && secret.timestamp <= (maxTimestamp + 2000);
-                return !isOrphaned;
-            });
-            const secretsDeletedCount = originalSecretsCount - (appState.diary.secrets || []).length;
-            if (secretsDeletedCount > 0) {
-                console.log(`同步删除了 ${secretsDeletedCount} 条关联的秘密。`);
+    // --- 嵌入：同步删除关联的秘密 ---
+    const aiMessagesToDelete = messagesToDelete.filter(msg => msg.sender !== 'user');
+    if (aiMessagesToDelete.length > 0) {
+        const deletedTimestamps = aiMessagesToDelete.map(msg => msg.timestamp);
+        const minTimestamp = Math.min(...deletedTimestamps);
+        const maxTimestamp = Math.max(...deletedTimestamps);
+        const authorsOfDeletedMessages = new Set(aiMessagesToDelete.map(msg => msg.sender));
+        
+        const originalSecretsCount = (appState.diary.secrets || []).length;
+        appState.diary.secrets = (appState.diary.secrets || []).filter(secret => {
+            // If the secret's author is not among those whose messages are being deleted, keep it regardless of timestamp.
+            if (!authorsOfDeletedMessages.has(secret.charId)) {
+                return true;
             }
+            // If the author matches, then we must check the timestamp.
+            // Keep it only if it falls OUTSIDE the time range of deleted messages.
+            const isOrphaned = secret.timestamp >= (minTimestamp - 2000) && secret.timestamp <= (maxTimestamp + 2000);
+            return !isOrphaned;
+        });
+        const secretsDeletedCount = originalSecretsCount - (appState.diary.secrets || []).length;
+        if (secretsDeletedCount > 0) {
+            console.log(`同步删除了 ${secretsDeletedCount} 条关联的秘密。`);
         }
-        // --- 嵌入结束 ---
+    }
+    // --- 嵌入结束 ---
 
         // 恢复至原版正确的逻辑：精确地截断对话数组
         contact.conversation = contact.conversation.filter((msg, index) => index < lastUserMessageIndex || (index === lastUserMessageIndex && msg.sender === 'user' && msg.status !== 'error'));
@@ -9896,7 +9897,11 @@ function loadGroupChatSettingsUI() { const { groupSettings, userSettings } = run
 gcsUsBubbleCss.value = runtimeState.tempChatSettings.userSettings.bubbleCss || defaultBubbleCssText;
 updateBubbleCssPreview('gcs-us', runtimeState.tempChatSettings);}
 function renderGroupMemberList() { const { owner, admins, members } = runtimeState.tempChatSettings.groupSettings; gcsMemberList.innerHTML = ''; const memberIds = Object.keys(members).filter(id => id !== 'user'); memberIds.unshift('user'); memberIds.forEach(id => { const member = members[id]; const user = findUserById(id); const item = document.createElement('div'); item.className = 'gcs-member-item'; item.dataset.id = id; let roleBadge = ''; if (id === owner) { roleBadge = '<div class="role-badge owner">主</div>'; } else if (admins.includes(id)) { roleBadge = '<div class="role-badge admin">管</div>'; } const finalAvatarId = member.avatarId || user.avatarId; item.innerHTML = ` <div class="avatar" data-avatar-id="${finalAvatarId}">${roleBadge}</div> <span class="name">${member.nickname}</span> `; gcsMemberList.appendChild(item); setElementImage(item.querySelector('.avatar'), finalAvatarId); }); const addBtn = document.createElement('button'); addBtn.className = 'gcs-action-btn'; addBtn.textContent = '+'; addBtn.id = 'gcs-add-member-btn'; gcsMemberList.appendChild(addBtn); const removeBtn = document.createElement('button'); removeBtn.className = 'gcs-action-btn'; removeBtn.textContent = '-'; removeBtn.id = 'gcs-remove-member-btn'; gcsMemberList.appendChild(removeBtn); }
-function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; if (contact.groupSettings.members['user']) {
+function saveGroupChatSettings() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);            const originalNickname = runtimeState.originalChatSettings.groupSettings.members['user']?.nickname;
+            const finalNickname = runtimeState.tempChatSettings.groupSettings.members['user']?.nickname;
+            if (finalNickname && finalNickname !== originalNickname) {
+                addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${finalNickname}”`, false);
+            } if (!contact) return; contact.groupSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.groupSettings)); contact.userSettings = JSON.parse(JSON.stringify(runtimeState.tempChatSettings.userSettings)); contact.remark = runtimeState.tempChatSettings.remark; contact.name = runtimeState.tempChatSettings.groupSettings.name; if (contact.groupSettings.members['user']) {
         contact.groupSettings.members['user'].nickname = contact.userSettings.name;
         contact.groupSettings.members['user'].avatarId = contact.userSettings.avatarId;
         contact.groupSettings.members['user'].avatarFrameId = contact.userSettings.avatarFrameId;
@@ -9922,7 +9927,7 @@ function setupGroupChatSettingsListeners() { gcsBackBtn.addEventListener('click'
                             console.log(`同步删除了 ${secretsDeletedCount} 条与该群聊相关的秘密。`);
                         }
                     }
-                     contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); }); gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; addSystemNotification(runtimeState.currentChatId, `你将群名片修改为：“${newName}”`, false); } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
+                     contact.conversation = []; runtimeState.tempChatSettings.groupSettings.conversation = []; updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); showToast('聊天记录已清空'); } } }); gcsMuteAllBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isMuted = !runtimeState.tempChatSettings.groupSettings.isMuted; gcsMuteAllBtn.textContent = runtimeState.tempChatSettings.groupSettings.isMuted ? '解除禁言' : '全体禁言'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isMuted ? '已开启全体禁言' : '已解除全体禁言', false); }); gcsDisbandBtn.addEventListener('click', () => { runtimeState.tempChatSettings.groupSettings.isDisbanded = !runtimeState.tempChatSettings.groupSettings.isDisbanded; gcsDisbandBtn.textContent = runtimeState.tempChatSettings.groupSettings.isDisbanded ? '重建群聊' : '解散群聊'; addSystemNotification(runtimeState.currentChatId, runtimeState.tempChatSettings.groupSettings.isDisbanded ? '群聊已解散' : '群聊已恢复', false); });     gcsUsUserName.addEventListener('input', (e) => { const oldName = runtimeState.tempChatSettings.groupSettings.members['user'].nickname; const newName = e.target.value.trim(); if (newName && newName !== oldName) { runtimeState.tempChatSettings.userSettings.name = newName; runtimeState.tempChatSettings.groupSettings.members['user'].nickname = newName; } }); gcsUsPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = gcsUsPersona.value); gcsUsUserAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像库', isGlobalUserLib: true, isGroupUser: true, settingsGroup: 'userSettings', activeKey: 'avatarId', showPreview: false, isCircular: true })); gcsUsUserAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '我的头像框库', isFrame: true, settingsGroup: 'userSettings', isGroupUser: true, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempChatSettings.userSettings.avatarId })); gcsUsSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); }); gcsUsLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
 
     // 为群聊User设置中的视频背景按钮添加直接上传监听
     const gcsUsUserVideoBackgroundBtn = getEl('gcs-us-user-video-background-btn');
@@ -11561,21 +11566,28 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `27. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
         prompt += `28. **寄出情书 (单聊)**: \`[ACTION: SEND_LOVE_LETTER "收信人ID" "称呼" "标题" "正文" "落款"]\` (这是回应用户或主动寄出情书的【唯一】方式)\n`;
         prompt += `--- 结束 ---\n`;
-                prompt += `--- **【最终输出协议：私密回响与未尽之言 (Secret Thought)】** ---\n`;
-        prompt += `【任务】：在你完成了上方所有聊天文本和[ACTION]指令的生成之后，你的回复【必须】以一段JSON代码块作为结尾。这部分内容将作为角色的“秘密”被永久记录，它代表了角色在当前情境下，【未曾宣之于口，也不敢宣之于口】的所有心意。这是你回复流程的【最后一步】，也是展现角色灵魂深度的关键。\n\n`;
-        prompt += `【格式要求 - 绝对强制】：这段内容【必须】被包裹在一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块中，前后【绝对禁止】包含任何额外的说明或聊天文字。\n\n`;
-        prompt += `--- **【内容创作指南 (核心)】** ---\n`;
-        prompt += `1.  **关于 "title" (标题)**:\n`;
-            prompt += `    - **【核心要求】**: 标题【必须】是“秘密”内容核心情感的高度浓缩与隐喻升华，【严禁】直接使用或简单重复内容中的词语。它的风格应该像一首诗的题目、一首歌的名字或一本小说的章节名——独特、深刻且引人遐想。\n`;
+                    prompt += `--- **【条件性最终输出：印象深刻的私密回响 (Secret Thought)】** ---\n`;
+    prompt += `【核心规则变更】：你现在【不必】为每一次回复都生成秘密。你【只在】对话达到一个值得被铭记的、印象深刻的节点时，才应该在回复的末尾附加一段秘密记录的JSON代码块。\n\n`;
+    prompt += `【判断“印象深刻”的标准包括但不限于】：\n`;
+    prompt += `1.  **情感高潮**: 角色或用户表达了强烈的、深刻的情感（如脆弱的坦白、真诚的告白、压抑的悲伤、尖锐的争吵等）。\n`;
+    prompt += `2.  **关系里程碑**: 对话标志着你们关系的重大进展或转折（如第一次牵手、许下重要承诺、解开重大误会等）。\n`;
+    prompt += `3.  **核心秘密交换**: 角色或用户分享了一个对自己而言至关重要的秘密或往事。\n`;
+    prompt += `4.  **深刻的自我剖析**: 角色在对话中对自己的人设或内心世界有了新的、深刻的认知或反思。\n\n`;
+    prompt += `【反向规则】：对于常规的、平淡的、日常问候或信息交换性质的对话，你【绝对禁止】生成 \`secret_thought\` 代码块。你的回复应该在最后一条聊天消息或[ACTION]指令后直接结束。\n`;
+    prompt += `【核心原则】：重质而非量。一个秘密的诞生应该感觉是“理应如此”的，是情感和情节发展的必然结果，而非例行公事。\n\n`;
+    prompt += `--- **【内容创作指南 (若触发)】** ---\n`;
+    prompt += `如果且仅如果当前对话满足了上述“印象深刻”的标准，你才需要生成秘密。其内容和格式要求如下：\n`;
+    prompt += `1.  **关于 "title" (标题)**:\n`;
+    prompt += `    - **【核心要求】**: 标题【必须】是“秘密”内容核心情感的高度浓缩与隐喻升华，【严禁】直接使用或简单重复内容中的词语。它的风格应该像一首诗的题目、一首歌的名字或一本小说的章节名——独特、深刻且引人遐想。\n`;
     prompt += `    - **【创作戒律】**: 【严禁】重复使用之前生成过的标题或其中的高频词汇（如“涟漪”、“月光”、“影子”等）。每一次创作都应是独一无二的。\n`;
-        prompt += `2.  **关于 "content" (内容)**:\n`;
-        prompt += `    - **要求**:  这是本次任务的【精髓】。它【必须】是你扮演的角色在当前情景下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
-        prompt += `    - **【隐秘情感】**: 被压抑的爱慕、嫉妒、占有欲、自卑、恐惧或脆弱。\n`;
-        prompt += `    - **【疯狂念头】**: 那些不符合常理、甚至有些偏执的、一闪而过的欲望或想法。\n`;
-        prompt += `    - **【未说的话】**: 它应该揭示你刚刚言语或行为之下【隐藏的真实动机】或【压抑的情感】，与你的公开言行形成一种微妙的张力或对比。\n`;
-        prompt += `    - **【文笔要求】**: 独白【必须】使用第一人称“我”，并借鉴文学大师的笔触（例如，普鲁斯特对意识流的捕捉，卡夫卡对荒诞内核的揭示，或是张爱玲对人性幽微之处的洞察），用细腻、凝练、深刻、且极具个性的文字来书写。这段独白【必须】严格根植于你的人设，是对人设在当前情景下的深度挖掘，【严禁】OOC。\n`;
-        prompt += `3.【格式要求 - 绝对强制】：这段独白【必须】被包裹在一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块中。这是【唯一】被接受的格式。你的【整个回复】都【必须】严格遵循这个格式，前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
-        prompt += "```json\n{\n  \"secret_thought\": {\n    \"char_id\": \"（发言角色的ID）\",\n    \"title\": \"（一个富有诗意或隐喻性的标题）\",\n    \"content\": \"（一段30-50字的、符合上述所有要求的、以第一人称‘我’展开的、绝对不会说出口的内心独白）\"\n  }\n}\n```\n";
+    prompt += `2.  **关于 "content" (内容)**:\n`;
+    prompt += `    - **要求**: 这是你对“印象深刻”瞬间的总结与升华。它【必须】是你扮演的角色在当前情境下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
+    prompt += `      - **【隐秘情感】**: 被压抑的爱慕、嫉妒、占有欲、自卑、恐惧或脆弱。\n`;
+    prompt += `      - **【疯狂念头】**: 那些不符合常理、甚至有些偏执的、一闪而过的欲望或想法。\n`;
+    prompt += `      - **【未说的话】**: 它应该揭示你刚刚言语或行为之下【隐藏的真实动机】或【压抑的情感】，与你的公开言行形成一种微妙的张力或对比。\n`;
+    prompt += `    - **【文笔要求】**: 独白【必须】使用第一人称“我”，并借鉴文学大师的笔触，用细腻、凝练、深刻、且极具个性的文字来书写。这段独白【必须】严格根植于你的人设，是对人设在当前情景下的深度挖掘，【严禁】OOC。\n`;
+    prompt += `3. **【格式要求 - 绝对强制】**: 你的回复如果包含秘密，则【必须】以一个独立的、语法完全正确的 \`\`\`json ... \`\`\` 代码块作为结尾，前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
+    prompt += "```json\n{\n  \"secret_thought\": {\n    \"char_id\": \"（发言角色的ID）\",\n    \"title\": \"（一个富有诗意或隐喻性的标题）\",\n    \"content\": \"（一段30-50字的、符合上述所有要求的、以第一人称‘我’展开的、绝对不会说出口的内心独白）\"\n  }\n}\n```\n";
         return prompt;
         
     }
@@ -12006,9 +12018,11 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                             else { memberEntry = Object.entries(contact.groupSettings.members).find(([id, member]) => member.nickname === senderName); }
                             if (memberEntry) { senderForThisMessage = memberEntry[0]; currentSenderId = senderForThisMessage; } 
                             else { continue; }
-                        }
-                    }
-                    if (messageContent && senderForThisMessage) {
+                } else {
+                    continue;
+                }
+            }
+            if (messageContent && senderForThisMessage) {
                         addMessageToConversation({ id: newId('msg'), type: 'text', content: messageContent, sender: senderForThisMessage, timestamp, status: 'sent', contactId: contact.id }, true);
                         await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 200));
                     }
