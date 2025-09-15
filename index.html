@@ -4912,7 +4912,8 @@ return {
                                                         { id: 'anniv_default_1', date: '2025-03-14', name: 'Gemini生日', isSpecial: true }
                         ],
                         collections: [],
-                        secrets: []
+                        secrets: [],
+                        diaries: [] // 新增：日记元数据
                      },
                     meta: {
                         lastUserActivityTimestamp: 0 // Tracks the timestamp of the last user interaction
@@ -7954,7 +7955,26 @@ function renderConversation(isLoadingMore = false) {
         chatMessagesView.querySelectorAll('[data-emoji-id]').forEach(el => setElementImage(el, el.dataset.emojiId, 'src'));
         chatMessagesView.querySelectorAll('[data-image-id]').forEach(el => setElementImage(el, el.dataset.imageId, 'src'));
     }
-function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; }
+function addMessageToConversation(message, fromAI = false) { const contact = appState.chat.contacts.find(c => c.id === message.contactId); if (!contact) return; if (fromAI && runtimeState.aiQuotedMessage && runtimeState.aiQuotedMessage.charId === message.sender) {
+    const quotedMsg = runtimeState.aiQuotedMessage.message;
+    const senderName = getDisplayName(quotedMsg.sender, contact.id);
+
+    let previewContent = '';
+    switch(quotedMsg.type) {
+        case 'text': previewContent = quotedMsg.content; break;
+        case 'voice': previewContent = '[语音]'; break;
+        case 'camera':
+        case 'image': previewContent = '[图片]'; break;
+        default: previewContent = `[${quotedMsg.type}]`; break;
+    }
+
+    message.quote = {
+        id: quotedMsg.id,
+        content: previewContent,
+        senderName: senderName
+    };
+    runtimeState.aiQuotedMessage = null; // Consume the quote
+} if (runtimeState.quotedMessage && message.sender === 'user') { let senderName; if (contact.isGroup) { senderName = contact.groupSettings.members[runtimeState.quotedMessage.sender]?.nickname || findUserById(runtimeState.quotedMessage.sender).name; } else { senderName = runtimeState.quotedMessage.sender === 'user' ? (contact.userSettings.name || '你') : (contact.remark || contact.charSettings.name); } message.quote = { id: runtimeState.quotedMessage.id, content: runtimeState.quotedMessage.content, senderName: senderName }; runtimeState.quotedMessage = null; quotePreview.style.display = 'none'; }
 
 // --- 核心新增：首次互动触发器 ---
 if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHadFirstInteraction) {
@@ -8115,16 +8135,18 @@ if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
                     let role = msg.sender === 'user' ? 'user' : 'assistant';
                     let content = '';
                     if (msg.quote) content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `;
-                    switch (msg.type) {
-                        case 'text': content += msg.content; break;
-                        case 'forwarded': const fwdSummary = msg.content.messages.map(fwd => `[${fwd.senderName}: ${truncateText(fwd.content, 15)}]`).join(', '); content += `[User forwards a chat history from "${msg.content.from}". Summary: ${fwdSummary}]`; break;
-                        case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break;
-                        case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break;
-                        case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break;
-                        case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break;
-                        case 'redPacket': content += `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`; role = 'user'; break;
-                        default: content += msg.content || '';
-                    }
+                                    // 为AI提供消息ID以供引用或撤回
+                content += `(ID: ${msg.id}) `;
+                switch (msg.type) {
+                    case 'text': content += msg.content; break;
+                    case 'forwarded': const fwdSummary = msg.content.messages.map(fwd => `[${fwd.senderName}: ${truncateText(fwd.content, 15)}]`).join(', '); content += `[User forwards a chat history from "${msg.content.from}". Summary: ${fwdSummary}]`; break;
+                    case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break;
+                    case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break;
+                    case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break;
+                    case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break;
+                    case 'redPacket': content += `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`; role = 'user'; break;
+                    default: content += msg.content || '';
+                }
                     return { role, content };
                 });
             }
@@ -9442,15 +9464,26 @@ if (runtimeState.chatSelectionMode) {
 
     const recalledMsg = target.closest('.message-timestamp[data-original-content]');
     if (recalledMsg && recalledMsg.dataset.originalContent) {
-        try {
-            const originalMsg = JSON.parse(recalledMsg.dataset.originalContent);
-            const senderName = findUserById(originalMsg.sender).name;
-            showToast(`[${senderName}]: ${originalMsg.content}`);
-        } catch (err) {
-            showToast(`撤回内容: ${recalledMsg.dataset.originalContent}`);
+            try {
+                const originalMsg = JSON.parse(recalledMsg.dataset.originalContent);
+                // 使用 getDisplayName 获取在当前聊天中的正确昵称
+                const senderName = getDisplayName(originalMsg.sender, runtimeState.currentChatId);
+                
+                let recalledContent = '';
+                switch(originalMsg.type) {
+                    case 'text': recalledContent = originalMsg.content; break;
+                    case 'voice': recalledContent = `[语音] ${originalMsg.content}`; break;
+                    case 'camera': recalledContent = `[图片] (${originalMsg.content})`; break;
+                    case 'image': recalledContent = `[图片]`; break;
+                    case 'link': recalledContent = `[链接] ${originalMsg.title}`; break;
+                    default: recalledContent = `[${originalMsg.type}]`; break;
+                }
+                showToast(`[${senderName}]: ${recalledContent}`);
+            } catch (err) {
+                showToast(`撤回内容: ${recalledMsg.dataset.originalContent}`);
+            }
+            return;
         }
-        return;
-    }
 }
 function handleAvatarLongPress(avatarElement) {
         const msgItem = avatarElement.closest('.message-item');
@@ -11031,7 +11064,41 @@ function getDisplayName(userId, contactId) {
     return char.name;
 }
 
-function recallMessage(msgId) { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); if (!contact) return; const msgIndex = contact.conversation.findIndex(m => m.id === msgId); if (msgIndex === -1) return; const msgToRecall = contact.conversation[msgIndex]; const isUserMsg = msgToRecall.sender === 'user'; const recallerName = isUserMsg ? '你' : findUserById(msgToRecall.sender, '对方').name; const timeDiff = (Date.now() - msgToRecall.timestamp) / 1000 / 60; if (timeDiff > 2 && isUserMsg) { showToast('超过2分钟的消息无法撤回', 'error'); return; } const recallNotification = { id: newId('msg'), type: 'notification', content: `${recallerName} 撤回了一条消息`, timestamp: Date.now(), originalContent: JSON.stringify(msgToRecall), contactId: runtimeState.currentChatId, sender: 'system' }; contact.conversation.splice(msgIndex, 1, recallNotification); updateContactLastMessage(runtimeState.currentChatId); debouncedSaveState(); renderConversation(); renderMessageList(); }
+function recallMessage(msgId, recallerId = 'user') {
+    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+    if (!contact) return;
+
+    const msgIndex = contact.conversation.findIndex(m => m.id === msgId);
+    if (msgIndex === -1) return;
+
+    const msgToRecall = contact.conversation[msgIndex];
+    const recallerName = getDisplayName(recallerId, runtimeState.currentChatId);
+
+    // 仅当用户撤回时检查时间
+    if (recallerId === 'user') {
+        const timeDiff = (Date.now() - msgToRecall.timestamp) / 1000 / 60;
+        if (timeDiff > 2) {
+            showToast('超过2分钟的消息无法撤回', 'error');
+            return;
+        }
+    }
+
+    const recallNotification = {
+        id: newId('msg'),
+        type: 'notification',
+        content: `${recallerName} 撤回了一条消息`,
+        timestamp: Date.now(),
+        originalContent: JSON.stringify(msgToRecall),
+        contactId: runtimeState.currentChatId,
+        sender: 'system'
+    };
+
+    contact.conversation.splice(msgIndex, 1, recallNotification);
+    updateContactLastMessage(runtimeState.currentChatId);
+    debouncedSaveState();
+    renderConversation();
+    renderMessageList();
+}
 function updateContactLastMessage(contactId) { const contact = appState.chat.contacts.find(c => c.id === contactId); if (!contact) return; let lastMessageText = ''; let lastMessageTime = contact.lastMessageTime; if (contact.conversation.length > 0) { const lastMsg = contact.conversation[contact.conversation.length - 1]; lastMessageTime = lastMsg.timestamp; switch (lastMsg.type) { case 'text': lastMessageText = lastMsg.content; break; case 'notification': lastMessageText = `[系统消息] ${lastMsg.content}`; break;case 'forwarded': lastMessageText = '[聊天记录]'; break; case 'emoji': lastMessageText = `[${lastMsg.description || '表情'}]`; break; case 'image': lastMessageText = '[图片]'; break; case 'camera': lastMessageText = '[图片]'; break; case 'voice': lastMessageText = '[语音]'; break; case 'link': lastMessageText = `[链接] ${lastMsg.title}`; break; case 'musicShare': lastMessageText = `[音乐分享] ${lastMsg.title}`; break; case 'redPacket': lastMessageText = `[红包] ${lastMsg.message}`; break; default: lastMessageText = '[未知消息]'; } } contact.lastMessage = lastMessageText; contact.lastMessageTime = lastMessageTime; }
 async function triggerVideoCallInvitationResponse(contactId) {
             const contact = appState.chat.contacts.find(c => c.id === contactId);
@@ -11099,10 +11166,16 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `4. **【可见性规则】**: 当动态或留言信息中标注了 \`(仅对 ... 可见)\` 时，你扮演的角色【只有在自己的名字出现在可见列表中时】才能看到并对其进行互动（如点赞、评论、回复）。严禁扮演 A 角色去评论一条只对 B 角色可见的内容。\n\n`;
         prompt += `5. **【评论区隐私规则】**: 如果一条动态被标记为 "(评论区私密)"，这意味着你【只能】看到并回应来自【你自己】和【用户】的评论/回复，以及【用户对你的直接回复】。你将完全看不到其他任何角色在该动态下的评论，也看不到用户对其他角色的回复。请严格遵守此规则，不要提及你看不到的评论。\n`;
         prompt += `6. **【情书的绝对秘密性】**: “信箱”应用和在其中收发的“情书”是你和用户之间【最私密、最秘密】的交流渠道。因此，你【绝对禁止】在除了回信之外的任何地方（例如：普通聊天、动态、评论、音乐评论区等），以任何形式【提及、暗示、或引用】任何关于情书的内容（比如“我收到你的信了”、“你的信写得真好”、“我等下给你写信”等）。回应情书的【唯一】方式，就是使用 \`[ACTION: SEND_LOVE_LETTER ...]\` 指令，同样以情书的形式进行回复。这个秘密必须被严格保守。\n\n`;        
+        prompt += `6.5. **【撤回与引用规则 (核心)】**:\n`;
+    prompt += `   a. **【执行撤回】**: 你【可以】撤回自己刚刚发出的消息。最简单的方式是，在你发送完一条或多条消息后，紧接着使用指令 \`[ACTION: RECALL_MESSAGE "last"]\`。这会撤回你本轮回复中【最后发出】的一条消息。你也可以通过消息ID精确撤回，例如 \`[ACTION: RECALL_MESSAGE "msg_xxxx"]\`。\n`;
+    prompt += `   b. **【执行引用】**: 你【可以】引用聊天记录中的任何一条消息进行回复。首先使用指令 \`[ACTION: QUOTE_MESSAGE "目标消息ID"]\`，然后紧接着发送你的回复内容。例如：\`[ACTION: QUOTE_MESSAGE "msg_123"]<MSG_SPLIT>原来是这样啊！\`。\n`;
+    prompt += `   c. **【观察与反应】**: 当你看到系统提示 \`[System Notification]: (ID: ...) '某人' 撤回了一条消息\` 时，你有【两种】反应模式，请根据你的人设和当前情景【自行选择】一种：\n`;
+    prompt += `      - **模式一 (未看见)**: 你不知道对方撤回了什么。你的回复应该对此表示好奇、疑问或调侃。例如：“咦？你撤回了什么呀，是不是说了什么小秘密？”\n`;
+    prompt += `      - **模式二 (已看见)**: 你假装在对方撤回前的一瞬间看到了消息内容。用户可以看到被撤回的内容，所以你可以直接针对【被撤回的内容】进行回复，这会显得非常真实。例如，如果用户撤回了“我爱你”，你可以回复：“嗯？我好像看到什么了，再说一遍？”\n\n`;
         prompt += `7. **【明信片的同等秘密性】**: 与情书一样，“明信片”也是你和用户之间的秘密渠道。你【绝对禁止】在聊天、动态、评论等任何非信箱应用的地方，提及任何与明信片相关的话题。回应用户明信片的【唯一】方式是在后台活动中自动生成一张新的明信片作为回复。\n\n`;
                
         // --- 通用聊天规则模块 (重构后) ---
-        prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景。\n`;
+        prompt += `**单聊规则**: 你的【聊天内容】都必须被拆分成【至少5-10条，允许更多，不设上限】简短消息。使用特殊分隔符“<MSG_SPLIT>”来分割每条消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。修改状态和签名的[ACTION]是“无声”的后台动作，【不计入】消息总数。括号()的使用规则需严格遵守。单聊回复【绝不能】包含任何如 \`[昵称]:\` 的前缀。此规则适用于所有单聊场景，包括你的回复和主动发起的对话。\n`;
         prompt += `**群聊规则**: 你的【聊天内容回复】必须被拆分为【不设数量上限】的简短消息。你可以自由使用所有【表达类ACTION】（如发送表情 SEND_EMOJI、语音 SEND_VOICE、图片 SEND_IMAGE、红包 SEND_REDPACKET 等）来丰富你的对话。括号()的使用规则需严格遵守。你的回复【不必】包含每个成员的反应，请模拟真实群聊的动态，可以有人连续发言、插话或潜水，但【重心必须是user】。回复必须使用特殊分隔符“<MSG_SPLIT>”来分割每条消息，且每条消息前【必须】加上发言人信息，格式为 \`[昵称 (ID: char_id)]: 内容\`。你【必须】从上文的成员列表中获取准确的昵称和ID，例如: \`[小明(ID: char_123)]: user今天有空吗？<MSG_SPLIT>[小明(ID: char_123)]: 和我一起出去玩吧？<MSG_SPLIT>[小红(ID: char_456)]: user之前就和我约好了呀！<MSG_SPLIT>[小明(ID: char_123)]: 万一user改主意了呢，还是user说了算。管理员和群主可使用【管理类ACTION】（如禁言、修改头衔）；普通成员可修改自己的群名片。这些管理操作【不计入】回复总数。\n\n`;
         
         // --- 社交环境信息构建 ---
@@ -11565,23 +11638,28 @@ prompt += `    - **主动申请**: \`[ACTION: SEND_FRIEND_REQUEST "这里必须�
         prompt += `26. **回复音乐评论 (通用)**: \`[ACTION: REPLY_MUSIC_COMMENT "songId" "commentId" "回复内容"]\`\n`;
         prompt += `27. **回复留言板 (通用)**: \`[ACTION: REPLY_MESSAGE_BOARD "messageId" "回复内容"]\`\n`;
         prompt += `28. **寄出情书 (单聊)**: \`[ACTION: SEND_LOVE_LETTER "收信人ID" "称呼" "标题" "正文" "落款"]\` (这是回应用户或主动寄出情书的【唯一】方式)\n`;
+            prompt += `29. **引用消息 (通用)**: \`[ACTION: QUOTE_MESSAGE "目标消息ID"]\` (引用后需紧跟一条文本或语音消息作为回复内容)\n`;
+    prompt += `30. **撤回消息 (通用)**: \`[ACTION: RECALL_MESSAGE "目标消息ID或'last'"]\` (使用 "last" 撤回本轮回复的最后一条消息)\n`;
         prompt += `--- 结束 ---\n`;
-                    prompt += `--- **【条件性最终输出：印象深刻的私密回响 (Secret Thought)】** ---\n`;
-    prompt += `【核心规则变更】：你现在【不必】为每一次回复都生成秘密。你【只在】对话达到一个值得被铭记的、印象深刻的节点时，才应该在回复的末尾附加一段秘密记录的JSON代码块。\n\n`;
-    prompt += `【判断“印象深刻”的标准包括但不限于】：\n`;
-    prompt += `1.  **情感高潮**: 角色或用户表达了强烈的、深刻的情感（如脆弱的坦白、真诚的告白、压抑的悲伤、尖锐的争吵等）。\n`;
-    prompt += `2.  **关系里程碑**: 对话标志着你们关系的重大进展或转折（如第一次牵手、许下重要承诺、解开重大误会等）。\n`;
-    prompt += `3.  **核心秘密交换**: 角色或用户分享了一个对自己而言至关重要的秘密或往事。\n`;
-    prompt += `4.  **深刻的自我剖析**: 角色在对话中对自己的人设或内心世界有了新的、深刻的认知或反思。\n\n`;
-    prompt += `【反向规则】：对于常规的、平淡的、日常问候或信息交换性质的对话，你【绝对禁止】生成 \`secret_thought\` 代码块。你的回复应该在最后一条聊天消息或[ACTION]指令后直接结束。\n`;
-    prompt += `【核心原则】：重质而非量。一个秘密的诞生应该感觉是“理应如此”的，是情感和情节发展的必然结果，而非例行公事。\n\n`;
-    prompt += `--- **【内容创作指南 (若触发)】** ---\n`;
-    prompt += `如果且仅如果当前对话满足了上述“印象深刻”的标准，你才需要生成秘密。其内容和格式要求如下：\n`;
+                        prompt += `--- **【最终输出协议：私密回响 (Secret Thought) - 强制与可选规则】** ---\n`;
+    prompt += `【规则一：强制生成 - “说漏嘴”的瞬间 (撤回时)】\n`;
+    prompt += `撤回行为在本质上是一种“说漏嘴”，是角色内心矛盾的戏剧性体现。因此，此规则具有【最高优先级】。\n`;
+    prompt += `**【强制要求】**: 当你在本轮回复中使用了 \`[ACTION: RECALL_MESSAGE ...]\` 指令时，你的【整个回复的最终结尾】（在所有文字消息和ACTION指令之后）【必须】附加一个 \`secret_thought\` 的JSON代码块。\n`;
+    prompt += `**【内容核心】**: 这个秘密的 "content" 【必须】是触发你撤回消息的、最真实的内心独白。它应该揭示你为什么“说漏嘴”又后悔了，聚焦于：\n`;
+    prompt += `  - **后悔与恐惧**: “天，我怎么把真心话说出来了，TA会怎么看我？”\n`;
+    prompt += `  - **时机未到**: “这句话现在说还太早，差点就暴露了我的全部计划/心意。”\n`;
+    prompt += `  - **策略调整**: “不对，这样说会显得我太软弱/强势，我必须换一种方式。”\n`;
+    prompt += `这个秘密的创作标准【完全等同于】下方【内容创作指南】中的所有要求，严禁模板化。\n\n`;
+    prompt += `【规则二：可选生成 - “印象深刻”的节点 (常规对话时)】\n`;
+    prompt += `**【触发条件】**: 如果你的回复中【没有】使用 \`RECALL_MESSAGE\` 指令，那么你【只在】对话达到一个值得被铭记的、印象深刻的节点时，才应该生成 \`secret_thought\`。\n`;
+    prompt += `**【判断标准】**: 情感高潮、关系里程碑、核心秘密交换、深刻的自我剖析等。\n`;
+    prompt += `**【反向规则】**: 对于常规的、平淡的对话，你【绝对禁止】生成此代码块。\n\n`;
+    prompt += `--- **【内容创作指南 (适用于所有Secret Thought)】** ---\n`;
     prompt += `1.  **关于 "title" (标题)**:\n`;
     prompt += `    - **【核心要求】**: 标题【必须】是“秘密”内容核心情感的高度浓缩与隐喻升华，【严禁】直接使用或简单重复内容中的词语。它的风格应该像一首诗的题目、一首歌的名字或一本小说的章节名——独特、深刻且引人遐想。\n`;
     prompt += `    - **【创作戒律】**: 【严禁】重复使用之前生成过的标题或其中的高频词汇（如“涟漪”、“月光”、“影子”等）。每一次创作都应是独一无二的。\n`;
     prompt += `2.  **关于 "content" (内容)**:\n`;
-    prompt += `    - **要求**: 这是你对“印象深刻”瞬间的总结与升华。它【必须】是你扮演的角色在当前情境下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
+    prompt += `    - **要求**: 这是你对“印象深刻”瞬间或“说漏嘴”瞬间的总结与升华。它【必须】是你扮演的角色在当前情境下，【绝对不会】对用户说出口的、最真实、最隐秘的内心独白。内容应聚焦于：\n`;
     prompt += `      - **【隐秘情感】**: 被压抑的爱慕、嫉妒、占有欲、自卑、恐惧或脆弱。\n`;
     prompt += `      - **【疯狂念头】**: 那些不符合常理、甚至有些偏执的、一闪而过的欲望或想法。\n`;
     prompt += `      - **【未说的话】**: 它应该揭示你刚刚言语或行为之下【隐藏的真实动机】或【压抑的情感】，与你的公开言行形成一种微妙的张力或对比。\n`;
@@ -11932,6 +12010,7 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         }
         
         let currentSenderId = contact.isGroup ? null : contact.id;
+            let lastMessageSentInTurn = null;
         let actionCounter = 0;
 
         for (const segment of combinedSegments) {
@@ -11981,11 +12060,50 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 } else {
                     if (!contact.isGroup && !contact.charSettings.isFriend) continue;
                     if (action === 'SEND_LOVE_LETTER' && args.length >= 5) { /* This action is now deprecated and handled by JSON replies */ } 
-                    else if (action === 'SEND_EMOJI' && args[0]) { const emojiDesc = args[0].toLowerCase(); const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)]; if (emoji) addMessageToConversation({ id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } 
-                    else if (action === 'SEND_VOICE' && args[0]) { const cleanText = args[0].replace(/\(.*?\)|（.*?）/g, ''); const duration = Math.max(1, Math.ceil(cleanText.length / 2)); addMessageToConversation({ id: messageId, type: 'voice', content: args[0], duration, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } 
-                    else if (action === 'SEND_IMAGE' && args[0]) { addMessageToConversation({ id: messageId, type: 'camera', content: args[0], imageId: 'default_camera_image', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } 
-                    else if (action === 'SHARE_MUSIC' && args[0]) { const songQuery = args[0]; const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase()); if (song) addMessageToConversation({ id: messageId, type: 'musicShare', songId: song.id, title: song.title, artist: song.artist, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } 
-                    else if (action.startsWith('SEND_REDPACKET')) { let packetData; if (action === 'SEND_REDPACKET_LUCKY' && contact.isGroup && args.length >= 3) { let [message, totalAmount, count] = args; packetData = { packetType: 'lucky', message, totalAmount: parseFloat(totalAmount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET_EXCLUSIVE' && contact.isGroup && args.length >= 3) { let [message, amount, targetNickname] = args; const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname.replace('@', '')); if (targetId) packetData = { packetType: 'exclusive', message, amount: parseFloat(amount), exclusiveTo: targetId }; } else if (action === 'SEND_REDPACKET_NORMAL' && contact.isGroup && args.length >= 3) { let [message, amount, count] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET' && !contact.isGroup && args.length >= 2) { let [message, amount] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount) }; } if (packetData) addMessageToConversation({ id: messageId, type: 'redPacket', ...packetData, sender: currentSenderId, timestamp, status: 'unclaimed', claimedBy: {}, contactId: contact.id }, true); } 
+                                    else if (action === 'QUOTE_MESSAGE' && args[0]) {
+                    const msgToQuote = contact.conversation.find(m => m.id === args[0]);
+                    if (msgToQuote) {
+                        runtimeState.aiQuotedMessage = { charId: currentSenderId, message: { ...msgToQuote } };
+                    }
+                }
+                else if (action === 'RECALL_MESSAGE' && args[0]) {
+                    if (args[0] === 'last' && lastMessageSentInTurn) {
+                        recallMessage(lastMessageSentInTurn.id, currentSenderId);
+                    } else {
+                        recallMessage(args[0], currentSenderId);
+                    }
+                }
+                    else if (action === 'SEND_EMOJI' && args[0]) { const emojiDesc = args[0].toLowerCase(); const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)];
+                    if (emoji) {
+                        const newMessage = { id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id };
+                        addMessageToConversation(newMessage, true);
+                        lastMessageSentInTurn = newMessage;
+                    }
+                } 
+                    else if (action === 'SEND_VOICE' && args[0]) { const cleanText = args[0].replace(/\(.*?\)|（.*?）/g, ''); const duration = Math.max(1, Math.ceil(cleanText.length / 2));
+                    const newMessage = { id: messageId, type: 'voice', content: args[0], duration, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id };
+                    addMessageToConversation(newMessage, true);
+                    lastMessageSentInTurn = newMessage;
+                } 
+                    else if (action === 'SEND_IMAGE' && args[0]) {
+                    const newMessage = { id: messageId, type: 'camera', content: args[0], imageId: 'default_camera_image', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id };
+                    addMessageToConversation(newMessage, true);
+                    lastMessageSentInTurn = newMessage;
+                } 
+                    else if (action === 'SHARE_MUSIC' && args[0]) { const songQuery = args[0]; const song = appState.music.playlist.find(s => `${s.artist} - ${s.title}`.toLowerCase() === songQuery.toLowerCase());
+                    if (song) {
+                        const newMessage = { id: messageId, type: 'musicShare', songId: song.id, title: song.title, artist: song.artist, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id };
+                        addMessageToConversation(newMessage, true);
+                        lastMessageSentInTurn = newMessage;
+                    }
+                } 
+                    else if (action.startsWith('SEND_REDPACKET')) { let packetData; if (action === 'SEND_REDPACKET_LUCKY' && contact.isGroup && args.length >= 3) { let [message, totalAmount, count] = args; packetData = { packetType: 'lucky', message, totalAmount: parseFloat(totalAmount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET_EXCLUSIVE' && contact.isGroup && args.length >= 3) { let [message, amount, targetNickname] = args; const targetId = Object.keys(contact.groupSettings.members).find(id => contact.groupSettings.members[id].nickname === targetNickname.replace('@', '')); if (targetId) packetData = { packetType: 'exclusive', message, amount: parseFloat(amount), exclusiveTo: targetId }; } else if (action === 'SEND_REDPACKET_NORMAL' && contact.isGroup && args.length >= 3) { let [message, amount, count] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount), count: parseInt(count) }; } else if (action === 'SEND_REDPACKET' && !contact.isGroup && args.length >= 2) { let [message, amount] = args; packetData = { packetType: 'normal', message, amount: parseFloat(amount) }; }
+                    if (packetData) {
+                        const newMessage = { id: messageId, type: 'redPacket', ...packetData, sender: currentSenderId, timestamp, status: 'unclaimed', claimedBy: {}, contactId: contact.id };
+                        addMessageToConversation(newMessage, true);
+                        lastMessageSentInTurn = newMessage;
+                    }
+                } 
                     else if (action === 'CLAIM_REDPACKET' && args.length >= 2) { const [messageId, claimerId] = args; claimRedPacketByAI(messageId, claimerId); } 
                     else if (action === 'INITIATE_VIDEO_CALL') { if (appState.chat.videoCallState.isActive) { addMessageToConversation({ id: newId('msg'), type: 'text', content: '（我想给你打视频，但你好像正在通话中...）', sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id }, true); } else if (!runtimeState.incomingCall.from) { showIncomingCallUI(currentSenderId); } } 
                     else if (action === 'PAT' && args[0]) { const targetId = args[0]; const targetName = getDisplayName(targetId, contact.id); addSystemNotification(contact.id, `'${actorName}' 拍了拍 '${targetName}'${args[1] ? ` ${args[1]}` : ''}`); } 
@@ -12023,7 +12141,10 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                 }
             }
             if (messageContent && senderForThisMessage) {
-                        addMessageToConversation({ id: newId('msg'), type: 'text', content: messageContent, sender: senderForThisMessage, timestamp, status: 'sent', contactId: contact.id }, true);
+                                    const newMessage = { id: newId('msg'), type: 'text', content: messageContent, sender: senderForThisMessage, timestamp, status: 'sent', contactId: contact.id };
+                    addMessageToConversation(newMessage, true);
+                    lastMessageSentInTurn = newMessage;
+                        
                         await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 200));
                     }
                 }
