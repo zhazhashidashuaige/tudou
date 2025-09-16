@@ -4991,19 +4991,72 @@ return {
     };
 }
 
-    function saveState() {
+    async function saveState() {
     try {
-        // 将 appState 的每个顶级模块分别保存到独立的 localStorage 键中
-        localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(appState.settings));
-        localStorage.setItem(DB_KEYS.MUSIC, JSON.stringify(appState.music));
-        localStorage.setItem(DB_KEYS.BEAUTIFY, JSON.stringify(appState.beautify));
-        localStorage.setItem(DB_KEYS.DATA, JSON.stringify(appState.data));
-        localStorage.setItem(DB_KEYS.CHAT, JSON.stringify(appState.chat));
-        localStorage.setItem(DB_KEYS.MAILBOX, JSON.stringify(appState.mailbox));
-        localStorage.setItem(DB_KEYS.DIARY, JSON.stringify(appState.diary));
-        localStorage.setItem(DB_KEYS.META, JSON.stringify(appState.meta));
+        const stateToSave = JSON.parse(JSON.stringify(appState));
+        const textSavePromises = [];
+
+        // 1. 聊天记录
+        if (stateToSave.chat && stateToSave.chat.contacts) {
+            for (const contact of stateToSave.chat.contacts) {
+                if (contact.conversation && contact.conversation.length > 0) {
+                    textSavePromises.push(addTextToDB(`conversation_${contact.id}`, contact.conversation));
+                    contact.conversation = [];
+                }
+            }
+        }
+        // 2. 动态 (Moments)
+        if (stateToSave.chat && stateToSave.chat.moments) {
+            const moments = stateToSave.chat.moments;
+            if (moments.posts && moments.posts.length > 0) textSavePromises.push(addTextToDB('moments_posts', moments.posts));
+            if (moments.photos && moments.photos.length > 0) textSavePromises.push(addTextToDB('moments_photos', moments.photos));
+            if (moments.albums && moments.albums.length > 0) textSavePromises.push(addTextToDB('moments_albums', moments.albums));
+            if (moments.messages && moments.messages.length > 0) textSavePromises.push(addTextToDB('moments_messages', moments.messages));
+            if (moments.notifications && moments.notifications.length > 0) textSavePromises.push(addTextToDB('moments_notifications', moments.notifications));
+            if (moments.visitors && moments.visitors.length > 0) textSavePromises.push(addTextToDB('moments_visitors', moments.visitors));
+            moments.posts = []; moments.photos = []; moments.albums = []; moments.messages = []; moments.notifications = []; moments.visitors = [];
+        }
+        // 3. 音乐 (歌词 & 评论)
+        if (stateToSave.music) {
+            if (stateToSave.music.lyrics && Object.keys(stateToSave.music.lyrics).length > 0) textSavePromises.push(addTextToDB('music_lyrics', stateToSave.music.lyrics));
+            if (stateToSave.music.comments && Object.keys(stateToSave.music.comments).length > 0) textSavePromises.push(addTextToDB('music_comments', stateToSave.music.comments));
+            stateToSave.music.lyrics = {}; stateToSave.music.comments = {};
+        }
+        // 4. 资料
+        if (stateToSave.data) {
+            if (stateToSave.data.worldBooks && stateToSave.data.worldBooks.length > 0) textSavePromises.push(addTextToDB('data_worldbooks', stateToSave.data.worldBooks));
+            if (stateToSave.data.archives && stateToSave.data.archives.length > 0) textSavePromises.push(addTextToDB('data_archives', stateToSave.data.archives));
+            if (stateToSave.data.infos && stateToSave.data.infos.length > 0) textSavePromises.push(addTextToDB('data_infos', stateToSave.data.infos));
+            if (stateToSave.data.savedThemes && stateToSave.data.savedThemes.length > 0) textSavePromises.push(addTextToDB('data_savedthemes', stateToSave.data.savedThemes));
+            if (stateToSave.data.savedBubbles && stateToSave.data.savedBubbles.length > 0) textSavePromises.push(addTextToDB('data_savedbubbles', stateToSave.data.savedBubbles));
+            stateToSave.data.worldBooks = []; stateToSave.data.archives = []; stateToSave.data.infos = []; stateToSave.data.savedThemes = []; stateToSave.data.savedBubbles = [];
+        }
+// 5. 信箱
+        if (stateToSave.mailbox) {
+            if (stateToSave.mailbox.loveLetters && stateToSave.mailbox.loveLetters.length > 0) textSavePromises.push(addTextToDB('mailbox_loveletters', stateToSave.mailbox.loveLetters));
+            if (stateToSave.mailbox.postcards && stateToSave.mailbox.postcards.length > 0) textSavePromises.push(addTextToDB('mailbox_postcards', stateToSave.mailbox.postcards));
+            stateToSave.mailbox.loveLetters = []; stateToSave.mailbox.postcards = [];
+        }
+        // 6. 手账
+        if (stateToSave.diary) {
+            if (stateToSave.diary.secrets && stateToSave.diary.secrets.length > 0) textSavePromises.push(addTextToDB('diary_secrets', stateToSave.diary.secrets));
+            if (stateToSave.diary.collections && stateToSave.diary.collections.length > 0) textSavePromises.push(addTextToDB('diary_collections', stateToSave.diary.collections));
+            stateToSave.diary.secrets = []; stateToSave.diary.collections = [];
+        }
+
+        await Promise.all(textSavePromises);
+
+        localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(stateToSave.settings));
+        localStorage.setItem(DB_KEYS.MUSIC, JSON.stringify(stateToSave.music));
+        localStorage.setItem(DB_KEYS.BEAUTIFY, JSON.stringify(stateToSave.beautify));
+        localStorage.setItem(DB_KEYS.DATA, JSON.stringify(stateToSave.data));
+        localStorage.setItem(DB_KEYS.CHAT, JSON.stringify(stateToSave.chat));
+        localStorage.setItem(DB_KEYS.MAILBOX, JSON.stringify(stateToSave.mailbox));
+        localStorage.setItem(DB_KEYS.DIARY, JSON.stringify(stateToSave.diary));
+        localStorage.setItem(DB_KEYS.META, JSON.stringify(stateToSave.meta));
+
     } catch (error) {
-        console.error("CRITICAL: 模块化保存状态失败 (Serialization Error):", error);
+        console.error("CRITICAL: 分层保存状态失败:", error);
         console.error("Failing state object:", appState);
         showToast("保存数据失败！请检查控制台。", 'error');
     }
@@ -5015,85 +5068,178 @@ return {
             saveState();
         }, 500); // 500ms delay
     }
-    function loadState() {
-    const oldMonolithicStateJSON = localStorage.getItem(DB_KEY);
+    async function loadState() {
     const defaultState = getInitialState();
+    
+    // --- 步骤 0a: (补丁) 检查并合并因键名错误产生的孤岛数据 ---
+    const patchFlag = 'orphaned_data_merged_v2_1';
+    if (!localStorage.getItem(patchFlag)) {
+        console.log("执行一次性数据修复补丁...");
+        const keyPairs = [
+            ['loveletters_all', 'mailbox_loveletters'],
+            ['postcards_all', 'mailbox_postcards'],
+            ['secrets_all', 'diary_secrets'],
+            ['collections_all', 'diary_collections']
+        ];
+        const mergePromises = [];
 
-    // 步骤 1: 检查是否存在旧的单体数据，如果存在，则执行一次性迁移
-    if (oldMonolithicStateJSON) {
-        console.log("检测到旧版数据，开始执行一次性迁移...");
-        try {
-            const oldState = JSON.parse(oldMonolithicStateJSON);
-            
-            // 将旧数据拆分并写入新的模块化键
-            localStorage.setItem(DB_KEYS.SETTINGS, JSON.stringify(oldState.settings || defaultState.settings));
-            localStorage.setItem(DB_KEYS.MUSIC, JSON.stringify(oldState.music || defaultState.music));
-            localStorage.setItem(DB_KEYS.BEAUTIFY, JSON.stringify(oldState.beautify || defaultState.beautify));
-            localStorage.setItem(DB_KEYS.DATA, JSON.stringify(oldState.data || defaultState.data));
-            localStorage.setItem(DB_KEYS.CHAT, JSON.stringify(oldState.chat || defaultState.chat));
-            localStorage.setItem(DB_KEYS.MAILBOX, JSON.stringify(oldState.mailbox || defaultState.mailbox));
-            localStorage.setItem(DB_KEYS.DIARY, JSON.stringify(oldState.diary || defaultState.diary));
-            localStorage.setItem(DB_KEYS.META, JSON.stringify(oldState.meta || defaultState.meta));
-
-            // 迁移成功后，删除旧的键
-            localStorage.removeItem(DB_KEY);
-            showToast("数据结构已更新！", "info");
-        } catch (e) {
-            console.error("旧数据迁移失败，将加载默认状态。", e);
-            appState = defaultState;
-            updateUIFromState();
-            return;
+        for (const [oldKey, newKey] of keyPairs) {
+            const promise = Promise.all([getTextFromDB(oldKey), getTextFromDB(newKey)])
+                .then(async ([oldData, newData]) => {
+                    const oldItems = oldData || [];
+                    const newItems = newData || [];
+                    if (oldItems.length > 0) {
+                        console.log(`发现孤岛数据: ${oldKey} (${oldItems.length}条)`);
+                        const combined = new Map();
+                        newItems.forEach(item => combined.set(item.id, item));
+                        oldItems.forEach(item => combined.set(item.id, item));
+                        const mergedData = Array.from(combined.values());
+                        await addTextToDB(newKey, mergedData);
+                        await deleteTextFromDB(oldKey);
+                        console.log(`数据已合并到: ${newKey}`);
+                    }
+                });
+            mergePromises.push(promise);
         }
+        await Promise.all(mergePromises);
+        localStorage.setItem(patchFlag, 'true');
+        showToast("数据已修复！", "info");
     }
 
-    // 步骤 2: 从新的模块化键加载数据
-    const moduleKeys = {
-        settings: DB_KEYS.SETTINGS, music: DB_KEYS.MUSIC, beautify: DB_KEYS.BEAUTIFY,
-        data: DB_KEYS.DATA, chat: DB_KEYS.CHAT, mailbox: DB_KEYS.MAILBOX,
-        diary: DB_KEYS.DIARY, meta: DB_KEYS.META
-    };
+    // --- 步骤 0b: (已修复) 执行一次性数据迁移 ---
+    const migrationFlag = 'full_text_data_migrated_v2';
+    if (!localStorage.getItem(migrationFlag)) {
+        console.log("开始将所有文本数据安全迁移到IndexedDB...");
+        try {
+            const migrationPromises = [];
+            const skeletonsToSave = {}; 
+            const modulesToMigrate = {
+                [DB_KEYS.CHAT]: ['conversation', 'moments'], 
+                [DB_KEYS.MUSIC]: ['lyrics', 'comments'],
+                [DB_KEYS.DATA]: ['worldBooks', 'archives', 'infos', 'savedThemes', 'savedBubbles'],
+                [DB_KEYS.MAILBOX]: ['loveLetters', 'postcards'],
+                [DB_KEYS.DIARY]: ['secrets', 'collections']
+            };
 
+            for (const [storageKey, dataKeys] of Object.entries(modulesToMigrate)) {
+                const moduleJSON = localStorage.getItem(storageKey);
+                if (moduleJSON) {
+                    const oldModuleState = JSON.parse(moduleJSON);
+                    let moduleUpdated = false;
+                    for (const key of dataKeys) {
+                        if (key === 'moments' && oldModuleState.moments) {
+                            const moments = oldModuleState.moments;
+                            if (moments.posts?.length > 0) migrationPromises.push(addTextToDB('moments_posts', moments.posts));
+                            if (moments.photos?.length > 0) migrationPromises.push(addTextToDB('moments_photos', moments.photos));
+                            if (moments.albums?.length > 0) migrationPromises.push(addTextToDB('moments_albums', moments.albums));
+                            if (moments.messages?.length > 0) migrationPromises.push(addTextToDB('moments_messages', moments.messages));
+                            if (moments.notifications?.length > 0) migrationPromises.push(addTextToDB('moments_notifications', moments.notifications));
+                            if (moments.visitors?.length > 0) migrationPromises.push(addTextToDB('moments_visitors', moments.visitors));
+                            moments.posts = []; moments.photos = []; moments.albums = []; moments.messages = []; moments.notifications = []; moments.visitors = [];
+                            moduleUpdated = true;
+                        } else if (key === 'conversation' && oldModuleState.contacts) {
+                            for (const contact of oldModuleState.contacts) {
+                                if (contact.conversation?.length > 0) {
+                                    migrationPromises.push(addTextToDB(`conversation_${contact.id}`, contact.conversation));
+                                    contact.conversation = [];
+                                    moduleUpdated = true;
+                                }
+                            }
+                        } else if (oldModuleState[key] && (oldModuleState[key].length > 0 || Object.keys(oldModuleState[key]).length > 0)) {
+                            migrationPromises.push(addTextToDB(`${storageKey.split('_v2_')[1]}_${key.toLowerCase()}`, oldModuleState[key]));
+                            oldModuleState[key] = Array.isArray(oldModuleState[key]) ? [] : {};
+                            moduleUpdated = true;
+                        }
+                    }
+                    if (moduleUpdated) {
+                        skeletonsToSave[storageKey] = JSON.stringify(oldModuleState);
+                    }
+                }
+            }
+            
+            const results = await Promise.allSettled(migrationPromises);
+            
+            let failedMigrations = 0;
+            results.forEach(result => {
+                if (result.status === 'rejected') {
+                    failedMigrations++;
+                    console.error("数据迁移失败项:", result.reason);
+                }
+            });
+
+            for (const [storageKey, skeletonJSON] of Object.entries(skeletonsToSave)) {
+                localStorage.setItem(storageKey, skeletonJSON);
+            }
+
+            if (failedMigrations > 0) {
+                showToast(`数据迁移完成，${failedMigrations}个项目失败。请检查控制台。`, 'error');
+            } else {
+                showToast("数据存储已完全升级！", "info");
+            }
+
+            localStorage.setItem(migrationFlag, 'true');
+        } catch (e) {
+            console.error("完全迁移失败，旧数据已保留在LocalStorage中。", e);
+            showToast("数据迁移时发生严重错误！请导出数据并联系开发者。", "error");
+        }
+    }
+    
+    // --- 步骤 1: 从localStorage加载骨架状态 ---
+    const moduleKeys = Object.keys(defaultState);
     appState = {};
-    for (const moduleName in moduleKeys) {
-        const savedModuleJSON = localStorage.getItem(moduleKeys[moduleName]);
+    for (const moduleName of moduleKeys) {
+        const storageKey = DB_KEYS[moduleName.toUpperCase()];
+        const savedModuleJSON = localStorage.getItem(storageKey);
         if (savedModuleJSON) {
             try {
-                // 深度合并加载的数据和默认数据，以防未来新增字段
                 const savedModule = JSON.parse(savedModuleJSON);
                 appState[moduleName] = { ...defaultState[moduleName], ...savedModule };
-                // 针对嵌套对象进行二次合并
-                 if (moduleName === 'settings' && savedModule.globalRealtimeActivity) {
-                    appState.settings.globalRealtimeActivity = { ...defaultState.settings.globalRealtimeActivity, ...savedModule.globalRealtimeActivity };
-                            if (moduleName === 'settings' && savedModule.globalContextMemory) {
-                appState.settings.globalContextMemory = { ...defaultState.settings.globalContextMemory, ...savedModule.globalContextMemory };
-            }
-                }
+                if (moduleName === 'settings' && savedModule.globalRealtimeActivity) appState.settings.globalRealtimeActivity = { ...defaultState.settings.globalRealtimeActivity, ...savedModule.globalRealtimeActivity };
+                if (moduleName === 'settings' && savedModule.globalContextMemory) appState.settings.globalContextMemory = { ...defaultState.settings.globalContextMemory, ...savedModule.globalContextMemory };
                 if (moduleName === 'chat') {
                     if (savedModule.userProfile) appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
                     if (savedModule.moments) appState.chat.moments = { ...defaultState.chat.moments, ...savedModule.moments };
                     if (savedModule.moments?.profile) appState.chat.moments.profile = { ...defaultState.chat.moments.profile, ...savedModule.moments.profile };
                 }
-            } catch (e) {
-                console.error(`加载模块 ${moduleName} 失败，使用默认值。`, e);
-                appState[moduleName] = defaultState[moduleName];
-            }
-        } else {
-            appState[moduleName] = defaultState[moduleName];
-        }
+            } catch (e) { appState[moduleName] = defaultState[moduleName]; }
+        } else { appState[moduleName] = defaultState[moduleName]; }
     }
-
-    // 步骤 3: 兼容性检查和修复 (与旧逻辑保持一致)
+    
+    // --- 步骤 2: 从IndexedDB异步加载所有大型文本数据 ---
+    const textLoadPromises = [];
+    if (appState.chat && appState.chat.contacts) {
+        for (const contact of appState.chat.contacts) { textLoadPromises.push(getTextFromDB(`conversation_${contact.id}`).then(d => { contact.conversation = d || []; })); }
+    }
+    textLoadPromises.push(getTextFromDB('moments_posts').then(d => { appState.chat.moments.posts = d || []; }));
+    textLoadPromises.push(getTextFromDB('moments_photos').then(d => { appState.chat.moments.photos = d || []; }));
+    textLoadPromises.push(getTextFromDB('moments_albums').then(d => { appState.chat.moments.albums = d || []; }));
+    textLoadPromises.push(getTextFromDB('moments_messages').then(d => { appState.chat.moments.messages = d || []; }));
+    textLoadPromises.push(getTextFromDB('moments_notifications').then(d => { appState.chat.moments.notifications = d || []; }));
+    textLoadPromises.push(getTextFromDB('moments_visitors').then(d => { appState.chat.moments.visitors = d || []; }));
+    textLoadPromises.push(getTextFromDB('music_lyrics').then(d => { appState.music.lyrics = d || {}; }));
+    textLoadPromises.push(getTextFromDB('music_comments').then(d => { appState.music.comments = d || {}; }));
+    textLoadPromises.push(getTextFromDB('data_worldbooks').then(d => { appState.data.worldBooks = d || []; }));
+    textLoadPromises.push(getTextFromDB('data_archives').then(d => { appState.data.archives = d || []; }));
+    textLoadPromises.push(getTextFromDB('data_infos').then(d => { appState.data.infos = d || []; }));
+    textLoadPromises.push(getTextFromDB('data_savedthemes').then(d => { appState.data.savedThemes = d || []; }));
+    textLoadPromises.push(getTextFromDB('data_savedbubbles').then(d => { appState.data.savedBubbles = d || []; }));
+    textLoadPromises.push(getTextFromDB('mailbox_loveletters').then(d => { appState.mailbox.loveLetters = d || []; }));
+    textLoadPromises.push(getTextFromDB('mailbox_postcards').then(d => { appState.mailbox.postcards = d || []; }));
+    textLoadPromises.push(getTextFromDB('diary_secrets').then(d => { appState.diary.secrets = d || []; }));
+    textLoadPromises.push(getTextFromDB('diary_collections').then(d => { appState.diary.collections = d || []; }));
+    
+    await Promise.all(textLoadPromises);
+    
+    // --- 步骤 3: 兼容性修复 ---
     if (!appState.beautify.bubbleSettings) appState.beautify.bubbleSettings = defaultState.beautify.bubbleSettings;
-    if (!appState.music.comments) appState.music.comments = {};
     if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
-    if (!appState.data.worldBooks) appState.data.worldBooks = [];
     if (!appState.chat.emojis) appState.chat.emojis = [];
-    if (!appState.chat.moments) appState.chat.moments = defaultState.chat.moments;
     if (!appState.chat.userProfile.avatarFrameLibrary) appState.chat.userProfile.avatarFrameLibrary = [];
     if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfile.signature;
+    if (!appState.chat.moments.profile) appState.chat.moments.profile = defaultState.chat.moments.profile;
     if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
-    if (!Array.isArray(appState.chat.moments.notifications)) { appState.chat.moments.notifications = []; }
     
+    // --- 步骤 4: 所有数据加载完毕后，更新UI ---
     updateUIFromState();
 }
 
@@ -5102,11 +5248,12 @@ return {
     // ===================================================================
     const IDB_NAME = 'EmperorPhoneMedia_v2';
     const IDB_STORE_NAME = 'mediaStore';
+    const IDB_TEXT_STORE_NAME = 'textStore';
     let db;
 
     function initDB() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(IDB_NAME, 1);
+            const request = indexedDB.open(IDB_NAME, 2); // 升级版本号以触发 onupgradeneeded
             request.onerror = (event) => reject("IndexedDB error: " + request.error);
             request.onsuccess = (event) => {
                 db = event.target.result;
@@ -5117,6 +5264,9 @@ return {
                 if (!db.objectStoreNames.contains(IDB_STORE_NAME)) {
                     db.createObjectStore(IDB_STORE_NAME, { keyPath: 'id' });
                 }
+                if (!db.objectStoreNames.contains(IDB_TEXT_STORE_NAME)) {
+                    db.createObjectStore(IDB_TEXT_STORE_NAME, { keyPath: 'id' });
+                }
             };
         });
     }
@@ -5126,6 +5276,11 @@ return {
     async function deleteMediaFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.delete(id); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
     async function getAllMediaFromDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
 async function clearMediaDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.clear(); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
+async function addTextToDB(id, data) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_TEXT_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_TEXT_STORE_NAME); return new Promise((resolve, reject) => { const request = store.put({ id, data }); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
+async function getTextFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_TEXT_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_TEXT_STORE_NAME); return new Promise((resolve, reject) => { const request = store.get(id); request.onsuccess = () => resolve(request.result ? request.result.data : null); request.onerror = () => reject(request.error); }); }
+async function getAllTextFromDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_TEXT_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_TEXT_STORE_NAME); return new Promise((resolve, reject) => { const request = store.getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
+async function clearTextDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_TEXT_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_TEXT_STORE_NAME); return new Promise((resolve, reject) => { const request = store.clear(); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
+async function deleteTextFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_TEXT_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_TEXT_STORE_NAME); return new Promise((resolve, reject) => { const request = store.delete(id); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
 function blobToBase64(blob) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -5220,93 +5375,88 @@ function findAllMediaIds(obj) {
 }
 
 getEl('export-all-btn').addEventListener('click', async () => {
-    showToast('正在准备导出...', 'info');
-    try {
-        const zip = new JSZip();
+showToast('正在准备导出...', 'info');
+try {
+    const zip = new JSZip();
 
-        // 1. 添加配置文件
-        const configStr = JSON.stringify(appState);
-        zip.file('config.json', configStr);
-
-        // 2. (新) 深度遍历appState，精准收集所有被引用的媒体ID
-        showToast('正在收集媒体文件引用...', 'info');
-        const allReferencedIds = findAllMediaIds(appState);
-        
-        // 3. (新) 根据ID列表，逐一从数据库获取媒体文件并打包
-        if (allReferencedIds.size > 0) {
-            showToast(`正在压缩 ${allReferencedIds.size} 个媒体文件...`);
-            const mediaPromises = [];
-            allReferencedIds.forEach(id => {
-                const promise = getMediaFromDB(id).then(data => {
-                    if (data) {
-                        zip.file(id, data);
-                    } else {
-                        console.warn(`在IndexedDB中未找到ID为: ${id} 的媒体文件，已跳过。`);
-                    }
-                });
-                mediaPromises.push(promise);
-            });
-            await Promise.all(mediaPromises);
-        }
-
-        // 4. 生成并下载ZIP文件
-        showToast('正在生成压缩包...', 'info');
-        const content = await zip.generateAsync({
-            type: "blob",
-            compression: "DEFLATE",
-            compressionOptions: {
-                level: 6 
-            }
-        });
-        
-        downloadFile(content, `EmperorPhone-FullBackup-${new Date().toISOString().slice(0, 10)}.zip`);
-        showToast('全部数据导出成功！', 'info');
-    } catch (error) {
-        showToast('导出失败，请查看控制台获取详情', 'error');
-        console.error("Full export failed:", error);
+    // 1. 添加轻量化的配置文件 (不含大型文本数据)
+    const lightState = JSON.parse(JSON.stringify(appState));
+    // 清理副本中的大型数据，因为它们将从IDB中单独导出
+    if (lightState.chat && lightState.chat.contacts) {
+        lightState.chat.contacts.forEach(c => { c.conversation = []; });
     }
+    if (lightState.mailbox) {
+        lightState.mailbox.loveLetters = [];
+        lightState.mailbox.postcards = [];
+    }
+    if (lightState.diary) {
+        lightState.diary.secrets = [];
+        lightState.diary.collections = [];
+    }
+    const configStr = JSON.stringify(lightState);
+    zip.file('config.json', configStr);
+
+    // 2. 导出所有媒体文件
+    showToast('正在压缩媒体文件...', 'info');
+    const allMedia = await getAllMediaFromDB();
+    if (allMedia.length > 0) {
+        const mediaFolder = zip.folder('media');
+        allMedia.forEach(item => {
+            mediaFolder.file(item.id, item.data);
+        });
+    }
+    
+    // 3. 导出所有文本数据
+    showToast('正在压缩文本数据...', 'info');
+    const allTextData = await getAllTextFromDB();
+    if (allTextData.length > 0) {
+        const textFolder = zip.folder('text');
+        allTextData.forEach(item => {
+            textFolder.file(`${item.id}.json`, JSON.stringify(item.data));
+        });
+    }
+
+    // 4. 生成并下载ZIP文件
+    showToast('正在生成压缩包...', 'info');
+    const content = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: {
+            level: 6 
+        }
+    });
+    
+    downloadFile(content, `EmperorPhone-FullBackup-${new Date().toISOString().slice(0, 10)}.zip`);
+    showToast('全部数据导出成功！', 'info');
+} catch (error) {
+    showToast('导出失败，请查看控制台获取详情', 'error');
+    console.error("Full export failed:", error);
+}
 });
 
 getEl('import-all-btn').addEventListener('click', () => {
     importFileInput.accept = '.zip';
     importFileInput.onchange = async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-        if (confirm("【最高警告】\n\n此操作将彻底覆盖您当前的所有配置、记录和媒体文件！\n\n确定要继续吗？")) {
-            showToast('正在导入，请勿操作...', 'info');
-            try {
-                const zip = await JSZip.loadAsync(file);
-                
-                // 1. 验证并读取配置文件
-                const configFile = zip.file('config.json');
-                if (!configFile) {
-                    throw new Error('压缩包内未找到 "config.json" 配置文件。');
-                }
-                const configStr = await configFile.async('string');
-                const importedState = JSON.parse(configStr);
+    if (confirm("【最高警告】\n\n此操作将彻底覆盖您当前的所有配置、记录和媒体文件！\n\n确定要继续吗？")) {
+        showToast('正在导入，请勿操作...', 'info');
+        try {
+            const zip = await JSZip.loadAsync(file);
+            
+            // 1. 清空现有数据库
+            showToast('正在清空旧数据...', 'info');
+            await Promise.all([clearMediaDB(), clearTextDB()]);
 
-                // 2. 清空现有媒体库
-                showToast('正在清空旧媒体库...', 'info');
-                await clearMediaDB();
+            // 2. 验证并读取配置文件
+            const configFile = zip.file('config.json');
+            if (!configFile) throw new Error('压缩包内未找到 "config.json" 配置文件。');
+            const configStr = await configFile.async('string');
+            const importedState = JSON.parse(configStr);
 
-                // 3. 导入新的媒体文件
-                const mediaFiles = [];
-                zip.forEach((relativePath, zipEntry) => {
-                    if (!zipEntry.dir && zipEntry.name !== 'config.json') {
-                        mediaFiles.push(
-                            zipEntry.async('blob').then(blobData => addMediaToDB(zipEntry.name, blobData))
-                        );
-                    }
-                });
-                
-                if(mediaFiles.length > 0) {
-                    showToast(`正在导入 ${mediaFiles.length} 个媒体文件...`, 'info');
-                    await Promise.all(mediaFiles);
-                }
-
-                            // 4. 应用新的配置 (模块化写入)
-            const modulesToImport = getInitialState(); // 获取所有模块的键
+            // 3. 应用新的配置到 localStorage
+            const modulesToImport = getInitialState();
             for (const moduleName in modulesToImport) {
                 const storageKey = DB_KEYS[moduleName.toUpperCase()];
                 if (storageKey && importedState[moduleName]) {
@@ -5314,16 +5464,45 @@ getEl('import-all-btn').addEventListener('click', () => {
                 }
             }
 
-                showToast('导入成功！应用即将刷新...', 'info');
-                setTimeout(() => window.location.reload(), 1500);
-
-            } catch (error) {
-                showToast(`导入失败: ${error.message}`, 'error');
-                console.error("Full import failed:", error);
+            // 4. 导入媒体和文本文件到 IndexedDB
+            const importPromises = [];
+            const mediaFolder = zip.folder("media");
+            if (mediaFolder) {
+                mediaFolder.forEach((relativePath, zipEntry) => {
+                    if (!zipEntry.dir) {
+                        importPromises.push(
+                            zipEntry.async('blob').then(blobData => addMediaToDB(zipEntry.name, blobData))
+                        );
+                    }
+                });
             }
+            const textFolder = zip.folder("text");
+            if (textFolder) {
+                textFolder.forEach((relativePath, zipEntry) => {
+                    if (!zipEntry.dir) {
+                        importPromises.push(
+                            zipEntry.async('string').then(textData => {
+                                const id = zipEntry.name.replace('.json', '');
+                                addTextToDB(id, JSON.parse(textData));
+                            })
+                        );
+                    }
+                });
+            }
+            
+            showToast('正在写入数据...', 'info');
+            await Promise.all(importPromises);
+
+            showToast('导入成功！应用即将刷新...', 'info');
+            setTimeout(() => window.location.reload(), 1500);
+
+        } catch (error) {
+            showToast(`导入失败: ${error.message}`, 'error');
+            console.error("Full import failed:", error);
         }
-        importFileInput.value = ''; // 重置文件输入，以便下次使用
-    };
+    }
+    importFileInput.value = '';
+};
     importFileInput.click();
 });
 function getNextApiKey() {
@@ -5859,21 +6038,27 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
         }
         
         const contact = appState.chat.contacts.find(c => c.id === id);
-        if (contact) {
-        // --- 核心Bug修复：增加上下文判断 ---
-        const isMomentsContext = momentsTabContent.offsetParent !== null || charMomentsScreen.classList.contains('active');
-        
-        // 如果在动态的上下文中，并且Char设置了专门的动态头像，则优先使用它
-        const finalAvatarId = (isMomentsContext && contact.charSettings.momentsAvatarId) 
-            ? contact.charSettings.momentsAvatarId 
-            : contact.charSettings.avatarId;
+    if (contact) {
+        if (contact.isGroup) {
+            return {
+                id: contact.id,
+                name: contact.groupSettings.name,
+                avatarId: contact.groupSettings.avatarId,
+                signature: 'A group chat'
+            };
+        } else {
+            const isMomentsContext = momentsTabContent.offsetParent !== null || charMomentsScreen.classList.contains('active');
+            const finalAvatarId = (isMomentsContext && contact.charSettings.momentsAvatarId) 
+                ? contact.charSettings.momentsAvatarId 
+                : contact.charSettings.avatarId;
 
-        return {
-            id: contact.id,
-            name: contact.charSettings.name,
-            avatarId: finalAvatarId, // 使用修正后的头像ID
-            signature: contact.signature
-        };
+            return {
+                id: contact.id,
+                name: contact.charSettings.name,
+                avatarId: finalAvatarId,
+                signature: contact.signature
+            };
+        }
     }
         return { id: id, name: '未知用户', avatarId: `https://api.multiavatar.com/${id}.png`, signature: '...' };
     }
@@ -6337,14 +6522,7 @@ const randomDelay = (Math.random() * 40 + 20) * 60 * 1000; // 20-60 minutes in m
     
     debouncedSaveState(); // Save the new timestamp to localStorage
 }
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-}
+
 async function loadAllCustomFonts() {
     const existingStyle = document.getElementById('all-custom-fonts-style');
     if (existingStyle) existingStyle.remove();
@@ -8035,7 +8213,8 @@ if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHa
         setTimeout(() => generateAndSendPostcard(contact), 3500);
     }
 }
-contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true; queueNotification(message.content, contact.id, message.sender); }
+contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true;     const notificationContent = message.type === 'emoji' ? `[${message.description}]` : message.content;
+    queueNotification(notificationContent, contact.id, message.sender); }
 // When a new message is added, increase the display limit to ensure it's visible
 if (runtimeState.chatDisplayLimits[contact.id]) {
 runtimeState.chatDisplayLimits[contact.id]++;
@@ -9385,6 +9564,18 @@ function handleChatViewClick(e) {
 const item = e.target.closest('.message-item, .message-timestamp');
 if (!item) return;
 const target = e.target;
+const emojiBubble = target.closest('.message-bubble.emoji-bubble');
+if (emojiBubble) {
+    const msgId = item.dataset.id;
+    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+    if (contact) {
+        const msg = contact.conversation.find(m => m.id === msgId);
+        if (msg && msg.description) {
+            showToast(msg.description);
+        }
+    }
+    return;
+}
 if (runtimeState.chatSelectionMode) {
         toggleMessageSelection(item);
         return;
@@ -11240,7 +11431,7 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `你当前正在扮演的角色身份【已锁定】为: **“${contact.charSettings.name}” (ID: ${contact.id})**。\n`;
     }
     prompt += `与你对话的用户身份是: **“${user.name}” (ID: user)**。\n`;
-    prompt += `【警告】：在你的任何思考和回应中，都必须牢记你的【锁定身份】。例如，即使下方“其他角色”列表中出现了另一个也叫“${contact.charSettings.name}”的角色（ID不同），你也【绝对不能】将自己与TA混淆。你的世界里，只有【ID】是唯一的身份凭证。\n\n`;
+    prompt += `【警告】：在你的任何思考和回应中，都必须牢记你的【锁定身份】。例如，即使下方“其他角色”列表中出现了另一个也叫“${contact.isGroup ? contact.groupSettings.name : contact.charSettings.name}”的角色（ID不同），你也【绝对不能】将自己与TA混淆。你的世界里，只有【ID】是唯一的身份凭证。\n\n`;
         prompt += `--- **【时间感知的【强制】修正规则】** ---\n`;
         prompt += `你【必须】根据对话历史中消息的【时间戳】来判断时间的流逝，【严禁】进行主观臆断和夸大。如果用户的上一条消息是几分钟或几小时前，你【绝对禁止】说出“好几天没见了”或“一周没联系了”这类严重偏离事实的话语。你的时间感知必须是客观且真实的。\n\n`;
         prompt += `你正在一个名为“${contact.isGroup ? contact.groupSettings.name : contact.charSettings.name}”的聊天中。请严格遵守以下规则进行角色扮演。\n\n`;
@@ -12256,7 +12447,9 @@ async function processVideoCallInvitationReply(replyContent, contact) {
         function processReceivedLoveLetter(letterData, contact) {
         const charId = contact.id;
         const letterToReply = appState.mailbox.loveLetters.find(l => l.replyDueTimestamp && l.replyFrom === charId);
-
+if (letterToReply) {
+    letterToReply.isRepliedTo = true;
+}
         const newLetter = { id: newId('letter'), senderId: charId, recipientId: 'user', timestamp: Date.now(), isRead: false, ...letterData };
         appState.mailbox.loveLetters.push(newLetter);
         contact.lastLetterSent = Date.now();
@@ -13265,8 +13458,8 @@ async function handleMomentsImageUpload(file, profileId, type) {
         }
         
         if (target.closest('.post-log-summary')) {
-            viewContentTitle.textContent = post.content.title;
-            viewContentBody.innerHTML = `<p>${escapeHTML(post.content.text).replace(/\n/g, '<br>')}</p>`;
+                        viewContentTitle.textContent = post.content.title;
+            viewContentBody.innerHTML = `<p>${escapeHTML(post.content.text).replace(/\\n/g, '\n').replace(/\n+/g, '<br>')}</p>`;
             viewContentModal.classList.add('visible');
             return;
         }
@@ -13596,7 +13789,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
             contentHTML = `${postText}${imageGridHTML}`;
         } else if (post.type === 'log') {
             const summary = post.content.text.length > 30 ? post.content.text.substring(0, 30).replace(/[，。！？]$/, '') + '...' : post.content.text;
-            contentHTML = `<div class="post-log-summary"><h3>${escapeHTML(post.content.title)}</h3><p>${escapeHTML(summary)}</p></div>`;
+            contentHTML = `<div class="post-log-summary"><h3>${escapeHTML(post.content.title)}</h3><p>${escapeHTML(summary).replace(/(?:\\r?\\n|\\n)+/g, '<br>')}</p></div>`;
         } else if (post.type === 'photo') {
             const photoData = appState.chat.moments.photos.filter(p => post.content.photoIds.includes(p.id));
             const album = appState.chat.moments.albums.find(a => a.id === post.content.albumId);
@@ -13727,7 +13920,8 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
     const authorId = postToDelete.authorId;
 
     appState.chat.moments.posts.splice(postIndex, 1);
-    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.postId !== postId);
+        const existingPostIds = new Set(appState.chat.moments.posts.map(p => p.id));
+        appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => !n.postId || existingPostIds.has(n.postId));
 
     if (postToDelete.type === 'photo' && postToDelete.content.photoIds) {
         const photoIdsToDelete = postToDelete.content.photoIds;
@@ -15852,19 +16046,39 @@ function setupCharFriendRequestModalListeners() {
         console.log(`Triggering AI for love letter. Context: ${letterToReply ? 'reply' : 'proactive'}`);
 
         try {
-            let context = {};
-            if (letterToReply) {
-                context = { type: 'reply_to_user', originalLetter: letterToReply };
+                let context = {};
+        if (letterToReply) {
+            // This is a direct reply triggered by the scheduler.
+            context = { type: 'reply_to_user', originalLetter: letterToReply };
+        } else {
+            // This is a proactive action. Determine the context.
+            const lettersFromCharToUser = appState.mailbox.loveLetters
+                .filter(l => l.senderId === charId && l.recipientId === 'user')
+                .sort((a, b) => a.timestamp - b.timestamp); // Sort oldest to newest
+
+            // Find the most recent letter from the char that has NOT been replied to.
+            const mostRecentUnreplied = [...lettersFromCharToUser].reverse().find(l => !l.isRepliedTo);
+
+            if (mostRecentUnreplied) {
+                // If there's an unreplied letter, the context is pining.
+                context.type = 'pining';
+                context.yourLastLetter = mostRecentUnreplied;
             } else {
-                const lettersBetween = appState.mailbox.loveLetters.filter(l => (l.senderId === charId && l.recipientId === 'user') || (l.senderId === 'user' && l.recipientId === charId)).sort((a, b) => a.timestamp - b.timestamp);
-                const lastUserLetter = lettersBetween.filter(l => l.senderId === 'user').pop();
-                const lastCharLetter = lettersBetween.filter(l => l.senderId === charId).pop();
-                if (!lastCharLetter) { context.type = 'proactive_first'; } 
-                else if (!lastUserLetter || lastCharLetter.timestamp > lastUserLetter.timestamp) { context.type = 'pining'; context.yourLastLetter = lastCharLetter; } 
-                else { context.type = 'proactive_subsequent_after_reply'; context.usersLastLetter = lastUserLetter; }
+                // All letters from the char have been replied to. Decide if it's the first or a subsequent proactive letter.
+                const lastUserLetter = appState.mailbox.loveLetters
+                    .filter(l => l.senderId === 'user' && l.recipientId === charId)
+                    .sort((a, b) => b.timestamp - a.timestamp)[0];
+                
+                if (lettersFromCharToUser.length === 0) {
+                    context.type = 'proactive_first';
+                } else {
+                    context.type = 'proactive_subsequent_after_reply';
+                    context.usersLastLetter = lastUserLetter; // Provide the user's last letter for context
+                }
             }
-            
-                    const secretInstruction = constructLoveLetterPrompt(char, context);
+        }
+        
+        const secretInstruction = constructLoveLetterPrompt(char, context);
         await triggerAiResponse(charId, false, false, false, secretInstruction, false);
 
         } catch (error) {
@@ -15973,9 +16187,9 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
     debouncedSaveState();
 });
     async function init() {
-            try {
-                runtimeState = getInitialRuntimeState();
-                await initDB();
+        try {
+            runtimeState = getInitialRuntimeState();
+            await initDB();
                 // --- Draggable Floating Video Button Logic ---
                 const draggable = getEl('floating-video-btn');
                 let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
@@ -16068,7 +16282,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                 // Store original content for restoration
                 queryAll('[data-icon-id]').forEach(el => { runtimeState.originalIconContent[el.dataset.iconId] = el.innerHTML; });
                 queryAll('[data-bubble-id]').forEach(el => { runtimeState.originalBubbleContent[el.dataset.bubbleId] = el.style.cssText; });
-                loadState();
+                await loadState();
                 
                     // 恢复视频通话状态
     if (appState.chat.videoCallState.isActive && appState.chat.videoCallState.chatId) {
@@ -16457,7 +16671,7 @@ getEl('save-love-letter-btn').addEventListener('click', () => {
     } else if (mode === 'reply') {
         const originalLetter = appState.mailbox.loveLetters.find(l => l.id === replyToId);
         if (!originalLetter) return;
-        
+                originalLetter.isRepliedTo = true; // Mark the original letter as replied to
         const newLetter = {
             id: newId('letter'),
             senderId: 'user',
