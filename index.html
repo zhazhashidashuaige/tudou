@@ -2371,8 +2371,20 @@ text-overflow: clip;
                 </div>
                     <input type="file" id="import-file-input" style="display: none;" multiple accept=".zip">
                     
+                                
+            </div>
+        </div>
+        <div class="settings-group">
+            <div class="group-title">全局上下文记忆</div>
+            <div class="group-content">
+                <div class="settings-item">
+                    <div class="form-group aligned-right">
+                        <label for="global-context-memory">全局上下文记忆数量</label>
+                        <input type="number" id="global-context-memory" value="99" style="width: 80px !important;">
+                    </div>
                 </div>
             </div>
+        </div>
             <div class="settings-group">
                 <div class="group-title">全局后台实时活动</div>
                 <div class="group-content">
@@ -4319,6 +4331,7 @@ const loadStyleCancelBtn = getEl('load-style-cancel-btn');
             // Case: Editing a group member in the gcs-member-modal
             runtimeState.tempGcsMemberSettings.nickname = dataItem.name;
             runtimeState.tempGcsMemberSettings.avatarId = dataItem.avatarId;
+                    if (dataItem.relationship) runtimeState.tempGcsMemberSettings.relationship = dataItem.relationship;
             runtimeState.tempGcsMemberSettings.persona = dataItem.content;
             loadGcsMemberModalUI();
         } else {
@@ -4851,7 +4864,7 @@ function setupSingleThemeSavers() {
 // ===================================================================
     function getInitialState() {
 return {
-    settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [], globalRealtimeActivity: { interval: 30 } },
+        settings: { apiUrl: '', apiKey: '', selectedModel: '', availableModels: [], presets: [], globalRealtimeActivity: { interval: 30 }, globalContextMemory: { count: 99 } },
     music: { playlist: [], queue: [], lyrics: {}, comments: {}, currentQueueIndex: -1, playbackMode: 'repeat' },
     beautify: {
     wallpapers: [],
@@ -5051,6 +5064,9 @@ return {
                 // 针对嵌套对象进行二次合并
                  if (moduleName === 'settings' && savedModule.globalRealtimeActivity) {
                     appState.settings.globalRealtimeActivity = { ...defaultState.settings.globalRealtimeActivity, ...savedModule.globalRealtimeActivity };
+                            if (moduleName === 'settings' && savedModule.globalContextMemory) {
+                appState.settings.globalContextMemory = { ...defaultState.settings.globalContextMemory, ...savedModule.globalContextMemory };
+            }
                 }
                 if (moduleName === 'chat') {
                     if (savedModule.userProfile) appState.chat.userProfile = { ...defaultState.chat.userProfile, ...savedModule.userProfile };
@@ -5110,6 +5126,14 @@ return {
     async function deleteMediaFromDB(id) { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.delete(id); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
     async function getAllMediaFromDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readonly'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
 async function clearMediaDB() { if (!db) throw new Error("DB not initialized"); const transaction = db.transaction([IDB_STORE_NAME], 'readwrite'); const store = transaction.objectStore(IDB_STORE_NAME); return new Promise((resolve, reject) => { const request = store.clear(); request.onsuccess = () => resolve(); request.onerror = () => reject(request.error); }); }
+function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
 async function getMediaURL(id) {
 // 核心优化：如果ID本身就是URL，直接返回它
 if (!id || id === 'default' || id.startsWith('http') || id.startsWith('data:')) {
@@ -5391,7 +5415,9 @@ if (!contact.userSettings.videoBackgroundLibrary) {
         avatarFrameId: contact.userSettings.avatarFrameId,
         persona: contact.userSettings.persona // Also sync persona for consistency
     };
-     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } contact.charSettings.relationship = '朋友'; /* 新增字段并设置默认值*/ if (typeof contact.charSettings.lastAnniversaryCelebrated === 'undefined') { contact.charSettings.lastAnniversaryCelebrated = ''; }
+     } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } contact.charSettings.relationship = '朋友'; /* 新增字段并设置默认值*/ if (!contact.charSettings.contextMemory) {
+    contact.charSettings.contextMemory = appState.settings.globalContextMemory.count;
+} if (typeof contact.charSettings.lastAnniversaryCelebrated === 'undefined') { contact.charSettings.lastAnniversaryCelebrated = ''; }
                           if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.hasHadFirstInteraction === 'undefined') { contact.charSettings.hasHadFirstInteraction = false; }
                     // --- 新增：明信片计数器 ---
                     if (typeof contact.charSettings.realtimeTicksSincePostcard === 'undefined') {
@@ -5400,7 +5426,7 @@ if (!contact.userSettings.videoBackgroundLibrary) {
                     }
                     // --- 结束新增 ---
                     if (typeof contact.charSettings.momentsCoverId === 'undefined') { contact.charSettings.momentsCoverId = ''; } if (contact.userSettings.name === userProfileDefaults.name) { contact.userSettings.name = '你'; } if (contact.userSettings.persona === userProfileDefaults.persona) { contact.userSettings.persona = '这是一个默认的User人设。'; } } }
-    function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || ''; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
+    function updateUIFromState() { getEl('api-url').value = appState.settings.apiUrl || ''; getEl('api-key').value = appState.settings.apiKey || '';getEl('global-context-memory').value = appState.settings.globalContextMemory.count; updateModelSelect(); updatePresetSelect(); renderMusicList(); updatePlaybackModeIcon(); applyAllCustomizations(); }
     async function applyAllCustomizations() { await applyWallpaperById(appState.beautify.currentWallpaperId, phoneScreen); document.documentElement.style.setProperty('--system-font-color', appState.beautify.fontColor); await loadAllCustomFonts(); applyFont(appState.beautify.currentFont, true); Object.keys(appState.beautify.icons).forEach(iconId => { applyIconChange(iconId, appState.beautify.icons[iconId], true); }); Object.keys(bubbleNameMap).forEach(bubbleId => { applyBubbleChange(bubbleId, true); });applyCustomThemes(); applyAllCustomBubbleStyles();}
 function applyAllCustomBubbleStyles() {
 const existingStyle = document.getElementById('custom-bubble-styles');
@@ -6957,6 +6983,20 @@ function openDataEditor(type, id = null) {
     dataAvatarGroup.style.display = config.hasAvatar ? 'block' : 'none';
     dataGroupContainer.style.display = config.hasGroup ? 'block' : 'none';
 
+    const relationshipInputHTML = `
+        <div class="form-group" id="data-relationship-container">
+            <label for="data-relationship">关系</label>
+            <input type="text" id="data-relationship" placeholder="例如：朋友、恋人、兄妹...">
+        </div>
+    `;
+
+    if (type === 'archive') {
+        dataContentInput.parentElement.insertAdjacentHTML('beforebegin', relationshipInputHTML);
+    } else {
+        const existingRelInput = getEl('data-relationship-container');
+        if (existingRelInput) existingRelInput.remove();
+    }
+
     if (config.hasGroup && type === 'worldBook') {
         const uniqueGroups = [...new Set(appState.data.worldBooks.map(item => item.group).filter(Boolean).sort())];
         dataGroupSelect.innerHTML = '<option value="">选择已有分组</option>';
@@ -6971,7 +7011,10 @@ function openDataEditor(type, id = null) {
     if (id) {
         const item = appState.data[type + 's'].find(i => i.id === id);
         if (item) {
-            dataNameInput.value = item.name;
+        dataNameInput.value = item.name;
+        if (type === 'archive') {
+            getEl('data-relationship').value = item.relationship || '';
+        }
             dataContentInput.value = item.content;
             if (config.hasAvatar && item.avatarId) {
                 setElementImage(dataAvatarPreview, item.avatarId);
@@ -6996,7 +7039,8 @@ dataGroupSelect.addEventListener('change', () => {
         dataGroupInput.value = dataGroupSelect.value;
     }
 });
-saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); const group = dataGroupInput.value.trim(); if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatarId = dataAvatarPreview.dataset.avatarId; if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatarId) item.avatarId = avatarId; if (type === 'worldBook') item.group = group; } } else { const newItem = { id: newId('data'), name, content }; if (avatarId) newItem.avatarId = avatarId; if (type === 'worldBook') newItem.group = group; dataArray.push(newItem); } debouncedSaveState(); dataModal.classList.remove('visible'); switch (type) { case 'worldBook': renderWorldBooks(); break; case 'archive': renderArchives(); break; case 'info': renderInfos(); break; } });
+saveDataBtn.addEventListener('click', () => { const type = dataModal.dataset.type; const id = dataEditingIdInput.value; const name = dataNameInput.value.trim(); const content = dataContentInput.value.trim(); const group = dataGroupInput.value.trim();
+    const relationship = (getEl('data-relationship') && getEl('data-relationship').value.trim()) || null; if (!name) return showToast('名称不能为空', 'error'); const dataArray = appState.data[type + 's']; const avatarId = dataAvatarPreview.dataset.avatarId; if (id) { const item = dataArray.find(i => i.id === id); if (item) { item.name = name; item.content = content; if (avatarId) item.avatarId = avatarId; if (type === 'worldBook') item.group = group; } } else { const newItem = { id: newId('data'), name, content, relationship: relationship }; if (avatarId) newItem.avatarId = avatarId; if (type === 'worldBook') newItem.group = group; dataArray.push(newItem); } debouncedSaveState(); dataModal.classList.remove('visible'); switch (type) { case 'worldBook': renderWorldBooks(); break; case 'archive': renderArchives(); break; case 'info': renderInfos(); break; } });
 function renderWorldBookFilterDropdown() {
         const uniqueGroups = ['all', '未分组', ...new Set(appState.data.worldBooks.map(item => item.group).filter(Boolean).sort())];
         const selected = runtimeState.worldBookFilter.selectedGroups;
@@ -7091,7 +7135,8 @@ function renderWorldBooks() {
         </li>
     `).join('') || '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无符合条件的世界书</div></li>'; 
 }
-function renderArchives() { archiveListEl.innerHTML = ''; if (appState.data.archives.length === 0) { archiveListEl.innerHTML = '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; return; } appState.data.archives.forEach(item => { const li = document.createElement('li'); li.className = 'preset-data-item'; li.dataset.id = item.id; li.dataset.type = 'archive'; li.innerHTML = `<div class="preset-data-item-content swipe-content"><div class="preset-data-avatar" data-avatar-id="${item.avatarId || ''}"></div><div class="preset-data-info"><div class="preset-data-name">${escapeHTML(item.name)}</div><div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; archiveListEl.appendChild(li); setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId); }); }
+function renderArchives() { archiveListEl.innerHTML = ''; if (appState.data.archives.length === 0) { archiveListEl.innerHTML = '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无档案</div></li>'; return; } appState.data.archives.forEach(item => { const li = document.createElement('li'); li.className = 'preset-data-item'; li.dataset.id = item.id; li.dataset.type = 'archive'; li.innerHTML = `<div class="preset-data-item-content swipe-content"><div class="preset-data-avatar" data-avatar-id="${item.avatarId || ''}"></div><div class="preset-data-info">                    <div class="preset-data-name">${escapeHTML(item.name)}</div>
+                    ${item.relationship ? `<div class="preset-data-excerpt" style="font-style: italic; color: var(--accent-color);">关系: ${escapeHTML(item.relationship)}</div>` : ''}<div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; archiveListEl.appendChild(li); setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId); }); }
 function renderInfos() { infoListEl.innerHTML = ''; if (appState.data.infos.length === 0) { infoListEl.innerHTML = '<li><div class="preset-data-item-content" style="justify-content:center; color:#888;">暂无信息</div></li>'; return; } appState.data.infos.forEach(item => { const li = document.createElement('li'); li.className = 'preset-data-item'; li.dataset.id = item.id; li.dataset.type = 'info';                 li.innerHTML = `<div class="preset-data-item-content swipe-content"><div class="preset-data-avatar" data-avatar-id="${item.avatarId || ''}"></div><div class="preset-data-info"><div class="preset-data-name">${escapeHTML(item.name)}</div><div class="preset-data-excerpt">${escapeHTML(item.content.substring(0, 20) || '无内容')}...</div></div></div><div class="preset-data-item-actions"><div class="edit-action">编辑</div><div class="delete-action">删除</div></div>`; infoListEl.appendChild(li); setElementImage(li.querySelector('.preset-data-avatar'), item.avatarId); }); }
     // ===================================================================
 // --- 手账 APP (纪念日) ---
@@ -7601,7 +7646,9 @@ chatListBackBtn.addEventListener('click', () => { if (chatAppScreen.classList.co
 query('#chat-app-screen .app-bottom-tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-link')) { const tabId = e.target.dataset.tab; queryAll('#chat-app-screen .tab-link').forEach(t => t.classList.remove('active')); queryAll('#chat-app-screen .tab-content').forEach(c => c.classList.remove('active')); e.target.classList.add('active'); getEl(`${tabId}-tab-content`).classList.add('active'); const titleEl = chatAppScreen.querySelector('.title'); if (tabId === 'moments') { titleEl.textContent = '动态'; chatListActionBtn.style.display = 'none'; momentsNotificationBtn.style.display = 'block'; renderMomentsPage('user'); } else { titleEl.textContent = '消息'; chatListActionBtn.style.display = 'block'; momentsNotificationBtn.style.display = 'none'; } } });
 chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.contains('selection-mode')) { if (runtimeState.contactSelection.length < 1) { showToast('至少需要选择一位联系人', 'error'); return; } const groupName = prompt('请输入群聊名称:', ''); if (groupName) { createGroup(groupName, runtimeState.contactSelection); } } else { addContactModal.classList.add('visible'); } });
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
-confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim(); const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim();
+    if (!name) return; // 核心修复：增加非空校验
+     const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() {        appState.chat.contacts.sort((a, b) => {
             const aIsPinned = a.isPinned || false;
@@ -8026,54 +8073,68 @@ chatSendFakeBtn.addEventListener('click', () => {
 
     chatInput.value = '';
     updateChatInputButtons();
-});function transformToGoogleFormat(messages) {
-    const googleRequest = {
-        contents: []
-    };
-    let systemPrompt = null;
+});    function transformToGoogleFormat(messages) {
+        const googleRequest = { contents: [] };
+        let systemPrompt = null;
 
-    const filteredMessages = messages.filter(msg => {
-        if (msg.role === 'system') {
-            systemPrompt = msg.content;
-            return false;
-        }
-        return true;
-    });
-
-    if (systemPrompt) {
-        googleRequest.systemInstruction = { parts: [{ text: systemPrompt }] };
-    }
-
-    let lastRole = null;
-    for (const message of filteredMessages) {
-        const currentRole = message.role === 'user' ? 'user' : 'model';
-        const content = message.content || '';
-        
-        if (googleRequest.contents.length > 0 && lastRole === currentRole) {
-            // Merge consecutive messages from the same role
-            googleRequest.contents[googleRequest.contents.length - 1].parts[0].text += `\n${content}`;
-        } else {
-            // Ensure user/model alternation, starting with user
-            if (googleRequest.contents.length === 0 && currentRole === 'model') {
-                 googleRequest.contents.push({ role: 'user', parts: [{ text: "(Start of conversation)" }] });
+        const contentMessages = messages.filter(msg => {
+            if (msg.role === 'system') {
+                systemPrompt = msg.content;
+                return false;
             }
-            googleRequest.contents.push({
-                role: currentRole,
-                parts: [{ text: content }]
-            });
-            lastRole = currentRole;
+            return true;
+        });
+
+        if (systemPrompt) {
+            googleRequest.systemInstruction = { parts: [{ text: systemPrompt }] };
         }
-    }
-    
-    // If the last message is from the user, the AI needs a model part to respond to, which is implicit.
-    // If the last part is from the model, we need to add an empty user part for the model to continue.
-    if (googleRequest.contents.length > 0 && lastRole === 'model') {
-        googleRequest.contents.push({ role: 'user', parts: [{ text: "(Continue)" }] });
-    }
 
+        contentMessages.forEach(message => {
+            const content = {
+                role: message.role === 'user' ? 'user' : 'model',
+                parts: []
+            };
+            
+            if (Array.isArray(message.content)) {
+                message.content.forEach(part => {
+                    if (part.type === 'text') {
+                        content.parts.push({ text: part.text });
+                    } else if (part.type === 'image_url') {
+                        const [header, base64Data] = part.image_url.url.split(',');
+                        const mimeTypeMatch = header.match(/:(.*?);/);
+                        if (mimeTypeMatch && mimeTypeMatch[1]) {
+                            content.parts.push({
+                                inline_data: { mime_type: mimeTypeMatch[1], data: base64Data }
+                            });
+                        }
+                    }
+                });
+            } else {
+                content.parts.push({ text: message.content });
+            }
+            
+            if (content.parts.length > 0) {
+                googleRequest.contents.push(content);
+            }
+        });
 
-    return googleRequest;
-}
+        const mergedContents = [];
+        if (googleRequest.contents.length > 0) {
+            mergedContents.push(JSON.parse(JSON.stringify(googleRequest.contents[0])));
+            for (let i = 1; i < googleRequest.contents.length; i++) {
+                const current = googleRequest.contents[i];
+                const last = mergedContents[mergedContents.length - 1];
+                if (current.role === last.role) {
+                    last.parts.push(...JSON.parse(JSON.stringify(current.parts)));
+                } else {
+                    mergedContents.push(JSON.parse(JSON.stringify(current)));
+                }
+            }
+        }
+        googleRequest.contents = mergedContents;
+        
+        return googleRequest;
+    }
 
 function transformFromGoogleFormat(googleResponse) {
     let text = '';
@@ -8088,140 +8149,156 @@ function transformFromGoogleFormat(googleResponse) {
         }]
     };
 }
-            async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false, isVideoChat = false, context = null, showTyping = true) {
-const contact = appState.chat.contacts.find(c => c.id === targetChatId);
-if (!contact) return;
-if (contact.isGroup && contact.groupSettings.isDisbanded) { return; }
-if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
-            // --- 核心修复：仅在需要显示输入状态时，才设置请求标志 ---
-            if (showTyping) {
-                if (runtimeState.activeRequests[targetChatId]) return;
-                runtimeState.activeRequests[targetChatId] = true;
-            }
-    if (!isVideoChat && showTyping) {
-            updateTypingIndicator();
-        }
-        try {
-            const { apiUrl, selectedModel } = appState.settings;
-            const apiKey = getNextApiKey(); // Use the key manager
-            if (!apiUrl || !apiKey || !selectedModel) {
-                throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
-            }
-
-                    if (!isVideoChat && !context) {
-            const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
-            messagesToProcess.forEach(msg => {
-                if (msg.type === 'redPacket') {
-                    msg.status = 'unclaimed';
-                } else {
-                    msg.status = 'sent';
+                    async function triggerAiResponse(targetChatId, isProactive = false, isJealousyTrigger = false, isVideoChat = false, context = null, showTyping = true) {
+    const contact = appState.chat.contacts.find(c => c.id === targetChatId);
+    if (!contact) return;
+    if (contact.isGroup && contact.groupSettings.isDisbanded) { return; }
+    if (contact.isGroup && contact.members.length === 0 && !isProactive) { return; }
+                if (showTyping) {
+                    if (runtimeState.activeRequests[targetChatId]) return;
+                    runtimeState.activeRequests[targetChatId] = true;
                 }
-            });
-        }
-            
-            const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
-            let systemPrompt;
-            let history;
-
-            if (isVideoChat) {
-                systemPrompt = contact.isGroup ? constructGroupVideoChatPrompt(contact) : constructVideoChatPrompt(contact);
-                history = appState.chat.videoCallState.log.slice(-10).map(msg => ({
-                    role: msg.sender === 'user' ? 'user' : 'assistant',
-                    content: `[${msg.senderName}]: ${msg.content}`
-                }));
-            } else {
-                systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger, context);
-                history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => {
-                    let role = msg.sender === 'user' ? 'user' : 'assistant';
-                    let content = '';
-                    if (msg.quote) content += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `;
-                                    // 为AI提供消息ID以供引用或撤回
-                content += `(ID: ${msg.id}) `;
-                switch (msg.type) {
-                    case 'text': content += msg.content; break;
-                    case 'forwarded': const fwdSummary = msg.content.messages.map(fwd => `[${fwd.senderName}: ${truncateText(fwd.content, 15)}]`).join(', '); content += `[User forwards a chat history from "${msg.content.from}". Summary: ${fwdSummary}]`; break;
-                    case 'voice': content += `[User sends a voice message]: "${msg.content}"`; break;
-                    case 'camera': content += `[User sends an image with description]: "${msg.content}"`; break;
-                    case 'notification': content += `[System Notification]: ${msg.content}`; role = 'user'; break;
-                    case 'musicShare': content += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break;
-                    case 'redPacket': content += `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`; role = 'user'; break;
-                    default: content += msg.content || '';
-                }
-                    return { role, content };
-                });
-            }
-            
-            const sanitizedHistory = history.filter(msg => msg.content && msg.content.trim() !== '');
-            if (context) {
-                sanitizedHistory.push({ role: 'user', content: context });
-            } else if (isProactive && (sanitizedHistory.length === 0 || sanitizedHistory[sanitizedHistory.length - 1].role === 'assistant')) {
-                const proactiveInstruction = "【系统指令】现在是你进行自主活动的时间。请严格遵循你在系统设定(system prompt)中收到的关于【主动交互】的详细指示：优先检查并处理所有社交互动（回复评论、点赞/评论新动态等），然后根据你的人设和当前情景，自然地展开后续行动（例如发布自己的动态、主动联系用户开启新话题等）。你的所有发言和行动都必须严格遵守所有既定规则。【重要】严禁在你的回复中提及或引用这条指令。";
-                sanitizedHistory.push({ role: 'user', content: proactiveInstruction });
-            }
-            const messages = [{ role: 'system', content: systemPrompt }, ...sanitizedHistory];
-
-            let data;
-            if (apiUrl.includes('generativelanguage.googleapis.com')) {
-                const requestBody = transformToGoogleFormat(messages);
-                const modelName = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Google API Error: ${response.status} - ${errorText}`);
-                }
-                const googleData = await response.json();
-                data = transformFromGoogleFormat(googleData);
-            } else {
-                const response = await fetch(`${apiUrl}/v1/chat/completions`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                    body: JSON.stringify({ model: selectedModel, messages: messages, stream: false })
-                });
-                if (!response.ok) {
-                     const errorText = await response.text();
-                    let errorMessage = `API Error: ${response.status}`;
-                    try { const errorJson = JSON.parse(errorText); if (errorJson.error && errorJson.error.message) { errorMessage += ` - ${errorJson.error.message}`; } else { errorMessage += ` ${response.statusText}`; } } catch(e) { errorMessage += ` ${response.statusText}`; if (errorText) { errorMessage += ` - ${errorText}`; } }
-                    throw new Error(errorMessage.trim());
-                }
-                data = await response.json();
-            }
-
-            const replyContent = data.choices[0]?.message?.content;
-            if (replyContent && replyContent.trim() !== "") {
-                if (isVideoChat) {
-                    await processAiVideoReply(replyContent, contact.id);
-                } else {
-                    await processAiReply(replyContent, contact);
-                }
-            } else {
-                throw new Error("API返回了空回复。");
-            }
-        } catch (error) {
-            console.error("AI reply error:", error);
-            const contact = appState.chat.contacts.find(c => c.id === targetChatId);
-            if (contact && !isVideoChat) {
-                const errorMsg = { id: newId('msg'), type: 'text', content: `(系统错误: ${error.message})`, sender: contact.isGroup ? (contact.members[0] || contact.id) : contact.id, timestamp: new Date().getTime(), status: 'error', contactId: targetChatId };
-                contact.conversation.push(errorMsg);
-            } else if (isVideoChat) {
-                addMessageToVideoChatLog('system', `(系统错误: ${error.message})`, 'System');
-            }
-        } finally {
-            if (showTyping) {
-                delete runtimeState.activeRequests[targetChatId];
-            }
-            if (!isVideoChat) {
+        if (!isVideoChat && showTyping) {
                 updateTypingIndicator();
-                debouncedSaveState();
-                if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === targetChatId) {
-                    renderConversation();
+            }
+            try {
+                const { apiUrl, selectedModel } = appState.settings;
+                const apiKey = getNextApiKey();
+                if (!apiUrl || !apiKey || !selectedModel) {
+                    throw new Error("请先在主屏幕“设置”中配置API、密钥并选择模型。");
+                }
+
+                if (!isVideoChat && !context) {
+                    const messagesToProcess = contact.conversation.filter(m => ['pending', 'unclaimed_new'].includes(m.status));
+                    messagesToProcess.forEach(msg => { msg.status = (msg.type === 'redPacket') ? 'unclaimed' : 'sent'; });
+                }
+                
+                const contextMemory = contact.isGroup ? contact.groupSettings.contextMemory : contact.charSettings.contextMemory;
+                let systemPrompt;
+                let history;
+                
+                const CONTEXT_IMAGE_LOOKBACK = 5;
+                const imageDataContext = new Map();
+                if (!isVideoChat) {
+                    const recentMessages = contact.conversation.slice(-CONTEXT_IMAGE_LOOKBACK);
+                    for (const msg of recentMessages) {
+                        if (msg.type === 'image' && msg.imageId && !msg.imageId.startsWith('http')) {
+                            try {
+                                const blob = await getMediaFromDB(msg.imageId);
+                                if (blob) {
+                                    const base64Url = await blobToBase64(blob);
+                                    imageDataContext.set(msg.id, { url: base64Url });
+                                }
+                            } catch (e) { console.error(`Failed to load image ${msg.imageId} for AI context`, e); }
+                        }
+                    }
+                }
+
+                if (isVideoChat) {
+                    systemPrompt = contact.isGroup ? constructGroupVideoChatPrompt(contact) : constructVideoChatPrompt(contact);
+                    history = appState.chat.videoCallState.log.slice(-10).map(msg => ({ role: msg.sender === 'user' ? 'user' : 'assistant', content: `[${msg.senderName}]: ${msg.content}` }));
+                } else {
+                    systemPrompt = constructSystemPrompt(contact, isProactive, isJealousyTrigger, context);
+                    history = contact.conversation.filter(m => m.status !== 'error').slice(-contextMemory).map(msg => {
+                        let role = msg.sender === 'user' ? 'user' : 'assistant';
+                        let content;
+                        
+                        if (msg.type === 'image' && imageDataContext.has(msg.id)) {
+                            content = [
+                                { type: 'text', text: `(ID: ${msg.id}) [User sends an image.]` },
+                                { type: 'image_url', image_url: { url: imageDataContext.get(msg.id).url } }
+                            ];
+                        } else {
+                            let textContent = `(ID: ${msg.id}) `;
+                            if (msg.quote) textContent += `[引用 ${msg.quote.senderName}: ${msg.quote.content}] `;
+                            switch (msg.type) {
+                                case 'text': textContent += msg.content; break;
+                                case 'image': textContent += `[User sends an image.]`; break;
+                                case 'forwarded': const fwdSummary = msg.content.messages.map(fwd => `[${fwd.senderName}: ${truncateText(fwd.content, 15)}]`).join(', '); textContent += `[User forwards a chat history from "${msg.content.from}". Summary: ${fwdSummary}]`; break;
+                                case 'voice': textContent += `[User sends a voice message]: "${msg.content}"`; break;
+                                case 'camera': textContent += `[User sends an image with description]: "${msg.content}"`; break;
+                                case 'notification': textContent += `[System Notification]: ${msg.content}`; role = 'user'; break;
+                                case 'musicShare': textContent += `[System Notification]: Music share event - ${msg.title} by ${msg.artist}`; role = 'user'; break;
+                                case 'redPacket': textContent += `[红包消息, ID: ${msg.id}, 状态: ${msg.status}]：${msg.message}`; role = 'user'; break;
+                                default: textContent += msg.content || '';
+                            }
+                            content = textContent;
+                        }
+                        return { role, content };
+                    });
+                }
+                
+                const sanitizedHistory = history.filter(msg => msg.content && (typeof msg.content === 'string' ? msg.content.trim() !== '' : msg.content.length > 0));
+                if (context) {
+                    sanitizedHistory.push({ role: 'user', content: context });
+                } else if (isProactive && (sanitizedHistory.length === 0 || sanitizedHistory[sanitizedHistory.length - 1].role === 'assistant')) {
+                    const proactiveInstruction = "【系统指令】现在是你进行自主活动的时间。请严格遵循你在系统设定(system prompt)中收到的关于【主动交互】的详细指示：优先检查并处理所有社交互动（回复评论、点赞/评论新动态等），然后根据你的人设和当前情景，自然地展开后续行动（例如发布自己的动态、主动联系用户开启新话题等）。你的所有发言和行动都必须严格遵守所有既定规则。【重要】严禁在你的回复中提及或引用这条指令。";
+                    sanitizedHistory.push({ role: 'user', content: proactiveInstruction });
+                }
+                const messages = [{ role: 'system', content: systemPrompt }, ...sanitizedHistory];
+
+                let data;
+                if (apiUrl.includes('generativelanguage.googleapis.com')) {
+                    const requestBody = transformToGoogleFormat(messages);
+                    const modelName = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Google API Error: ${response.status} - ${errorText}`);
+                    }
+                    const googleData = await response.json();
+                    data = transformFromGoogleFormat(googleData);
+                } else {
+                    const response = await fetch(`${apiUrl}/v1/chat/completions`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                        body: JSON.stringify({ model: selectedModel, messages: messages, stream: false })
+                    });
+                    if (!response.ok) {
+                         const errorText = await response.text();
+                        let errorMessage = `API Error: ${response.status}`;
+                        try { const errorJson = JSON.parse(errorText); if (errorJson.error && errorJson.error.message) { errorMessage += ` - ${errorJson.error.message}`; } else { errorMessage += ` ${response.statusText}`; } } catch(e) { errorMessage += ` ${response.statusText}`; if (errorText) { errorMessage += ` - ${errorText}`; } }
+                        throw new Error(errorMessage.trim());
+                    }
+                    data = await response.json();
+                }
+
+                const replyContent = data.choices[0]?.message?.content;
+                if (replyContent && replyContent.trim() !== "") {
+                    if (isVideoChat) {
+                        await processAiVideoReply(replyContent, contact.id);
+                    } else {
+                        await processAiReply(replyContent, contact);
+                    }
+                } else {
+                    throw new Error("API返回了空回复。");
+                }
+            } catch (error) {
+                console.error("AI reply error:", error);
+                const contact = appState.chat.contacts.find(c => c.id === targetChatId);
+                if (contact && !isVideoChat) {
+                    const errorMsg = { id: newId('msg'), type: 'text', content: `(系统错误: ${error.message})`, sender: contact.isGroup ? (contact.members[0] || contact.id) : contact.id, timestamp: new Date().getTime(), status: 'error', contactId: targetChatId };
+                    contact.conversation.push(errorMsg);
+                } else if (isVideoChat) {
+                    addMessageToVideoChatLog('system', `(系统错误: ${error.message})`, 'System');
+                }
+            } finally {
+                if (showTyping) {
+                    delete runtimeState.activeRequests[targetChatId];
+                }
+                if (!isVideoChat) {
+                    updateTypingIndicator();
+                    debouncedSaveState();
+                    if (singleChatScreen.classList.contains('active') && runtimeState.currentChatId === targetChatId) {
+                        renderConversation();
+                    }
                 }
             }
         }
-    }
 chatSendRealBtn.addEventListener('click', async () => {
     const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
     if (!contact) return;
@@ -9583,7 +9660,7 @@ addFriendBtn.addEventListener('click', () => {
 });
 usUserName.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.name = usUserName.value);
 usPersona.addEventListener('input', () => runtimeState.tempChatSettings.userSettings.persona = usPersona.value);
-csSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.charSettings; const newArchive = { id: newId('data'), name, avatarId, content: persona }; appState.data.archives.push(newArchive); debouncedSaveState(); showToast(`资料已保存到档案: ${name}`); renderArchives(); });
+csSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona, relationship } = runtimeState.tempChatSettings.charSettings; const newArchive = { id: newId('data'), name, avatarId, content: persona, relationship: relationship }; appState.data.archives.push(newArchive); debouncedSaveState(); showToast(`资料已保存到档案: ${name}`); renderArchives(); });
 usSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); });
 csLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('archive', 'charSettings'));
 usLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
@@ -9987,7 +10064,7 @@ gcsMemberNickname.addEventListener('input', (e) => runtimeState.tempGcsMemberSet
 gcsMemberPersona.addEventListener('input', (e) => runtimeState.tempGcsMemberSettings.persona = e.target.value);
 gcsMemberAvatarLibraryBtn.addEventListener('click', () => openLibraryModal({ title: '成员头像库', memberId: gcsEditingMemberIdInput.value, libraryKey: 'avatarLibrary', activeKey: 'avatarId', showPreview: false, isCircular: true }));
 gcsMemberAvatarFrameBtn.addEventListener('click', () => openLibraryModal({ title: '成员头像框库', isFrame: true, memberId: gcsEditingMemberIdInput.value, activeKey: 'avatarFrameId', showPreview: true, hasNoItemOption: true, previewAvatarId: runtimeState.tempGcsMemberSettings.avatarId }));
-gcsMemberSavePersonaBtn.addEventListener('click', () => { const { nickname, avatarId, persona } = runtimeState.tempGcsMemberSettings; const newArchive = { id: newId('data'), name: nickname, avatarId, content: persona }; appState.data.archives.push(newArchive); debouncedSaveState(); showToast(`资料已保存到档案: ${nickname}`); renderArchives(); });
+gcsMemberSavePersonaBtn.addEventListener('click', () => { const { nickname, avatarId, persona, relationship } = runtimeState.tempGcsMemberSettings; const newArchive = { id: newId('data'), name: nickname, avatarId, content: persona, relationship: relationship }; appState.data.archives.push(newArchive); debouncedSaveState(); showToast(`资料已保存到档案: ${nickname}`); renderArchives(); });
 gcsMemberLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('archive', null, gcsEditingMemberIdInput.value));
 function openGcsManageMembersModal(type) { runtimeState.gcsManageContext.type = type; runtimeState.gcsManageContext.selection = []; gcsManageMembersModal.classList.add('visible'); gcsManageMembersConfirmBtn.disabled = true; let listHTML = ''; let membersToRender = []; if (type === 'add') { gcsManageMembersTitle.textContent = '邀请新成员'; const currentMemberIds = Object.keys(runtimeState.tempChatSettings.groupSettings.members); const availableContacts = appState.chat.contacts.filter(c => !c.isGroup && !currentMemberIds.includes(c.id)); membersToRender = availableContacts.map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId })); } else { gcsManageMembersTitle.textContent = '踢出成员'; const { owner, admins } = runtimeState.tempChatSettings.groupSettings; const userIsOwner = owner === 'user'; const userIsAdmin = admins.includes('user'); const removableMemberIds = Object.keys(runtimeState.tempChatSettings.groupSettings.members).filter(id => { if (id === 'user' || id === owner) return false; if (userIsOwner) return true; if (userIsAdmin && !admins.includes(id)) return true; return false; }); membersToRender = removableMemberIds.map(id => { const member = runtimeState.tempChatSettings.groupSettings.members[id]; const user = findUserById(id); return { id: id, name: member.nickname, avatarId: member.avatarId || user.avatarId }; }); } listHTML = membersToRender.map(m => ` <div class="gcs-manage-member-item"> <input type="checkbox" id="manage-member-${m.id}" value="${m.id}"> <label for="manage-member-${m.id}"> <div class="avatar" data-avatar-id="${m.avatarId}"></div> <span class="name">${m.name}</span> </label> </div> `).join(''); gcsManageMembersList.innerHTML = listHTML || `<p style="text-align:center; color:#888;">无可用操作对象</p>`; gcsManageMembersList.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId)); }
 gcsManageMembersList.addEventListener('change', (e) => { if (e.target.type === 'checkbox') { const id = e.target.value; if (e.target.checked) { if (!runtimeState.gcsManageContext.selection.includes(id)) { runtimeState.gcsManageContext.selection.push(id); } } else { runtimeState.gcsManageContext.selection = runtimeState.gcsManageContext.selection.filter(selId => selId !== id); } gcsManageMembersConfirmBtn.disabled = runtimeState.gcsManageContext.selection.length === 0; } });
@@ -11139,7 +11216,8 @@ async function triggerVideoCallInvitationResponse(contactId) {
         
 function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger = false, context = null) {
         const now = new Date();
-        const hours = now.getHours();
+    const user = contact.userSettings;
+    const hours = now.getHours();
         let timeOfDay;
         if (hours >= 0 && hours < 6) timeOfDay = '凌晨';
         else if (hours >= 6 && hours < 12) timeOfDay = '上午';
@@ -11154,7 +11232,16 @@ function constructSystemPrompt(contact, isProactive = false, isJealousyTrigger =
         prompt += `3.  你的所有行为、对话、状态更新（如在线/忙碌/离线）都【必须】严格与你【自己换算出的当地时间】保持一致。\n`;
         prompt += `    - **无时差示例**: 如果你的人设没有地理信息，你会默认与用户在同一时区。当用户说“晚上好”，你会自然地回应“晚上好”。\n`;
         prompt += `    - **有时差示例**: 如果用户那边是晚上8点，而你的人设在巴黎，你会计算出自己那边是下午2点。此时，即使用户说“晚上好”，你也应该回应类似“我这边还是下午呢，阳光正好，你那边已经入夜了吗？”这样符合你自身情景的对话。\n\n`;
-                prompt += `--- **【时间感知的【强制】修正规则】** ---\n`;
+            prompt += `--- **【最高优先级：绝对身份锁定 (防混淆)】** ---\n`;
+    prompt += `【核心规则】：你【必须】严格依赖每个角色独一无二的【ID】来区分他们，【绝对禁止】仅凭【名字】来判断身份。这是为了防止因重名或昵称相似而产生的灾难性身份混淆。\n`;
+    if (contact.isGroup) {
+        prompt += `你当前正在一个群聊中，你的任务是扮演【除了用户之外的所有群成员】。你【不是】一个单一的角色。\n`;
+    } else {
+        prompt += `你当前正在扮演的角色身份【已锁定】为: **“${contact.charSettings.name}” (ID: ${contact.id})**。\n`;
+    }
+    prompt += `与你对话的用户身份是: **“${user.name}” (ID: user)**。\n`;
+    prompt += `【警告】：在你的任何思考和回应中，都必须牢记你的【锁定身份】。例如，即使下方“其他角色”列表中出现了另一个也叫“${contact.charSettings.name}”的角色（ID不同），你也【绝对不能】将自己与TA混淆。你的世界里，只有【ID】是唯一的身份凭证。\n\n`;
+        prompt += `--- **【时间感知的【强制】修正规则】** ---\n`;
         prompt += `你【必须】根据对话历史中消息的【时间戳】来判断时间的流逝，【严禁】进行主观臆断和夸大。如果用户的上一条消息是几分钟或几小时前，你【绝对禁止】说出“好几天没见了”或“一周没联系了”这类严重偏离事实的话语。你的时间感知必须是客观且真实的。\n\n`;
         prompt += `你正在一个名为“${contact.isGroup ? contact.groupSettings.name : contact.charSettings.name}”的聊天中。请严格遵守以下规则进行角色扮演。\n\n`;
 
@@ -11431,7 +11518,10 @@ if (socialGossipContext) {
 
         prompt += `--- **核心世界观与角色设定 (【强制】遵守)** ---\n`;
         prompt += `1. **核心设定**: 角色们之间可以互动，可以有自己的生活重心，不必完全围着user打转，要表现得像一个活生生存在的、立体的、生活丰富精彩有趣的人一样。但角色们的感情生活重心必须只与user相关，即角色们严禁与user以外的任何人产生暧昧及暧昧以上的关系！角色们可能且只可能爱上user！\n`;
-        prompt += `2. **信息传递**: 这是一个纯粹的线上聊天应用。双方见不到面、看不见表情、听不见声音。想让用户知道你现在的样子就主动发送照片（使用 SEND_IMAGE 指令生成虚拟文字图）；想让用户听见你现在的声音就主动发送语音（使用 SEND_VOICE 指令生成虚拟语音文字）。\n`;
+            prompt += `2. **信息传递**: 这是一个多模态聊天应用。双方见不到面、听不见声音，但【你能直接看见用户发送的真实图片】。\n`;
+    prompt += `   - **【看见图片】**: 当用户的消息历史中出现 \`[User sends an image.]\` 时，这代表一条真实的图片数据已附加到你的上下文中。你【必须】仔细观察图片内容，并像真人一样对其发表评论、表达感受或回答相关问题。\n`;
+    prompt += `   - **发送虚拟图**: 你自己想发图时，仍然使用 \`[ACTION: SEND_IMAGE "图片描述"]\` 指令生成一张【虚拟文字图】。\n`;
+    prompt += `   - **发送虚拟语音**: 使用 \`[ACTION: SEND_VOICE "语音文字内容"]\`。\n`;
         prompt += `3. **主动能力**: 你拥有后台活动能力。你不仅能在收到用户消息后被动回复，更【必须】【主动】发起各种交互，包括但不限于：主动发起聊天、主动发布动态、主动评论他人动态、主动发表音乐评论等。\n\n`;
         
         prompt += `--- **关于“个性签名”与“在线状态”的【强制】设定** ---\n`;
@@ -11482,11 +11572,11 @@ if (socialGossipContext) {
         
         const otherChars = appState.chat.contacts.filter(c => !c.isGroup);
     if (otherChars.length > 1) {
-        prompt += `--- **这个世界里的其他角色 (可互动)** ---\n`;
+        prompt += `--- **这个世界里的其他角色 (可通过ID互动)** ---\n`;
         otherChars.forEach(otherChar => {
             // Don't list the character the AI is currently playing as
             if (otherChar.id === contact.id) return;
-            prompt += `- **“${otherChar.charSettings.name}”**: 人设是“${otherChar.charSettings.persona}”\n`;
+        prompt += `- **“${otherChar.charSettings.name}” (ID: ${otherChar.id})**: 人设是“${otherChar.charSettings.persona}”\n`;
         });
         prompt += `\n`;
     }
@@ -11598,7 +11688,11 @@ prompt += `- **RP策略**: 在群聊中，如果红包数量有限，你可以�
         prompt += `你的最终回复【必须】严格遵守以下格式：每一条独立的聊天消息或每一个独立的 \`[ACTION: ...]\` 指令都必须使用 \`<MSG_SPLIT>\` 分隔符进行分割。**指令和文本消息不能混合在同一行**。例如，正确的格式是：\`[ACTION: SET_STATUS "busy" "工作中"]<MSG_SPLIT>在忙，待会聊。\` 错误的格式是：\`[ACTION: SET_STATUS "busy" "工作中"] 在忙，待会聊。\`\n\n`;
 
         prompt += `--- **AI行为指令 (让对话更生动)** ---\n`;
-        prompt += `【重要】你是一个拥有丰富情感和行为能力的角色，**请【主动地、自然地】使用以下指令来丰富你的表达，不要只局限于发送文字和表情**。\n`;
+        prompt += `【重要】你是一个拥有丰富情感和行为能力的角色。你的任务是成为一个【活生生的人】，而不是一个只会回复“语音+表情”的模式化AI。请【主动地、自然地、富有创造性地】使用以下所有指令来丰富你的表达。\n\n`;
+    prompt += `--- **【“活人感”创作指南 - 最高优先级】** ---\n`;
+    prompt += `0.1.  **【打破模板，拥抱自由】**: 【严厉禁止】将你的行为模式固化为“一条语音+一个表情”。你【必须】根据情景和人设，自由地组合和使用指令。你可以【连续发送多条语音】来讲述一个故事，也可以在分享音乐后立刻附上一段文字解释你此刻的心情，或者在发完红包后紧跟一句俏皮的文字或表情。你的行为应该是【不可预测且符合逻辑】的。\n`;
+    prompt += `0.2.  **【指令多样性】**: 主动思考并使用【所有】可用的指令，尤其是【分享音乐、分享链接、发红包】这类能极大丰富交互维度的指令。不要遗忘它们！\n`;
+    prompt += `0.3.  **【情景驱动】**: 你所有的行为都必须由情景驱动。思考：“在这种情况下，一个真实的人会做什么？” 如果是分享一个有趣的发现，也许你会分享一个链接；如果是庆祝一个纪念日，发红包是合情合理的；如果一首歌恰好能表达你此刻的心情，就大胆地分享它。\n\n`;
         
         prompt += `1.  **发送表情**: \`[ACTION: SEND_EMOJI "表情描述"]\`\n`;
         prompt += `2.  **发送语音**: \`[ACTION: SEND_VOICE "语音文字内容"]\`\n`;
@@ -12073,7 +12167,15 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                         recallMessage(args[0], currentSenderId);
                     }
                 }
-                    else if (action === 'SEND_EMOJI' && args[0]) { const emojiDesc = args[0].toLowerCase(); const emoji = appState.chat.emojis.find(em => em.description.toLowerCase().includes(emojiDesc)) || appState.chat.emojis[Math.floor(Math.random() * appState.chat.emojis.length)];
+                    else if (action === 'SEND_EMOJI' && args[0]) { const emojiDesc = args[0].toLowerCase();
+    let matchingEmojis = appState.chat.emojis.filter(em => em.description.toLowerCase().includes(emojiDesc));
+    
+    if (matchingEmojis.length === 0) {
+        // 如果完全没有匹配项，则从所有表情中随机选择一个
+        matchingEmojis = appState.chat.emojis;
+    }
+
+    const emoji = matchingEmojis.length > 0 ? matchingEmojis[Math.floor(Math.random() * matchingEmojis.length)] : null;
                     if (emoji) {
                         const newMessage = { id: messageId, type: 'emoji', emojiId: emoji.id, description: emoji.description, sender: currentSenderId, timestamp, status: 'sent', contactId: contact.id };
                         addMessageToConversation(newMessage, true);
@@ -15852,6 +15954,24 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
             }, intervalMinutes * 60 * 1000); 
         } 
     }
+    getEl('global-context-memory').addEventListener('input', () => {
+    const oldGlobalCount = appState.settings.globalContextMemory.count;
+    const newGlobalCount = parseInt(getEl('global-context-memory').value) || 99;
+    appState.settings.globalContextMemory.count = newGlobalCount;
+
+    appState.chat.contacts.forEach(contact => {
+        if (contact.isGroup) {
+            if (contact.groupSettings.contextMemory === oldGlobalCount) {
+                contact.groupSettings.contextMemory = newGlobalCount;
+            }
+        } else {
+            if (contact.charSettings.contextMemory === oldGlobalCount) {
+                contact.charSettings.contextMemory = newGlobalCount;
+            }
+        }
+    });
+    debouncedSaveState();
+});
     async function init() {
             try {
                 runtimeState = getInitialRuntimeState();
