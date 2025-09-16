@@ -2154,6 +2154,52 @@ text-overflow: clip;
         background-color: var(--danger-color);
         color: white;
     }
+        /* --- 资产 APP - 银行样式 --- */
+    .bank-balance-display {
+        display: flex;
+        justify-content: space-around;
+        background-color: var(--item-bg);
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+    }
+    .balance-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .balance-label {
+        font-size: 14px;
+        color: var(--secondary-text-color);
+    }
+    .balance-value {
+        font-size: 18px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+    .balance-item.loan .balance-value {
+        color: var(--danger-color);
+    }
+    .bank-action-group {
+        display: flex;
+        gap: 10px;
+        padding: 15px;
+        align-items: center;
+    }
+    .bank-action-group input {
+        flex-grow: 1;
+        text-align: right;
+    }
+    .bank-action-group button {
+        flex-shrink: 0;
+        width: 100px;
+    }
+        #bank-tab-content.active {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
 </style>
     <script src="https://kit.fontawesome.com/492a2d863d.js" crossorigin="anonymous"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2335,7 +2381,7 @@ text-overflow: clip;
             <div id="app-grid">
                 <div class="app-icon" id="chat-app-btn"><div class="icon" data-icon-id="app-chat"><i class="fa-solid fa-comment-dots"></i></div><span class="label">聊天</span></div>
                 <div class="app-icon" id="music-app-btn"><div class="icon" data-icon-id="app-music"><i class="fa-solid fa-music"></i></div><span class="label">音乐</span></div>
-                <div class="app-icon"><div class="icon" data-icon-id="app-shop"><i class="fa-solid fa-shop"></i></div><span class="label">购物</span></div>
+                <div class="app-icon" id="shop-app-btn"><div class="icon" data-icon-id="app-shop"><i class="fa-solid fa-shop"></i></div><span class="label">购物</span></div>
                 <div class="app-icon" id="diary-app-btn"><div class="icon" data-icon-id="app-diary"><i class="fa-solid fa-book-bookmark"></i></div><span class="label">手账</span></div>
                 <div class="app-icon" id="mail-app-btn"><div class="icon" data-icon-id="app-mail"><i class="fa-solid fa-envelope"></i></div><span class="label">信箱</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-ranking"><i class="fa-solid fa-chart-simple"></i></div><span class="label">榜单</span></div>
@@ -2343,7 +2389,9 @@ text-overflow: clip;
                 <div class="app-icon"><div class="icon" data-icon-id="app-game"><i class="fa-solid fa-gamepad"></i></div><span class="label">游戏</span></div>
                 <div class="app-icon"><div class="icon" data-icon-id="app-forum"><i class="fa-solid fa-blog"></i></div><span class="label">论坛</span></div>
                                 <div class="app-icon" id="assets-app-btn"><div class="icon" data-icon-id="app-assets"><i class="fa-solid fa-building-columns"></i></div><span class="label">资产</span></div>
-            </div>
+                            <div class="app-icon" id="entertainment-app-btn"><div class="icon" data-icon-id="app-entertainment"><i class="fa-solid fa-snowman"></i></div><span class="label">娱乐</span></div>
+                <div class="app-icon" id="weibo-app-btn"><div class="icon" data-icon-id="app-weibo"><i class="fa-solid fa-mobile-screen-button"></i></div><span class="label">微博</span></div>
+                            </div>
         </div>
 
         <!-- 底部Dock栏 -->
@@ -2360,7 +2408,8 @@ text-overflow: clip;
                 <div class="title-wrapper"><h2 class="title">设置</h2></div>
                 <div class="app-header-right"></div>
             </div>
-            <div class="app-content">
+                    <div class="app-content tab-content-wrapper">
+            <div id="main-settings-tab-content" class="tab-content active">
                 <div class="settings-group"><div class="group-title">API 配置</div><div class="group-content"><div class="settings-item"><label for="api-url">反代地址</label><input type="text" id="api-url" placeholder="例如: https://api.example.com"></div><div class="settings-item"><label for="api-key">API 密钥</label><input type="password" id="api-key" placeholder="请输入您的 API Key"></div></div><button id="confirm-api-btn" class="settings-button" data-bubble-id="settings-load-model">加载模型</button></div>
                 <div class="settings-group"><div class="group-title">模型选择</div><div class="group-content"><div class="settings-item"><select id="model-select"><option value="">请先加载模型</option></select></div></div></div>
                 <div class="settings-group"><div class="group-title">API 预设</div><div class="group-content"><div class="settings-item"><label for="preset-select">选择预设</label><select id="preset-select"><option value="">无</option></select></div></div><div class="button-group"><button id="save-preset-btn" class="settings-button" data-bubble-id="settings-save-preset">保存预设</button><button id="manage-presets-btn" class="settings-button secondary" data-bubble-id="settings-manage-presets">管理预设</button></div></div>
@@ -2406,6 +2455,18 @@ text-overflow: clip;
                 </div>
             </div>
             </div>
+            <div id="guide-tab-content" class="tab-content">
+                <p style="text-align:center; color: #888; margin-top: 50px;">指南功能待开发...</p>
+            </div>
+            <div id="memory-tab-content" class="tab-content">
+                <p style="text-align:center; color: #888; margin-top: 50px;">记忆功能待开发...</p>
+            </div>
+        </div>
+        <div class="app-bottom-tabs">
+            <div class="tab-link active" data-tab="main-settings">设置</div>
+            <div class="tab-link" data-tab="guide">指南</div>
+            <div class="tab-link" data-tab="memory">记忆</div>
+        </div>
         </div>
 
         <!-- 音乐APP界面 -->
@@ -3032,6 +3093,147 @@ text-overflow: clip;
                 <div class="tab-link" data-tab="exhibition">展厅</div>
             </div>
         </div>
+            <!-- 资产APP界面 -->
+    <div id="assets-app-screen" class="app-screen">
+        <div class="app-header">
+            <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
+            <div class="title-wrapper"><h2 class="title">银行</h2></div>
+            <div class="app-header-right"></div>
+        </div>
+        <div class="app-content tab-content-wrapper">
+            <div id="bank-tab-content" class="tab-content active">
+                <!-- 余额显示区 -->
+                <div class="bank-balance-display">
+                    <div class="balance-item">
+                        <span class="balance-label">现金余额</span>
+                        <span class="balance-value" id="bank-cash-balance">¥ 0.00</span>
+                    </div>
+                    <div class="balance-item">
+                        <span class="balance-label">银行存款</span>
+                        <span class="balance-value" id="bank-deposit-balance">¥ 0.00</span>
+                    </div>
+                    <div class="balance-item loan">
+                        <span class="balance-label">贷款总额</span>
+                        <span class="balance-value" id="bank-loan-balance">¥ 0.00</span>
+                    </div>
+                </div>
+
+                <!-- 操作区 -->
+                <div class="settings-group">
+                    <div class="group-title">存款</div>
+                    <div class="group-content">
+                        <div class="bank-action-group">
+                            <input type="number" id="bank-deposit-input" class="uniform-input-box" placeholder="输入存款金额">
+                            <button id="bank-deposit-btn" class="settings-button">确认存款</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="group-title">取款</div>
+                    <div class="group-content">
+                        <div class="bank-action-group">
+                            <input type="number" id="bank-withdraw-input" class="uniform-input-box" placeholder="输入取款金额">
+                            <button id="bank-withdraw-btn" class="settings-button secondary">确认取款</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <div class="group-title">贷款</div>
+                    <div class="group-content">
+                        <div class="bank-action-group">
+                            <input type="number" id="bank-loan-input" class="uniform-input-box" placeholder="输入贷款金额">
+                            <button id="bank-loan-btn" class="settings-button danger-btn">申请贷款</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="stock-tab-content" class="tab-content">
+                <p style="text-align:center; color: #888; margin-top: 50px;">股市功能待开发...</p>
+            </div>
+            <div id="lottery-tab-content" class="tab-content">
+                <p style="text-align:center; color: #888; margin-top: 50px;">彩票功能待开发...</p>
+            </div>
+            <div id="monopoly-tab-content" class="tab-content">
+                <p style="text-align:center; color: #888; margin-top: 50px;">大富翁功能待开发...</p>
+            </div>
+        </div>
+        <div class="app-bottom-tabs">
+            <div class="tab-link active" data-tab="bank">银行</div>
+            <div class="tab-link" data-tab="stock">股市</div>
+            <div class="tab-link" data-tab="lottery">彩票</div>
+            <div class="tab-link" data-tab="monopoly">大富翁</div>
+        </div>
+    </div>
+    <!-- 购物APP界面 -->
+<div id="shop-app-screen" class="app-screen">
+    <div class="app-header">
+        <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
+        <div class="title-wrapper"><h2 class="title">购买</h2></div>
+        <div class="app-header-right"></div>
+    </div>
+    <div class="app-content tab-content-wrapper">
+        <div id="purchase-tab-content" class="tab-content active">
+            <p style="text-align:center; color: #888; margin-top: 50px;">购买功能待开发...</p>
+        </div>
+        <div id="resale-tab-content" class="tab-content">
+            <p style="text-align:center; color: #888; margin-top: 50px;">转售功能待开发...</p>
+        </div>
+        <div id="takeout-tab-content" class="tab-content">
+            <p style="text-align:center; color: #888; margin-top: 50px;">外卖功能待开发...</p>
+        </div>
+        <div id="blindbox-tab-content" class="tab-content">
+            <p style="text-align:center; color: #888; margin-top: 50px;">盲盒功能待开发...</p>
+        </div>
+    </div>
+    <div class="app-bottom-tabs">
+        <div class="tab-link active" data-tab="purchase">购买</div>
+        <div class="tab-link" data-tab="resale">转售</div>
+        <div class="tab-link" data-tab="takeout">外卖</div>
+        <div class="tab-link" data-tab="blindbox">盲盒</div>
+    </div>
+</div>
+    <!-- 娱乐APP界面 -->
+    <div id="entertainment-app-screen" class="app-screen">
+        <div class="app-header">
+            <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
+            <div class="title-wrapper"><h2 class="title">直播</h2></div>
+            <div class="app-header-right"></div>
+        </div>
+        <div class="app-content tab-content-wrapper">
+        <div id="livestream-tab-content" class="tab-content active">
+            <p style="text-align:center; color: #888; margin-top: 50px;">直播功能待开发...</p>
+        </div>
+        <div id="questionnaire-tab-content" class="tab-content">
+            <p style="text-align:center; color: #888; margin-top: 50px;">问卷功能待开发...</p>
+        </div>
+    </div>
+    <div class="app-bottom-tabs">
+        <div class="tab-link active" data-tab="livestream">直播</div>
+        <div class="tab-link" data-tab="questionnaire">问卷</div>
+    </div>
+    </div>
+    <!-- 微博APP界面 -->
+    <div id="weibo-app-screen" class="app-screen">
+        <div class="app-header">
+            <div class="app-header-left"><button class="back-btn" onclick="closeCurrentApp()">&lt; 返回</button></div>
+            <div class="title-wrapper"><h2 class="title">微博</h2></div>
+            <div class="app-header-right"></div>
+        </div>
+            <div class="app-content tab-content-wrapper">
+        <div id="weibo-main-tab-content" class="tab-content active">
+            <p style="text-align:center; color: #888; margin-top: 50px;">微博功能待开发...</p>
+        </div>
+        <div id="hot-search-tab-content" class="tab-content">
+            <p style="text-align:center; color: #888; margin-top: 50px;">热搜功能待开发...</p>
+        </div>
+    </div>
+    <div class="app-bottom-tabs">
+        <div class="tab-link active" data-tab="weibo-main">微博</div>
+        <div class="tab-link" data-tab="hot-search">热搜</div>
+    </div>
+    </div>
     <!-- 浮动歌词 & 音乐播放器 -->
     <div id="lyrics-container"><div id="lyrics-line">...</div></div>
     <div id="player-modal">
@@ -3889,7 +4091,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const charMomentsScreen = getEl('char-moments-screen');
     const mailAppScreen = getEl('mail-app-screen');
     const diaryAppScreen = getEl('diary-app-screen');
-
+const assetsAppScreen = getEl('assets-app-screen');
+const shopAppScreen = getEl('shop-app-screen');
+    const entertainmentAppScreen = getEl('entertainment-app-screen');
+    const weiboAppScreen = getEl('weibo-app-screen');
     // --- 设置 APP ---
     const confirmApiBtn = getEl('confirm-api-btn');
     const modelSelect = getEl('model-select');
@@ -4897,7 +5102,10 @@ return {
                             avatarFrameLibrary: [],
                             persona: '全网唯一土皇帝',
                             signature: '全网唯一土皇帝',
-                            balance: 1000000.00
+                            cashBalance: 1000000.00,
+                            bankBalance: 0,
+                            loan: 0,
+                            lastInterestCalc: ''
                         },
                         moments: {
                             profile: {
@@ -5238,7 +5446,42 @@ return {
     if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfile.signature;
     if (!appState.chat.moments.profile) appState.chat.moments.profile = defaultState.chat.moments.profile;
     if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
-    
+        
+    // --- 步骤 3.5: (补丁) 迁移 balance 结构 ---
+    const balanceMigrationFlag = 'balance_structure_migrated_v1';
+    if (!localStorage.getItem(balanceMigrationFlag)) {
+        console.log("执行一次性余额数据结构迁移...");
+        let migrationPerformed = false;
+        
+        // 迁移 User
+        if (appState.chat.userProfile.hasOwnProperty('balance') && !appState.chat.userProfile.hasOwnProperty('cashBalance')) {
+            appState.chat.userProfile.cashBalance = appState.chat.userProfile.balance;
+            appState.chat.userProfile.bankBalance = 0;
+            appState.chat.userProfile.loan = 0;
+            appState.chat.userProfile.lastInterestCalc = '';
+            delete appState.chat.userProfile.balance;
+            migrationPerformed = true;
+        }
+
+        // 迁移 Chars
+        appState.chat.contacts.forEach(contact => {
+            if (!contact.isGroup && contact.charSettings && contact.charSettings.hasOwnProperty('balance') && !contact.charSettings.hasOwnProperty('cashBalance')) {
+                contact.charSettings.cashBalance = contact.charSettings.balance;
+                contact.charSettings.bankBalance = 0;
+                contact.charSettings.loan = 0;
+                contact.charSettings.lastInterestCalc = '';
+                delete contact.charSettings.balance;
+                migrationPerformed = true;
+            }
+        });
+
+        if (migrationPerformed) {
+            // 立即保存一次以固化迁移结果
+            saveState();
+            showToast("账户系统已升级！", "info");
+        }
+        localStorage.setItem(balanceMigrationFlag, 'true');
+    }
     // --- 步骤 4: 所有数据加载完毕后，更新UI ---
     updateUIFromState();
 }
@@ -5562,6 +5805,11 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
         } appScreen.classList.add('active'); if (appScreen.id === 'beautify-app-screen') { const activeTab = query('#beautify-app-screen .tab-link.active')?.dataset.tab || 'wallpaper'; handleBeautifyTabChange(activeTab); } else if (appScreen.id === 'data-app-screen') { const activeTab = query('#data-app-screen .tab-link.active')?.dataset.tab || 'world-book'; handleDataTabChange(activeTab); 
     } else if (appScreen.id === 'settings-app-screen') {
             renderGlobalRealtimeSettings();
+                } else if (appScreen.id === 'assets-app-screen') {
+            const activeTab = assetsAppScreen.querySelector('.app-bottom-tabs .tab-link.active');
+            if (activeTab) {
+                handleAssetsTabChange(activeTab.dataset.tab);
+            }
         } }
     function closeCurrentApp() { const activeApp = document.querySelector('.app-screen.active:not(.sub-screen)'); if (activeApp) { if (activeApp.id === 'chat-app-screen' && activeApp.classList.contains('selection-mode')) exitContactSelectionMode(); activeApp.classList.remove('active'); phoneScreen.classList.remove('app-open'); } }
     window.closeCurrentApp = closeCurrentApp;
@@ -5569,8 +5817,10 @@ async function updateBattery() { try { if ('getBattery' in navigator) { const ba
     function openSubScreen(subScreen, parentScreen) { parentScreen.classList.add('parent-hidden'); subScreen.classList.add('active'); }
     function closeSubScreen(subScreen, parentScreen) { subScreen.classList.remove('active'); parentScreen.classList.remove('parent-hidden'); if (parentScreen.id === 'single-chat-screen') { updateSingleChatUI(); } }
     function setupAppNavigation() { getEl('settings-app-btn').addEventListener('click', () => openApp(settingsAppScreen)); getEl('music-app-btn').addEventListener('click', () => openApp(musicAppScreen)); getEl('beautify-app-btn').addEventListener('click', () => openApp(beautifyAppScreen));
+      getEl('shop-app-btn').addEventListener('click', () => openApp(shopAppScreen));
         getEl('diary-app-btn').addEventListener('click', () => openApp(diaryAppScreen));
-        getEl('mail-app-btn').addEventListener('click', () => { openApp(mailAppScreen); handleMailTabChange('love-letter'); }); getEl('data-app-btn').addEventListener('click', () => openApp(dataAppScreen)); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
+        getEl('mail-app-btn').addEventListener('click', () => { openApp(mailAppScreen); handleMailTabChange('love-letter'); }); getEl('data-app-btn').addEventListener('click', () => openApp(dataAppScreen));getEl('assets-app-btn').addEventListener('click', () => openApp(assetsAppScreen));    getEl('entertainment-app-btn').addEventListener('click', () => openApp(entertainmentAppScreen));
+    getEl('weibo-app-btn').addEventListener('click', () => openApp(weiboAppScreen)); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
 
     // ===================================================================
     // --- 设置 APP ---
@@ -5597,7 +5847,12 @@ if (!contact.userSettings.videoBackgroundLibrary) {
      } else { const char = appState.chat.contacts.find(c => c.id === memberId); if (char) { contact.groupSettings.members[memberId] = { ...deepCopy(char.charSettings), nickname: char.name, title: '成员', isMuted: false }; } } } }); } else { if (!contact.charSettings) { contact.charSettings = { name: contact.name, linkedWorldBooks: [], avatarId: contact.avatarId, avatarLibrary: [contact.avatarId], avatarFrameId: '', chatBackgroundId: 'default', videoBackgroundId: '', videoBackgroundLibrary: [], contextMemory: 99, persona: '这是一个默认人设。', isFriend: true, realtimeActivity: { enabled: false, interval: 30 }, momentsCoverId: '', momentsAvatarId: '' , visitors: [], hasHadFirstChat: false, moments: { photos: [], albums: [] }, balance: 1000000.00 }; } contact.charSettings.relationship = '朋友'; /* 新增字段并设置默认值*/ if (!contact.charSettings.contextMemory) {
     contact.charSettings.contextMemory = appState.settings.globalContextMemory.count;
 } if (typeof contact.charSettings.lastAnniversaryCelebrated === 'undefined') { contact.charSettings.lastAnniversaryCelebrated = ''; }
-                          if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.balance === 'undefined') { contact.charSettings.balance = 1000000.00; } if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.hasHadFirstInteraction === 'undefined') { contact.charSettings.hasHadFirstInteraction = false; }
+                          if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: [], albums: [] }; } if (typeof contact.charSettings.cashBalance === 'undefined') {
+    contact.charSettings.cashBalance = 1000000.00;
+    contact.charSettings.bankBalance = 0;
+    contact.charSettings.loan = 0;
+    contact.charSettings.lastInterestCalc = '';
+} if (!contact.charSettings.chatBackgroundId) { contact.charSettings.chatBackgroundId = 'default'; } if (typeof contact.charSettings.videoBackgroundId === 'undefined') { contact.charSettings.videoBackgroundId = ''; } if (!contact.charSettings.realtimeActivity) { contact.charSettings.realtimeActivity = { enabled: false, interval: 30 }; } if (typeof contact.charSettings.hasHadFirstInteraction === 'undefined') { contact.charSettings.hasHadFirstInteraction = false; }
                     // --- 新增：明信片计数器 ---
                     if (typeof contact.charSettings.realtimeTicksSincePostcard === 'undefined') {
                         contact.charSettings.realtimeTicksSincePostcard = 0;
@@ -9208,7 +9463,7 @@ confirmCameraBtn.addEventListener('click', async () => { const text = cameraText
 cancelLinkBtn.addEventListener('click', () => linkShareModal.classList.remove('visible'));
 confirmLinkBtn.addEventListener('click', () => { const title = linkTitleInput.value.trim(); if (!title) return showToast('标题是必填项', 'error'); const summary = linkSummaryInput.value.trim(); const source = linkSourceInput.value.trim(); const content = linkContentInput.value.trim(); addMessageToConversation({ id: newId('msg'), type: 'link', title, summary, source, content, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); linkShareModal.classList.remove('visible'); [linkTitleInput, linkSummaryInput, linkSourceInput, linkContentInput].forEach(i => i.value = ''); });
 cancelRedPacketBtn.addEventListener('click', () => redPacketModal.classList.remove('visible'));
-confirmRedPacketBtn.addEventListener('click', () => { const amount = parseFloat(redPacketAmountInput.value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); if (appState.chat.userProfile.balance < amount) return showToast(`余额不足！(当前: ${appState.chat.userProfile.balance.toFixed(2)})`, 'error'); appState.chat.userProfile.balance -= amount; const message = redPacketMessageInput.value.trim() || '恭喜发财，大吉大利！'; addMessageToConversation({ id: newId('msg'), type: 'redPacket', packetType: 'normal', amount, count: 1, message, sender: 'user', timestamp: Date.now(), status: 'unclaimed_new', claimedBy: {}, contactId: runtimeState.currentChatId }); redPacketModal.classList.remove('visible'); redPacketAmountInput.value = ''; redPacketMessageInput.value = ''; });
+confirmRedPacketBtn.addEventListener('click', () => { const amount = parseFloat(redPacketAmountInput.value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); if (appState.chat.userProfile.cashBalance < amount) return showToast(`现金余额不足！(当前: ${appState.chat.userProfile.cashBalance.toFixed(2)})`, 'error'); appState.chat.userProfile.cashBalance -= amount; const message = redPacketMessageInput.value.trim() || '恭喜发财，大吉大利！'; addMessageToConversation({ id: newId('msg'), type: 'redPacket', packetType: 'normal', amount, count: 1, message, sender: 'user', timestamp: Date.now(), status: 'unclaimed_new', claimedBy: {}, contactId: runtimeState.currentChatId }); redPacketModal.classList.remove('visible'); redPacketAmountInput.value = ''; redPacketMessageInput.value = ''; });
 function updateChatInputButtons() { const hasText = chatInput.value.trim() !== ''; chatEmojiBtn.style.display = hasText ? 'none' : 'block'; chatSendFakeBtn.style.display = hasText ? 'block' : 'none'; }
 chatInput.addEventListener('input', updateChatInputButtons);
 
@@ -11001,7 +11256,7 @@ function claimRedPacket(msg) {
 
     if (!msg.claimedBy) msg.claimedBy = {};
     msg.claimedBy['user'] = claimedAmount;
-    appState.chat.userProfile.balance += claimedAmount;
+    appState.chat.userProfile.cashBalance += claimedAmount;
 
     const senderDisplayName = getDisplayName(msg.sender, msg.contactId);
     addSystemNotification(msg.contactId, `你领取了 ${senderDisplayName} 的红包`, false);
@@ -11049,7 +11304,7 @@ function claimRedPacketByAI(messageId, claimerId) {
 
     if (!msg.claimedBy) msg.claimedBy = {};
     msg.claimedBy[claimerId] = claimedAmount;
-    char.charSettings.balance += claimedAmount;
+    char.charSettings.cashBalance += claimedAmount;
 
     const claimerDisplayName = getDisplayName(claimerId, contact.id);
     const senderDisplayName = getDisplayName(msg.sender, contact.id);
@@ -11250,7 +11505,7 @@ function showRedPacketDetails(msg) {
 function openGroupRedPacketModal() { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); runtimeState.groupRedPacketContext = { selectedMember: null }; const membersAndUser = ['user', ...contact.members]; groupRedPacketMemberGrid.innerHTML = membersAndUser.map(memberId => { const memberInfo = contact.groupSettings.members[memberId] || {}; const userProfile = findUserById(memberId); return `<div class="group-member-item" data-id="${memberId}"> <div class="avatar" data-avatar-id="${userProfile.avatarId}"></div> <span class="name">${memberInfo.nickname || userProfile.name}</span> </div>`; }).join(''); groupRedPacketMemberGrid.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId)); groupRedPacketModal.classList.add('visible'); }
 groupRedPacketMemberGrid.addEventListener('click', e => { const item = e.target.closest('.group-member-item'); if (item) { queryAll('#group-red-packet-member-grid .group-member-item').forEach(el => el.classList.remove('selected')); item.classList.add('selected'); runtimeState.groupRedPacketContext.selectedMember = item.dataset.id; } });
 cancelGroupRedPacketBtn.addEventListener('click', () => groupRedPacketModal.classList.remove('visible'));
-confirmGroupRedPacketBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); const groupSize = contact.members.length + 1; const activeTab = groupRedPacketModal.querySelector('.tab-btn.active').dataset.tab; const inputs = groupRedPacketModal.querySelectorAll('.red-packet-input'); let totalCost = 0; let packetData = { id: newId('msg'), type: 'redPacket', sender: 'user', timestamp: Date.now(), status: 'unclaimed_new', claimedBy: {}, contactId: runtimeState.currentChatId }; if (activeTab === 'exclusive') { if (!runtimeState.groupRedPacketContext.selectedMember) return showToast('请选择一个专属对象', 'error'); if (runtimeState.groupRedPacketContext.selectedMember === 'user') return showToast('不能给自己发专属红包', 'error'); const amount = parseFloat(inputs[0].value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); totalCost = amount; packetData = { ...packetData, packetType: 'exclusive', amount, count: 1, message: inputs[1].value || '恭喜发财，大吉大利！', exclusiveTo: runtimeState.groupRedPacketContext.selectedMember }; } else if (activeTab === 'lucky') { const totalAmount = parseFloat(inputs[2].value); const count = parseInt(inputs[3].value); if (isNaN(totalAmount) || totalAmount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的总金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); if (totalAmount < count * 0.01) return showToast('总金额不足以让每人分到0.01元', 'error'); totalCost = totalAmount; packetData = { ...packetData, packetType: 'lucky', totalAmount, count, message: inputs[4].value || '恭喜发财，大吉大利！' }; } else { const amount = parseFloat(inputs[5].value); const count = parseInt(inputs[6].value); if (isNaN(amount) || amount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的单个金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); totalCost = amount * count; packetData = { ...packetData, packetType: 'normal', amount, count, message: inputs[7].value || '恭喜发财，大吉大利！' }; } if (appState.chat.userProfile.balance < totalCost) return showToast(`余额不足！(需要: ${totalCost.toFixed(2)}, 当前: ${appState.chat.userProfile.balance.toFixed(2)})`, 'error'); appState.chat.userProfile.balance -= totalCost; addMessageToConversation(packetData); groupRedPacketModal.classList.remove('visible'); inputs.forEach(i => i.value = ''); });
+confirmGroupRedPacketBtn.addEventListener('click', () => { const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId); const groupSize = contact.members.length + 1; const activeTab = groupRedPacketModal.querySelector('.tab-btn.active').dataset.tab; const inputs = groupRedPacketModal.querySelectorAll('.red-packet-input'); let totalCost = 0; let packetData = { id: newId('msg'), type: 'redPacket', sender: 'user', timestamp: Date.now(), status: 'unclaimed_new', claimedBy: {}, contactId: runtimeState.currentChatId }; if (appState.chat.userProfile.cashBalance < totalCost) return showToast(`现金余额不足！(需要: ${totalCost.toFixed(2)}, 当前: ${appState.chat.userProfile.cashBalance.toFixed(2)})`, 'error'); appState.chat.userProfile.cashBalance -= totalCost; if (activeTab === 'exclusive') { if (!runtimeState.groupRedPacketContext.selectedMember) return showToast('请选择一个专属对象', 'error'); if (runtimeState.groupRedPacketContext.selectedMember === 'user') return showToast('不能给自己发专属红包', 'error'); const amount = parseFloat(inputs[0].value); if (isNaN(amount) || amount <= 0) return showToast('请输入有效金额', 'error'); totalCost = amount; packetData = { ...packetData, packetType: 'exclusive', amount, count: 1, message: inputs[1].value || '恭喜发财，大吉大利！', exclusiveTo: runtimeState.groupRedPacketContext.selectedMember }; } else if (activeTab === 'lucky') { const totalAmount = parseFloat(inputs[2].value); const count = parseInt(inputs[3].value); if (isNaN(totalAmount) || totalAmount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的总金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); if (totalAmount < count * 0.01) return showToast('总金额不足以让每人分到0.01元', 'error'); totalCost = totalAmount; packetData = { ...packetData, packetType: 'lucky', totalAmount, count, message: inputs[4].value || '恭喜发财，大吉大利！' }; } else { const amount = parseFloat(inputs[5].value); const count = parseInt(inputs[6].value); if (isNaN(amount) || amount <= 0 || isNaN(count) || count <= 0) return showToast('请输入有效的单个金额和数量', 'error'); if (count > groupSize) return showToast(`红包个数不能超过群成员总数(${groupSize})`, 'error'); totalCost = amount * count; packetData = { ...packetData, packetType: 'normal', amount, count, message: inputs[7].value || '恭喜发财，大吉大利！' }; } if (appState.chat.userProfile.balance < totalCost) return showToast(`余额不足！(需要: ${totalCost.toFixed(2)}, 当前: ${appState.chat.userProfile.balance.toFixed(2)})`, 'error'); appState.chat.userProfile.balance -= totalCost; addMessageToConversation(packetData); groupRedPacketModal.classList.remove('visible'); inputs.forEach(i => i.value = ''); });
 function checkExpiredPackets() {
     const now = Date.now();
     const twentyFourHours = 24 * 60 * 60 * 1000;
@@ -15684,7 +15939,191 @@ function setupMomentsPageListeners() {
             appState.mailbox.activeTab = tabId;
             debouncedSaveState();
         }
+   function handleAssetsTabChange(tabId) {
+        const titleEl = assetsAppScreen.querySelector('.title');
+        const tabMap = { 'bank': '银行', 'stock': '股市', 'lottery': '彩票', 'monopoly': '大富翁' };
+        titleEl.textContent = tabMap[tabId] || '资产';
+        if (tabId === 'bank') {
+            renderBankUI();
+        }
+    }
 
+    function calculateInterest() {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const calculateForEntity = (entity) => {
+            if (!entity.lastInterestCalc || entity.lastInterestCalc === today) {
+                entity.lastInterestCalc = today;
+                return; // 今天已经计算过或无需计算
+            }
+
+            let lastDate = new Date(entity.lastInterestCalc);
+            const currentDate = new Date(today);
+            let daysPassed = 0;
+            
+            // 计算经过了多少个不同的日期
+            while(lastDate < currentDate) {
+                daysPassed++;
+                lastDate.setDate(lastDate.getDate() + 1);
+            }
+
+            if (daysPassed > 0) {
+                for (let i = 0; i < daysPassed; i++) {
+                    // 存款利息
+                    if (entity.bankBalance > 0) {
+                        const dailyInterest = Math.ceil(entity.bankBalance * 0.01);
+                        entity.bankBalance += dailyInterest;
+                    }
+                    // 贷款利息
+                    if (entity.loan > 0) {
+                        const dailyLoanInterest = Math.ceil(entity.loan * 0.025);
+                        entity.loan += dailyLoanInterest;
+                    }
+                }
+            }
+            entity.lastInterestCalc = today;
+        };
+
+        // 为用户和所有角色计算
+        calculateForEntity(appState.chat.userProfile);
+        appState.chat.contacts.forEach(c => {
+            if (!c.isGroup && c.charSettings) {
+                calculateForEntity(c.charSettings);
+            }
+        });
+
+        debouncedSaveState();
+    }
+
+    function renderBankUI() {
+        calculateInterest(); // 每次渲染前都计算利息
+        const user = appState.chat.userProfile;
+        getEl('bank-cash-balance').textContent = `¥ ${user.cashBalance.toFixed(2)}`;
+        getEl('bank-deposit-balance').textContent = `¥ ${user.bankBalance.toFixed(2)}`;
+        getEl('bank-loan-balance').textContent = `¥ ${user.loan.toFixed(2)}`;
+    }
+
+    function setupBankListeners() {
+        getEl('bank-deposit-btn').addEventListener('click', () => {
+            const amount = parseFloat(getEl('bank-deposit-input').value);
+            const user = appState.chat.userProfile;
+            if (isNaN(amount) || amount <= 0) return showToast('请输入有效的存款金额', 'error');
+            if (amount > user.cashBalance) return showToast('现金余额不足', 'error');
+            
+            user.cashBalance -= amount;
+            user.bankBalance += amount;
+            showToast(`成功存入 ¥${amount.toFixed(2)}`, 'info');
+            getEl('bank-deposit-input').value = '';
+            renderBankUI();
+            debouncedSaveState();
+        });
+
+        getEl('bank-withdraw-btn').addEventListener('click', () => {
+            const amount = parseFloat(getEl('bank-withdraw-input').value);
+            const user = appState.chat.userProfile;
+            if (isNaN(amount) || amount <= 0) return showToast('请输入有效的取款金额', 'error');
+            if (amount > user.bankBalance) return showToast('银行存款不足', 'error');
+
+            user.bankBalance -= amount;
+            user.cashBalance += amount;
+            showToast(`成功取出 ¥${amount.toFixed(2)}`, 'info');
+            getEl('bank-withdraw-input').value = '';
+            renderBankUI();
+            debouncedSaveState();
+        });
+
+        getEl('bank-loan-btn').addEventListener('click', () => {
+            const amount = parseFloat(getEl('bank-loan-input').value);
+            const user = appState.chat.userProfile;
+            if (isNaN(amount) || amount <= 0) return showToast('请输入有效的贷款金额', 'error');
+
+            user.loan += amount;
+            user.cashBalance += amount;
+            showToast(`成功贷款 ¥${amount.toFixed(2)}，已存入现金余额`, 'info');
+            getEl('bank-loan-input').value = '';
+            renderBankUI();
+            debouncedSaveState();
+        });
+    }
+
+    assetsAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            assetsAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            assetsAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            handleAssetsTabChange(tabId);
+        }
+    });
+    
+    function handleShopTabChange(tabId) {
+        const titleEl = shopAppScreen.querySelector('.title');
+        const tabMap = { 'purchase': '购买', 'resale': '转售', 'takeout': '外卖', 'blindbox': '盲盒' };
+        titleEl.textContent = tabMap[tabId] || '购物';
+    }
+
+    shopAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            shopAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            shopAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            handleShopTabChange(tabId);
+        }
+    });
+    
+    function handleEntertainmentTabChange(tabId) {
+        const titleEl = entertainmentAppScreen.querySelector('.title');
+        const tabMap = { 'livestream': '直播', 'questionnaire': '问卷' };
+        titleEl.textContent = tabMap[tabId] || '娱乐';
+    }
+
+    entertainmentAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            entertainmentAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            entertainmentAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            handleEntertainmentTabChange(tabId);
+        }
+    });
+
+    function handleWeiboTabChange(tabId) {
+        const titleEl = weiboAppScreen.querySelector('.title');
+        const tabMap = { 'weibo-main': '微博', 'hot-search': '热搜' };
+        titleEl.textContent = tabMap[tabId] || '微博';
+    }
+
+    weiboAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            weiboAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            weiboAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            handleWeiboTabChange(tabId);
+        }
+    });
+
+    function handleSettingsTabChange(tabId) {
+        const titleEl = settingsAppScreen.querySelector('.title');
+        const tabMap = { 'main-settings': '设置', 'guide': '指南', 'memory': '记忆' };
+        titleEl.textContent = tabMap[tabId] || '设置';
+    }
+
+    settingsAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tab-link')) {
+            const tabId = e.target.dataset.tab;
+            settingsAppScreen.querySelectorAll('.tab-link').forEach(t => t.classList.remove('active'));
+            settingsAppScreen.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            e.target.classList.add('active');
+            getEl(`${tabId}-tab-content`).classList.add('active');
+            handleSettingsTabChange(tabId);
+        }
+    });
         function renderPostcardWall() {
             const wallEl = getEl('postcard-wall');
             const promptEl = getEl('unread-postcard-prompt');
@@ -16393,6 +16832,7 @@ await generateAndSendLoveLetter(taskToProcess.charId);}
                 setupNewMomentsFeaturesListeners();
                 setupMomentsModalListeners();
                 setupMomentsPageListeners();
+                setupBankListeners();
                 // --- Mail App New Listeners & Functions ---
         function openEditLoveLetterModal(mode, letterId) {
         const modal = getEl('edit-love-letter-modal');
