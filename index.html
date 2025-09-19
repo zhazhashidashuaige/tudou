@@ -33,19 +33,6 @@
 
     <title>EPhone</title>
 
-<!-- ▼▼▼ 【全新添加】iOS 启动画面，实现真·全屏启动 ▼▼▼ -->
-<!-- 你需要将下面的 "你的默认壁纸图片URL" 替换成一张真实的图片链接 -->
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-<link rel="apple-touch-startup-image" href="你的默认壁纸图片URL" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
-<!-- ▲▲▲ 添加结束 ▲▲▲ -->
-
-
 
 
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
@@ -71,6 +58,7 @@ body {
 /* ▲▲▲ 替换结束 ▲▲▲ */
 
 /* 2. 让 #phone-screen 成为新的“根”容器，撑满整个浏览器窗口 */
+/* ▼▼▼ 请用这块【最终修正版】的代码，替换掉你现有的 #phone-screen 样式 ▼▼▼ */
 #phone-screen {
     width: 100%;
     height: 100vh;
@@ -78,8 +66,9 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background-color: #fff; 
+    background-color: #000; /* 核心修正：将画布底色改为黑色 */
 }
+/* ▲▲▲ 替换结束 ▲▲▲ */
 
 /* 3. 【核心】隐藏掉模拟器的状态栏 */
 #status-bar {
