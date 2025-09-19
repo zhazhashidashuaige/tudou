@@ -42,12 +42,9 @@
         @font-face { font-family: 'bulangni'; src: url('') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
         :root { --screen-width: 350px; --screen-height: 650px; --secondary-bg: #ffffff; --border-color: #e0e0e0; --text-primary: #1f1f1f; --text-secondary: #8a8a8a; --accent-color: #007bff;   --status-bar-text-color: #000000; }
 /* ▼▼▼ 用这块终极代码，替换掉你现有的 html 和 body 样式 ▼▼▼ */
-/* ▼▼▼ 用这块终极代码，替换掉你现有的 html, body, #phone-screen, .screen 样式 ▼▼▼ */
-
-/* 1. 重置 html 和 body 元素，确保它们是全屏画布 */
 html {
     -webkit-text-size-adjust: 100%;
-    height: 100%; 
+    height: 100%; /* 确保html元素也能撑满 */
 }
 
 body {
@@ -55,37 +52,28 @@ body {
     font-family: 'bulangni', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-weight: normal;
     background-color: #f0f2f5;
-    height: 100%;
+    height: 100%; /* 让body也撑满父元素(html) */
     overflow: hidden; /* 防止body本身出现滚动条 */
 }
+/* ▲▲▲ 替换结束 ▲▲▲ */
 
-/* 2. 设置 #phone-screen 为撑满视窗的根容器 */
+/* 2. 让 #phone-screen 成为新的“根”容器，撑满整个浏览器窗口 */
+/* ▼▼▼ 请用这块【最终修正版】的代码，替换掉你现有的 #phone-screen 样式 ▼▼▼ */
 #phone-screen {
     width: 100%;
-    height: 100vh; /* 核心：使用 vh 单位确保撑满整个屏幕的可视高度 */
+    height: 100vh;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background-color: #000; /* 设置一个黑色底色，防止切换时闪烁白边 */
+    background-color: #000; /* 核心修正：将画布底色改为黑色 */
 }
-
-/* 3. 确保所有 .screen 页面都能继承父容器的全部高度 */
-.screen {
-    width: 100%;
-    height: 100%; /* 核心：继承 #phone-screen 的 100vh 高度 */
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-}
-
 /* ▲▲▲ 替换结束 ▲▲▲ */
+
+/* 3. 【核心】隐藏掉模拟器的状态栏 */
+#status-bar {
+    display: none;
+}
 
 /* 4. 【核心】让所有页面的头部自动适应iPhone的“刘海”安全区 */
 .header, .qzone-header {
@@ -143,19 +131,20 @@ body {
 
         .header .action-btn img { height: 26px; }
         .header .save-btn { font-size: 16px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
-        /* ▼▼▼ 请用这【一整块代码】，完整替换掉您现有的 #home-screen, #clock-container, 和 .app-grid 样式 ▼▼▼ */
+     /* ▼▼▼ 【替换】用这块终极代码，替换掉旧的 #home-screen 和 .app-grid 样式 ▼▼▼ */
 
 #home-screen {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    box-sizing: border-box;
     background-size: cover;
     background-position: center;
     padding-left: 20px;
     padding-right: 20px;
-    /* We remove vertical padding here to rely on margins */
+    /* 核心：强制让整个锁屏界面的底部内边距等于安全区高度，确保背景图能铺满 */
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box; /* 确保padding计算正确 */
 }
 
 #clock-container {
@@ -164,11 +153,10 @@ body {
     text-shadow: 0 3px 8px rgba(0,0,0,0.4);
     margin-bottom: 20px;
     flex-shrink: 0;
-    /* This is the key: pushes the clock down from the top edge */
     margin-top: calc(60px + env(safe-area-inset-top));
 }
 
-.app-grid { /* <--- 只修改这个符号 */
+.app-grid {
     margin-top: auto; /* 自动贴紧底部 */
     display: flex;
     flex-direction: column;
@@ -176,10 +164,13 @@ body {
     gap: 20px;
     width: 100%;
     padding: 20px;
-    /* 关键：使用 margin-bottom 抬高图标，适配底部“小黑条” */
-    margin-bottom: calc(30px + env(safe-area-inset-bottom)); 
+    /* 核心：将原来的margin-bottom改为padding-bottom，让图标网格的背景也能延伸 */
+    padding-bottom: 30px; /* 这是原来margin里的30px */
+    margin-bottom: 0; /* 移除旧的margin-bottom */
 }
+
 /* ▲▲▲ 替换结束 ▲▲▲ */
+
 
         .app-row { display: flex; justify-content: center; gap: 25px; width: 100%; }
         .app-icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 14px; font-weight: 500; text-align: center; }
@@ -6763,6 +6754,16 @@ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 /* ▲▲▲ 新增样式结束 ▲▲▲ */
 
 /* ▲▲▲ CSS 粘贴结束 ▲▲▲ */
+
+/* ▼▼▼ 【全新添加】强制修正所有设置页面的底部安全区 ▼▼▼ */
+#font-settings-screen .form-container,
+#wallpaper-screen .form-container,
+#api-settings-screen .form-container,
+#css-editor-screen .form-container {
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+/* ▲▲▲ 添加结束 ▲▲▲ */
+
 
     </style>
     <!-- ▼▼▼ 在这里添加下面这行 ▼▼▼ -->
@@ -25142,5 +25143,4 @@ async function handleCharacterDataDeletion(dataType, index) {
 <input type="file" id="character-card-input" accept=".png, .json" style="display: none;">
 <!-- ▲▲▲ 文件选择器结束 ▲▲▲ -->
 </body>
-
 </html>
