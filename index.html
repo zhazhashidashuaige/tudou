@@ -131,45 +131,29 @@ body {
 
         .header .action-btn img { height: 26px; }
         .header .save-btn { font-size: 16px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
-     /* ▼▼▼ 【替换】用这块终极代码，替换掉旧的 #home-screen 和 .app-grid 样式 ▼▼▼ */
-
+    /* ▼▼▼ 【终极强制版】请用这块代码完整替换旧的 #home-screen 样式 ▼▼▼ */
 #home-screen {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    background-size: cover;
-    background-position: center;
-    padding-left: 20px;
-    padding-right: 20px;
-    /* 核心：强制让整个锁屏界面的底部内边距等于安全区高度，确保背景图能铺满 */
-    padding-bottom: env(safe-area-inset-bottom);
-    box-sizing: border-box; /* 确保padding计算正确 */
+    width: 100% !important;
+    height: 100vh !important; /* 核心强制1: 直接让锁屏页高度等于屏幕可视高度 */
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    
+    display: flex !important;
+    flex-direction: column !important;
+    
+    background-size: cover !important;
+    background-position: center !important;
+    
+    padding-top: env(safe-area-inset-top) !important; /* 核心强制2: 顶部留出安全距离 */
+    padding-bottom: env(safe-area-inset-bottom) !important; /* 核心强制3: 底部留出安全距离，让背景能铺满 */
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    
+    box-sizing: border-box !important; /* 确保padding计算正确 */
 }
-
-#clock-container {
-    text-align: center;
-    color: white;
-    text-shadow: 0 3px 8px rgba(0,0,0,0.4);
-    margin-bottom: 20px;
-    flex-shrink: 0;
-    margin-top: calc(60px + env(safe-area-inset-top));
-}
-
-.app-grid {
-    margin-top: auto; /* 自动贴紧底部 */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    width: 100%;
-    padding: 20px;
-    /* 核心：将原来的margin-bottom改为padding-bottom，让图标网格的背景也能延伸 */
-    padding-bottom: 30px; /* 这是原来margin里的30px */
-    margin-bottom: 0; /* 移除旧的margin-bottom */
-}
-
 /* ▲▲▲ 替换结束 ▲▲▲ */
+
 
 
         .app-row { display: flex; justify-content: center; gap: 25px; width: 100%; }
