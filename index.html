@@ -6783,6 +6783,69 @@ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 /* ▲▲▲ 添加结束 ▲▲▲ */
 
 
+/* ▼▼▼ 【全新】iOS风格的滑动开关样式 ▼▼▼ */
+
+.toggle-switch-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* 让文字和开关两端对齐 */
+    cursor: pointer;
+    user-select: none;
+    width: 100%;
+    padding: 10px 0; /* 增加一点上下间距 */
+}
+
+.toggle-switch-text {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* 隐藏原始的 checkbox */
+.toggle-switch-label input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+/* 开关的轨道 */
+.toggle-switch-slider {
+    position: relative;
+    display: inline-block;
+    width: 51px;
+    height: 31px;
+    background-color: #e9e9eb;
+    border-radius: 34px;
+    transition: background-color 0.2s;
+    flex-shrink: 0; /* 防止被压缩 */
+}
+
+/* 开关的滑块 (那个白色圆点) */
+.toggle-switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 27px;
+    width: 27px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+/* 当 checkbox 被选中时，改变轨道的颜色 */
+.toggle-switch-label input:checked + .toggle-switch-slider {
+    background-color: #34c759; /* iOS 风格的绿色 */
+}
+
+/* 当 checkbox 被选中时，移动滑块 */
+.toggle-switch-label input:checked + .toggle-switch-slider::before {
+    transform: translateX(20px);
+}
+
+/* ▲▲▲ 新样式粘贴结束 ▲▲▲ */
+
     </style>
     <!-- ▼▼▼ 在这里添加下面这行 ▼▼▼ -->
     <style id="custom-theme-style"></style>
@@ -7429,6 +7492,16 @@ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             <label style="font-weight: 500; color: var(--text-secondary);">主屏幕设置</label>
         </div>
         <div id="wallpaper-preview">点击下方上传</div>
+<!-- ▼▼▼ 请将这段新代码粘贴到 wallpaper-preview 的 div 之后 ▼▼▼ -->
+<div class="form-group">
+    <label for="enable-lock-screen-toggle" class="toggle-switch-label">
+        <span class="toggle-switch-text">启用锁屏界面</span>
+        <input type="checkbox" id="enable-lock-screen-toggle">
+        <span class="toggle-switch-slider"></span>
+    </label>
+</div>
+<!-- ▲▲▲ 粘贴结束 ▲▲▲ -->
+
         <button class="form-button" onclick="document.getElementById('wallpaper-upload-input').click();">上传壁纸</button>
         <input type="file" id="wallpaper-upload-input" accept="image/*">
 
@@ -25160,5 +25233,99 @@ async function handleCharacterDataDeletion(dataType, index) {
 <!-- ▼▼▼ 这是我们新加的隐藏文件选择器 ▼▼▼ -->
 <input type="file" id="character-card-input" accept=".png, .json" style="display: none;">
 <!-- ▲▲▲ 文件选择器结束 ▲▲▲ -->
+
+<!-- ▼▼▼ 请将这一整块 SCRIPT 代码粘贴到 </body> 标签的正上方 ▼▼▼ -->
+<script>
+    // 等待整个页面的HTML都加载完毕后，再执行我们的代码
+    document.addEventListener('DOMContentLoaded', function() {
+        // 这是程序的入口，调用初始化和事件监听函数
+        initialize();
+        setupEventListeners();
+    });
+
+    /**
+     * 负责程序启动时的所有初始化工作
+     */
+    function initialize() {
+        // --- 这是我们新加的锁屏逻辑 ---
+        const enableLockScreenToggle = document.getElementById('enable-lock-screen-toggle');
+        
+        // 从浏览器缓存中读取设置。如果找不到，就默认'true' (启用锁屏)
+        const lockScreenEnabled = localStorage.getItem('lockScreenEnabled') !== 'false'; 
+        
+        // 根据读取到的设置，更新开关的UI状态（是打开还是关闭）
+        enableLockScreenToggle.checked = lockScreenEnabled;
+
+        // 根据设置，决定应用启动时第一个显示的屏幕
+        if (lockScreenEnabled) {
+            showScreen('lock-screen');
+        } else {
+            showScreen('home-screen');
+        }
+        // --- 锁屏逻辑结束 ---
+
+        // 这里可以放您其他的初始化代码，比如加载数据等
+        // loadChats(); 
+        // loadWorldBooks();
+    }
+
+    /**
+     * 负责管理页面上所有的点击、输入等事件
+     */
+    function setupEventListeners() {
+        // --- 这是我们新加的开关事件监听 ---
+        const enableLockScreenToggle = document.getElementById('enable-lock-screen-toggle');
+        
+        // 监听开关状态的变化
+        enableLockScreenToggle.addEventListener('change', (e) => {
+            const isEnabled = e.target.checked;
+            // 将新的设置 ('true' 或 'false') 保存到浏览器缓存中
+            localStorage.setItem('lockScreenEnabled', isEnabled);
+            // 给用户一个提示
+            showCustomAlert(isEnabled ? '锁屏已启用' : '锁屏已禁用');
+        });
+        // --- 开关事件监听结束 ---
+
+        // --- 这是一个示例，让锁屏界面可以点击进入主屏幕 ---
+        const lockScreen = document.getElementById('lock-screen');
+        if (lockScreen) {
+            lockScreen.addEventListener('click', () => {
+                showScreen('home-screen');
+            });
+        }
+    }
+
+    /**
+     * 切换显示不同屏幕的辅助函数
+     * @param {string} screenId 要显示的屏幕的ID
+     */
+    function showScreen(screenId) {
+        // 找到所有 class 为 'screen' 的元素
+        const screens = document.querySelectorAll('.screen');
+        // 遍历所有屏幕，移除 'active' class 来隐藏它们
+        screens.forEach(screen => {
+            screen.classList.remove('active');
+        });
+        // 找到目标屏幕并添加 'active' class 来显示它
+        const targetScreen = document.getElementById(screenId);
+        if (targetScreen) {
+            targetScreen.classList.add('active');
+        }
+    }
+
+    /**
+     * 显示一个自定义提示的辅助函数
+     * @param {string} message 要显示的提示信息
+     */
+    function showCustomAlert(message) {
+        // 这是一个最简单的实现。
+        // 如果您有自己的通知栏UI，可以替换成您自己的代码。
+        alert(message);
+    }
+
+</script>
+<!-- ▲▲▲ SCRIPT 代码粘贴结束 ▲▲▲ -->
+
+
 </body>
 </html>
