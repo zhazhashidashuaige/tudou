@@ -41,20 +41,21 @@
     <style>
         @font-face { font-family: 'bulangni'; src: url('') format('truetype'); font-weight: normal; font-style: normal; font-display: swap; }
         :root { --screen-width: 350px; --screen-height: 650px; --secondary-bg: #ffffff; --border-color: #e0e0e0; --text-primary: #1f1f1f; --text-secondary: #8a8a8a; --accent-color: #007bff;   --status-bar-text-color: #000000; }
-        html { height: 100%; overflow: hidden; }
+/* ▼▼▼ 用这块终极代码，替换掉你现有的 html 和 body 样式 ▼▼▼ */
+html {
+    -webkit-text-size-adjust: 100%;
+    height: 100%; /* 确保html元素也能撑满 */
+}
 
-/* ▼▼▼ 请用下面这【一整块】全新的代码，替换掉所有旧的 body, phone-frame, phone-screen 等样式 ▼▼▼ */
-
-/* 1. 重置 body，使其成为一个干净的画布 */
 body {
-    height: 100%;
-    overflow: hidden;
     margin: 0;
     font-family: 'bulangni', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-weight: normal;
-    /* 背景色可以根据喜好设定，这里用一个柔和的颜色 */
-    background-color: #f0f2f5; 
+    background-color: #f0f2f5;
+    height: 100%; /* 让body也撑满父元素(html) */
+    overflow: hidden; /* 防止body本身出现滚动条 */
 }
+/* ▲▲▲ 替换结束 ▲▲▲ */
 
 /* 2. 让 #phone-screen 成为新的“根”容器，撑满整个浏览器窗口 */
 #phone-screen {
