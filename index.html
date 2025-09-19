@@ -88,11 +88,44 @@ body {
 
         .header .action-btn img { height: 26px; }
         .header .save-btn { font-size: 16px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
-        #home-screen { display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 20px; padding-top: 80px; padding-bottom: 50px; box-sizing: border-box; background-size: cover; background-position: center; }
-        #clock-container { text-align: center; color: white; text-shadow: 0 3px 8px rgba(0,0,0,0.4); margin-bottom: 20px; flex-shrink: 0; }
-        #main-time { font-size: 80px; font-weight: 200; }
-        #main-date { font-size: 18px; font-weight: 500; }
-        .app-grid { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; padding: 20px; }
+        /* ▼▼▼ 请用这【一整块代码】，完整替换掉您现有的 #home-screen, #clock-container, 和 .app-grid 样式 ▼▼▼ */
+
+#home-screen {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    box-sizing: border-box;
+    background-size: cover;
+    background-position: center;
+    padding-left: 20px;
+    padding-right: 20px;
+    /* We remove vertical padding here to rely on margins */
+}
+
+#clock-container {
+    text-align: center;
+    color: white;
+    text-shadow: 0 3px 8px rgba(0,0,0,0.4);
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    /* This is the key: pushes the clock down from the top edge */
+    margin-top: calc(60px + env(safe-area-inset-top));
+}
+
+.app-grid { /* <--- 只修改这个符号 */
+    margin-top: auto; /* 自动贴紧底部 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    padding: 20px;
+    /* 关键：使用 margin-bottom 抬高图标，适配底部“小黑条” */
+    margin-bottom: calc(30px + env(safe-area-inset-bottom)); 
+}
+/* ▲▲▲ 替换结束 ▲▲▲ */
+
         .app-row { display: flex; justify-content: center; gap: 25px; width: 100%; }
         .app-icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; color: white; text-shadow: 0 1px 3px rgba(0,0,0,0.5); font-size: 14px; font-weight: 500; text-align: center; }
         .app-icon .icon-bg { width: 65px; height: 65px; border-radius: 18px; background-color: var(--secondary-bg); display: flex; justify-content: center; align-items: center; font-size: 32px; margin-bottom: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15); transition: transform 0.2s ease; overflow: hidden; }
