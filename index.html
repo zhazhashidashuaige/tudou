@@ -51,14 +51,12 @@ body {
     margin: 0;
     font-family: 'bulangni', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     font-weight: normal;
-    background-color: #f0f2f5;
-    height: 100%; /* 让body也撑满父元素(html) */
-    overflow: hidden; /* 防止body本身出现滚动条 */
+    background-color: #000; /* ★★★ 核心修正：将网页底色改为纯黑 ★★★ */
+    height: 100%; 
+    overflow: hidden; 
 }
 /* ▲▲▲ 替换结束 ▲▲▲ */
 
-/* 2. 让 #phone-screen 成为新的“根”容器，撑满整个浏览器窗口 */
-/* ▼▼▼ 请用这块【最终修正版】的代码，替换掉你现有的 #phone-screen 样式 ▼▼▼ */
 #phone-screen {
     width: 100%;
     height: 100vh;
@@ -66,8 +64,9 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    background-color: #000; /* 核心修正：将画布底色改为黑色 */
+    background-color: transparent; /* ★★★ 核心修正：让主容器透明，露出黑色body ★★★ */
 }
+
 /* ▲▲▲ 替换结束 ▲▲▲ */
 
 /* 3. 【核心】隐藏掉模拟器的状态栏 */
