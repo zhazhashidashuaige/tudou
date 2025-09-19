@@ -131,43 +131,55 @@ body {
 
         .header .action-btn img { height: 26px; }
         .header .save-btn { font-size: 16px; color: var(--accent-color); font-weight: 600; cursor: pointer; }
-/* ▼▼▼ 【全新优化版】请用这块代码完整替换掉旧的 #home-screen 样式 ▼▼▼ */
+/* ▼▼▼ 【终极合并修正版】请用这块代码完整替换掉旧的 #home-screen, #clock-container, .app-grid 样式 ▼▼▼ */
+        
+/* 1. (核心) 为锁屏和主屏幕应用相同的全屏布局 */
+#lock-screen, 
 #home-screen {
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%; /* 核心1: 高度继承父容器的100%，确保和父容器一样高 */
+    height: 100%;
     background-size: cover;
     background-position: center;
     
-    /* 核心2: 用padding把内容挤进来，但背景图会铺满整个padding区域 */
+    /* 用padding把内容挤进来，同时让背景铺满安全区 */
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: 20px;
     padding-right: 20px;
     
-    box-sizing: border-box; /* 核心3: 确保padding被计算在高度之内，不会把容器撑大 */
+    box-sizing: border-box;
 }
 
+/* 2. (核心) 单独处理锁屏的文字，让它自动贴底 */
+#lock-screen-content {
+    margin-top: auto; /* 关键：自动将此元素推到容器底部 */
+    text-align: center;
+    color: white;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    padding-bottom: 40px; /* 在安全区之上再增加一点距离，更好看 */
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* 3. 保持主屏幕的时钟和App图标布局不变 */
 #clock-container {
     text-align: center;
     color: white;
     text-shadow: 0 3px 8px rgba(0,0,0,0.4);
     margin-bottom: 20px;
     flex-shrink: 0;
-    /* 核心4: 这里的margin-top不再需要加上安全区距离，因为父容器的padding已经处理了 */
     margin-top: 60px; 
 }
-
 .app-grid {
-    margin-top: auto; /* 自动贴紧底部 */
+    margin-top: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 20px;
     width: 100%;
     padding: 20px;
-    /* 核心5: 这里的margin-bottom也不再需要安全区距离了 */
     margin-bottom: 30px; 
 }
 /* ▲▲▲ 替换结束 ▲▲▲ */
