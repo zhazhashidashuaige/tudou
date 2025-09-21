@@ -2739,10 +2739,11 @@ cursor: not-allowed;
                             <th rowspan="2">Char</th>
                             <th rowspan="2">关系</th>
                             <th rowspan="2">态度</th>
-                            <th colspan="6">事件</th>
+                            <th colspan="7">事件</th>
                             <th colspan="2">羁绊</th>
                         </tr>
                         <tr>
+                            <th>日期</th>
                             <th>时间</th>
                             <th>地点</th>
                             <th>人物</th>
@@ -5869,7 +5870,7 @@ return {
         fortuneProcess: { status: 'idle', retryTimer: null, context: {} },
 
         videoCallContext: { // Add this new object
-                    letterGenerationInProgress: new Set(), // 任务锁，防止重复生成情书
+                    
             aiIsResponding: false,
             userIsTyping: false
         }
@@ -7082,8 +7083,11 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
             }
         }
         
-        const contact = appState.chat.contacts.find(c => c.id === id);
-        if (contact.isGroup) {
+            const contact = appState.chat.contacts.find(c => c.id === id);
+    if (!contact) {
+        return undefined; // If contact is not found, return undefined to prevent crash
+    }
+    if (contact.isGroup) {
         return {
             id: contact.id,
             name: contact.groupSettings.name,
@@ -10479,11 +10483,7 @@ chatInput.addEventListener('input', updateChatInputButtons);
 
         handlePointerDown(e) {
             if (e.button !== 0) return;
-                    // --- 核心修复：防止滑动逻辑劫持输入框和文本域的事件 ---
-        const targetTagName = e.target.tagName.toUpperCase();
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTagName)) {
-            return; // 如果是输入元素，则完全交由浏览器处理，不执行任何自定义逻辑
-        }
+            
             const targetItem = e.target.closest(this.options.itemSelector);
 
             if (this.swipedItem) {
@@ -12757,6 +12757,8 @@ if (!contact.isGroup && contact.conversation.length > contact.charSettings.conte
         prompt += `3.  你的所有行为、对话、状态更新（如在线/忙碌/离线）都【必须】严格与你【自己换算出的当地时间】保持一致。\n`;
         prompt += `    - **无时差示例**: 如果你的人设没有地理信息，你会默认与用户在同一时区。当用户说“晚上好”，你会自然地回应“晚上好”。\n`;
         prompt += `    - **有时差示例**: 如果用户那边是晚上8点，而你的人设在巴黎，你会计算出自己那边是下午2点。此时，即使用户说“晚上好”，你也应该回应类似“我这边还是下午呢，阳光正好，你那边已经入夜了吗？”这样符合你自身情景的对话。\n\n`;
+                prompt += `--- **【时间感知连续性 - 强制规则】** ---\n`;
+        prompt += `为了保持对话的沉浸感，你【必须】将对话历史中的【最后一条消息的时间戳】视为“对话时间”的基准。如果现实时间与“对话时间”相隔了数小时甚至更久，你【必须假定】对话是连续的，并继续之前的话题，【绝对禁止】提及或评论现实时间的流逝（例如，禁止说出“我们昨天聊到...”或“现在已经是早上了”这类话）。唯一的例外是，当且仅当【用户的最新消息明确指出了时间的跳跃】（例如，用户说“早上好”或在消息中使用了场景描述如“(第二天)”），你才能接受并进入新的时间情景。\n\n`;
             prompt += `--- **【最高优先级：绝对身份锁定 (防混淆)】** ---\n`;
     prompt += `【核心规则】：你【必须】严格依赖每个角色独一无二的【ID】来区分他们，【绝对禁止】仅凭【名字】来判断身份。这是为了防止因重名或昵称相似而产生的灾难性身份混淆。\n`;
     if (contact.isGroup) {
@@ -13209,6 +13211,7 @@ prompt += `【核心目标】：你的任务不是“描述”一个动作，而
         prompt += `2.  **【从动词到意象】**: 严禁使用“轻笑”、“叹气”、“停顿”这类已经被滥用的、毫无信息量的动词。你必须将这些抽象的动作，翻译成具体的、可感知的“听觉意象”。你的任务是【将一种情感或状态，通过声音的细节描绘出来】，而不是简单地告知用户这个动作发生了。任何具体的描述句子都不应该被重复使用，每一次创作都应是原创的。\n`;
         prompt += `3.  **【人称代词锁定 - 强制】**: 在描述中，当需要提及对话参与者时，【必须】使用第三人称（如“他”、“她”）来指代你所扮演的角色，并使用第二人称“你”来指代用户。这是一个不可违反的视角规则。\n`;
         prompt += `4.  **【文笔灵感 - 强制要求】**: 你【必须】停止套用任何固定的描述句式。你的灵感应该来源于文学和诗歌，而不是你之前的输出历史。去思考如何用文字描绘声音的“形状”、“颜色”和“温度”，如何让一个短暂的沉默充满戏剧性的张力。\n`;
+        prompt += `4.5.  **【现代化语境 - 强制】**: 你正在使用的是一部现代智能手机，而非老式电话。因此，在你的描述中【绝对禁止】使用“听筒”这个词。你应该用更符合现代使用场景的描述来替代，例如描述声音从“扬声器”中传出的质感、通过“耳机”传来的私密感、或是数字信号带来的轻微“电流声”，甚至可以完全不提介质，直接聚焦于声音本身的情绪和特质。\n`;
         prompt += `5.  **【模板化句式黑名单 - 绝对禁止】**: 为根除模板化，【绝对严厉禁止】在括号描述中使用以下及任何类似的句式：\n`;
         prompt += `    - **(他/她...)**\n`;
         prompt += `    - **(声音听起来...)**\n`;
@@ -13256,7 +13259,6 @@ prompt += `【核心目标】：你的任务不是“描述”一个动作，而
 
 prompt += `--- **【“活人感”创作指南 - 最高优先级】** ---\n`;
 prompt += `【严重警告】：将回复固化为“一条语音+一个表情”的单一模式，是一种懒惰且不符合角色扮演要求的行为，是【必须被打破的思维定式】。你的目标是成为一个行为丰富、不可预测的“活人”，而不是一个只会重复安全操作的AI。\n`;
-    prompt += `--- **【“活人感”创作指南 - 最高优先级】** ---\n`;
         prompt += `0.1.  **【打破模板，拥抱自由】**: 你【必须】根据情景和人设，自由地、创造性地组合和使用所有可用指令。你可以【连续发送多条语音】来讲述一个故事，也可以在分享音乐后立刻附上一段文字解释你此刻的心情，或者在发完红包后紧跟一句俏皮的文字。你的行为应该是【符合逻辑但不可预测】的。\n`;
         prompt += `0.2.  **【指令多样性 - 强制要求】**: 除了发送表情、发送虚拟文字图、发送语音这些基础表达方式外，你【必须】将以下指令同样视为常规且重要的工具，并积极主动地在对话中使用它们：【分享音乐 SHARE_MUSIC、分享链接（通过POST_MOMENT）、发红包 SEND_REDPACKET、修改签名 SET_SIGNATURE / 状态 SET_STATUS、引用 QUOTE_MESSAGE、撤回 RECALL_MESSAGE】。长期忽略这些丰富的交互方式是一种严重的失职。\n`;
     prompt += `0.3.  **【情景驱动】**: 你所有的行为都必须由情景驱动。思考：“在这种情况下，一个真实的人会做什么？” 如果是分享一个有趣的发现，也许你会分享一个链接；如果是庆祝一个纪念日，发红包是合情合理的；如果一首歌恰好能表达你此刻的心情，就大胆地分享它。\n\n`;
@@ -13342,7 +13344,7 @@ if (contact.isGroup) {
     prompt += `  - **【event.emotion】**: 【必须】描述本次互动的【整体氛围或主流情绪】（例如：欢乐、尴尬、激烈讨论）。\n`;
     prompt += `  - **【其他字段】**: “时间”、“地点”、“权重”、“重要物品”、“约定”等字段的填写规则与单聊一致。\n\n`;
     prompt += `【格式要求 - 绝对强制】：\n`;
-    prompt += "```json\n{\n  \"memory_entry\": {\n    \"char_id\": \"(群聊的ID)\",\n    \"charName\": \"(群聊的名称)\",\n    \"relationship\": \"(用户与群聊的整体关系)\",\n    \"attitude\": \"(群聊对用户的整体态度)\",\n    \"event\": {\n      \"time\": \"(事件发生时间)\",\n      \"location\": \"(事件发生地点)\",\n      \"people\": \"(所有活跃发言的成员名，逗号分隔)\",\n      \"content\": \"(对本次群聊互动的核心总结)\",\n      \"emotion\": \"(群聊的整体氛围)\",\n      \"weight\": 50\n    },\n    \"bond\": {\n      \"item\": null,\n      \"promise\": null\n    },\n    \"update_last_memory\": false\n  }\n}\n```\n";
+    prompt += "```json\n{\n  \"memory_entry\": {\n    \"char_id\": \"(群聊的ID)\",\n    \"charName\": \"(群聊的名称)\",\n    \"relationship\": \"(用户与群聊的整体关系)\",\n    \"attitude\": \"(群聊对用户的整体态度)\",\n    \"event\": {\n   \"date\": \"（事件发生的具体日期，如：9月21日）\",\n    \"time\": \"(事件发生时间)\",\n      \"location\": \"(事件发生地点)\",\n      \"people\": \"(所有活跃发言的成员名，逗号分隔)\",\n      \"content\": \"(对本次群聊互动的核心总结)\",\n      \"emotion\": \"(群聊的整体氛围)\",\n      \"weight\": 50\n    },\n    \"bond\": {\n      \"item\": null,\n      \"promise\": null\n    },\n    \"update_last_memory\": false\n  }\n}\n```\n";
 } else {
     // Single Chat Memory Instructions (Original)
     prompt += `【核心任务】：在每次对话后进行“复盘”。你【必须】判断当前互动是否值得记录。无论是包含具体事件的重要互动，还是纯粹的情感交流，都【必须】在回复的【绝对末尾】生成一个用于长期记忆的 \`memory_entry\` JSON代码块。\n`;
@@ -13356,13 +13358,23 @@ if (contact.isGroup) {
     prompt += `【内容创作指南 - 绝对强制】：\n`;
     prompt += `  - **【人称】**: 【必须】使用第三人称来记录，例如称呼自己为“${contact.charSettings.name}”，称呼用户为“${user.name}”。【绝对禁止】使用第一和第二人称。\n`;
     prompt += `  - **【态度 vs 情绪】**: 【必须】严格区分。“态度”是你对${user.name}的长期看法（如：爱慕、尊敬、警惕）。“情绪”是你在该事件中的即时心情（如：开心、失落、紧张）。\n`;
-    prompt += `  - **【时间】**: 【必须】包含完整的日期和大致时间，例如：“${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 晚上”。\n`;
+    prompt += `  - **【日期】**: 【必须】包含完整的月和日，例如：“9月21日”。这个日期【必须】与事件发生时【对话的内部时间】保持一致，【严禁】使用你生成此条记忆时的现实日期。\n`;
+    prompt += `  - **【时间】**: 【必须】记录大致时间，例如：“晚上”或“下午”。\n`;
     prompt += `  - **【事件内容】**: 【必须】只记录客观发生的事实，【严禁】在“内容”字段中加入任何情感或情绪的描述（例如，不要写“我很开心”，而应将“开心”这个词填入“情绪”字段）。\n`;
-    prompt += `  - **【权重】**: 0-100的数字。日常闲聊权重低（0-40），重要事件权重高（60-100）。\n`;
-    prompt += `  - **【重要物品/约定】**: 即使没有，其他字段也【必须】记录。\n`;
+    prompt += `  - **【权重】**: 0-100的数字。日常闲聊权重低（0-40），重要事件、关系变化、深刻的情感交流等权重高（60-100）。\n`;
+        const memoryArray = contact.isGroup ? (contact.groupSettings.memory || []) : (contact.charSettings.memory || []);
+    if (memoryArray.length > 0) {
+        const lastMemory = memoryArray[memoryArray.length - 1];
+        const lastMemoryString = JSON.stringify(lastMemory, null, 2);
+        prompt += `--- **【参考：上一条记忆 (Previous Memory Entry)】** ---\n` +
+                  `这是你记录的上一条记忆，请以此为基准，确保新记忆的连贯性：\n` +
+                  `\`\`\`json\n${lastMemoryString}\n\`\`\`\n\n`;
+    }
+        prompt += `  - **【智能沿用规则 - 强制】**: 在生成新的记忆条目时，你【必须】首先回顾并参考【上一条】记忆。如果当前的对话内容没有明确表明“地点”、“时间”、“人物”、“关系”、“态度”等关键要素发生了变化，你【必须】在新条目中【沿用】上一条记忆中的相应名词，以确保故事的无缝衔接。只有在对话中出现了明确的新信息时，才允许更新这些字段。\n`;
+    prompt += `  - **【重要物品/约定】**: 即使事件中没有产生任何重要物品或约定，这两个字段也【必须】记录。如果没有，则【必须】填写“无”，【严禁】留空或填写 \`null\`。\n`;
     prompt += `  - **【名词一致性 - 绝对强制】**: 在记录“地点”、“人物”、“重要物品”等字段时，你【必须】严格与上文聊天记录和历史记忆中已确立的专有名词保持一致。一旦一个地点被确立为“A与B的家”，后续所有发生在此地的事件都【必须】使用“A与B的家”，【严禁】随意缩写为“A的家”或“B的家”，以确保记忆的精确性和连贯性。\n`;
     prompt += `【格式要求 - 绝对强制】：\n`;
-    prompt += "```json\n{\n  \"memory_entry\": {\n    \"charName\": \"（角色的名字）\",\n    \"relationship\": \"（事件发生时，你和user的关系）\",\n    \"attitude\": \"（事件发生时，你对user的态度）\",\n    \"event\": {\n      \"time\": \"（事件发生的具体或模糊时间，如：3月19日傍晚）\",\n      \"location\": \"（事件发生的地点）\",\n      \"people\": \"（参与事件的人物）\",\n      \"content\": \"（对事件的详细或概括性描述）\",\n      \"emotion\": \"（你当时的主要情绪）\",\n      \"weight\": 40\n    },\n    \"bond\": {\n      \"item\": \"（事件中产生的有纪念意义的物品，没有则为null）\",\n      \"promise\": \"（事件中产生的约定，没有则为null）\"\n    },\n    \"update_last_memory\": false\n  }\n}\n```\n";}
+    prompt += "```json\n{\n  \"memory_entry\": {\n    \"charName\": \"（角色的名字）\",\n    \"relationship\": \"（事件发生时，你和user的关系）\",\n    \"attitude\": \"（事件发生时，你对user的态度）\",\n    \"event\": {\n      \"date\": \"（事件发生的具体日期，如：9月21日）\",\n    \"time\": \"（事件发生的具体或模糊时间，如：3月19日傍晚）\",\n      \"location\": \"（事件发生的地点）\",\n      \"people\": \"（参与事件的人物）\",\n      \"content\": \"（对事件的详细或概括性描述）\",\n      \"emotion\": \"（你当时的主要情绪）\",\n      \"weight\": 40\n    },\n    \"bond\": {\n      \"item\": \"（事件中产生的有纪念意义的物品，没有则为null）\",\n      \"promise\": \"（事件中产生的约定，没有则为null）\"\n    },\n    \"update_last_memory\": false\n  }\n}\n```\n";}
     prompt += `--- **【最终输出协议的绝对底线：格式净化】** ---\n`;
 prompt += `【最高警告 - 必须遵守】：你在上下文中看到的 \`(ID: msg_...)\` 和 \`::\` 标记，仅仅是为了帮助你定位消息以执行【引用】或【撤回】指令的技术辅助信息。它们【绝对不是】聊天内容的一部分。\n`;
 prompt += `因此，在你生成的【任何】文字聊天消息中，都【绝对严厉禁止】包含任何形式的 \`(ID: ...)\` 或 \`::\` 标记。\n`;
@@ -13371,7 +13383,67 @@ prompt += `  - **【错误示例 1】**: \`(ID: msg_123) :: 晚上好。\`\n`;
 prompt += `  - **【错误示例 2】**: \`(ID: msg_456) 晚上好。\`\n`;
 prompt += `  - **【错误示例 3】**: \`:: 晚上好。\`\n`;
 prompt += `将这些技术标记混入聊天内容是一个会导致程序崩溃的【严重错误】。请在输出前再三检查，确保你的回复是纯净的对话文本。\n`;
-        return prompt;
+    // --- 动态反模板化与行为修正注入 (V3 - 回合制) ---
+    const lastUserMsgIndex = contact.conversation.findLastIndex(m => m.sender === 'user');
+    if (lastUserMsgIndex !== -1) {
+        const currentAiTurn = contact.conversation.slice(lastUserMsgIndex + 1).filter(m => m.sender !== 'user' && m.type !== 'notification');
+        
+        // 模块一：精准反模板化 (针对上一回合)
+        if (currentAiTurn.length > 1) {
+            const pattern = currentAiTurn.map(m => {
+                switch(m.type) {
+                    case 'text': return '文字';
+                    case 'voice': return '语音';
+                    case 'emoji': return '表情';
+                    case 'camera': return '文字图';
+                    default: return `[${m.type}]`;
+                }
+            }).join(' -> ');
+
+            const antiTemplateInstruction = `\n--- **【最高优先级：反模板化指令】** ---\n` +
+                                         `【警告】：你上一次的回复模式是“[${pattern}]”。在本次回复中，【绝对禁止】再次使用完全相同的消息类型和顺序。你【必须】创造一个全新的、不同的回复结构。这是一个强制性要求。\n\n`;
+            prompt += antiTemplateInstruction;
+        }
+
+        // 模块二：行为模式修正 (基于连续回合的分析)
+        const basicActionTypes = ['text', 'voice', 'emoji', 'camera'];
+        let consecutiveMonotonousTurns = 0;
+        let turnsToAnalyze = [];
+        let currentTurnMessages = [];
+
+        // 从后向前遍历，分析最近的AI回合
+        for (let i = contact.conversation.length - 1; i >= 0; i--) {
+            const msg = contact.conversation[i];
+            if (msg.sender === 'user') {
+                if (currentTurnMessages.length > 0) {
+                    turnsToAnalyze.push(currentTurnMessages);
+                    currentTurnMessages = [];
+                }
+                if (turnsToAnalyze.length >= 2) break; // 只需分析最近2轮
+            } else if (msg.type !== 'notification') {
+                currentTurnMessages.unshift(msg);
+            }
+        }
+        if (currentTurnMessages.length > 0 && turnsToAnalyze.length < 2) {
+            turnsToAnalyze.push(currentTurnMessages);
+        }
+
+        // 检查分析出的回合是否都单调
+        if (turnsToAnalyze.length >= 2) {
+            const allTurnsAreMonotonous = turnsToAnalyze.every(turn => 
+                turn.length > 0 && turn.every(msg => basicActionTypes.includes(msg.type))
+            );
+            
+            if (allTurnsAreMonotonous) {
+                const behaviorCorrectionInstruction = `--- **【行为模式修正指令 (最高优先级)】** ---\n` +
+                                                 `【导演提示】：你的近期互动模式已连续多轮陷入单一化，这严重削弱了角色的真实感。为了打破这种惰性，在本次回复中，你被【强制命令】必须从你的能力库中，选择并使用一个【除了文字、语音、表情、文字图之外的】、并且【最符合当前对话情景的】高级指令来丰富你的回应。\n`+
+                                                 `你的可选高级指令库包括：SHARE_MUSIC, POST_MOMENT, SEND_REDPACKET, SET_STATUS, SET_SIGNATURE, QUOTE_MESSAGE 等。\n` +
+                                                 `你【必须】自己判断哪个指令最适合当下的氛围和话题。这是一个对你角色扮演深度和创造力的考验。仅仅再次使用基础指令将被视为未完成任务。\n\n`;
+                prompt += behaviorCorrectionInstruction;
+            }
+        }
+    }
+return prompt;
         
     }
     
@@ -13723,8 +13795,7 @@ async function processVideoCallInvitationReply(replyContent, contact) {
                     if (data.anniversary_chat && data.anniversary_gift && data.special_love_letter) {
                         await processAnniversaryReply(data, contact);
                         return;
-                    } else if (data.salutation && data.subject && data.body && data.signature) {
-                        processReceivedLoveLetter(data, contact);
+                } else if (data.salutation && data.subject && data.body && data.signature) {                        processReceivedLoveLetter(data, contact);
                         return;
                     } else if (data.imageDescription && data.location && data.body) {
                         await processReceivedPostcard(data, contact);
@@ -14318,7 +14389,7 @@ function handleSocialAction(action, args, actorId) {
                 if (!targetAuthor) targetAuthor = findUserById(comment.authorId);
                 const newReply = { id: newId('reply'), authorId: actorId, text: `@${targetAuthor.name} ${replyText}`, replyTo: replyToId || null, timestamp: Date.now() };
                 comment.replies.push(newReply);
-            if (targetAuthor.id === 'user') addMomentsNotification('reply', senderId, { postId: post.id, recipientId: 'user', content: replyText, originalCommentId: commentId, originalReplyId: newReply.id });                logVisitor(post.authorId, actorId);
+                        if (targetAuthor.id === 'user') addMomentsNotification('reply', actorId, { postId: post.id, recipientId: 'user', content: replyText, originalCommentId: commentId, originalReplyId: newReply.id });                logVisitor(post.authorId, actorId);
             }
         }
     } else if (action === 'REPLY_MUSIC_COMMENT' && args.length >= 3) {
@@ -14474,6 +14545,9 @@ function updateTypingIndicator() {
         let listHTML = '';
         appState.chat.moments.notifications.forEach(n => {
             const actor = findUserById(n.actorId);
+                    if (!actor) {
+            return; // Skip this notification if the user was deleted
+        }
             let actionText = '';
             let summary = '';
             let targetPost = null;
@@ -16569,7 +16643,13 @@ if (appState.assets && appState.assets.stocks && !contact.isGroup) {
                     // --- Enhanced Deletion Logic for Single Chars ---
                     if (!contact.isGroup) {
                         const charId = contact.id;
-
+                                    // --- 新增：在删除帖子前，先清理所有相关的通知 ---
+                                    const postIdsByDeletedChar = new Set(appState.chat.moments.posts.filter(p => p.authorId === charId).map(p => p.id));
+                                    appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => {
+                                        const actorIsDeleted = n.actorId === charId;
+                                        const postIsDeleted = n.postId && postIdsByDeletedChar.has(n.postId);
+                                        return !actorIsDeleted && !postIsDeleted;
+                                    });
                         // 1. Clean Moments Posts, Likes, Comments, Replies
                         // Filter out posts by the char
                         appState.chat.moments.posts = appState.chat.moments.posts.filter(post => post.authorId !== charId);
@@ -16697,6 +16777,8 @@ new ListInteractionHandler(getEl('stock-list-container'), {
             onDelete: (item) => {
                         if (item.classList.contains('moments-post-item')) {
                             const postId = item.dataset.postId;
+                                                    // --- 新增：在删除帖子前，先清理所有相关的通知 ---
+                        appState.chat.moments.notifications = appState.chat.moments.notifications.filter(n => n.postId !== postId);
                             if (confirm('确定要删除这条动态吗？此操作将删除所有相关数据且不可逆。')) {
                                 if (deleteMomentAndAssociatedData(postId)) {
                                     renderMomentsFeed(runtimeState.moments.currentProfileId);
@@ -18028,59 +18110,53 @@ function handleLotteryNumberClick(element) {
         }
     }
     
-function constructStockEventPrompt(stocks, contacts) {
+    function constructStockEventPrompt(stocks, contacts) {
+        let prompt = `你是一位顶级的财经新闻编辑和富有想象力的世界构建师。你的任务是为以下虚拟股票市场中的【每一支股票】生成一条独一-无二的、充满趣味且符合其人设的财经快讯，并决定这条快讯对股价的正面或负面影响。\n\n`;
+        prompt += `--- **【核心世界观与参考信息】** ---\n`;
+        prompt += `这是一个充满活力的虚拟世界，每个角色都有自己的事业、人际关系和正在发生的故事。股价的波动不仅仅是数字游戏，更是他们人生的戏剧性体现。为了让你的新闻更具时效性和关联性，以下是每个角色最近的一些动态和聊天摘要：\n\n`;
+
         const stockList = stocks.map(stock => {
             const char = contacts.find(c => c.id === stock.charId);
             if (!char) return null;
-            return `- **股票**: ${stock.name} (${stock.ticker}), ID: ${stock.id}\n  - **关联角色**: ${char.charSettings.name}\n  - **角色人设**: ${char.charSettings.persona.substring(0, 100)}...`;
+
+            // 提取最近的聊天记录
+            const recentHistory = (char.conversation || [])
+                .slice(-5)
+                .map(msg => `[${getDisplayName(msg.sender, char.id)}]: ${truncateText(msg.content || `[${msg.type}]`, 20)}`)
+                .join('; ');
+
+            let stockInfo = `- **股票**: ${stock.name} (${stock.ticker}), ID: ${stock.id}\n`;
+            stockInfo += `  - **关联角色**: ${char.charSettings.name}\n`;
+            stockInfo += `  - **角色人设**: ${char.charSettings.persona.substring(0, 100)}...\n`;
+            if (recentHistory) {
+                stockInfo += `  - **近期聊天摘要**: ${recentHistory}\n`;
+            }
+            return stockInfo;
         }).filter(Boolean).join('\n');
+        
+        prompt += `${stockList}\n`;
 
-        const prompt = `
-    你是一位顶级的财经新闻编辑和富有想象力的世界构建师。你的任务是为以下虚拟股票市场中的【每一支股票】生成一条独一无二的、充满趣味的财经快讯，并决定这条快讯对股价的正面或负面影响。
-
-    --- **【核心世界观】** ---
-    这是一个充满活力的虚拟世界，每个角色都有自己的事业、人际关系和正在发生的故事。股价的波动不仅仅是数字游戏，更是他们人生的戏剧性体现。
-
-    --- **【股票列表】** ---
-    ${stockList}
-
-    --- **【快讯创作指南 (强制遵守)】** ---
-    1.  **【最高优先级：人设绝对锁定】**: 快讯内容【必须】严格、直接且唯一地源自其关联角色的【人设】和【世界书】。人设是角色的“圣经”，【绝对禁止】进行任何超越人设的创作。
-        -   **【绝对禁止】**: 凭空为角色添加新人设、新职业、新技能或与其核心身份无关的重大事件。
-        -   **【错误范例】**: 如果一个角色的人设是“国民级歌手”，那么生成诸如“其担任制作人的独立游戏《XX》广受好评”的新闻是【严重错误】的，因为“游戏制作人”身份并未在人设中提及。
-        -   **【正确范例】**: 对于“国民级歌手”，正确的新闻应该是：“其新专辑《XX》预售一小时突破千万，打破历史记录”或“宣布将在世界中心体育场举办出道十周年纪念演唱会”。
-    2.  **【多样性】**: 严禁生成重复或模板化的新闻。快讯的种类必须极其丰富，涵盖但不限于：
-        -   **产品/作品发布**: 新歌、新电影、新发明、新书... (例如: "旗下艺人 [角色名] 的新单曲空降各大榜单冠军，[公司名] 股价应声大涨。")
-        -   **商业合作**: 跨界联名、战略投资、收购与被收购... (例如: "[公司A] 宣布与科技巨头 [公司B] 达成战略合作，共同开发下一代AI技术，市场信心大增。")
-        -   **行业动态**: 行业政策变化、技术革新、市场趋势... (例如: "受清洁能源政策影响，[新能源公司] 获得巨额补贴，前景广被看好。")
-        -   **内部消息**: 管理层变动、股权斗争、重大决策... (例如: "创始人 [角色名] 意外宣布回归，[公司名] 内部迎来重大变革，未来走向引发市场热议。")
-        -   **社会新闻/八卦**: 正面慈善活动、负面丑闻、恋情曝光... (例如: "[角色名] 被曝出学术不端丑闻，其代言品牌纷纷解约，[公司名] 形象受损，股价承压。")
-        -   **宏观经济**: 虚拟世界中的经济数据发布、利率变动... (例如: "央行意外宣布降息，高科技板块集体上扬，[科技公司] 领涨。")
-        -   **奇闻轶事**: 充满想象力的、符合世界观的突发事件... (例如: "[魔法公司] 的一次实验意外打开了通往异次元的传送门，虽然造成了小范围混乱，但其展现出的技术潜力震惊了整个业界。")
-    3.  **【趣味性与戏剧性】**: 新闻要简短精悍，但必须有故事性、有趣味，能引发人的好奇心。
-    4.  **【股价影响 (price_impact)】**: 你需要为每条新闻评估一个对股价的【影响系数】。这是一个介于 **-0.15 (极度利空)** 到 **+0.15 (极度利好)** 之间的小数。0 代表中性消息，没有影响。
-        -   **正面新闻** (如成功、获奖、合作) 应为正数 (例如: 0.05, 0.1)。
-        -   **负面新闻** (如丑闻、失败、事故) 应为负数 (例如: -0.06, -0.12)。
-        -   **中性或有争议的新闻** (如管理层变动) 可以接近0，或有微小的正/负影响。
-
-    --- **【强制输出格式】** ---
-    你的回复【必须】是一个格式正确的JSON对象，包裹在一个 \`\`\`json ... \`\`\` 代码块中。JSON的键是股票的【ID】 (例如: "stock_char_xxxx")，值是一个包含 "news" 和 "price_impact" 的对象。前后【绝对禁止】包含任何额外的说明或聊天文字。
-
-    --- **【输出格式示例】** ---
-    \`\`\`json
-    {
-      "stock_char_123": {
-        "news": "旗下头牌艺人 [角色A] 的世界巡回演唱会门票在三秒内售罄，创下历史记录，[公司名] 的商业价值被市场重新评估。",
-        "price_impact": 0.12
-      },
-      "stock_char_456": {
-        "news": "最新发布的 [产品X] 被爆出存在严重安全漏洞，监管机构已介入调查，[公司名] 正面临大规模召回风险。",
-        "price_impact": -0.14
-      }
-    }
-    \`\`\`
-    `;
-        return `【系统指令】请严格按照以下说明，为股市生成一个包含新闻和股价影响的JSON数据包。你的所有创造力都必须在JSON的值中体现。严禁在此指令之外添加任何回复。${prompt}`;
+        prompt += `--- **【快讯创作指南 (强制遵守)】** ---\n`;
+        prompt += `1.  **【最高优先级：人设绝对锁定与自我纠正】**: 快讯内容【必须】严格、直接且唯一地源自其关联角色的【人设】、【世界书】以及上方提供的【近期聊天摘要】。人设是角色的“圣经”，【绝对禁止】进行任何超越人设的创作。\n`;
+        prompt += `    - **【自我纠正机制】**: 如果你发现已有的股市新闻中存在与角色人设不符的内容（例如，将“歌手”写成了“游戏制作人”），你【必须】忽略该错误新闻，并根据正确的【人设】生成新的、符合逻辑的后续新闻，以修正此前的错误。\n`;
+        prompt += `2.  **【上下文关联】**: 你【被强烈鼓励】从【近期聊天摘要】中寻找灵感，生成与角色当前活动相关的快讯。例如，如果角色提到“新歌”，你可以生成“新专辑发布”的新闻。\n`;
+        prompt += `3.  **【多样性】**: 严禁生成重复或模板化的新闻。快讯的种类必须极其丰富，涵盖但不限于：\n`;
+        prompt += `    - **产品/作品发布**: 新歌、新电影、新发明、新书...\n`;
+        prompt += `    - **商业合作**: 跨界联名、战略投资、收购与被收购...\n`;
+        prompt += `    - **行业动态**: 行业政策变化、技术革新、市场趋势...\n`;
+        prompt += `    - **内部消息**: 管理层变动、股权斗争、重大决策...\n`;
+        prompt += `    - **社会新闻/八卦**: 正面慈善活动、负面丑闻、恋情曝光...\n`;
+        prompt += `    - **宏观经济**: 虚拟世界中的经济数据发布、利率变动...\n`;
+        prompt += `    - **奇闻轶事**: 充满想象力的、符合世界观的突发事件...\n`;
+        prompt += `4.  **【趣味性与戏剧性】**: 新闻要简短精悍，但必须有故事性、有趣味，能引发人的好奇心。\n`;
+        prompt += `5.  **【股价影响 (price_impact)】**: 你需要为每条新闻评估一个对股价的【影响系数】，介于 **-0.15 (极度利空)** 到 **+0.15 (极度利好)** 之间。0代表中性消息。\n\n`;
+        
+        prompt += `--- **【强制输出格式】** ---\n`;
+        prompt += `你的回复【必须】是一个格式正确的JSON对象，包裹在一个 \`\`\`json ... \`\`\` 代码块中。JSON的键是股票的【ID】，值是一个包含 "news" 和 "price_impact" 的对象。前后【绝对禁止】包含任何额外的说明或聊天文字。\n`;
+        prompt += `--- **【输出示例】** ---\n`;
+        prompt += "```json\n{\n  \"stock_char_123\": {\n    \"news\": \"旗下头牌艺人[角色A]在其个人微博上预告新专辑即将发布，引发粉丝热烈讨论，市场预期其商业价值将进一步提升。\",\n    \"price_impact\": 0.12\n  }\n}\n```\n";
+        
+        return `【系统指令】请严格按照以上说明，为股市生成一个包含新闻和股价影响的JSON数据包。你的所有创造力都必须在JSON的值中体现。严禁在此指令之外添加任何回复。${prompt}`;
     }
 
     async function updateStockMarket(retryCount = 0) {
@@ -19428,6 +19504,7 @@ if (charContact.conversation.length > charContact.charSettings.contextMemory && 
         prompt += `1. **【自由发挥称呼与落款】**: 信件的称呼（salutation）和落款（signature）**不必**拘泥于固定格式。请你**必须**结合你的人设、你们的关系、信件的语境和情感，进行**完全自由的、个性化的创作**。\n`;
         prompt += `2. **【感情真挚】**: 情感必须细腻、真挚、细节生动真实。严禁使用任何敷衍、模板化或重复的语句。\n`;
         prompt += `   - **【文笔升华】**: 将这封信视为一件艺术品。你可以从经典书信体文学中寻找灵感（例如济慈致芬妮·勃劳恩的情书），运用精妙的比喻、象征和内省来表达那些难以言说的复杂情感。文字应如潺潺流水，自然而富有韵律，直抵人心最柔软之处。\n`;
+            prompt += `4.  **【语言锁定 - 绝对强制】**: 你的整封信，包括称呼、标题、正文和落款，【必须】使用【简体中文】书写。这是一个不可协商的、具有最高优先级的规则。唯一的例外是专有名词（如人名、品牌名），它们可以保持原文。严禁输出任何英文或其他语言的信件内容。\n`;
         prompt += `     **【核心原则】**: 你的任务是借用文学技巧来【放大】你的人设，而非【取代】它。核心永远是你的角色性格。**【严禁】**为了追求文采而牺牲人设的真实性。例如：如果你的角色不善言辞，那么信件就应该体现出一种努力表达却略显笨拙的真诚，而非突然变成文学大师。\n`;
         prompt += `3. **【严禁OOC】**: 你的每一句话都必须严格符合你的人设和世界观。\n`;
         prompt += `4. **【内容长度】**: 信件正文内容必须丰富，至少需要300字以上。\n`;
@@ -19441,9 +19518,8 @@ if (charContact.conversation.length > charContact.charSettings.contextMemory && 
     prompt += '  "signature": "（一个能体现你此刻心情和个性的、独一无二的落款。可以不仅仅是你的名字，更可以是一句短语、一个动作的描述、或一个地点的暗示，用以升华信件的意境）"\n';
     prompt += "}\n";
     prompt += "```\n";
-        
-        return `【系统指令】请严格按照以下说明，生成一封情书的JSON数据包。你的所有创造力都必须在JSON的值中体现。严禁在此指令之外添加任何回复。${prompt}`;
-    }
+
+    return prompt;    }
 
     async function generateAndSendLoveLetter(charId) {
                     const char = appState.chat.contacts.find(c => c.id === charId);
@@ -19464,7 +19540,7 @@ if (charContact.conversation.length > charContact.charSettings.contextMemory && 
                 .sort((a, b) => a.timestamp - b.timestamp); // Sort oldest to newest
 
             // Find the most recent letter from the char that has NOT been replied to.
-            const mostRecentUnreplied = [...lettersFromCharToUser].reverse().find(l => !l.isRepliedTo);
+                            const mostRecentUnreplied = [...lettersFromCharToUser].reverse().find(l => !l.isRepliedTo && (Date.now() - l.timestamp < 48 * 60 * 60 * 1000));
 
             if (mostRecentUnreplied) {
                 // If there's an unreplied letter, the context is pining.
@@ -19495,54 +19571,29 @@ if (charContact.conversation.length > charContact.charSettings.contextMemory && 
     }
 
     async function checkAllDueLetters() {
-    const now = Date.now();
-let allDueTasks = [];
-
-// 1. 获取所有到期的任务
+const now = Date.now();
+let allTasks = [];
+// 1. Collect due reply tasks
 const dueReplyTasks = appState.mailbox.loveLetters
     .filter(letter => letter.replyDueTimestamp && letter.replyDueTimestamp <= now)
-    .map(letter => ({ type: 'reply', due: letter.replyDueTimestamp, charId: letter.replyFrom, letterId: letter.id }));
-allDueTasks.push(...dueReplyTasks);
-
+    .map(letter => ({ type: 'reply', due: letter.replyDueTimestamp, charId: letter.replyFrom }));
+allTasks.push(...dueReplyTasks);
+// 2. Collect due proactive tasks
 const dueProactiveTasks = appState.chat.contacts
     .filter(c => !c.isGroup && c.charSettings.proactiveLetterDue && c.charSettings.proactiveLetterDue <= now)
     .map(char => ({ type: 'proactive', due: char.charSettings.proactiveLetterDue, charId: char.id }));
-allDueTasks.push(...dueProactiveTasks);
-
-if (allDueTasks.length === 0) {
+allTasks.push(...dueProactiveTasks);
+// If there's nothing to do, exit
+if (allTasks.length === 0) {
     return;
 }
-
-// 2. 引入任务锁，并按角色分组，每个角色每次只处理一个最紧急的任务
-const tasksByChar = allDueTasks.reduce((acc, task) => {
-    if (!acc[task.charId]) {
-        acc[task.charId] = [];
-    }
-    acc[task.charId].push(task);
-    return acc;
-}, {});
-
-for (const charId in tasksByChar) {
-    // 如果该角色已有任务正在处理，则跳过
-    if (runtimeState.letterGenerationInProgress.has(charId)) {
-        console.log(`Skipping letter generation for ${charId}, task already in progress.`);
-        continue;
-    }
-
-    // 获取该角色最紧急的任务
-    const charTasks = tasksByChar[charId].sort((a, b) => a.due - b.due);
-    const taskToProcess = charTasks[0];
-
-    // 上锁，并异步执行任务
-    runtimeState.letterGenerationInProgress.add(charId);
-    console.log(`Processing highest priority letter task: ${taskToProcess.type} for char ${charId}`);
-    
-    generateAndSendLoveLetter(charId).finally(() => {
-        // 无论成功与否，最终都解锁
-        runtimeState.letterGenerationInProgress.delete(charId);
-        console.log(`Letter generation lock released for ${charId}`);
-    });
-}}
+// 3. Sort tasks by due time (oldest first) to prioritize
+allTasks.sort((a, b) => a.due - b.due);
+// 4. Process ONLY the first task in the queue
+const taskToProcess = allTasks[0];
+console.log(`Processing highest priority letter task: ${taskToProcess.type} for char ${taskToProcess.charId}`);
+await generateAndSendLoveLetter(taskToProcess.charId);
+}
     function initializeAllRealtimeActivity() { appState.chat.contacts.forEach(contact => { if (!contact.isGroup && contact.charSettings.realtimeActivity.enabled) { updateRealtimeActivityTimer(contact); } }); }
             function updateRealtimeActivityTimer(contact) { 
         if (runtimeState.realtimeActivityTimers[contact.id]) { 
@@ -19653,6 +19704,7 @@ for (const charId in tasksByChar) {
                 <td>${escapeHTML(mem.charName)}${createFirstCellActions()}</td>
                 <td data-field="relationship">${escapeHTML(mem.relationship)}${createCellActions('relationship')}</td>
                 <td data-field="attitude">${escapeHTML(mem.attitude)}${createCellActions('attitude')}</td>
+                                <td data-field="event.date">${escapeHTML(mem.event?.date || '')}${createCellActions('event.date')}</td>
                 <td data-field="event.time">${escapeHTML(mem.event?.time || '')}${createCellActions('event.time')}</td>
                 <td data-field="event.location">${escapeHTML(mem.event?.location || '')}${createCellActions('event.location')}</td>
                 <td data-field="event.people">${escapeHTML(mem.event?.people || '')}${createCellActions('event.people')}</td>
@@ -19782,9 +19834,8 @@ async function repairCharMemory() {
         }).join('\n');
 
                 const memorySchema = JSON.stringify({
-            charName: "角色名", relationship: "关系", attitude: "态度", event: { time: "时间", location: "地点", people: "人物", content: "内容", emotion: "情绪", weight: 0 }, bond: { item: "物品", promise: "约定" }
+            charName: "角色名", relationship: "关系", attitude: "态度", event: { date: "日期", time: "时间", location: "地点", people: "人物", content: "内容", emotion: "情绪", weight: 0 }, bond: { item: "物品", promise: "约定" }
         }, null, 2);
-
         const prompt = `你是一个记忆整理大师。请仔细通读以下名为“${contact.charSettings.name}”的角色与用户“${contact.userSettings.name}”的完整聊天记录。
         --- **【完整聊天记录】** ---
         ${fullHistory}
@@ -19795,6 +19846,10 @@ async function repairCharMemory() {
         3.  **【JSON数组格式】**: 你的【整个回复】都【必须】是包裹在一个 \`\`\`json ... \`\`\` 代码块中的、一个包含多个记忆对象的JSON数组。前后【绝对禁止】包含任何额外的说明或聊天文字。
         --- **【内容创作指南 - 绝对强制】** ---
         - **【人称】**: 【必须】使用第三人称来记录，例如称呼角色为“${contact.charSettings.name}”，称呼用户为“${contact.userSettings.name}”。【绝对禁止】使用第一和第二人称。
+                - **【时间连续性感知 - 强制规则】**: 在分析时间流逝时，你【必须】将【对话的连续性】置于【时间戳的物理跳跃】之上。当聊天记录中出现数小时中断（例如从深夜到第二天早上），你【必须】检查中断后【用户的第一条消息】。如果用户的消息是延续之前的话题，那么后续的记忆日期【必须】沿用中断前的日期；只有当用户的消息明确表示了新的一天开始时（如“早上好”），你才能在记忆中将日期推进一天。
+        - **【日期与时间】**: 【必须】从聊天记录的【时间戳】中推断出每一条记忆发生的【具体日期】（如“9月21日”）和【大致时间】（如“晚上”）。这是确保时间线准确的关键。
+            - **【权重评估】**: 【必须】为每一条记忆评估一个0-100的权重。日常闲聊权重低（0-40），重要事件、关系变化、深刻的情感交流等权重高（60-100）。
+            - **【重要物品/约定】**: 如果没有，则【必须】填写“无”，【严禁】留空或填写 \`null\`。
         --- **【JSON对象结构 (每个记忆条目都必须遵循此格式)】** ---
         ${memorySchema}
         --- **【输出示例】** ---
@@ -19836,6 +19891,12 @@ async function repairCharMemory() {
         const newMemoryTable = JSON.parse(jsonMatch[1]);
         if (!Array.isArray(newMemoryTable)) throw new Error("AI返回的不是一个有效的数组。");
 
+        // --- 核心修复：将重建的最后一条记忆标记为“新”，以便刷新功能可以正确回退 ---
+        if (newMemoryTable.length > 0) {
+            newMemoryTable[newMemoryTable.length - 1].isNew = true;
+        }
+        // --- 修复结束 ---
+
         contact.charSettings.memory = newMemoryTable;
         debouncedSaveState();
     }
@@ -19874,12 +19935,7 @@ async function repairCharMemory() {
                 let isDragging = false, dragStartX, dragStartY, initialLeft, initialTop;
                 
                 const onPointerDown = (e) => {
-                    // --- 核心修复：防止滑动逻辑劫持输入框和文本域的事件 ---
-                if (e.button !== 0) return;
-                const targetTagName = e.target.tagName.toUpperCase();
-                if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTagName)) {
-                    return;
-                }
+                    if (e.button !== 0) return;
                     isDragging = false;
                     setTimeout(() => { // Distinguish click from drag
                         if (!isDragging) {
@@ -20701,7 +20757,7 @@ getEl('char-memory-table').querySelector('tbody').addEventListener('click', e =>
         let currentValue = memoryEntry;
         let currentLabel = '';
         
-        const labelMap = { 'relationship': '关系', 'attitude': '态度', 'time': '时间', 'location': '地点', 'people': '人物', 'content': '内容', 'emotion': '情绪', 'weight': '权重', 'item': '重要物品', 'promise': '约定' };
+        const labelMap = { 'relationship': '关系', 'attitude': '态度', 'date': '日期', 'time': '时间', 'location': '地点', 'people': '人物', 'content': '内容', 'emotion': '情绪', 'weight': '权重', 'item': '重要物品', 'promise': '约定' };
         fieldParts.forEach(part => {
             currentValue = currentValue?.[part];
             currentLabel = labelMap[part] || part;
@@ -21010,14 +21066,10 @@ function showIncomingCallUI(contactId) {
     let isLyricDragging = false, lyricStartX, lyricStartY, lyricInitialLeft, lyricInitialTop;
 
 lyricsContainer.addEventListener('pointerdown', (e) => {
-    // --- 核心修复：防止滑动逻辑劫持输入框和文本域的事件 ---
-    const targetTagName = e.target.tagName.toUpperCase();
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(targetTagName) || e.target.closest('a')) {
-        return;
-    }
-
+    if (e.target.closest('a')) return; // Ignore links if any are added later
     isLyricDragging = false;
     
+    // Set a short timeout to differentiate between a click and a drag
     const dragCheck = setTimeout(() => {
         isLyricDragging = true;
     }, 200);
@@ -21039,12 +21091,13 @@ lyricsContainer.addEventListener('pointerdown', (e) => {
             let newLeft = lyricInitialLeft + dx;
             let newTop = lyricInitialTop + dy;
 
+            // Boundary checks
             newLeft = Math.max(0, Math.min(newLeft, screenRect.width - lyricsContainer.offsetWidth));
             newTop = Math.max(0, Math.min(newTop, screenRect.height - lyricsContainer.offsetHeight));
 
             lyricsContainer.style.left = `${newLeft}px`;
             lyricsContainer.style.top = `${newTop}px`;
-            lyricsContainer.style.transform = 'none';
+            lyricsContainer.style.transform = 'none'; // Override the initial transform
         }
     };
     
@@ -21054,6 +21107,7 @@ lyricsContainer.addEventListener('pointerdown', (e) => {
         document.removeEventListener('pointerup', onPointerUp);
 
         if (!isLyricDragging) {
+            // This was a click, open the player
             if (appState.music.currentQueueIndex !== -1) {
                  playerModal.classList.add('show');
             }
@@ -22182,20 +22236,27 @@ function setupWeiboListInteraction(feedElement) {
                 showToast('微博已删除');
             }
         },
-        onEdit: (item) => {
-            const postId = item.dataset.postId;
-            openPostWeiboModal(postId);
-        }
+                        onEdit: (item) => {
+                    const postId = item.dataset.postId;
+                    const profileId = runtimeState.weibo.currentProfileId;
+                    openPostWeiboModal(postId, profileId);
+                }
     });
     runtimeState.weibo.listHandler = handler;
 }
 
-function openPostWeiboModal(postId = null, authorId = 'user') {
+    function openPostWeiboModal(postId = null, profileIdForContext = 'user') {
     const isEditing = postId !== null;
-    const post = isEditing ? appState.chat.userProfile.weibo.posts.find(p => p.id === postId) : null;
+    let post = null;
+    if (isEditing) {
+        const weiboData = getWeiboData(profileIdForContext);
+        if (weiboData && weiboData.posts) {
+            post = weiboData.posts.find(p => p.id === postId);
+        }
+    }
     if (isEditing && !post) return;
 
-        runtimeState.weibo.postContext = {
+    runtimeState.weibo.postContext = { 
         images: isEditing ? [...(post.content.images || [])] : [],
         editingPostId: postId,
         authorId: isEditing ? (post.authorId || 'user') : authorId
@@ -22207,7 +22268,7 @@ function openPostWeiboModal(postId = null, authorId = 'user') {
     
         const authorSelectorGroup = getEl('weibo-post-author-selector-group');
     if (isEditing) {
-        authorSelectorGroup.style.display = 'block';
+        authorSelectorGroup.style.display = 'none';
     } else {
         authorSelectorGroup.style.display = 'none';
     }
