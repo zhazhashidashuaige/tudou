@@ -4405,6 +4405,27 @@ cursor: not-allowed;
         </div>
     </div>
 </div>
+    <!-- 新增：微博个人资料编辑弹窗 -->
+    <div id="edit-weibo-profile-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">编辑个人资料</h3>
+            <div class="modal-body">
+                <input type="hidden" id="editing-weibo-profile-id">
+                <div class="form-group">
+                    <label for="weibo-bio-input">简介</label>
+                    <input type="text" id="weibo-bio-input" class="uniform-input-box" placeholder="一句话介绍你自己">
+                </div>
+                <div class="form-group">
+                    <label for="weibo-persona-input">人设 (公众形象)</label>
+                    <textarea id="weibo-persona-input" class="wide-textarea" rows="5" placeholder="这部分内容不会公开展示，仅用于AI理解你在微博上的行为方式和语言风格。"></textarea>
+                </div>
+            </div>
+            <div class="modal-actions row">
+                <button id="cancel-edit-weibo-profile-btn" class="cancel-btn">取消</button>
+                <button id="save-weibo-profile-btn" class="confirm-btn">保存</button>
+            </div>
+        </div>
+    </div>
     <!-- 新增：展厅礼物查看器 -->
     <div id="gift-viewer-modal" class="modal-overlay" style="background-color: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 230;">
         <button id="gift-viewer-close-btn" class="postcard-close-btn">&times;</button>
@@ -5745,6 +5766,7 @@ return {
                                 profile: {
                                     name: '土皇帝',
                                     bio: '全网唯一土皇帝',
+                                    persona: '全网唯一土皇帝',
                                     avatarId: 'default_user_avatar',
                                     coverId: 'default_moments_cover',
                                 },
@@ -6132,6 +6154,31 @@ return {
     if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
         
     // --- 步骤 3.5: (补丁) 迁移 balance 结构 ---
+        // --- 新增补丁：为微博个人资料添加 persona 字段 (V2: 修正为留空) ---
+    const weiboPersonaMigrationFlag = 'weibo_persona_migrated_v2';
+    if (!localStorage.getItem(weiboPersonaMigrationFlag)) {
+        console.log("Applying Weibo persona migration patch (v2)...");
+        let patched = false;
+        // Patch for user
+        if (appState.chat.userProfile.weibo && appState.chat.userProfile.weibo.profile) {
+            // 无论 persona 字段是否存在，都将其设置为空字符串，以覆盖旧的错误数据
+            appState.chat.userProfile.weibo.profile.persona = '';
+            patched = true;
+        }
+        // Patch for characters
+        appState.chat.contacts.forEach(contact => {
+            if (!contact.isGroup && contact.charSettings.weibo && contact.charSettings.weibo.profile) {
+                // 同样，直接设置为空字符串
+                contact.charSettings.weibo.profile.persona = '';
+                patched = true;
+            }
+        });
+
+        if (patched) {
+            console.log("Weibo persona patch (v2) applied, personas have been cleared.");
+        }
+        localStorage.setItem(weiboPersonaMigrationFlag, 'true');
+    }
     const balanceMigrationFlag = 'balance_structure_migrated_v1';
     if (!localStorage.getItem(balanceMigrationFlag)) {
     
@@ -6623,6 +6670,7 @@ if (!contact.charSettings.moments) { contact.charSettings.moments = { photos: []
                 profile: {
                     name: contact.charSettings.name,
                     bio: '这个人很懒，什么都没写...',
+                    persona: '这个人很懒，什么都没写...',
                     avatarId: contact.charSettings.avatarId,
                     coverId: 'default_moments_cover',
                 },
@@ -9639,7 +9687,7 @@ function transformFromGoogleFormat(googleResponse) {
             }
             
             if (triggerContext.type === 'background_event') {
-            const RETRY_DELAY = 5000;
+            const RETRY_DELAY = 30000;
             
             if (!triggerContext.taskId) {
                 triggerContext.taskId = `bg_task_${targetChatId}`;
@@ -15673,6 +15721,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
     }
     function renderSingleMomentComment(comment, postId) {
         const author = findUserById(comment.authorId);
+        if (!author) return '';
         const repliesHTML = (comment.replies || []).map(reply => renderSingleMomentReply(reply, comment.replies, postId)).join('');
         const canModify = true; // 假设User总是可以编辑和删除
         return `
@@ -18246,7 +18295,7 @@ function handleLotteryNumberClick(element) {
             '股市快讯更新失败',
             `已重试 ${retryCount + 1} 次。\n原因: ${detailedErrorMessage}`
         );
-        setTimeout(() => updateStockMarket(retryCount + 1), 5000);
+        setTimeout(() => updateStockMarket(retryCount + 1), 30000);
     }
 }
     function renderStockMarket() {
@@ -18656,12 +18705,6 @@ showPersistentNotification(
             handleEntertainmentTabChange(tabId);
         }
     });
-
-    function handleWeiboTabChange(tabId) {
-        const titleEl = weiboAppScreen.querySelector('.title');
-        const tabMap = { 'weibo-main': '微博', 'hot-search': '热搜' };
-        titleEl.textContent = tabMap[tabId] || '微博';
-    }
 
     weiboAppScreen.querySelector('.app-bottom-tabs').addEventListener('click', (e) => {
         if (e.target.classList.contains('tab-link')) {
@@ -20111,8 +20154,8 @@ async function repairCharMemory() {
                         }
                     } else {
                         console.log("V-Final Fix: Background initialization failed. Retrying in 5 seconds...");
-                        showToast('股市API请求失败，将在5秒后自动重试...', 'error');
-                        setTimeout(runFixInBackground, 5000); 
+                        showToast('股市API请求失败，将在30秒后自动重试...', 'error');
+                        setTimeout(runFixInBackground, 30000); 
                     }
                 };
                 
@@ -21547,6 +21590,20 @@ function getWeiboDisplayNameWithVIP(profileId) {
             // Prioritize remark over the base name, which is consistent with the chat list.
             return contact ? (contact.remark || contact.charSettings.name) : '未知用户';
         }
+        function openWeiboProfileEditor(profileId) {
+    const modal = getEl('edit-weibo-profile-modal');
+    const weiboData = getWeiboData(profileId);
+    if (!weiboData || !weiboData.profile) {
+        showToast('无法加载个人资料', 'error');
+        return;
+    }
+
+    getEl('editing-weibo-profile-id').value = profileId;
+    getEl('weibo-bio-input').value = weiboData.profile.bio || '';
+    getEl('weibo-persona-input').value = weiboData.profile.persona || '';
+    
+    modal.classList.add('visible');
+}
 function handleWeiboTabChange(tabId) {
     const titleEl = weiboAppScreen.querySelector('.title');
     const headerActionsEl = getEl('weibo-header-actions');
@@ -21758,7 +21815,8 @@ function renderSingleWeiboPost(post) {
 }
 
 function renderSingleWeiboComment(comment, postId) {
-    const author = findUserById(comment.authorId);
+const author = findUserById(comment.authorId);
+if (!author) return ''; // 核心修复：如果作者不存在，则不渲染此条评论
     const repliesHTML = (comment.replies || []).map(reply => renderSingleWeiboReply(reply, comment.replies, postId, comment.id)).join('');
     const canModify = true; 
     return `
@@ -21788,8 +21846,9 @@ function renderSingleWeiboComment(comment, postId) {
 }
 
 function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
-    const author = findUserById(reply.authorId);
-    let replyText = escapeHTML(reply.text);
+        const author = findUserById(reply.authorId);
+        if (!author) return '';
+            let replyText = escapeHTML(reply.text);
     const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s);
     let targetHTML = '';
     if(mentionMatch) {
@@ -21896,14 +21955,7 @@ getEl('weibo-app-screen').addEventListener('click', e => {
             return;
         }
         if (e.target.closest('.weibo-profile-bio')) {
-            const currentBio = appState.chat.userProfile.weibo.profile.bio;
-            const newBio = prompt('修改你的简介:', currentBio);
-            if (newBio !== null && newBio.trim() !== currentBio) {
-                appState.chat.userProfile.weibo.profile.bio = newBio.trim();
-                debouncedSaveState();
-                renderWeiboPage('user');
-                showToast('简介已更新');
-            }
+            openWeiboProfileEditor('user');
             return;
         }
     } else { // Char's Page
@@ -21949,14 +22001,7 @@ getEl('weibo-app-screen').addEventListener('click', e => {
             return;
         }
         if (e.target.closest('.weibo-profile-bio')) {
-            const currentBio = contact.charSettings.weibo.profile.bio;
-            const newBio = prompt(`修改 ${contact.charSettings.weibo.profile.name} 的简介:`, currentBio);
-            if (newBio !== null && newBio.trim() !== currentBio) {
-                contact.charSettings.weibo.profile.bio = newBio.trim();
-                debouncedSaveState();
-                renderWeiboPage(charId);
-                showToast('简介已更新');
-            }
+            openWeiboProfileEditor(charId);
             return;
         }
     }
@@ -22527,6 +22572,7 @@ getEl('weibo-visibility-options').addEventListener('change', (e) => {
         topicGroup.style.display = 'block';
     }
 });
+
 getEl('save-collection-btn').addEventListener('click', () => {
 const collectionId = getEl('editing-collection-id').value;
 const newName = getEl('collection-name-input').value.trim();
@@ -22543,6 +22589,35 @@ if (collection) {
     getEl('edit-collection-modal').classList.remove('visible');
     showToast('收藏已更新');
 }
+});
+// --- 新增：微博资料编辑弹窗监听 ---
+getEl('cancel-edit-weibo-profile-btn').addEventListener('click', () => {
+    getEl('edit-weibo-profile-modal').classList.remove('visible');
+});
+
+getEl('save-weibo-profile-btn').addEventListener('click', () => {
+    const profileId = getEl('editing-weibo-profile-id').value;
+    const weiboData = getWeiboData(profileId);
+    if (!weiboData || !weiboData.profile) return;
+
+    const newBio = getEl('weibo-bio-input').value.trim();
+    const newPersona = getEl('weibo-persona-input').value.trim();
+
+    weiboData.profile.bio = newBio;
+    weiboData.profile.persona = newPersona;
+
+    // 如果是用户，同步更新全局签名和人设（如果它们与旧bio一致）
+    if (profileId === 'user' && appState.chat.userProfile.signature === appState.chat.userProfile.weibo.profile.bio) {
+        appState.chat.userProfile.signature = newBio;
+    }
+    if (profileId === 'user' && appState.chat.userProfile.persona === appState.chat.userProfile.weibo.profile.bio) {
+        appState.chat.userProfile.persona = newPersona;
+    }
+
+    debouncedSaveState();
+    renderWeiboPage(profileId);
+    getEl('edit-weibo-profile-modal').classList.remove('visible');
+    showToast('个人资料已更新');
 });
 init();
 
