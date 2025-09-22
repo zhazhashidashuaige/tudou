@@ -3081,7 +3081,7 @@ cursor: not-allowed;
                     <div class="form-group"><label for="cs-persona">人设</label><textarea id="cs-persona" class="wide-textarea" rows="5"></textarea></div>
                     <div class="chat-settings-actions">
                         <div class="button-group"><button id="cs-save-persona-btn" class="settings-button secondary" data-bubble-id="cs-save-persona">保存到资料</button><button id="cs-load-persona-btn" class="settings-button secondary" data-bubble-id="cs-load-persona">从资料读取</button></div>
-
+<div class="button-group" style="margin-top: 10px;"><button id="cs-generate-weibo-profile-btn" class="settings-button secondary" style="flex: 1;">智能生成微博资料</button></div>
                         <div class="button-group"><button id="cs-clear-history-btn" class="settings-button danger-btn" data-bubble-id="cs-clear-history">清空记录</button><button id="cs-delete-friend-btn" class="settings-button danger-btn" data-bubble-id="cs-delete-friend">删除好友</button></div>
                         <div class="form-group aligned-right"><label for="cs-realtime-activity-toggle">后台实时活动</label><input type="checkbox" id="cs-realtime-activity-toggle"></div>
                         <div class="form-group aligned-right" id="cs-realtime-interval-group" style="display: none;"><label for="cs-realtime-interval">活动间隔(分钟)</label><input type="number" id="cs-realtime-interval" value="30"></div>
@@ -3104,6 +3104,7 @@ cursor: not-allowed;
                     <div class="form-group"><label for="us-persona">你的人设</label><textarea id="us-persona" class="wide-textarea" rows="5"></textarea></div>
                     <div class="chat-settings-actions">
                         <div class="button-group"><button id="us-save-persona-btn" class="settings-button secondary" data-bubble-id="us-save-persona">保存到资料</button><button id="us-load-persona-btn" class="settings-button secondary" data-bubble-id="us-load-persona">从资料读取</button></div>
+                    <div class="button-group" style="margin-top: 10px;"><button id="us-generate-weibo-profile-btn" class="settings-button secondary" style="flex: 1;">智能生成微博资料</button></div>
                     </div>
                                     <div class="settings-group" id="us-bubble-customization">
                     <div class="group-title">聊天气泡样式</div>
@@ -5870,6 +5871,7 @@ return {
     function getInitialRuntimeState() {
         return {
             apiKeyIndex: 0, // For multiple API key round-robin
+            weibo: { fanUpdateTimers: {} },
             originalIconContent: {},
             originalBubbleContent: {},
                     exportProgress: { filesProcessed: 0, currentPart: 1 },
@@ -6210,16 +6212,45 @@ delete defaultState.chat.userProfile; // Don't copy the old key from default
     textLoadPromises.push(getTextFromDB('diary_secrets').then(d => { appState.diary.secrets = d || []; }));
     textLoadPromises.push(getTextFromDB('diary_collections').then(d => { appState.diary.collections = d || []; }));
         // --- 步骤 2.5: 加载完成后，将激活的用户Profile数据加载到内存中的appState.chat.userProfile ---
-    const activeId = appState.chat.activeUserProfileId || appState.chat.userProfiles[0]?.id;
-    const activeProfile = appState.chat.userProfiles.find(p => p.id === activeId) || appState.chat.userProfiles[0];
-    if (activeProfile) {
-        appState.chat.userProfile = JSON.parse(JSON.stringify(activeProfile));
-    } else {
-        // Fallback if something went wrong
-        appState.chat.userProfile = getInitialState().chat.userProfiles[0];
-        appState.chat.userProfiles = [appState.chat.userProfile];
-        appState.chat.activeUserProfileId = appState.chat.userProfile.id;
+const activeId = appState.chat.activeUserProfileId || appState.chat.userProfiles[0]?.id;
+const activeProfile = appState.chat.userProfiles.find(p => p.id === activeId) || appState.chat.userProfiles[0];
+if (activeProfile) {
+    appState.chat.userProfile = JSON.parse(JSON.stringify(activeProfile));
+} else {
+    // Fallback if something went wrong
+    appState.chat.userProfile = getInitialState().chat.userProfiles[0];
+    appState.chat.userProfiles = [appState.chat.userProfile];
+    appState.chat.activeUserProfileId = appState.chat.userProfile.id;
+}
+
+// --- 最后一次的数据修正补丁：将动态签名与全局签名同步 ---
+const finalSignatureSyncPatch = 'final_signature_sync_v1';
+if (!localStorage.getItem(finalSignatureSyncPatch)) {
+    console.log("Running one-time data correction for signature separation...");
+    let patched = false;
+    
+    const correctMomentsSignature = appState.chat.moments.profile.signature;
+    
+    // 修正所有用户主页的全局签名
+    appState.chat.userProfiles.forEach(profile => {
+        if (profile.signature !== correctMomentsSignature) {
+            profile.signature = correctMomentsSignature;
+            patched = true;
+        }
+    });
+
+    // 修正当前活动的用户主页内存副本
+    if (appState.chat.userProfile.signature !== correctMomentsSignature) {
+        appState.chat.userProfile.signature = correctMomentsSignature;
+        patched = true;
     }
+
+    if (patched) {
+        saveState(); // 立即保存修正
+        showToast('用户数据结构已更新，签名已自动校正', 'info');
+    }
+    localStorage.setItem(finalSignatureSyncPatch, 'true');
+}
     await Promise.all(textLoadPromises);
     
     // --- 步骤 3: 兼容性修复 ---
@@ -6613,7 +6644,11 @@ function showPersistentNotification(id, title, details) {
     if (banner) {
         banner.querySelector('strong').textContent = title;
         banner.querySelector('.details').textContent = details;
-        return; // 不执行创建和动画逻辑
+        // 确保它可见，以防万一
+        if (!banner.classList.contains('show')) {
+            banner.classList.add('show');
+        }
+        return;
     }
 
     // 如果横幅不存在，则创建新的
@@ -6629,45 +6664,16 @@ function showPersistentNotification(id, title, details) {
     notificationContainer.appendChild(banner);
     setTimeout(() => banner.classList.add('show'), 50);
 
-    let startY, initialY;
-    const dismissThreshold = -50; // 上滑50像素即可关闭
-
-    const onPointerDown = (e) => {
-        e.stopPropagation();
-        banner.style.transition = 'none';
-        startY = e.touches ? e.touches[0].clientY : e.clientY;
-        initialY = banner.getBoundingClientRect().top;
-        
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp, { once: true });
+    // --- 核心修复：只保留手动点击消除的逻辑 ---
+    const dismissOnClick = () => {
+        banner.classList.remove('show');
+        setTimeout(() => {
+            banner.remove();
+            // 移除监听器以防止内存泄漏
+            banner.removeEventListener('click', dismissOnClick);
+        }, 400);
     };
-
-    const onPointerMove = (e) => {
-        const currentY = e.touches ? e.touches[0].clientY : e.clientY;
-        const diffY = currentY - startY;
-        // 只允许上滑
-        if (diffY < 0) {
-            banner.style.transform = `translateY(${diffY}px)`;
-        }
-    };
-
-    const onPointerUp = (e) => {
-        document.removeEventListener('pointermove', onPointerMove);
-        banner.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease-out';
-        
-        const currentY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
-        const diffY = currentY - startY;
-
-        if (diffY < dismissThreshold) {
-            banner.classList.remove('show');
-            setTimeout(() => banner.remove(), 400);
-        } else {
-            // Return to original position if not swiped enough
-            banner.style.transform = 'translateY(0)';
-        }
-    };
-
-    banner.addEventListener('pointerdown', onPointerDown);
+    banner.addEventListener('click', dismissOnClick);
 }
     // ===================================================================
     // --- APP导航与路由 ---
@@ -7189,16 +7195,26 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
         `; }
     function renderSingleReply(reply, allReplies) { const author = findUserById(reply.authorId, reply.authorName); let targetHTML = ''; if (reply.replyTo) { const targetReply = allReplies.find(r => r.id === reply.replyTo); if (targetReply) { const targetAuthor = findUserById(targetReply.authorId, targetReply.authorName); targetHTML = `回复 <span class="reply-target">@${targetAuthor.name}</span>`; } } return `<div class="reply-item" data-reply-id="${reply.id}"><span class="reply-author">${author.name}</span> ${targetHTML}: ${reply.text}<span class="delete-reply-btn" data-icon-id="comment-reply-delete">×</span><div class="reply-input-container"><input type="text" placeholder="回复 ${author.name}..."><button class="settings-button secondary" style="padding: 5px 10px;" data-bubble-id="comment-reply-send">发送</button></div></div>`; }
     
-    function findUserById(id) {
+    function findUserById(id, context = 'chat') {
         if (id === 'user') {
-            const activeProfile = getActiveUserProfile();
-            return {
-                id: 'user',
-                name: activeProfile.name,
-                avatarId: activeProfile.avatarId,
-                signature: activeProfile.signature
-            };
+        const activeProfile = getActiveUserProfile();
+        switch(context) {
+            case 'moments':
+                const momentsProfile = appState.chat.moments.profile;
+                return { id: 'user', name: momentsProfile.name, avatarId: momentsProfile.avatarId, signature: momentsProfile.signature };
+            case 'weibo':
+                const weiboProfile = activeProfile.weibo.profile;
+                return { id: 'user', name: weiboProfile.name, avatarId: weiboProfile.avatarId, signature: weiboProfile.bio };
+            case 'chat':
+            default:
+                return {
+                    id: 'user',
+                    name: activeProfile.name,
+                    avatarId: activeProfile.avatarId,
+                    signature: activeProfile.signature
+                };
         }
+    }
         if (id === 'system') return { id: 'system', name: '系统通知', avatarId: '', signature: '' };
 
         // 优先在当前聊天（如果是群聊）的成员列表中查找，以获取最新的昵称
@@ -7217,35 +7233,33 @@ function renderPlayerQueue() { playerPlaylistView.innerHTML = ''; appState.music
     if (contact.isGroup) {
         return {
             id: contact.id,
-            name: contact.groupSettings.name,
-            avatarId: contact.groupSettings.avatarId,
+        name: contact.remark || contact.groupSettings.name,
+        avatarId: contact.groupSettings.avatarId,
             signature: 'A group chat'
         };
     } else {
-        const isWeiboContext = weiboAppScreen.classList.contains('active');
-        if (isWeiboContext && contact.charSettings.weibo && contact.charSettings.weibo.profile) {
-            const weiboProfile = contact.charSettings.weibo.profile;
-            return {
-                id: contact.id,
-                name: weiboProfile.name,
-                avatarId: weiboProfile.avatarId,
-                signature: weiboProfile.bio
-            };
+        switch(context) {
+            case 'moments':
+                const momentsName = contact.remark || contact.charSettings.name;
+                return {
+                    id: contact.id,
+                    name: momentsName,
+                    avatarId: contact.charSettings.momentsAvatarId || contact.charSettings.avatarId,
+                    signature: contact.signature
+                };
+            case 'weibo':
+                const weiboProfile = contact.charSettings.weibo.profile;
+                return { id: contact.id, name: weiboProfile.name, avatarId: weiboProfile.avatarId, signature: weiboProfile.bio };
+            case 'chat':
+            default:
+                return {
+                    id: contact.id,
+                    name: contact.remark || contact.charSettings.name,
+                    avatarId: contact.charSettings.avatarId,
+                    signature: contact.signature
+                };
         }
-
-        const isMomentsContext = momentsTabContent.offsetParent !== null || charMomentsScreen.classList.contains('active');
-        const finalAvatarId = (isMomentsContext && contact.charSettings.momentsAvatarId) 
-            ? contact.charSettings.momentsAvatarId 
-            : contact.charSettings.avatarId;
-
-        return {
-            id: contact.id,
-            name: contact.charSettings.name,
-            avatarId: finalAvatarId,
-            signature: contact.signature
-        };
-    
-    }
+}
         return { id: id, name: '未知用户', avatarId: `https://api.multiavatar.com/${id}.png`, signature: '...' };
     }
     function canCharViewMoment(charId, post) {
@@ -7692,7 +7706,7 @@ prompt += "```json\n{\n  \"description\": \"（这里是你生成的、关于礼
 function constructWeiboSystemPrompt(contact, weiboContext) {
     const userProfile = getActiveUserProfile();
     
-    let prompt = `你正在扮演角色 “${contact.charSettings.name}”，为人设是 “${contact.charSettings.persona}” 的角色。你正在浏览“微博”这个公开社交平台。\n\n`;
+    let prompt = `你正在扮演角色 “${contact.charSettings.name}” (ID: ${contact.id})。你正在浏览“微博”这个公开社交平台。\n\n`;
     prompt += `--- **【核心世界观：动态 vs 微博】** ---\n`;
     prompt += `1. **动态 (Moments)**: 是一个私密的朋友圈，只有你、用户和其他好友能看到。在这里，你可以发布更私人、更生活化的内容。\n`;
     prompt += `2. **微博 (Weibo)**: 是一个完全公开的平台，类似于Twitter或Instagram。除了你的熟人，还有成千上万的虚拟陌生网友（粉丝、路人、黑子）。因此，你在微博上的言行举止需要带有一些“偶像包袱”，更加注重公众形象，不能像在动态里那样随意。这是塑造你“公众人设”和“私人人设”差异的关键。\n\n`;
@@ -7720,12 +7734,29 @@ function constructWeiboSystemPrompt(contact, weiboContext) {
         prompt += "```json\n{\n  \"comments\": [\n    { \n      \"authorName\": \"随机虚拟网名1\", \n      \"text\": \"评论内容1\",\n      \"replies\": [\n        { \"authorName\": \"回复者A\", \"text\": \"回复内容A\" },\n        { \"authorName\": \"回复者B\", \"text\": \"回复内容B\" }\n      ]\n    },\n    { \"authorName\": \"随机虚拟网名2\", \"text\": \"评论内容2\" }\n  ]\n}\n```\n";
     } else if (weiboContext.taskType === 'WEIBO_SOCIAL_SCAN') {
         prompt += `这是你的后台自主活动时间。你的任务是扫描微博社交圈的最新动态，并决定如何互动。\n\n`;
+        
+        const privatePersona = contact.charSettings.persona;
+        const publicPersona = contact.charSettings.weibo.profile.persona;
+        const linkedWorldBooks = contact.charSettings.linkedWorldBooks || [];
+        let worldBookContent = '无';
+        if (linkedWorldBooks.length > 0) {
+            worldBookContent = linkedWorldBooks.map(id => {
+                const wb = appState.data.worldBooks.find(w => w.id === id);
+                return wb ? `【${wb.name}】: ${wb.content}` : '';
+            }).filter(Boolean).join('\n');
+        }
+
+        prompt += `--- **【内容创作核心参考资料】** ---\n`;
+        prompt += `1. **你的私密人设 (对密友)**: ${privatePersona}\n`;
+        prompt += `2. **你的公众人设 (对大众)**: ${publicPersona}\n`;
+        prompt += `3. **相关世界观**: ${worldBookContent}\n\n`;
+
         prompt += `--- **【社交圈最新动态】** ---\n${weiboContext.feed}\n\n`;
         prompt += `--- **【行动指南 (必须遵守)】** ---\n`;
         prompt += `1. **【最高优先级：回应用户】**: 你【必须】最优先检查【用户(user)】发布的、且你【从未】互动过的新微博。对于这样的微博，你【必须】从“评论”或“转发”中选择一种方式进行回应。这是强制要求。\n`;
         prompt += `2. **【次优先级：回应他人】**: 检查其他角色发布的、你感兴趣的微博，你可以选择点赞、评论或转发。\n`;
         prompt += `3. **【回复评论】**: 检查所有微博下的评论区，如果有人（包括用户、其他角色、甚至随机NPC）对【你】的微博或评论进行了回复，你【必须】使用回复指令进行回应。\n`;
-        prompt += `4. **【自由活动】**: 完成以上社交任务后，如果你有感而发，可以主动发布一条自己的新微博。内容必须符合你的“公众人设”。\n`;
+        prompt += `4. **【自由活动】**: 完成以上社交任务后，如果你有感而发，可以主动发布一条自己的新微博。【重要】在创作微博内容时，你的灵感应来源于你的【私密人设】和【相关世界观】，但最终发布的内容和语气【必须】经过你的【公众人设】进行包装和过滤。不要在公共平台暴露过于私密的细节，要维持你的公众形象。\n`;
         prompt += `5. **【输出格式】**: 你的回复【必须】完全由下方定义的 [ACTION] 指令组成，每个指令占一行。如果无需任何操作，则返回空内容。\n\n`;
         prompt += `--- **【可用微博ACTION指令】** ---\n`;
         prompt += `- **发布新微博**: \`[ACTION: WEIBO_POST "微博内容" "可选话题"]\`\n`;
@@ -7737,6 +7768,7 @@ function constructWeiboSystemPrompt(contact, weiboContext) {
 
     return prompt;
 }
+
     function openEditGiftModal(postcard) {
         const modal = getEl('edit-gift-modal');
         getEl('editing-gift-postcard-id').value = postcard.id;
@@ -9152,6 +9184,7 @@ if (!userWeibo.followerIds.includes(newContact.id)) {
     userWeibo.followerCount = (userWeibo.followerCount || 0) + 1;
 }
 // --- 自动互粉逻辑结束 ---
+
  appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() {        appState.chat.contacts.sort((a, b) => {
@@ -9546,6 +9579,7 @@ if (message.sender === 'user' && !contact.isGroup && !contact.charSettings.hasHa
         // 使用setTimeout让角色的反应看起来更自然
         setTimeout(() => generateAndSendLoveLetter(contact.id), 2000);
         setTimeout(() => generateAndSendPostcard(contact), 3500);
+        
     }
 }
 contact.conversation.push(message); if (fromAI && (!singleChatScreen.classList.contains('active') || runtimeState.currentChatId !== contact.id)) { contact.unreadCount = (contact.unreadCount || 0) + 1; contact.needsShake = true;     const notificationContent = message.type === 'emoji' ? `[${message.description}]` : message.content;
@@ -11258,7 +11292,10 @@ function saveSingleChatSettings() { const contact = appState.chat.contacts.find(
         if (contact.charSettings.weibo && contact.charSettings.weibo.profile) {
             contact.charSettings.weibo.profile.name = runtimeState.tempChatSettings.charSettings.name;
         }
-   contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();     // --- 新增结束 ---
+if (runtimeState.originalChatSettings.charSettings.persona !== runtimeState.tempChatSettings.charSettings.persona) {
+    updateWeiboFollowersFromPersona(contact);
+}
+   contact.name = runtimeState.tempChatSettings.charSettings.name; 
 if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();
     applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
@@ -11331,6 +11368,32 @@ csSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, perso
 usSavePersonaBtn.addEventListener('click', () => { const { name, avatarId, persona } = runtimeState.tempChatSettings.userSettings; const newInfo = { id: newId('data'), name, avatarId, content: persona }; appState.data.infos.push(newInfo); debouncedSaveState(); showToast(`资料已保存到信息: ${name}`); renderInfos(); });
 csLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('archive', 'charSettings'));
 usLoadPersonaBtn.addEventListener('click', () => openLoadPersonaModal('info', 'userSettings'));
+getEl('cs-generate-weibo-profile-btn').addEventListener('click', async () => {
+    const contact = appState.chat.contacts.find(c => c.id === runtimeState.currentChatId);
+    if (!contact) return;
+
+    // 核心：使用当前编辑器中最新的、可能还未保存的人设
+    const currentPersonaInEditor = getEl('cs-persona').value;
+    if (!currentPersonaInEditor.trim()) {
+        showToast('请先填写或读取人设', 'error');
+        return;
+    }
+
+    // 临时更新内存中的 contact 对象，以便函数能读取到最新人设
+    contact.charSettings.persona = currentPersonaInEditor;
+    
+    await generateWeiboProfileFromPersona(contact);
+    // 函数内部会处理保存和UI更新
+});
+
+getEl('us-generate-weibo-profile-btn').addEventListener('click', async () => {
+    const currentUserPersona = getEl('us-persona').value;
+    if (!currentUserPersona.trim()) {
+        showToast('请先填写你的人设', 'error');
+        return;
+    }
+    await generateNewUserWeiboProfile(currentUserPersona);
+});
 function openLibraryModal(context) { runtimeState.libraryContext = context; runtimeState.librarySelection = []; libraryModal.classList.remove('selection-mode'); libraryDeleteBtn.style.display = 'none'; libraryModalTitle.textContent = context.title; libraryModalPreviewArea.style.display = context.showPreview ? 'block' : 'none'; if (context.showPreview) { libraryModalPreviewArea.innerHTML = `<div id="avatar-frame-preview"><div class="avatar-frame"></div></div>`; setElementImage(libraryModalPreviewArea.querySelector('#avatar-frame-preview'), context.previewAvatarId); } renderLibraryGrid(); libraryModal.classList.add('visible'); }
 function renderLibraryGrid() { let items, activeItem; const context = runtimeState.libraryContext; if (context.isGlobalUserLib) { items = appState.chat.userProfile.avatarLibrary; } else if (context.isFrame) { items = appState.chat.userProfile.avatarFrameLibrary; } else if (context.isGroup) { items = runtimeState.tempChatSettings.groupSettings[context.libraryKey]; } else if (context.memberId) { items = runtimeState.tempGcsMemberSettings[context.libraryKey]; } else { items = runtimeState.tempChatSettings[context.settingsGroup][context.libraryKey]; } if (context.isGroup) { activeItem = runtimeState.tempChatSettings.groupSettings[context.activeKey]; } else if (context.memberId) { activeItem = runtimeState.tempGcsMemberSettings[context.activeKey]; } else { activeItem = runtimeState.tempChatSettings[context.settingsGroup][context.activeKey]; } libraryGrid.innerHTML = ''; if (context.hasNoItemOption) { const noItem = document.createElement('div'); noItem.className = 'library-item no-frame'; noItem.dataset.id = ''; noItem.innerHTML = '🚫'; if (activeItem === '') { noItem.classList.add('selected'); } libraryGrid.appendChild(noItem); } items.forEach(id => { const item = document.createElement('div'); item.className = 'library-item'; if (context.isCircular) item.classList.add('circular'); item.innerHTML = `<img alt="library image">`; item.dataset.id = id; if (id === activeItem) { item.classList.add('selected'); } libraryGrid.appendChild(item); setElementImage(item.querySelector('img'), id, 'src'); }); updateLibraryPreview(); }
 async function updateLibraryPreview() { const context = runtimeState.libraryContext; if (!context.showPreview) return; const previewFrame = query('#avatar-frame-preview .avatar-frame'); if (previewFrame) { let activeFrameId; if (context.memberId) { activeFrameId = runtimeState.tempGcsMemberSettings[context.activeKey]; } else if (context.isGroupUser) { activeFrameId = runtimeState.tempChatSettings.userSettings[context.activeKey]; } else { activeFrameId = runtimeState.tempChatSettings[context.settingsGroup][context.activeKey]; } await setElementImage(previewFrame, activeFrameId); } }
@@ -13887,6 +13950,254 @@ function constructAnniversaryMomentPrompt(contact, anniversaryName) {
 
     return `【系统指令】请严格按照以上说明，生成一条用于庆祝“${anniversaryName}”的动态指令。严禁在此指令之外添加任何回复。${prompt}`;
 }
+async function generateNewUserWeiboProfile(persona) {
+    const bannerId = `user_weibo_profile_generation`;
+    try {
+        showToast(`正在根据你的人设智能生成新的微博主页...`, 'info');
+
+        const prompt = `
+        你是一位顶级的社交媒体运营专家和虚拟世界角色设定师。你的任务是根据一个用户的【私密人设】，为其在“微博”这个公开社交平台上，创作一套完整、真实的【全新公众形象资料】。
+        ---
+        【核心任务】
+        你必须一次性生成以下五项内容：
+        1.  **公众姓名 (name)**: 一个独特、响亮的网络昵称。
+        2.  **粉丝数量 (follower_count)**
+        3.  **关注数量 (following_count)**
+        4.  **个人简介 (bio)**
+        5.  **公众人设 (public_persona)**
+        ---
+        【强制规则】
+        1.  **【粉丝数评估 (深度分析)】**: 必须仔细阅读【私密人设】，分析其【职业】、【社会地位】和【性格魅力】，并参考下方指南。
+            *   **粉丝阶层指南**:
+                *   **普通素人 (几十 - 几万粉)**: 学生、普通上班族等。
+                *   **小有名气 (10万 - 50万粉)**: 垂直领域的网红、N线艺人等。
+                *   **家喻户晓 (50万 - 500万粉)**: B-A线明星、知名企业家等。
+                *   **大红大紫/顶流 (500万 - 5000万粉)**: 顶级流量明星、行业巨头。
+                *   **传奇人物 (5000万+粉)**: 时代偶像、国际巨星。
+        2.  **【关注数评估 (社交关系模拟)】**: 必须基于【粉丝阶层】和【性格】评估。公众人物的关注数应远小于粉丝数；普通素人的关注数应与粉丝数基本持平。
+        3.  **【个人简介创作】**: 必须根据【粉丝阶层】决定风格。素人简介应生活化；公众人物简介应专业官方。
+        4.  **【公众人设塑造 (关键)】**: 【私密人设】是用户真实的内在，而【公众人设】是经过包装后呈现给大众的【公众形象】。它必须源于私密人设，但要对其进行【提炼、包装和简化】。
+        5.  **【JSON输出】**: 你的回复【必须】是包裹在一个 \`\`\`json ... \`\`\` 代码块中的JSON对象。前后【绝对禁止】包含任何额外的说明或聊天文字。
+        ---
+        【用户信息】
+        - **私密人设 (仅供你参考)**: ${persona}
+        ---
+        【输出格式示例】
+        \`\`\`json
+        {
+          "name": "夜航船",
+          "follower_count": 8560000,
+          "following_count": 230,
+          "bio": "独立摄影师｜代表作：《城市折叠》｜工作请私信",
+          "public_persona": "一位专注于记录城市光影的摄影师，对外展现出对艺术的极致追求和略带神秘感的气质。不常互动，但偶尔会分享深刻的摄影感悟。"
+        }
+        \`\`\`
+        `;
+
+        const { apiUrl, selectedModel } = appState.settings;
+        const apiKey = getNextApiKey();
+        if (!apiUrl || !apiKey || !selectedModel) throw new Error("API未配置");
+
+        const messages = [{ role: 'system', content: prompt }];
+        if (!apiUrl.includes('generativelanguage.googleapis.com')) messages[0].role = 'user';
+        
+        let data;
+        if (apiUrl.includes('generativelanguage.googleapis.com')) {
+            const requestBody = transformToGoogleFormat(messages);
+            const modelName = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
+            const response = await fetch(`https://cors.eu.org/${apiUrl}/v1beta/${modelName}:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+            if (!response.ok) throw new Error(`Google API Error: ${response.status} - ${await response.text()}`);
+            data = transformFromGoogleFormat(await response.json());
+        } else {
+            const response = await fetch(`${apiUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: selectedModel, messages, stream: false }) });
+            if (!response.ok) throw new Error(`API Error: ${response.status} - ${await response.text()}`);
+            data = await response.json();
+        }
+
+        const replyContent = data.choices[0]?.message?.content;
+        const jsonMatch = replyContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) throw new Error("AI未能返回有效的JSON。");
+        
+        const result = JSON.parse(jsonMatch[1]);
+        
+        const newProfileId = newId('user_profile');
+        const defaultWeiboData = getInitialState().chat.userProfiles[0].weibo;
+
+        const newProfile = {
+            id: newProfileId,
+name: result.name,
+avatarId: 'default_user_avatar',
+avatarFrameId: '',
+persona: persona,
+signature: getActiveUserProfile().signature, // 核心修复：继承当前的全局签名，而不是用bio覆盖
+            cashBalance: getActiveUserProfile().cashBalance,
+            bankBalance: getActiveUserProfile().bankBalance,
+            loan: getActiveUserProfile().loan,
+            lastInterestCalc: getActiveUserProfile().lastInterestCalc,
+            weibo: {
+                ...JSON.parse(JSON.stringify(defaultWeiboData)),
+                profile: {
+                    id: newProfileId,
+                    name: result.name,
+                    bio: result.bio,
+                    persona: result.public_persona,
+                    avatarId: 'default_user_avatar'
+                },
+                followerCount: result.follower_count || 0,
+                followingCount: result.following_count || 0,
+                posts: [],
+            }
+        };
+        appState.chat.userProfiles.push(newProfile);
+        debouncedSaveState();
+        showToast(`已为你创建新的微博主页：“${result.name}”！`, 'info');
+
+    } catch (error) {
+        console.error("Failed to generate user Weibo profile:", error);
+        showPersistentNotification(
+            bannerId,
+            `微博主页生成失败`,
+            `原因: ${error.message}\n请稍后重试...`
+        );
+    }
+}
+async function generateWeiboProfileFromPersona(contact) {
+    if (!contact || contact.isGroup) return;
+    const name = contact.charSettings.name;
+    const persona = contact.charSettings.persona;
+    if (!persona) return;
+
+    if (runtimeState.weibo.fanUpdateTimers[contact.id]) {
+        clearTimeout(runtimeState.weibo.fanUpdateTimers[contact.id]);
+    }
+
+    const bannerId = `fan_update_failure_${contact.id}`;
+    
+    try {
+        showToast(`正在根据“${name}”的人设智能生成微博资料...`, 'info');
+
+        const prompt = `
+        你是一位顶级的社交媒体运营专家和虚拟世界角色设定师。你的任务是根据一个虚拟角色的【私密人设】，为其在“微博”这个公开社交平台上，创作一套完整、真实的公众形象资料。
+        ---
+        【核心任务】
+        你必须一次性生成以下四项内容：
+        1.  **粉丝数量 (follower_count)**: 一个合理的初始粉丝数。
+        2.  **关注数量 (following_count)**: 一个符合其社交习惯的关注数。
+        3.  **个人简介 (bio)**: 一段公开展示的个人简介。
+        4.  **公众人设 (public_persona)**: 一段供AI在微博上进行角色扮演时使用的、非公开的公众形象设定。
+
+        ---
+        【强制规则】
+
+        1.  **【ID 优先原则】**: 你必须以【ID】作为区分角色的【唯一标识】，绝对禁止仅凭【姓名】判断身份，以防重名混淆。
+
+        2.  **【粉丝数评估 (深度分析)】**:
+            *   你必须仔细阅读【私密人设】，分析其【职业】(明星、网红、学者、政治家、企业家等)、【社会地位】和【性格魅力】。
+            *   **粉丝阶层指南 (必须参考)**:
+                *   **普通素人 (几十 - 几万粉)**: 学生、普通上班族、小众兴趣爱好者。
+                *   **小有名气 (10万 - 50万粉)**: 垂直领域的网红、N线艺人、脸熟但叫不出名字的演员。
+                *   **家喻户晓 (50万 - 500万粉)**: B-A线明星、知名企业家、有影响力的公众知识分子。
+                *   **大红大紫/顶流 (500万 - 5000万粉)**: 顶级流量明星、国民级演员、行业巨头。
+                *   **传奇人物 (5000万+粉)**: 具有时代意义的殿堂级人物、国际巨星。
+
+        3.  **【关注数评估 (社交关系模拟)】**:
+            *   你的评估【必须】基于你刚刚为角色设定的【粉丝阶层】和其【性格】。
+            *   **公众人物 (粉丝 > 10万)**: 关注数【必须】远小于粉丝数。他们通常只关注少量同行、官方机构或密友。一个外向活跃的明星关注数可能在几百，而一个高冷的艺术家可能只有几十。
+            *   **普通素人 (粉丝 < 10万)**: 关注数应与粉丝数【基本持平】，或略高于粉丝数，以模拟真实社交圈中的互粉和单向关注。
+
+        4.  **【个人简介创作】**:
+            *   简介【必须】根据角色的【粉丝阶层】来决定风格。
+            *   **素人简介**: 必须生活化、个人化。例如：“INFP｜摄影爱好者｜今天也要开心”。
+            *   **公众人物简介**: 必须专业、官方。必须包含其【职业身份】，可以包含代表作、奖项、或虚构的工作联系方式。例如：“歌手｜代表作《XXX》｜工作联系：xxx@email.com”。
+
+        5.  **【公众人设塑造 (关键)】**:
+            *   **区分内外**: 【私密人设】是角色只对密友（用户）展现的真实内在，而【公众人设】是TA经过包装后选择呈现给大众的【公众形象】。
+            *   **提炼与包装**: 公众人设【必须】源于私密人设，但要对其进行【提炼、包装和简化】，隐藏不适合公开的特质，强化其职业形象和个人魅力标签。
+
+        6.  **【JSON输出】**: 你的回复【必须】是一个格式正确的JSON对象，包裹在一个 \`\`\`json ... \`\`\` 代码块中。前后【绝对禁止】包含任何额外的说明或聊天文字。
+
+        ---
+        【角色信息】
+        - **姓名**: ${name}
+        - **ID (唯一标识)**: ${contact.id}
+        - **私密人设 (仅供你参考)**: ${persona}
+
+        ---
+        【输出格式示例】
+        \`\`\`json
+        {
+          "follower_count": 8560000,
+          "following_count": 230,
+          "bio": "演员｜代表作：《夏日终曲》、《长夜回响》｜商务联系：studio@${name}.com",
+          "public_persona": "一位演技备受认可的实力派演员，对外展现出敬业、谦逊和对艺术专注的形象。不常分享私生活，微博内容多为作品宣传和生活中的艺术感悟，与粉丝保持着专业而友好的距离。"
+        }
+        \`\`\`
+    `;
+
+        const { apiUrl, selectedModel } = appState.settings;
+        const apiKey = getNextApiKey();
+        if (!apiUrl || !apiKey || !selectedModel) throw new Error("API未配置");
+
+        const messages = [{ role: 'system', content: prompt }];
+        if (!apiUrl.includes('generativelanguage.googleapis.com')) messages[0].role = 'user';
+        
+        let data;
+        if (apiUrl.includes('generativelanguage.googleapis.com')) {
+            const requestBody = transformToGoogleFormat(messages);
+            const modelName = selectedModel.startsWith('models/') ? selectedModel : `models/${selectedModel}`;
+            const response = await fetch(`https://cors.eu.org/${apiUrl}/v1beta/${modelName}:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
+            if (!response.ok) throw new Error(`Google API Error: ${response.status} - ${await response.text()}`);
+            data = transformFromGoogleFormat(await response.json());
+        } else {
+            const response = await fetch(`${apiUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: selectedModel, messages, stream: false }) });
+            if (!response.ok) throw new Error(`API Error: ${response.status} - ${await response.text()}`);
+            data = await response.json();
+        }
+
+        const replyContent = data.choices[0]?.message?.content;
+        const jsonMatch = replyContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (!jsonMatch) throw new Error("AI未能返回有效的JSON。");
+        
+        const result = JSON.parse(jsonMatch[1]);
+        const newFollowerCount = parseInt(result.follower_count, 10);
+        const newFollowingCount = parseInt(result.following_count, 10);
+        const newBio = result.bio;
+        const newPublicPersona = result.public_persona;
+
+        if (!isNaN(newFollowerCount) && !isNaN(newFollowingCount) && newBio && newPublicPersona) {
+            // --- On Success ---
+            const banner = getEl(bannerId);
+            if (banner) {
+                banner.classList.remove('show');
+                setTimeout(() => banner.remove(), 400);
+            }
+            delete runtimeState.weibo.fanUpdateTimers[contact.id];
+
+            contact.charSettings.weibo.followerCount = newFollowerCount;
+            contact.charSettings.weibo.followingCount = newFollowingCount;
+            contact.charSettings.weibo.profile.bio = newBio;
+            contact.charSettings.weibo.profile.persona = newPublicPersona;
+            
+            debouncedSaveState();
+            showToast(`“${name}”的微博资料已更新！`, 'info');
+            
+            if (weiboAppScreen.classList.contains('active') && runtimeState.weibo.currentProfileId === contact.id) {
+                renderWeiboPage(contact.id);
+            }
+        } else {
+             throw new Error("AI返回的数据不完整或格式错误。");
+        }
+    } catch (error) {
+        // --- On Failure ---
+        console.error("Failed to generate Weibo profile:", error);
+        showPersistentNotification(
+            bannerId,
+            `“${name}”微博资料更新失败`,
+            `原因: ${error.message}\n系统将在30秒后自动重试...`
+        );
+        runtimeState.weibo.fanUpdateTimers[contact.id] = setTimeout(() => generateWeiboProfileFromPersona(contact), 30000);
+    }
+}
 async function processVideoCallInvitationReply(replyContent, contact) {
             const lines = replyContent.split('\n').map(l => l.trim()).filter(l => l);
             let hasAcceptedMember = false;
@@ -14899,7 +15210,7 @@ function updateTypingIndicator() {
 
         setElementImage(coverEl, coverId);
         nameEl.textContent = getMomentsDisplayName(profileId);
-        signatureEl.textContent = profileData.signature;
+        signatureEl.textContent = isUserPage ? appState.chat.moments.profile.signature : profileData.signature;
         setElementImage(avatarEl, avatarId);
 
         renderMomentsFeed(profileId);
@@ -15785,7 +16096,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
 }
 
     function renderSingleMomentPost(post) {
-        const author = findUserById(post.authorId);
+       const author = findUserById(post.authorId, 'moments');
         const isLiked = post.likes.includes('user');
         const commentsHTML = (post.comments || []).map(comment => renderSingleMomentComment(comment, post.id)).join('');
         
@@ -15861,7 +16172,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
         `;
     }
     function renderSingleMomentComment(comment, postId) {
-        const author = findUserById(comment.authorId);
+        const author = findUserById(comment.authorId, 'moments');
         if (!author) return '';
         const repliesHTML = (comment.replies || []).map(reply => renderSingleMomentReply(reply, comment.replies, postId)).join('');
         const canModify = true; // 假设User总是可以编辑和删除
@@ -15891,7 +16202,7 @@ fabContainer.innerHTML = `<div id="moments-fab-options" style="display: ${runtim
             </div>`;
     }
     function renderSingleMomentReply(reply, allReplies, postId) {
-            const author = findUserById(reply.authorId);
+            const author = findUserById(reply.authorId, 'moments');
             
             let replyText = escapeHTML(reply.text);
             const mentionMatch = replyText.match(/^@(\S+)\s(.*)/s); // Added 's' flag for multiline
@@ -16011,7 +16322,7 @@ function syncAndUpdateMoments(profileId) { if (profileId === 'user' && getEl('mo
                 <div id="moment-post-author-selector"></div>
             </div>`;
         modalBody.insertAdjacentHTML('afterbegin', authorSelectorHTML);
-        renderMomentAuthorSelector('moment-post-author-selector', post.authorId);
+        renderMomentAuthorSelector('moment-post-author-selector', post.authorId, 'moments');
         commentPrivateCheckbox.checked = post.areCommentsPrivate || false; // Load existing setting
         getEl('post-moment-visibility-public-checkbox').checked = post.isVisibilityPublic || false; // Load existing setting
     } else {
@@ -17339,18 +17650,19 @@ function renderWorldBookList(listElement, linkedIdsArray) { listElement.innerHTM
         editMomentCommentModal.classList.add('visible');
     }
 
-    function renderMomentAuthorSelector(containerId, selectedId) {
+    function renderMomentAuthorSelector(containerId, selectedId, context = 'moments') {
         const container = getEl(containerId);
     container.classList.add('author-selector');
-        const availableAuthors = [
-            { id: 'user', name: appState.chat.moments.profile.name, avatarId: appState.chat.moments.profile.avatarId },
-            ...appState.chat.contacts.filter(c => !c.isGroup).map(c => ({ id: c.id, name: c.charSettings.name, avatarId: c.charSettings.avatarId }))
-        ];
+        const userProfile = findUserById('user', context);
+    const availableAuthors = [
+        userProfile,
+        ...appState.chat.contacts.filter(c => !c.isGroup).map(c => findUserById(c.id, context))
+    ];
 
         container.innerHTML = availableAuthors.map(author => `
             <div class="author-selector-item ${author.id === selectedId ? 'selected' : ''}" data-id="${author.id}">
                 <div class="avatar" data-avatar-id="${author.avatarId}"></div>
-                <span class="name">${author.name}</span>
+                <span class="name">${escapeHTML(author.name)}</span>
             </div>
         `).join('');
         container.querySelectorAll('[data-avatar-id]').forEach(el => setElementImage(el, el.dataset.avatarId));
@@ -21828,7 +22140,7 @@ if (!contact) return;
             </div>
                     <div class="weibo-profile-details">
             <div class="weibo-profile-name">${getWeiboDisplayNameWithVIP(profileId)}</div>
-            <div class="weibo-profile-bio">${escapeHTML(weiboData.profile.bio)}</div>
+<div class="weibo-profile-bio">${escapeHTML(weiboData.profile.bio || '一个很神秘的人。')}</div>
                 <div class="weibo-stats">
                     <div class="weibo-stat-item"><div class="count">${(weiboData.posts || []).length}</div><div class="label">微博</div></div>
                     <div class="weibo-stat-item" data-stat-type="following"><div class="count">${formatNumber(weiboData.followingCount || 0)}</div><div class="label">关注</div></div>
@@ -21879,7 +22191,7 @@ function renderWeiboFeed(profileId) {
 }
 
 function renderSingleWeiboPost(post) {
-    const author = findUserById(post.authorId);
+    const author = findUserById(post.authorId, 'weibo');
     if (!author) { // Safety check for deleted authors
         console.warn(`Could not render Weibo post ${post.id} because author ${post.authorId} was not found.`);
         return '';
@@ -22010,7 +22322,7 @@ function renderSingleWeiboComment(comment, postId) {
     if (comment.authorId.startsWith('npc_')) {
         author = { id: comment.authorId, name: comment.authorName, avatarId: comment.authorAvatarId };
     } else {
-        author = findUserById(comment.authorId);
+        author = findUserById(comment.authorId, 'weibo');
     }
     if (!author) return '';
 
@@ -22047,7 +22359,7 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
         if (reply.authorId.startsWith('npc_')) {
             author = { id: reply.authorId, name: reply.authorName, avatarId: reply.authorAvatarId };
         } else {
-            author = findUserById(reply.authorId);
+            author = findUserById(reply.authorId, 'weibo');
         }
         if (!author) return '';
 
@@ -22119,7 +22431,7 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
     };
 
     const isUserPage = runtimeState.weibo.currentProfileId === 'user';
-    if (isUserPage) {
+    if (isUserPage) { // --- USER's Profile Interactions ---
         if (e.target.closest('.weibo-profile-avatar')) {
             createFileInput('image/*', async (event) => {
                 const file = event.target.files[0];
@@ -22127,6 +22439,7 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
                 const newAvatarId = newId('lib');
                 await addMediaToDB(newAvatarId, file);
                 appState.chat.userProfile.weibo.profile.avatarId = newAvatarId;
+syncActiveUserProfileBack(); // Sync changes back to the main array
 
                 debouncedSaveState();
                 renderWeiboPage('user');
@@ -22141,6 +22454,7 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
                 const newCoverId = newId('lib');
                 await addMediaToDB(newCoverId, file);
                 appState.chat.userProfile.weibo.profile.coverId = newCoverId;
+syncActiveUserProfileBack(); // Sync changes back to the main array
 
                 debouncedSaveState();
                 renderWeiboPage('user');
@@ -22153,7 +22467,9 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
             const newName = prompt('修改你的昵称:', currentName);
             if (newName && newName.trim() !== currentName) {
                 const finalName = newName.trim();
-                appState.chat.userProfile.weibo.profile.name = finalName;
+                appState.chat.userProfile.name = finalName; // Sync to main profile name
+appState.chat.userProfile.weibo.profile.name = finalName;
+syncActiveUserProfileBack(); // Sync changes back to the main array
 
                 debouncedSaveState();
                 renderWeiboPage('user');
@@ -22246,9 +22562,8 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
     weiboData.followerCount = newCount;
 }
 
-// If the user's own profile was edited, ensure the runtime copy is also updated.
 if (isUserPage) {
-   appState.chat.userProfile.weibo = getActiveUserProfile().weibo;
+    syncActiveUserProfileBack(); // Sync the updated weiboData back to the main array
 }
 
 debouncedSaveState();
@@ -22601,7 +22916,7 @@ function openWeiboCommentEditor(postId, commentId, replyId = null) {
 
     runtimeState.editingComment = { source: 'weibo', postId, commentId, replyId };
     getEl('edit-weibo-comment-content').value = commentToEdit.text;
-    renderMomentAuthorSelector('weibo-comment-author-selector', commentToEdit.authorId);
+    renderMomentAuthorSelector('weibo-comment-author-selector', commentToEdit.authorId, 'weibo');
     getEl('edit-weibo-comment-modal').classList.add('visible');
 }
 
@@ -22895,18 +23210,19 @@ getEl('save-weibo-profile-btn').addEventListener('click', () => {
     const newPersona = getEl('weibo-persona-input').value.trim();
 
     weiboData.profile.bio = newBio;
-    weiboData.profile.persona = newPersona;
+weiboData.profile.persona = newPersona;
+syncActiveUserProfileBack(); // Sync changes back to the main array
     
-    // 如果是用户，仅更新当前活动的主profile中的weibo部分，并刷新活动副本
     if (profileId === 'user') {
-        const activeProfile = getActiveUserProfile();
-        activeProfile.weibo.profile.bio = newBio;
-        activeProfile.weibo.profile.persona = newPersona;
-        // 更新weibo profile里的name，以防在其他地方被修改
-        activeProfile.weibo.profile.name = activeProfile.name;
-        // 更新活动副本
-        appState.chat.userProfile = JSON.parse(JSON.stringify(activeProfile));
+    const activeProfileInArray = appState.chat.userProfiles.find(p => p.id === appState.chat.activeUserProfileId);
+    if (activeProfileInArray) {
+        activeProfileInArray.weibo.profile.bio = newBio;
+        activeProfileInArray.weibo.profile.persona = newPersona;
+        // 同时更新内存中的活动副本以保证UI即时刷新
+        appState.chat.userProfile.weibo.profile.bio = newBio;
+        appState.chat.userProfile.weibo.profile.persona = newPersona;
     }
+}
 
     debouncedSaveState();
     renderWeiboPage(profileId);
@@ -22942,7 +23258,15 @@ function getActiveUserProfile() {
     const activeProfile = appState.chat.userProfiles.find(p => p.id === appState.chat.activeUserProfileId);
     return activeProfile || appState.chat.userProfiles[0];
 }
-
+function syncActiveUserProfileBack() {
+    const activeId = appState.chat.activeUserProfileId;
+    if (!activeId || !appState.chat.userProfiles) return;
+    const profileIndex = appState.chat.userProfiles.findIndex(p => p.id === activeId);
+    if (profileIndex !== -1) {
+        // Merge the changes from the active working copy back into the source array
+        appState.chat.userProfiles[profileIndex] = JSON.parse(JSON.stringify(appState.chat.userProfile));
+    }
+}
 function updateProfileSettingsVisibility(mode) {
     const grid = getEl('weibo-profile-selector-grid');
     const managementActions = getEl('weibo-profile-management-actions');
@@ -22991,7 +23315,7 @@ function renderWeiboProfileSelector() {
         if (mode === 'delete-selection' && isSelected) itemClass += ' danger-selection'; // Add danger class for visual cue
         return `
             <div class="${itemClass}" data-id="${profile.id}">
-                <div class="avatar" data-avatar-id="${profile.avatarId}"></div>
+                <div class="avatar" data-avatar-id="${profile.weibo.profile.avatarId}"></div>
                 <span class="name">${escapeHTML(profile.name)}</span>
             </div>
         `;
@@ -23039,11 +23363,11 @@ function populateProfileForm(profileData) {
 
     if (profileData) { // Editing mode
         nameLabel.textContent = '编辑名字';
-        bioLabel.textContent = '编辑简介';
-        personaLabel.textContent = '编辑人设';
-        nameInput.value = profileData.name;
-        bioInput.value = profileData.signature;
-        personaInput.value = profileData.persona;
+bioLabel.textContent = '编辑简介';
+personaLabel.textContent = '编辑人设';
+nameInput.value = profileData.name;
+bioInput.value = profileData.weibo.profile.bio;
+personaInput.value = profileData.weibo.profile.persona;
         saveBtnContainer.style.display = 'none'; // Hide the add/cancel buttons
         form.classList.remove('hidden-by-logic');
     } else { // Adding mode
