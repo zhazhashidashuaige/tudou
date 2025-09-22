@@ -6227,7 +6227,7 @@ delete defaultState.chat.userProfile; // Don't copy the old key from default
     if (!Array.isArray(appState.settings.presets)) appState.settings.presets = [];
     if (!appState.chat.emojis) appState.chat.emojis = [];
     if (!appState.chat.userProfile.avatarFrameLibrary) appState.chat.userProfile.avatarFrameLibrary = [];
-    if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfile.signature;
+    if (!appState.chat.userProfile.signature) appState.chat.userProfile.signature = defaultState.chat.userProfiles[0].signature;
     if (!appState.chat.moments.profile) appState.chat.moments.profile = defaultState.chat.moments.profile;
     if (!appState.chat.moments.profile.signature) appState.chat.moments.profile.signature = defaultState.chat.moments.profile.signature;
         
@@ -6698,7 +6698,13 @@ function showPersistentNotification(id, title, details) {
       getEl('shop-app-btn').addEventListener('click', () => openApp(shopAppScreen));
         getEl('diary-app-btn').addEventListener('click', () => openApp(diaryAppScreen));
         getEl('mail-app-btn').addEventListener('click', () => { openApp(mailAppScreen); handleMailTabChange('love-letter'); }); getEl('data-app-btn').addEventListener('click', () => openApp(dataAppScreen));getEl('assets-app-btn').addEventListener('click', () => openApp(assetsAppScreen)); getEl('entertainment-app-btn').addEventListener('click', () => openApp(entertainmentAppScreen));
-    getEl('weibo-app-btn').addEventListener('click', () => { openApp(weiboAppScreen); handleWeiboTabChange('weibo-main'); }); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
+    getEl('weibo-app-btn').addEventListener('click', () => {
+    openApp(weiboAppScreen);
+    // 智能恢复上次的标签页，而不是强制重置
+    const activeTab = weiboAppScreen.querySelector('.app-bottom-tabs .tab-link.active');
+    const tabToLoad = activeTab ? activeTab.dataset.tab : 'weibo-main';
+    handleWeiboTabChange(tabToLoad);
+}); getEl('chat-app-btn').addEventListener('click', () => { openApp(chatAppScreen); renderMessageList(); }); }
 
     // ===================================================================
     // --- 设置 APP ---
@@ -9121,7 +9127,32 @@ chatListActionBtn.addEventListener('click', () => { if (chatAppScreen.classList.
 cancelAddContactBtn.addEventListener('click', () => addContactModal.classList.remove('visible'));
 confirmAddContactBtn.addEventListener('click', () => { const name = newContactNameInput.value.trim();
     if (!name) return; // 核心修复：增加非空校验
-     const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact); appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
+     const newContact = { id: newId('contact'),name: name, remark: '', avatarId: `https://api.multiavatar.com/${name}.png`, status: 'online', statusText: '在线', signature: '这个人很懒，什么都没留下。', lastMessage: '', lastMessageTime: Date.now(), isGroup: false, conversation: [], listenTogetherDuration: 0, lastLetterSent: 0 }; initializeContactSettings(newContact);// --- 新增：自动互粉逻辑 ---
+const userProfile = getActiveUserProfile();
+const charWeibo = newContact.charSettings.weibo;
+const userWeibo = userProfile.weibo;
+
+// 1. User follows the new Char
+if (!userWeibo.followingIds.includes(newContact.id)) {
+    userWeibo.followingIds.push(newContact.id);
+    userWeibo.followingCount = (userWeibo.followingCount || 0) + 1;
+}
+if (!charWeibo.followerIds.includes('user')) {
+    charWeibo.followerIds.push('user');
+    charWeibo.followerCount = (charWeibo.followerCount || 0) + 1;
+}
+
+// 2. New Char follows the User
+if (!charWeibo.followingIds.includes('user')) {
+    charWeibo.followingIds.push('user');
+    charWeibo.followingCount = (charWeibo.followingCount || 0) + 1;
+}
+if (!userWeibo.followerIds.includes(newContact.id)) {
+    userWeibo.followerIds.push(newContact.id);
+    userWeibo.followerCount = (userWeibo.followerCount || 0) + 1;
+}
+// --- 自动互粉逻辑结束 ---
+ appState.chat.contacts.push(newContact); saveState(); renderMessageList(); addContactModal.classList.remove('visible'); newContactNameInput.value = ''; });
 const statusMap = { online: '在线', busy: '忙碌', offline: '离线' };
 function renderMessageList() {        appState.chat.contacts.sort((a, b) => {
             const aIsPinned = a.isPinned || false;
@@ -11227,7 +11258,7 @@ function saveSingleChatSettings() { const contact = appState.chat.contacts.find(
         if (contact.charSettings.weibo && contact.charSettings.weibo.profile) {
             contact.charSettings.weibo.profile.name = runtimeState.tempChatSettings.charSettings.name;
         }
-        // --- 新增结束 ---
+   contact.name = runtimeState.tempChatSettings.charSettings.name; if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();     // --- 新增结束 ---
 if (oldSettings.enabled !== newSettings.enabled || oldSettings.interval !== newSettings.interval) { updateRealtimeActivityTimer(contact); } debouncedSaveState();
     applyAllCustomBubbleStyles(); updateSingleChatUI(); renderMessageList(); syncAndUpdateMoments(contact.id); if (viewContentModal.classList.contains('visible')) { const packetBubble = document.querySelector(`.message-bubble.red-packet[data-packet-content]`); if (packetBubble) { const packetData = JSON.parse(decodeURIComponent(packetBubble.dataset.packetContent)); showRedPacketDetails(packetData); } } }
 getEl('chat-settings-back-btn').addEventListener('click', () => { saveSingleChatSettings(); closeSubScreen(chatSettingsScreen, singleChatScreen); renderGlobalRealtimeSettings(); });
@@ -22210,18 +22241,20 @@ function renderSingleWeiboReply(reply, allReplies, postId, commentId) {
         }
 
         if (statType === 'following') {
-            weiboData.followingCount = newCount;
-            if (isUserPage) {
-                getActiveUserProfile().weibo.followingCount = newCount;
-            }
-        } else {
-            weiboData.followerCount = newCount;
-            if (isUserPage) {
-                getActiveUserProfile().weibo.followerCount = newCount;
-            }
-        }
-        showToast(`${typeLabel}数量已更新`);
-        return; // Stop further processing
+    weiboData.followingCount = newCount;
+} else {
+    weiboData.followerCount = newCount;
+}
+
+// If the user's own profile was edited, ensure the runtime copy is also updated.
+if (isUserPage) {
+   appState.chat.userProfile.weibo = getActiveUserProfile().weibo;
+}
+
+debouncedSaveState();
+renderWeiboPage(profileId); // Re-render the page to show the new count
+showToast(`${typeLabel}数量已更新`);
+return; // Stop further processing
     }
     const postItem = e.target.closest('.weibo-post-item');
     if (!postItem) return;
@@ -22890,6 +22923,15 @@ function openWeiboCharSettingsModal(charId) {
     getEl('weibo-add-profile-fields').classList.add('hidden-by-logic');
     getEl('weibo-profile-settings-modal').classList.add('visible');
 }
+function openWeiboProfileSettingsModal() {
+    runtimeState.weibo.profileSettings = { mode: 'select', selectedId: null, editingCharId: null };
+    runtimeState.weibo.tempActiveProfileId = appState.chat.activeUserProfileId;
+    renderWeiboProfileSelector();
+    renderProfileManagementButtons();
+    updateProfileSettingsVisibility('select');
+    getEl('weibo-add-profile-fields').classList.add('hidden-by-logic');
+    getEl('weibo-profile-settings-modal').classList.add('visible');
+}
 function getActiveUserProfile() {
     if (!appState.chat.userProfiles || appState.chat.userProfiles.length === 0) {
         const defaultProfile = getInitialState().chat.userProfiles[0];
@@ -22933,7 +22975,12 @@ function updateProfileSettingsVisibility(mode) {
 }
 function renderWeiboProfileSelector() {
     const grid = getEl('weibo-profile-selector-grid');
-    const profiles = appState.chat.userProfiles;
+    const { editingCharId } = runtimeState.weibo.profileSettings;
+    
+    // If we are editing a char, the selector should show that single char. Otherwise, show user profiles.
+    const profiles = editingCharId 
+        ? [appState.chat.contacts.find(c => c.id === editingCharId)].map(c => ({...c.charSettings.weibo.profile, id: c.id}))
+        : appState.chat.userProfiles;
     const mode = runtimeState.weibo.profileSettings.mode;
     const currentSelectedId = (mode === 'select') ? runtimeState.weibo.tempActiveProfileId : runtimeState.weibo.profileSettings.selectedId;
 
@@ -23494,5 +23541,4 @@ init();
 </script>
 
 </body>
-
 </html>
