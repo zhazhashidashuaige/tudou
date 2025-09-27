@@ -8363,6 +8363,10 @@ function constructWeiboSystemPrompt(contact, weiboContext, countToGenerate = 10,
     prompt += `--- **【本次任务：${weiboContext.taskType}】** ---\n`;
     
     if (weiboContext.taskType === 'GENERATE_NPC_COMMENTS') {
+                const allOtherChars = appState.chat.contacts
+                .filter(c => !c.isGroup && c.id !== weiboContext.post.authorId)
+                .map(c => `“${c.charSettings.name}” (ID: ${c.id})`)
+                .join('、');
                         const isUserPost = (weiboContext.post.authorId || '').startsWith('user');
             const postAuthorId = weiboContext.post.authorId;
     let authorWorldBookContent = '无';
@@ -8499,8 +8503,10 @@ if (postAuthorId.startsWith('user_profile')) { // 这是一个更可靠的判断
         prompt += `    - **后续页 (16页及以后)**: 话题可能开始发散，出现一些“歪楼”的评论。也可能会有后知后觉的“路人”发表一些延迟的、仿佛刚看到这条微博的评论。\n`;
         prompt += `    **【强制数量】**: 你本次【必须生成不多不少，正好 ${countToGenerate} 条】顶级评论（不含楼中楼回复）。这是一个硬性指标，绝对不能违反。\n\n`;
         prompt += `0.  **【评论者人设与命名艺术 (最高优先级)】**: 你【必须】为生成的【每一条】评论和回复，在后台构思一个独特的虚拟评论者人设。你【绝对禁止】生成笼统的、无身份特征的“路人甲”式评论。你的创作【必须】体现出以下维度的多样性：\n`;
-        prompt += `1.  **【绝对禁止事项 - 最高否决权】**: 你的评论作者【绝对禁止】是【用户(user)】或任何已存在的【其他角色(char)】。用户和其他角色拥有自己的账号，会自主行动。你的唯一任务是扮演【完全随机生成的、此前未出现过的虚拟网友】和【与发布者相关的、存在于世界书中的特定NPC】。将任何已存在的char（例如你自己正在扮演的“${contact.charSettings.name}”）、或用户设置为评论者，是一种会导致世界观混乱的严重错误，必须绝对避免。\n\n`;
-        prompt += `    - **职业与阶层**: 学生、公司职员、艺术家、蓝领工人、退休干部、金融精英、小镇青年……\n`;
+        prompt += `1.  **【绝对禁止事项 - 最高否决权】**: 你的评论作者【绝对禁止】是【用户(user)】或以下列表中的任何【已存在的角色(char)】。这些角色拥有自己的账号，会通过“后台活动”自主行动，你无权扮演他们。\n`;
+        prompt += `    - **【禁止扮演的角色名单】**: ${allOtherChars || '无'}\n`;
+        prompt += `    - **【你的唯一任务】**: 扮演【完全随机生成的、此前未出现过的虚拟网友】和【与发布者相关的、存在于世界书中的、且不在上述黑名单中的特定NPC】。\n`;
+        prompt += `    - **【严重警告】**: 将任何已存在的char或用户设置为评论者，是一种会导致世界观混乱的严重错误，必须绝对避免。\n\n`;        prompt += `    - **职业与阶层**: 学生、公司职员、艺术家、蓝领工人、退休干部、金融精英、小镇青年……\n`;
         prompt += `    - **年龄与性别**: 怀旧的“80后”、追星的“00后”少女、愤世嫉俗的中年男性、慈祥的老奶奶……\n`;
         prompt += `    - **立场**: 死忠粉丝、理智粉、路人、黑子、乐子人、专业人士、竞争对手……\n`;
         prompt += `    - **【强制要求】**: 这些虚构的人设【必须】直接体现在评论者的【虚拟网名】和【发言内容/语气】上。\n\n`;
@@ -11494,7 +11500,7 @@ function handleMusicShareClick() {
 chatImageInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { const compressedFile = await compressImageBeforeSaving(file); const imageId = newId('image'); await addMediaToDB(imageId, compressedFile); addMessageToConversation({ id: newId('msg'), type: 'image', imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); chatImageInput.value = ''; } });cancelVoiceBtn.addEventListener('click', () => voiceInputModal.classList.remove('visible'));
 confirmVoiceBtn.addEventListener('click', () => { const text = voiceTextInput.value.trim(); if (!text) return; const cleanText = text.replace(/\[.*?\]|（.*?）/g, '');         const duration = Math.max(1, Math.ceil(cleanText.length / 2)); addMessageToConversation({ id: newId('msg'), type: 'voice', content: text, duration: duration, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); voiceInputModal.classList.remove('visible'); voiceTextInput.value = ''; });
 cancelCameraBtn.addEventListener('click', () => cameraInputModal.classList.remove('visible'));
-confirmCameraBtn.addEventListener('click', async () => { const text = cameraTextInput.value.trim(); if (!text) return; const response = await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg'); const blob = await response.blob(); const imageId = newId('image'); await addMediaToDB(imageId, blob); addMessageToConversation({ id: newId('msg'), type: 'camera', content: text, imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); cameraInputModal.classList.remove('visible'); cameraTextInput.value = ''; });
+confirmCameraBtn.addEventListener('click', async () => { const text = cameraTextInput.value.trim(); if (!text) return; const response = await fetch('https://i.postimg.cc/5NSdtmGQ/2192-DEA6-CBFB258102-F62-D8-E1629104-A.jpg'); const blob = await response.blob(); const imageId = newId('image'); await addMediaToDB(imageId, blob); addMessageToConversation({ id: newId('msg'), type: 'camera', content: text, imageId: imageId, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); cameraInputModal.classList.remove('visible'); cameraTextInput.value = ''; });
 cancelLinkBtn.addEventListener('click', () => linkShareModal.classList.remove('visible'));
 confirmLinkBtn.addEventListener('click', () => { const title = linkTitleInput.value.trim(); if (!title) return showToast('标题是必填项', 'error'); const summary = linkSummaryInput.value.trim(); const source = linkSourceInput.value.trim(); const content = linkContentInput.value.trim(); addMessageToConversation({ id: newId('msg'), type: 'link', title, summary, source, content, sender: 'user', timestamp: Date.now(), status: 'pending', contactId: runtimeState.currentChatId }); linkShareModal.classList.remove('visible'); [linkTitleInput, linkSummaryInput, linkSourceInput, linkContentInput].forEach(i => i.value = ''); });
 cancelRedPacketBtn.addEventListener('click', () => redPacketModal.classList.remove('visible'));
@@ -22384,7 +22390,7 @@ async function repairCharMemory() {
                 const defaultAvatarBlob = await (await fetch('https://i.postimg.cc/50dRBnZR/c0a269c8637df7a30e8b491cd7519343.jpg')).blob();
                 await addMediaToDB('default_user_avatar', defaultAvatarBlob);
                 await addMediaToDB('default_moments_avatar', defaultAvatarBlob);
-                const defaultCameraBlob = await (await fetch('https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg')).blob();
+                const defaultCameraBlob = await (await fetch('https://i.postimg.cc/5NSdtmGQ/2192-DEA6-CBFB258102-F62-D8-E1629104-A.jpg')).blob();
                 await addMediaToDB('default_camera_image', defaultCameraBlob);
                 
                 // Default cover is now blank, no need to fetch image
@@ -26073,7 +26079,7 @@ function generateRandomNpcProfile() {
     if (npcAvatarLibrary.length > 0) {
         selectedAvatar = npcAvatarLibrary[Math.floor(Math.random() * npcAvatarLibrary.length)];
     } else {
-        selectedAvatar = 'https://i.postimg.cc/KY703cH8/QQ-20250816135643.jpg';
+        selectedAvatar = 'https://i.postimg.cc/5NSdtmGQ/2192-DEA6-CBFB258102-F62-D8-E1629104-A.jpg';
     }
     return {
         id: newId('npc'),
